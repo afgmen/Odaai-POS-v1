@@ -1,0 +1,359 @@
+import 'package:drift/drift.dart' hide Column;
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/theme/app_theme.dart';
+import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../providers/tables_provider.dart';
+
+/// 테이블/좌석 관리 화면
+class TableManagementScreen extends ConsumerWidget {
+  const TableManagementScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final tablesAsync = ref.watch(allTablesProvider);
+    final filter = ref.watch(tableStatusFilterProvider);
+
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        title: Text(l10n.tableManagement),
+        centerTitle: false,
+        actions: [
+          IconButton(
+            onPressed: () => _showAddTableDialog(context, ref),
+            icon: const Icon(Icons.add_circle_outline, color: AppTheme.primary),
+            tooltip: l10n.addTable,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // 상태 필터 칩
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                _FilterChip(label: l10n.all, isSelected: filter == null,
+                    onTap: () => ref.read(tableStatusFilterProvider.notifier).state = null),
+                const SizedBox(width: 8),
+                _FilterChip(label: '🟢 ${l10n.tableAvailable}', isSelected: filter == 'available',
+                    onTap: () => ref.read(tableStatusFilterProvider.notifier).state = 'available'),
+                const SizedBox(width: 8),
+                _FilterChip(label: '🔴 ${l10n.tableOccupied}', isSelected: filter == 'occupied',
+                    onTap: () => ref.read(tableStatusFilterProvider.notifier).state = 'occupied'),
+                const SizedBox(width: 8),
+                _FilterChip(label: '🟡 ${l10n.tableReserved}', isSelected: filter == 'reserved',
+                    onTap: () => ref.read(tableStatusFilterProvider.notifier).state = 'reserved'),
+              ],
+            ),
+          ),
+
+          // 테이블 그리드
+          Expanded(
+            child: tablesAsync.when(
+              data: (tables) {
+                final filtered = filter == null
+                    ? tables
+                    : tables.where((t) => t.status == filter).toList();
+
+                if (filtered.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.table_restaurant, size: 64, color: AppTheme.textDisabled),
+                        const SizedBox(height: 16),
+                        Text(
+                          tables.isEmpty ? l10n.noTables : l10n.noTablesFiltered,
+                          style: const TextStyle(color: AppTheme.textSecondary),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return GridView.builder(
+                  padding: const EdgeInsets.all(12),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 180,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.0,
+                  ),
+                  itemCount: filtered.length,
+                  itemBuilder: (_, i) => _TableCard(
+                    table: filtered[i],
+                    onTap: () => _showTableActions(context, ref, filtered[i]),
+                  ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text(l10n.msgError(e.toString()))),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddTableDialog(BuildContext context, WidgetRef ref) {
+    final nameCtrl = TextEditingController();
+    final seatsCtrl = TextEditingController(text: '4');
+    final zoneCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(l10n.addTable),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: nameCtrl, decoration: InputDecoration(labelText: l10n.tableNameLabel, hintText: l10n.tableNameHint)),
+              const SizedBox(height: 12),
+              TextField(controller: seatsCtrl, decoration: InputDecoration(labelText: l10n.seatsLabel), keyboardType: TextInputType.number),
+              const SizedBox(height: 12),
+              TextField(controller: zoneCtrl, decoration: InputDecoration(labelText: l10n.zoneLabel, hintText: l10n.zoneHint)),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameCtrl.text.trim().isEmpty) return;
+                final dao = ref.read(tablesDaoProvider);
+                await dao.createTable(StoreTablesCompanion.insert(
+                  name: nameCtrl.text.trim(),
+                  seats: Value(int.tryParse(seatsCtrl.text) ?? 4),
+                  zone: Value(zoneCtrl.text.trim().isEmpty ? null : zoneCtrl.text.trim()),
+                ));
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: Text(l10n.add),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showTableActions(BuildContext context, WidgetRef ref, StoreTable table) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx)!;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(width: 40, height: 4,
+                decoration: BoxDecoration(color: AppTheme.divider, borderRadius: BorderRadius.circular(2))),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(table.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              ),
+              if (table.status == 'available') ...[
+                ListTile(
+                  leading: const Icon(Icons.restaurant, color: AppTheme.primary),
+                  title: Text(l10n.startUse),
+                  onTap: () async {
+                    await ref.read(tablesDaoProvider).updateTableStatus(table.id, 'occupied');
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.event_seat, color: Colors.orange),
+                  title: Text(l10n.reserve),
+                  onTap: () async {
+                    await ref.read(tablesDaoProvider).updateTableStatus(table.id, 'reserved');
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                ),
+              ],
+              if (table.status == 'occupied') ...[
+                ListTile(
+                  leading: const Icon(Icons.check_circle, color: AppTheme.success),
+                  title: Text(l10n.clearTable),
+                  onTap: () async {
+                    await ref.read(tablesDaoProvider).clearTable(table.id);
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.swap_horiz, color: AppTheme.primary),
+                  title: Text(l10n.moveTable),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _showMoveTableDialog(context, ref, table);
+                  },
+                ),
+              ],
+              if (table.status == 'reserved')
+                ListTile(
+                  leading: const Icon(Icons.event_available, color: AppTheme.success),
+                  title: Text(l10n.reserveToUse),
+                  onTap: () async {
+                    await ref.read(tablesDaoProvider).updateTableStatus(table.id, 'occupied');
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                ),
+              if (table.status != 'available')
+                ListTile(
+                  leading: const Icon(Icons.clear, color: AppTheme.error),
+                  title: Text(l10n.clearTableShort),
+                  onTap: () async {
+                    await ref.read(tablesDaoProvider).clearTable(table.id);
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: AppTheme.error),
+                title: Text(l10n.delete, style: const TextStyle(color: AppTheme.error)),
+                onTap: () async {
+                  await ref.read(tablesDaoProvider).deactivateTable(table.id);
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showMoveTableDialog(BuildContext context, WidgetRef ref, StoreTable fromTable) async {
+    final allTables = await ref.read(tablesDaoProvider).getAllTables();
+    final available = allTables.where((t) => t.id != fromTable.id && t.status == 'available').toList();
+
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(l10n.moveTableTitle(fromTable.name)),
+          content: available.isEmpty
+              ? Text(l10n.noEmptyTables)
+              : SizedBox(
+                  width: 300,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: available.length,
+                    itemBuilder: (_, i) => ListTile(
+                      leading: const Icon(Icons.table_restaurant),
+                      title: Text(available[i].name),
+                      subtitle: Text('${l10n.seatsUnit(available[i].seats)}${available[i].zone != null ? ' · ${available[i].zone}' : ''}'),
+                      onTap: () async {
+                        await ref.read(tablesDaoProvider).moveTable(fromTable.id, available[i].id);
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                    ),
+                  ),
+                ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ─── 위젯 ──────────────────────────────────────────────
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FilterChip({required this.label, required this.isSelected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primary : AppTheme.cardWhite,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? AppTheme.primary : AppTheme.divider),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppTheme.textPrimary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TableCard extends StatelessWidget {
+  final StoreTable table;
+  final VoidCallback onTap;
+
+  const _TableCard({required this.table, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final Color statusColor;
+    final String statusEmoji;
+    switch (table.status) {
+      case 'occupied':
+        statusColor = AppTheme.error;
+        statusEmoji = '🔴';
+        break;
+      case 'reserved':
+        statusColor = AppTheme.warning;
+        statusEmoji = '🟡';
+        break;
+      default:
+        statusColor = AppTheme.success;
+        statusEmoji = '🟢';
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.cardWhite,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: statusColor.withAlpha(80), width: 2),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(statusEmoji, style: const TextStyle(fontSize: 28)),
+            const SizedBox(height: 8),
+            Text(
+              table.name,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${l10n.seatsUnit(table.seats)}${table.zone != null ? ' · ${table.zone}' : ''}',
+              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

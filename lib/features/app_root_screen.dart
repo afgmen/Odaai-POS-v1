@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/theme/app_theme.dart';
+import '../core/responsive/adaptive_scaffold.dart';
+import '../l10n/app_localizations.dart';
+import 'cash_drawer/presentation/screens/cash_drawer_screen.dart';
+import 'customers/presentation/screens/customer_management_screen.dart';
 import 'pos/presentation/screens/pos_main_screen.dart';
 import 'products/presentation/screens/product_management_screen.dart';
 import 'sales/presentation/screens/sales_history_screen.dart';
@@ -9,9 +12,14 @@ import 'dashboard/presentation/screens/dashboard_screen.dart';
 import 'dashboard/presentation/screens/low_stock_screen.dart';
 import 'employees/presentation/screens/employee_management_screen.dart';
 import 'promotions/presentation/screens/promotion_management_screen.dart';
+import 'refunds/presentation/screens/refund_screen.dart';
+import 'reports/presentation/screens/reports_screen.dart';
+import 'settings/presentation/screens/settings_screen.dart';
+import 'sync/presentation/widgets/sync_status_indicator.dart';
+import 'tables/presentation/screens/table_management_screen.dart';
 
 /// 앱 전체 탭 네비게이션 루트
-/// IndexedStack 사용 → 탭 전환 시 각 화면의 로컬 상태(스크롤 등) 유지
+/// AdaptiveScaffold 사용 → 모바일: BottomNav, 태블릿+: NavigationRail
 class AppRootScreen extends ConsumerStatefulWidget {
   const AppRootScreen({super.key});
 
@@ -22,74 +30,71 @@ class AppRootScreen extends ConsumerStatefulWidget {
 class _AppRootScreenState extends ConsumerState<AppRootScreen> {
   int _currentIndex = 0;
 
+  static const _screens = <Widget>[
+    PosMainScreen(),           // 0
+    ProductManagementScreen(), // 1
+    SalesHistoryScreen(),      // 2
+    DashboardScreen(),         // 3
+    CustomerManagementScreen(),// 4  ← NEW
+    TableManagementScreen(),   // 5  ← NEW
+    RefundScreen(),            // 6  ← NEW
+    CashDrawerScreen(),        // 7  ← NEW
+    LowStockScreen(),          // 8
+    EmployeeManagementScreen(),// 9
+    PromotionManagementScreen(),// 10
+    ReportsScreen(),           // 11
+    SettingsScreen(),          // 12
+  ];
+
+  /// 네비게이션 아이템 목록을 l10n 기반으로 빌드
+  List<NavigationItem> _buildDestinations(AppLocalizations? l10n) {
+    return [
+      NavigationItem(icon: Icons.point_of_sale_outlined, selectedIcon: Icons.point_of_sale,
+          label: l10n?.navPos ?? 'POS'),
+      NavigationItem(icon: Icons.inventory_2_outlined, selectedIcon: Icons.inventory_2,
+          label: l10n?.navProducts ?? 'Products'),
+      NavigationItem(icon: Icons.receipt_long_outlined, selectedIcon: Icons.receipt_long,
+          label: l10n?.navSales ?? 'Sales'),
+      NavigationItem(icon: Icons.bar_chart_outlined, selectedIcon: Icons.bar_chart,
+          label: l10n?.navDashboard ?? 'Dashboard'),
+      // ─── 새 기능 4개 ────────────────────
+      NavigationItem(icon: Icons.people_alt_outlined, selectedIcon: Icons.people_alt,
+          label: l10n?.navCustomers ?? 'Customers'),
+      NavigationItem(icon: Icons.table_restaurant_outlined, selectedIcon: Icons.table_restaurant,
+          label: l10n?.navTables ?? 'Tables'),
+      NavigationItem(icon: Icons.undo_outlined, selectedIcon: Icons.undo,
+          label: l10n?.navRefunds ?? 'Refunds'),
+      NavigationItem(icon: Icons.account_balance_wallet_outlined, selectedIcon: Icons.account_balance_wallet,
+          label: l10n?.navCashDrawer ?? 'Cash'),
+      // ─── 기존 기능 ─────────────────────
+      NavigationItem(icon: Icons.warning_amber_outlined, selectedIcon: Icons.warning_amber_rounded,
+          label: l10n?.navInventory ?? 'Low Stock'),
+      NavigationItem(icon: Icons.people_outline, selectedIcon: Icons.people,
+          label: l10n?.navEmployees ?? 'Employees'),
+      NavigationItem(icon: Icons.local_offer_outlined, selectedIcon: Icons.local_offer,
+          label: l10n?.navPromotions ?? 'Promotions'),
+      NavigationItem(icon: Icons.analytics_outlined, selectedIcon: Icons.analytics,
+          label: l10n?.navReports ?? 'Reports'),
+      NavigationItem(icon: Icons.settings_outlined, selectedIcon: Icons.settings,
+          label: l10n?.settings ?? 'Settings'),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: const [
-          PosMainScreen(),
-          ProductManagementScreen(),
-          SalesHistoryScreen(),
-          DashboardScreen(),
-          LowStockScreen(),
-          EmployeeManagementScreen(),
-          PromotionManagementScreen(),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
-        backgroundColor: AppTheme.cardWhite,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: const Color(0x14000000),
-        height: 70,
-        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
-          if (states.contains(WidgetState.selected)) {
-            return const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.primary);
-          }
-          return const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: AppTheme.textSecondary);
-        }),
-        indicatorColor: const Color(0xFFE8F0FE),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.point_of_sale_outlined),
-            selectedIcon: Icon(Icons.point_of_sale),
-            label: 'POS',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: '상품관리',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: '주문내역',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: '대시보드',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.warning_amber_outlined),
-            selectedIcon: Icon(Icons.warning_amber_rounded),
-            label: '재고부족',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            selectedIcon: Icon(Icons.people),
-            label: '직원관리',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.local_offer_outlined),
-            selectedIcon: Icon(Icons.local_offer),
-            label: '프로모션',
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context);
+
+    return AdaptiveScaffold(
+      currentIndex: _currentIndex,
+      onDestinationSelected: (index) => setState(() => _currentIndex = index),
+      destinations: _buildDestinations(l10n),
+      trailing: const SyncStatusIndicator(),
+      bodyBuilder: (context, index) {
+        return IndexedStack(
+          index: _currentIndex,
+          children: _screens,
+        );
+      },
     );
   }
 }

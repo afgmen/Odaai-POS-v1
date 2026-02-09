@@ -293,7 +293,6 @@ class ReceiptPdfService {
             style: pw.TextStyle(
               fontSize: isBold ? 11 : 9,
               fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
-              ,
             ),
           ),
           pw.Text(
@@ -301,7 +300,6 @@ class ReceiptPdfService {
             style: pw.TextStyle(
               fontSize: isBold ? 12 : 9,
               fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
-              ,
             ),
           ),
         ],

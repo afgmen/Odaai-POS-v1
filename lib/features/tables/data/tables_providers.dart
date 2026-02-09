@@ -61,9 +61,9 @@ final filteredTablesProvider = StreamProvider<List<RestaurantTable>>((ref) {
           allTables.where((t) => t.status == selectedStatus).toList();
       return Stream.value(filtered);
     },
-    loading: () => Stream.value([]),
-    error: (err, stack) => Stream.value([]),
-  ).asyncExpand((tables) => tables);
+    loading: () => Stream.value(<RestaurantTable>[]),
+    error: (err, stack) => Stream.value(<RestaurantTable>[]),
+  ).asyncExpand((tables) => Stream.value(tables));
 });
 
 /// 선택된 테이블 ID

@@ -115,7 +115,7 @@ class AppDatabase extends _$AppDatabase {
           // v3 → v4: 고객 포인트/메모, 테이블, 시재, 환불 테이블 추가
           await _safeAddColumn('customers', 'points', 'INTEGER NOT NULL DEFAULT 0');
           await _safeAddColumn('customers', 'note', 'TEXT NULL');
-          await _safeCreateTable(m, storeTables, 'store_tables');
+          await _safeCreateTable(m, restaurantTables, 'restaurant_tables');
           await _safeCreateTable(m, cashDrawerLogs, 'cash_drawer_logs');
           await _safeCreateTable(m, refunds, 'refunds');
           await _safeCreateTable(m, refundItems, 'refund_items');

@@ -5,7 +5,7 @@ import '../tables/sales.dart';
 
 part 'customers_dao.g.dart';
 
-@DriftAccessor(tables: [Customers, Sales, SaleItems, StoreTables, CashDrawerLogs, Refunds, RefundItems])
+@DriftAccessor(tables: [Customers, Sales, SaleItems, CashDrawerLogs, Refunds, RefundItems])
 class CustomersDao extends DatabaseAccessor<AppDatabase> with _$CustomersDaoMixin {
   CustomersDao(super.db);
 
@@ -79,49 +79,6 @@ class CustomersDao extends DatabaseAccessor<AppDatabase> with _$CustomersDaoMixi
     ).getSingle();
     return result.read<double>('total');
   }
-
-  // ─── 테이블/좌석 관리 ─────────────────────────────
-
-  Future<int> createTable(StoreTablesCompanion entry) =>
-      into(storeTables).insert(entry);
-
-  Stream<List<StoreTable>> watchAllTables() =>
-      (select(storeTables)
-            ..where((t) => t.isActive.equals(true))
-            ..orderBy([(t) => OrderingTerm.asc(t.name)]))
-          .watch();
-
-  Future<List<StoreTable>> getAllTables() =>
-      (select(storeTables)
-            ..where((t) => t.isActive.equals(true))
-            ..orderBy([(t) => OrderingTerm.asc(t.name)]))
-          .get();
-
-  Future<void> updateTableStatus(int tableId, String status, {int? saleId}) =>
-      (update(storeTables)..where((t) => t.id.equals(tableId))).write(
-        StoreTablesCompanion(
-          status: Value(status),
-          currentSaleId: Value(saleId),
-          occupiedAt: Value(status == 'occupied' ? DateTime.now() : null),
-        ),
-      );
-
-  Future<void> clearTable(int tableId) => updateTableStatus(tableId, 'available');
-
-  Future<void> moveTable(int fromTableId, int toTableId) async {
-    final fromTable = await (select(storeTables)..where((t) => t.id.equals(fromTableId))).getSingle();
-    if (fromTable.currentSaleId != null) {
-      await updateTableStatus(toTableId, 'occupied', saleId: fromTable.currentSaleId);
-      await clearTable(fromTableId);
-    }
-  }
-
-  Future<bool> updateTable(StoreTablesCompanion entry) =>
-      update(storeTables).replace(entry);
-
-  Future<void> deactivateTable(int id) =>
-      (update(storeTables)..where((t) => t.id.equals(id)))
-          .write(const StoreTablesCompanion(isActive: Value(false)));
 
   // ─── 시재 관리 (Cash Drawer) ──────────────────────
 

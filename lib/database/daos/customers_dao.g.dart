@@ -8,7 +8,6 @@ mixin _$CustomersDaoMixin on DatabaseAccessor<AppDatabase> {
   $SalesTable get sales => attachedDatabase.sales;
   $ProductsTable get products => attachedDatabase.products;
   $SaleItemsTable get saleItems => attachedDatabase.saleItems;
-  $StoreTablesTable get storeTables => attachedDatabase.storeTables;
   $CashDrawerLogsTable get cashDrawerLogs => attachedDatabase.cashDrawerLogs;
   $RefundsTable get refunds => attachedDatabase.refunds;
   $RefundItemsTable get refundItems => attachedDatabase.refundItems;
@@ -26,8 +25,6 @@ class CustomersDaoManager {
       $$ProductsTableTableManager(_db.attachedDatabase, _db.products);
   $$SaleItemsTableTableManager get saleItems =>
       $$SaleItemsTableTableManager(_db.attachedDatabase, _db.saleItems);
-  $$StoreTablesTableTableManager get storeTables =>
-      $$StoreTablesTableTableManager(_db.attachedDatabase, _db.storeTables);
   $$CashDrawerLogsTableTableManager get cashDrawerLogs =>
       $$CashDrawerLogsTableTableManager(
         _db.attachedDatabase,

@@ -271,10 +271,10 @@ class ReceiptPdfService {
   static pw.Widget _buildPaymentInfo(ReceiptData data, Map<String, String> labels) {
     return pw.Column(
       children: [
-        _summaryRow(labels['paymentMethod'] ?? 'Payment', data.paymentLabelFrom(labels), font),
+        _summaryRow(labels['paymentMethod'] ?? 'Payment', data.paymentLabelFrom(labels)),
         if (data.paymentMethod == 'cash') ...[
-          _summaryRow(labels['cashPaid'] ?? 'Paid', _fmt(data.cashPaid), font),
-          _summaryRow(labels['change'] ?? 'Change', _fmt(data.change), font, isBold: true),
+          _summaryRow(labels['cashPaid'] ?? 'Paid', _fmt(data.cashPaid)),
+          _summaryRow(labels['change'] ?? 'Change', _fmt(data.change), isBold: true),
         ],
       ],
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../../app_root_screen.dart';
 
@@ -67,14 +68,16 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
           );
         }
       } else {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _errorMessage = 'PIN이 일치하지 않습니다';
+          _errorMessage = l10n.pinMismatch;
           _pin = '';
         });
       }
     } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _errorMessage = '로그인 오류: ${e.toString()}';
+        _errorMessage = l10n.loginError(e.toString());
         _pin = '';
       });
     } finally {
@@ -86,6 +89,8 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
@@ -100,18 +105,18 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                   // 로고/제목
                   const Icon(Icons.store, size: 80, color: AppTheme.primary),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Oda POS',
-                    style: TextStyle(
+                  Text(
+                    l10n.appName,
+                    style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'PIN을 입력하여 로그인하세요',
-                    style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                  Text(
+                    l10n.pinLoginTitle,
+                    style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                   ),
                   const SizedBox(height: 48),
 

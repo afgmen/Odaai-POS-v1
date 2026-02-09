@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/responsive/responsive_helper.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../providers/dashboard_provider.dart';
 
 /// 매출 대시보드 화면
@@ -10,6 +12,7 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final filter = ref.watch(dashboardFilterProvider);
 
     return Scaffold(
@@ -18,9 +21,9 @@ class DashboardScreen extends ConsumerWidget {
         backgroundColor: AppTheme.cardWhite,
         elevation: 0,
         titleSpacing: 16,
-        title: const Text(
-          '매출 대시보드',
-          style: TextStyle(
+        title: Text(
+          l10n.salesDashboard,
+          style: const TextStyle(
               fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
         ),
         bottom: PreferredSize(
@@ -28,78 +31,133 @@ class DashboardScreen extends ConsumerWidget {
           child: Container(height: 1, color: AppTheme.divider),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── 날짜 필터 ──────────────────────────
-            Row(
-              children: DashboardFilter.values.map((f) {
-                final isSelected = filter == f;
-                return Padding(
-                  padding: EdgeInsets.only(
-                      right: f == DashboardFilter.values.last ? 0 : 8),
-                  child: InkWell(
-                    onTap: () =>
-                        ref.read(dashboardFilterProvider.notifier).state = f,
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppTheme.primary : AppTheme.cardWhite,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected ? AppTheme.primary : AppTheme.divider,
-                          width: isSelected ? 2 : 1,
-                        ),
-                      ),
-                      child: Text(
-                        f.label,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color:
-                              isSelected ? Colors.white : AppTheme.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final deviceType = ResponsiveHelper.getDeviceType(constraints.maxWidth);
+          final isWide = deviceType != DeviceType.mobile;
 
-            // ── 주요 통계 카드 행 (매출, 주문수, 평균주문) ──
-            Row(
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(isWide ? 24 : 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: totalSalesCard(ref)),
-                const SizedBox(width: 10),
-                Expanded(child: orderCountCard(ref)),
-                const SizedBox(width: 10),
-                Expanded(child: avgOrderCard(ref)),
+                // ── 날짜 필터 ──────────────────────────
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: DashboardFilter.values.map((f) {
+                      final isSelected = filter == f;
+                      return Padding(
+                        padding: EdgeInsets.only(
+                            right: f == DashboardFilter.values.last ? 0 : 8),
+                        child: InkWell(
+                          onTap: () =>
+                              ref.read(dashboardFilterProvider.notifier).state = f,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppTheme.primary : AppTheme.cardWhite,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected ? AppTheme.primary : AppTheme.divider,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Text(
+                              f.label,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight:
+                                    isSelected ? FontWeight.w700 : FontWeight.w500,
+                                color:
+                                    isSelected ? Colors.white : AppTheme.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // ── 주요 통계 카드 (반응형) ──
+                if (isWide)
+                  Row(
+                    children: [
+                      Expanded(child: _totalSalesCard(ref, l10n)),
+                      const SizedBox(width: 10),
+                      Expanded(child: _orderCountCard(ref, l10n)),
+                      const SizedBox(width: 10),
+                      Expanded(child: _avgOrderCard(ref, l10n)),
+                      const SizedBox(width: 10),
+                      Expanded(child: _InventoryValueCompactCard()),
+                    ],
+                  )
+                else ...[
+                  Row(
+                    children: [
+                      Expanded(child: _totalSalesCard(ref, l10n)),
+                      const SizedBox(width: 10),
+                      Expanded(child: _orderCountCard(ref, l10n)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(child: _avgOrderCard(ref, l10n)),
+                      const SizedBox(width: 10),
+                      const Expanded(child: SizedBox()),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  _InventoryValueCard(),
+                ],
+                const SizedBox(height: 20),
+
+                // ── 결제 방법별 + 상품별 (태블릿: 가로, 모바일: 세로) ──
+                if (isWide)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _SectionTitle(title: l10n.paymentMethodSales),
+                            const SizedBox(height: 10),
+                            _PaymentBreakdownSection(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _SectionTitle(title: l10n.productRanking),
+                            const SizedBox(height: 10),
+                            _TopSellingSection(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                else ...[
+                  _SectionTitle(title: l10n.paymentMethodSales),
+                  const SizedBox(height: 10),
+                  _PaymentBreakdownSection(),
+                  const SizedBox(height: 20),
+                  _SectionTitle(title: l10n.productRanking),
+                  const SizedBox(height: 10),
+                  _TopSellingSection(),
+                ],
               ],
             ),
-            const SizedBox(height: 14),
-
-            // ── 재고 가치 카드 ──────────────────────
-            _InventoryValueCard(),
-            const SizedBox(height: 20),
-
-            // ── 결제 방법별 매출 ────────────────────
-            _SectionTitle(title: '결제 방법별 매출'),
-            const SizedBox(height: 10),
-            _PaymentBreakdownSection(),
-            const SizedBox(height: 20),
-
-            // ── 상품별 매출 순위 ────────────────────
-            _SectionTitle(title: '상품별 매출 순위'),
-            const SizedBox(height: 10),
-            _TopSellingSection(),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -145,51 +203,51 @@ Widget _statCardLayout({
   );
 }
 
-Widget _asyncDoubleWidget(AsyncValue<double> async, Color color, String Function(double) fmt) {
+Widget _asyncDoubleWidget(AsyncValue<double> async, Color color, String Function(double) fmt, AppLocalizations l10n) {
   return async.when(
     data: (v) => Text(fmt(v), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color)),
     loading: () => const SizedBox(height: 22, child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary))),
-    error: (_, _) => const Text('오류', style: TextStyle(fontSize: 16, color: AppTheme.error)),
+    error: (_, _) => Text(l10n.error, style: const TextStyle(fontSize: 16, color: AppTheme.error)),
   );
 }
 
 // ── 매출 합계 카드 ─────────────────────────────────
-Widget totalSalesCard(WidgetRef ref) {
+Widget _totalSalesCard(WidgetRef ref, AppLocalizations l10n) {
   final async = ref.watch(totalSalesProvider);
   return _statCardLayout(
-    title: '매출 합계',
+    title: l10n.totalSalesAmount,
     icon: Icons.attach_money,
     color: AppTheme.primary,
     bgColor: const Color(0xFFE8F0FE),
-    valueWidget: _asyncDoubleWidget(async, AppTheme.primary, (v) => '₩${_fmt(v)}'),
+    valueWidget: _asyncDoubleWidget(async, AppTheme.primary, (v) => '₩${_fmt(v)}', l10n),
   );
 }
 
 // ── 주문 수 카드 ────────────────────────────────────
-Widget orderCountCard(WidgetRef ref) {
+Widget _orderCountCard(WidgetRef ref, AppLocalizations l10n) {
   final async = ref.watch(orderCountProvider);
   return _statCardLayout(
-    title: '주문 수',
+    title: l10n.orderCount,
     icon: Icons.receipt_long,
     color: AppTheme.success,
     bgColor: const Color(0xFFE6FAF2),
     valueWidget: async.when(
-      data: (v) => Text('$v건', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.success)),
+      data: (v) => Text('$v${l10n.orderUnit}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.success)),
       loading: () => const SizedBox(height: 22, child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary))),
-      error: (_, _) => const Text('오류', style: TextStyle(fontSize: 16, color: AppTheme.error)),
+      error: (_, _) => Text(l10n.error, style: const TextStyle(fontSize: 16, color: AppTheme.error)),
     ),
   );
 }
 
 // ── 평균 주문금액 카드 ──────────────────────────────
-Widget avgOrderCard(WidgetRef ref) {
+Widget _avgOrderCard(WidgetRef ref, AppLocalizations l10n) {
   final async = ref.watch(avgOrderProvider);
   return _statCardLayout(
-    title: '평균 주문금액',
+    title: l10n.avgOrderAmount,
     icon: Icons.bar_chart,
     color: AppTheme.warning,
     bgColor: const Color(0xFFFFF3E0),
-    valueWidget: _asyncDoubleWidget(async, AppTheme.warning, (v) => '₩${_fmt(v)}'),
+    valueWidget: _asyncDoubleWidget(async, AppTheme.warning, (v) => '₩${_fmt(v)}', l10n),
   );
 }
 
@@ -199,6 +257,7 @@ class _InventoryValueCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final asyncValue = ref.watch(inventoryValueProvider);
 
     return Container(
@@ -223,16 +282,16 @@ class _InventoryValueCard extends ConsumerWidget {
                 child: const Icon(Icons.inventory_2, size: 18, color: Color(0xFF7B1FA2)),
               ),
               const SizedBox(width: 12),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('재고 가치',
-                      style: TextStyle(
+                  Text(l10n.inventoryValue,
+                      style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppTheme.textPrimary)),
-                  Text('현재 보유 재고 총 가치',
-                      style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                  Text(l10n.inventoryValueDesc,
+                      style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                 ],
               ),
             ],
@@ -248,9 +307,38 @@ class _InventoryValueCard extends ConsumerWidget {
                 child: Center(
                     child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary))),
             error: (_, _) =>
-                const Text('오류', style: TextStyle(color: AppTheme.error)),
+                Text(l10n.error, style: const TextStyle(color: AppTheme.error)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── 재고 가치 컴팩트 카드 (태블릿 가로 배치용) ─────────
+class _InventoryValueCompactCard extends ConsumerWidget {
+  const _InventoryValueCompactCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final asyncValue = ref.watch(inventoryValueProvider);
+
+    return _statCardLayout(
+      title: l10n.inventoryValue,
+      icon: Icons.inventory_2,
+      color: const Color(0xFF7B1FA2),
+      bgColor: const Color(0xFFF3E5F5),
+      valueWidget: asyncValue.when(
+        data: (v) => Text(
+          '₩${_fmt(v)}',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF7B1FA2)),
+        ),
+        loading: () => const SizedBox(
+          height: 22,
+          child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary)),
+        ),
+        error: (_, _) => Text(l10n.error, style: const TextStyle(fontSize: 16, color: AppTheme.error)),
       ),
     );
   }
@@ -277,6 +365,7 @@ class _PaymentBreakdownSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final asyncValue = ref.watch(paymentBreakdownProvider);
 
     return Container(
@@ -290,9 +379,9 @@ class _PaymentBreakdownSection extends ConsumerWidget {
           if (stats.isEmpty) {
             return Padding(
               padding: const EdgeInsets.all(24),
-              child: const Center(
-                child: Text('데이터 없음',
-                    style: TextStyle(color: AppTheme.textDisabled)),
+              child: Center(
+                child: Text(l10n.noData,
+                    style: const TextStyle(color: AppTheme.textDisabled)),
               ),
             );
           }
@@ -324,7 +413,7 @@ class _PaymentBreakdownSection extends ConsumerWidget {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              _paymentLabel(stat.method),
+                              _paymentLabel(stat.method, l10n),
                               style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -372,9 +461,9 @@ class _PaymentBreakdownSection extends ConsumerWidget {
         loading: () => const Padding(
             padding: EdgeInsets.all(24),
             child: Center(child: CircularProgressIndicator(color: AppTheme.primary))),
-        error: (_, _) => const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('오류 발생', style: TextStyle(color: AppTheme.error))),
+        error: (_, _) => Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(l10n.errorOccurred, style: const TextStyle(color: AppTheme.error))),
       ),
     );
   }
@@ -386,6 +475,7 @@ class _TopSellingSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final asyncValue = ref.watch(topSellingProvider);
 
     return Container(
@@ -397,11 +487,11 @@ class _TopSellingSection extends ConsumerWidget {
       child: asyncValue.when(
         data: (items) {
           if (items.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.all(24),
+            return Padding(
+              padding: const EdgeInsets.all(24),
               child: Center(
-                child: Text('판매 데이터 없음',
-                    style: TextStyle(color: AppTheme.textDisabled)),
+                child: Text(l10n.noSalesData,
+                    style: const TextStyle(color: AppTheme.textDisabled)),
               ),
             );
           }
@@ -486,7 +576,7 @@ class _TopSellingSection extends ConsumerWidget {
                               ),
                               const SizedBox(height: 3),
                               Text(
-                                '${item.totalQuantity}개 판매',
+                                l10n.soldCount(item.totalQuantity),
                                 style: const TextStyle(
                                     fontSize: 11, color: AppTheme.textSecondary),
                               ),
@@ -504,9 +594,9 @@ class _TopSellingSection extends ConsumerWidget {
         loading: () => const Padding(
             padding: EdgeInsets.all(24),
             child: Center(child: CircularProgressIndicator(color: AppTheme.primary))),
-        error: (_, _) => const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('오류 발생', style: TextStyle(color: AppTheme.error))),
+        error: (_, _) => Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(l10n.errorOccurred, style: const TextStyle(color: AppTheme.error))),
       ),
     );
   }
@@ -522,15 +612,17 @@ String _fmt(double price) {
 }
 
 Color _paymentColor(String method) => switch (method) {
-      'cash' => const Color(0xFF03B26C), // 초록
-      'card' => const Color(0xFF3182F6), // 파란색
-      'qr' => const Color(0xFFFFA726),   // 주황
+      'cash' => const Color(0xFF03B26C),     // 초록
+      'card' => const Color(0xFF3182F6),     // 파란색
+      'qr' => const Color(0xFFFFA726),       // 주황
+      'transfer' => const Color(0xFF7B1FA2), // 보라
       _ => const Color(0xFF6B7280),
     };
 
-String _paymentLabel(String method) => switch (method) {
-      'cash' => '현금',
-      'card' => '카드',
-      'qr' => 'QR',
+String _paymentLabel(String method, AppLocalizations l10n) => switch (method) {
+      'cash' => l10n.cash,
+      'card' => l10n.card,
+      'qr' => l10n.qr,
+      'transfer' => l10n.transfer,
       _ => method,
     };

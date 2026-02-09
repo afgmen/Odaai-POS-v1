@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/database_providers.dart';
 
 /// 재고 조정 모달
@@ -50,6 +51,7 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: const BoxDecoration(
         color: AppTheme.cardWhite,
@@ -76,9 +78,9 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '재고 조정',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                    Text(
+                      l10n.stockAdjustment,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
                     ),
                     Text(
                       widget.product.name,
@@ -107,12 +109,12 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '현재 재고',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+                  Text(
+                    l10n.currentStockAmount,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
                   ),
                   Text(
-                    '${widget.product.stock}개',
+                    l10n.piecesUnit(widget.product.stock),
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary),
                   ),
                 ],
@@ -121,16 +123,16 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
             const SizedBox(height: 18),
 
             // ─── 입고 / 출고 토글 ───────────────
-            const Text(
-              '조정 유형',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+            Text(
+              l10n.adjustmentType,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 6),
             Row(
               children: [
                 Expanded(
                   child: _ToggleButton(
-                    label: '+ 입고',
+                    label: l10n.stockIn,
                     icon: Icons.add_circle_outline,
                     isActive: _isIn,
                     activeColor: AppTheme.success,
@@ -140,7 +142,7 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _ToggleButton(
-                    label: '- 출고',
+                    label: l10n.stockOut,
                     icon: Icons.remove_circle_outline,
                     isActive: !_isIn,
                     activeColor: AppTheme.error,
@@ -152,33 +154,33 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
             const SizedBox(height: 18),
 
             // ─── 조정 수량 ──────────────────────
-            const Text(
-              '조정 수량',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+            Text(
+              l10n.adjustmentQuantity,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 6),
             TextField(
               controller: _quantityController,
               keyboardType: const TextInputType.numberWithOptions(),
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 suffixText: '개',
-                suffixStyle: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
-                hintText: '수량 입력',
+                suffixStyle: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                hintText: l10n.enterQuantity,
               ),
             ),
             const SizedBox(height: 14),
 
             // ─── 사유 ───────────────────────────
-            const Text(
-              '사유 (선택)',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+            Text(
+              l10n.reasonOptional,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 6),
             TextField(
               controller: _reasonController,
-              decoration: const InputDecoration(
-                hintText: '예: 신규 입고, 손실 등',
+              decoration: InputDecoration(
+                hintText: l10n.reasonHint,
               ),
             ),
             const SizedBox(height: 14),
@@ -194,7 +196,7 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '조정 후 재고',
+                    l10n.stockAfterAdjust,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -202,7 +204,7 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
                     ),
                   ),
                   Text(
-                    '$_previewStock개',
+                    l10n.piecesUnit(_previewStock),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -224,7 +226,7 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('취소'),
+                    child: Text(l10n.cancel),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -241,7 +243,7 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
                     ),
                     child: _isProcessing
                         ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                        : const Text('조정 완료', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        : Text(l10n.adjustComplete, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -253,6 +255,7 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
   }
 
   Future<void> _executeAdjustment() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isProcessing = true);
     try {
       final dao = ref.read(productsDaoProvider);
@@ -264,7 +267,7 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
       );
       if (mounted) {
         Navigator.of(context).pop();
-        _showSnackBar('재고가 조정되었습니다 (${_isIn ? '+' : ''}${_isIn ? _quantity : -_quantity}개)', AppTheme.success);
+        _showSnackBar(l10n.stockAdjusted('${_isIn ? '+' : ''}${_isIn ? _quantity : -_quantity}'), AppTheme.success);
       }
     } catch (e) {
       if (mounted) {

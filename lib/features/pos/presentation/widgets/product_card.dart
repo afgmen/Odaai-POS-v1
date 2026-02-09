@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../database/app_database.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../providers/currency_provider.dart';
 import '../../providers/cart_provider.dart';
 
 /// 상품 카드 위짓 (그리드 내 단일 상품)
@@ -17,6 +21,7 @@ class ProductCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isOutOfStock = product.stock <= 0;
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return Opacity(
       opacity: isOutOfStock ? 0.5 : 1.0,
@@ -48,12 +53,8 @@ class ProductCard extends ConsumerWidget {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // 기본 아이콘 (이미지 없을 때)
-                      Icon(
-                        Icons.shopping_bag_outlined,
-                        size: 40,
-                        color: AppTheme.textDisabled,
-                      ),
+                      // 상품 이미지 또는 기본 아이콘
+                      _ProductImage(imageUrl: product.imageUrl),
                       // 재고 부족 배지
                       if (isOutOfStock)
                         Positioned(
@@ -122,7 +123,7 @@ class ProductCard extends ConsumerWidget {
                       const SizedBox(height: 4),
                       // 가격
                       Text(
-                        '₩${_formatPrice(product.price)}',
+                        priceFormatter.format(product.price),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -150,9 +151,76 @@ class ProductCard extends ConsumerWidget {
   }
 }
 
-String _formatPrice(double price) {
-  return price.toInt().toString().replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-    (match) => '${match[1]},',
-  );
+/// 상품 이미지 위젯
+class _ProductImage extends StatelessWidget {
+  final String? imageUrl;
+
+  const _ProductImage({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl == null) {
+      return const Icon(
+        Icons.shopping_bag_outlined,
+        size: 40,
+        color: AppTheme.textDisabled,
+      );
+    }
+
+    return FutureBuilder<File?>(
+      future: _getImageFile(imageUrl!),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: SizedBox(
+              width: 30,
+              height: 30,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
+
+        if (snapshot.hasData && snapshot.data != null && snapshot.data!.existsSync()) {
+          return ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(12),
+            ),
+            child: Image.file(
+              snapshot.data!,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(
+                  Icons.broken_image,
+                  size: 40,
+                  color: AppTheme.textDisabled,
+                );
+              },
+            ),
+          );
+        }
+
+        return const Icon(
+          Icons.shopping_bag_outlined,
+          size: 40,
+          color: AppTheme.textDisabled,
+        );
+      },
+    );
+  }
+
+  Future<File?> _getImageFile(String imageUrl) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/$imageUrl');
+      if (await file.exists()) {
+        return file;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }

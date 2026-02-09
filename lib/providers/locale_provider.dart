@@ -21,7 +21,7 @@ enum AppLanguage {
   static AppLanguage fromCode(String code) {
     return AppLanguage.values.firstWhere(
       (lang) => lang.code == code,
-      orElse: () => AppLanguage.ko,
+      orElse: () => AppLanguage.en,
     );
   }
 }
@@ -34,13 +34,13 @@ final localeProvider = StateNotifierProvider<LocaleNotifier, Locale>((ref) {
 class LocaleNotifier extends StateNotifier<Locale> {
   final Ref ref;
 
-  LocaleNotifier(this.ref) : super(const Locale('ko')) {
+  LocaleNotifier(this.ref) : super(const Locale('en')) {
     _loadSavedLocale();
   }
 
   Future<void> _loadSavedLocale() async {
     final prefs = await SharedPreferences.getInstance();
-    final languageCode = prefs.getString('language_code') ?? 'ko';
+    final languageCode = prefs.getString('language_code') ?? 'en';
     state = Locale(languageCode);
   }
 

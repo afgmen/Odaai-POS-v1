@@ -10,7 +10,8 @@ class Sales extends Table {
   RealColumn get tax => real().withDefault(const Constant(0))();
   RealColumn get discount => real().withDefault(const Constant(0))();
   RealColumn get total => real().withDefault(const Constant(0))();
-  TextColumn get paymentMethod => text()(); // 'cash' | 'card' | 'qr'
+  TextColumn get paymentMethod => text()(); // 'cash' | 'card' | 'qr' | 'transfer'
+  TextColumn get paymentReference => text().nullable()(); // 결제 참조번호 (카드승인번호, 이체참조 등)
   IntColumn get employeeId => integer().nullable()();
   IntColumn get customerId => integer().nullable()();
   TextColumn get status => text().withDefault(const Constant('completed'))();

@@ -16,17 +16,41 @@ final mgmtCategoryListProvider = FutureProvider<List<String>>((ref) async {
   return categories.keys.toList();
 });
 
-/// 필터링된 상품 목록 (키워드 + 카테고리 조합)
-final mgmtFilteredProductsProvider = FutureProvider<List<Product>>((ref) async {
+/// 전체 상품 목록 스트림 (실시간 업데이트)
+final allProductsStreamProvider = StreamProvider<List<Product>>((ref) {
   final dao = ref.watch(productsDaoProvider);
+  return dao.watchAllProducts();
+});
+
+/// 필터링된 상품 목록 (키워드 + 카테고리 조합) - 실시간 업데이트
+/// 전체 상품 Stream을 받아서 클라이언트 사이드에서 필터링
+final mgmtFilteredProductsProvider = StreamProvider<List<Product>>((ref) {
+  final allProductsAsync = ref.watch(allProductsStreamProvider);
   final query = ref.watch(mgmtSearchQueryProvider);
   final category = ref.watch(mgmtSelectedCategoryProvider);
 
-  if (query.trim().isNotEmpty) {
-    return await dao.searchProducts(query.trim());
-  }
-  if (category != null) {
-    return await dao.getProductsByCategory(category);
-  }
-  return await dao.getAllProducts();
+  return allProductsAsync.when(
+    data: (allProducts) {
+      var filtered = allProducts;
+
+      // 카테고리 필터링
+      if (category != null) {
+        filtered = filtered.where((p) => p.category == category).toList();
+      }
+
+      // 검색어 필터링 (이름, SKU, 바코드)
+      if (query.trim().isNotEmpty) {
+        final searchLower = query.trim().toLowerCase();
+        filtered = filtered.where((p) {
+          return p.name.toLowerCase().contains(searchLower) ||
+              p.sku.toLowerCase().contains(searchLower) ||
+              (p.barcode?.toLowerCase().contains(searchLower) ?? false);
+        }).toList();
+      }
+
+      return Stream.value(filtered);
+    },
+    loading: () => Stream.value([]),
+    error: (err, stack) => Stream.value([]),
+  ).asyncExpand((products) => products);
 });

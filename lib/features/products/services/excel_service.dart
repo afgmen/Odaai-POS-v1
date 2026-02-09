@@ -11,7 +11,7 @@ import '../../../database/daos/products_dao.dart';
 // ─────────────────────────────────────────────
 // Excel 열 정의 (순서 중요)
 // ─────────────────────────────────────────────
-const List<String> excelHeaders = [
+const List<String> _defaultExcelHeaders = [
   'SKU',        // 0
   '상품명',      // 1
   '바코드',      // 2
@@ -47,14 +47,16 @@ class ExcelService {
   static Future<String?> downloadProducts({
     required List<Product> products,
     required BuildContext context,
+    Map<String, String> labels = const {},
   }) async {
     try {
       final excel = Excel.createExcel();
 
+      final sheetName = labels['sheetName'] ?? '상품목록';
       // 기본 시트 이름 변경
       final defaultName = excel.tables.keys.first;
-      excel.rename(defaultName, '상품목록');
-      final sheet = excel['상품목록'];
+      excel.rename(defaultName, sheetName);
+      final sheet = excel[sheetName];
 
       // ── 헤더 행 스타일 ──────────────────────
       // AppTheme.primary = 0xFF3182F6
@@ -65,6 +67,17 @@ class ExcelService {
         fontSize: 11,
         horizontalAlign: HorizontalAlign.Center,
       );
+
+      final excelHeaders = [
+        'SKU',
+        labels['headerProductName'] ?? _defaultExcelHeaders[1],
+        labels['headerBarcode'] ?? _defaultExcelHeaders[2],
+        labels['headerCategory'] ?? _defaultExcelHeaders[3],
+        labels['headerSellingPrice'] ?? _defaultExcelHeaders[4],
+        labels['headerCostPrice'] ?? _defaultExcelHeaders[5],
+        labels['headerStock'] ?? _defaultExcelHeaders[6],
+        labels['headerMinStock'] ?? _defaultExcelHeaders[7],
+      ];
 
       for (int col = 0; col < excelHeaders.length; col++) {
         final cell = sheet.cell(
@@ -124,7 +137,7 @@ class ExcelService {
       final fileName = 'oda_products_${_dateTag()}.xlsx';
 
       final savedPath = await FilePicker.platform.saveFile(
-        dialogTitle: '엑셀 파일 저장',
+        dialogTitle: labels['dialogSaveTitle'] ?? '엑셀 파일 저장',
         fileName: fileName,
         type: FileType.custom,
         allowedExtensions: ['xlsx'],
@@ -149,12 +162,13 @@ class ExcelService {
     required ProductsDao dao,
     required AppDatabase db,
     required BuildContext context,
+    Map<String, String> labels = const {},
   }) async {
     // ── 파일 선택 다이얼로그 ──────────────────
     final pickerResult = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['xlsx'],
-      dialogTitle: '엑셀 파일 선택',
+      dialogTitle: labels['dialogSelectTitle'] ?? '엑셀 파일 선택',
     );
     if (pickerResult == null || pickerResult.files.isEmpty) return null;
 
@@ -162,7 +176,7 @@ class ExcelService {
     final bytes = file.bytes;
     if (bytes == null) return null;
 
-    return _parseAndUpsert(dao, db, bytes);
+    return _parseAndUpsert(dao, db, bytes, labels: labels);
   }
 
   // ════════════════════════════════════════════
@@ -171,8 +185,9 @@ class ExcelService {
   static Future<ExcelUploadResult> _parseAndUpsert(
     ProductsDao dao,
     AppDatabase db,
-    Uint8List bytes,
-  ) async {
+    Uint8List bytes, {
+    Map<String, String> labels = const {},
+  }) async {
     final excel = Excel.decodeBytes(bytes);
 
     // 첫 번째 시트 사용
@@ -196,7 +211,7 @@ class ExcelService {
 
         final name = _readStr(rowData, 1);
         if (name == null || name.trim().isEmpty) {
-          errors.add('행 ${row + 1}: 상품명이 비어있습니다');
+          errors.add(labels['rowNameEmpty']?.replaceAll('{row}', '${row + 1}') ?? '행 ${row + 1}: 상품명이 비어있습니다');
           continue;
         }
 
@@ -209,15 +224,15 @@ class ExcelService {
 
         // ── 유효성 검사 ───────────────────
         if (price < 0) {
-          errors.add('행 ${row + 1}: 판매가는 0 이상이어야 합니다');
+          errors.add(labels['rowPriceError']?.replaceAll('{row}', '${row + 1}') ?? '행 ${row + 1}: 판매가는 0 이상이어야 합니다');
           continue;
         }
         if (cost < 0) {
-          errors.add('행 ${row + 1}: 원가는 0 이상이어야 합니다');
+          errors.add(labels['rowCostError']?.replaceAll('{row}', '${row + 1}') ?? '행 ${row + 1}: 원가는 0 이상이어야 합니다');
           continue;
         }
         if (stock < 0) {
-          errors.add('행 ${row + 1}: 재고는 0 이상이어야 합니다');
+          errors.add(labels['rowStockError']?.replaceAll('{row}', '${row + 1}') ?? '행 ${row + 1}: 재고는 0 이상이어야 합니다');
           continue;
         }
 
@@ -255,7 +270,7 @@ class ExcelService {
           inserted++;
         }
       } catch (e) {
-        errors.add('행 ${row + 1}: ${e.toString()}');
+        errors.add(labels['rowError']?.replaceAll('{row}', '${row + 1}').replaceAll('{error}', e.toString()) ?? '행 ${row + 1}: ${e.toString()}');
       }
     }
 

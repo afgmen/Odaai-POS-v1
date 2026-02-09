@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/database_providers.dart';
 import '../../providers/cart_provider.dart';
 
@@ -46,6 +47,7 @@ class _BarcodeScanInputModalState extends ConsumerState<BarcodeScanInputModal> {
     final input = _controller.text.trim();
     if (input.isEmpty) return;
 
+    final l10n = AppLocalizations.of(context)!;
     final dao = ref.read(productsDaoProvider);
 
     // 1) 바코드로 정확 매칭, 미매칭이면 SKU로 재조회
@@ -58,18 +60,18 @@ class _BarcodeScanInputModalState extends ConsumerState<BarcodeScanInputModal> {
       if (product.stock > 0) {
         ref.read(cartProvider.notifier).addItem(product);
         setState(() {
-          _lastMessage = '✓  ${product!.name} — 장바구니에 추가';
+          _lastMessage = l10n.addedToCartMsg(product!.name);
           _lastMessageColor = AppTheme.success;
         });
       } else {
         setState(() {
-          _lastMessage = '✗  ${product!.name} — 현재 품절 중';
+          _lastMessage = l10n.outOfStockMsg(product!.name);
           _lastMessageColor = AppTheme.error;
         });
       }
     } else {
       setState(() {
-        _lastMessage = '✗  [$input] 상품을 찾을 수 없습니다';
+        _lastMessage = l10n.productNotFoundMsg(input);
         _lastMessageColor = AppTheme.error;
       });
     }
@@ -83,6 +85,7 @@ class _BarcodeScanInputModalState extends ConsumerState<BarcodeScanInputModal> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: const BoxDecoration(
         color: AppTheme.cardWhite,
@@ -113,9 +116,9 @@ class _BarcodeScanInputModalState extends ConsumerState<BarcodeScanInputModal> {
             children: [
               const Icon(Icons.qr_code_2, color: AppTheme.primary, size: 24),
               const SizedBox(width: 10),
-              const Text(
-                '바코드 / SKU 입력',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+              Text(
+                l10n.barcodeSkuInput,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
               ),
               const Spacer(),
               // 닫기 버튼
@@ -156,7 +159,7 @@ class _BarcodeScanInputModalState extends ConsumerState<BarcodeScanInputModal> {
                     ),
                     prefixIcon: const Icon(Icons.qr_code, size: 22, color: AppTheme.textDisabled),
                     contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                    hintText: '바코드 또는 SKU',
+                    hintText: l10n.barcodeOrSku,
                     hintStyle: const TextStyle(fontSize: 16, color: AppTheme.textDisabled),
                   ),
                 ),
@@ -173,7 +176,7 @@ class _BarcodeScanInputModalState extends ConsumerState<BarcodeScanInputModal> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('조회', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  child: Text(l10n.lookup, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
               ),
             ],
@@ -195,14 +198,14 @@ class _BarcodeScanInputModalState extends ConsumerState<BarcodeScanInputModal> {
                 ),
               ),
               const SizedBox(width: 10),
-              const Text(
-                '연속 스캔 모드',
-                style: TextStyle(fontSize: 14, color: AppTheme.textPrimary, fontWeight: FontWeight.w500),
+              Text(
+                l10n.continuousScanMode,
+                style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary, fontWeight: FontWeight.w500),
               ),
               const SizedBox(width: 6),
-              const Text(
-                '— 입력 후 자동 초기화',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              Text(
+                l10n.autoResetAfterInput,
+                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
             ],
           ),
@@ -236,9 +239,9 @@ class _BarcodeScanInputModalState extends ConsumerState<BarcodeScanInputModal> {
           ],
 
           // ── 안내 텍스트 ───────────────────────────
-          const Text(
-            'USB 바코드 스캔기 연결 시 스캔 후 자동으로 조회됩니다.',
-            style: TextStyle(fontSize: 12, color: AppTheme.textDisabled),
+          Text(
+            l10n.barcodeScannerHelp,
+            style: const TextStyle(fontSize: 12, color: AppTheme.textDisabled),
           ),
           const SizedBox(height: 8),
         ],

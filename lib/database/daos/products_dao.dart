@@ -114,7 +114,7 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
       final newStock = oldStock + quantity;
 
       if (newStock < 0) {
-        throw Exception('재고가 부족합니다. 현재 재고: $oldStock');
+        throw Exception('Insufficient stock. Current: $oldStock');
       }
 
       await (update(products)..where((p) => p.id.equals(productId)))
@@ -178,6 +178,56 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
 
     final result = await query.getSingle();
     return result.read(expr.sum()) ?? 0;
+  }
+
+  // ==================== IMAGE MANAGEMENT ====================
+
+  /// Update product image URL
+  Future<void> updateProductImageUrl(int productId, String? imageUrl) async {
+    await (update(products)..where((p) => p.id.equals(productId)))
+        .write(ProductsCompanion(
+      imageUrl: Value(imageUrl),
+      updatedAt: Value(DateTime.now()),
+      needsSync: const Value(true),
+    ));
+  }
+
+  /// Get products without images
+  Future<List<Product>> getProductsWithoutImage() {
+    return (select(products)
+          ..where((p) =>
+              p.imageUrl.isNull() & p.isActive.equals(true))
+          ..orderBy([(p) => OrderingTerm.asc(p.name)]))
+        .get();
+  }
+
+  /// Get products with images
+  Future<List<Product>> getProductsWithImage() {
+    return (select(products)
+          ..where((p) =>
+              p.imageUrl.isNotNull() & p.isActive.equals(true))
+          ..orderBy([(p) => OrderingTerm.asc(p.name)]))
+        .get();
+  }
+
+  /// Get image coverage rate (%)
+  Future<double> getImageCoverageRate() async {
+    final totalQuery = selectOnly(products)
+      ..addColumns([products.id.count()])
+      ..where(products.isActive.equals(true));
+
+    final withImageQuery = selectOnly(products)
+      ..addColumns([products.id.count()])
+      ..where(products.imageUrl.isNotNull() & products.isActive.equals(true));
+
+    final totalResult = await totalQuery.getSingle();
+    final withImageResult = await withImageQuery.getSingle();
+
+    final total = totalResult.read(products.id.count()) ?? 0;
+    final withImage = withImageResult.read(products.id.count()) ?? 0;
+
+    if (total == 0) return 0;
+    return (withImage / total) * 100;
   }
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/employee_form_modal.dart';
 
@@ -12,6 +13,7 @@ class EmployeeManagementScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final employeesAsync = ref.watch(activeEmployeesProvider);
 
     return Scaffold(
@@ -23,9 +25,9 @@ class EmployeeManagementScreen extends ConsumerWidget {
           children: [
             const Icon(Icons.people, color: AppTheme.primary, size: 22),
             const SizedBox(width: 8),
-            const Text(
-              '직원 관리',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+            Text(
+              l10n.employeeManagement,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
             ),
           ],
         ),
@@ -41,7 +43,7 @@ class EmployeeManagementScreen extends ConsumerWidget {
                 elevation: 0,
               ),
               icon: const Icon(Icons.add, size: 20),
-              label: const Text('직원 추가', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              label: Text(l10n.addEmployee, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -49,15 +51,15 @@ class EmployeeManagementScreen extends ConsumerWidget {
       body: employeesAsync.when(
         data: (employees) {
           if (employees.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.people_outline, size: 80, color: AppTheme.textDisabled),
-                  SizedBox(height: 16),
+                  const Icon(Icons.people_outline, size: 80, color: AppTheme.textDisabled),
+                  const SizedBox(height: 16),
                   Text(
-                    '등록된 직원이 없습니다',
-                    style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
+                    l10n.noEmployees,
+                    style: const TextStyle(fontSize: 16, color: AppTheme.textSecondary),
                   ),
                 ],
               ),
@@ -88,7 +90,7 @@ class EmployeeManagementScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
           child: Text(
-            '직원 목록을 불러올 수 없습니다\n$error',
+            l10n.employeeLoadError,
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppTheme.error),
           ),
@@ -135,7 +137,8 @@ class _EmployeeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final roleLabel = _getRoleLabel(employee.role);
+    final l10n = AppLocalizations.of(context)!;
+    final roleLabel = _getRoleLabel(l10n, employee.role);
     final roleColor = _getRoleColor(employee.role);
     final hasPin = employee.pin != null;
 
@@ -231,7 +234,7 @@ class _EmployeeCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 2),
                       Text(
-                        hasPin ? 'PIN' : '없음',
+                        hasPin ? l10n.employeePin : l10n.none,
                         style: TextStyle(
                           fontSize: 12,
                           color: hasPin ? AppTheme.success : AppTheme.textDisabled,
@@ -257,32 +260,35 @@ class _EmployeeCard extends StatelessWidget {
                     break;
                 }
               },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit, size: 18, color: AppTheme.textPrimary),
-                      SizedBox(width: 8),
-                      Text('수정'),
-                    ],
+              itemBuilder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit, size: 18, color: AppTheme.textPrimary),
+                        const SizedBox(width: 8),
+                        Text(l10n.edit),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'toggle',
-                  child: Row(
-                    children: [
-                      Icon(
-                        employee.isActive ? Icons.block : Icons.check_circle,
-                        size: 18,
-                        color: employee.isActive ? AppTheme.error : AppTheme.success,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(employee.isActive ? '비활성화' : '활성화'),
-                    ],
+                  PopupMenuItem(
+                    value: 'toggle',
+                    child: Row(
+                      children: [
+                        Icon(
+                          employee.isActive ? Icons.block : Icons.check_circle,
+                          size: 18,
+                          color: employee.isActive ? AppTheme.error : AppTheme.success,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(employee.isActive ? l10n.deactivate : l10n.activate),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ];
+              },
             ),
           ],
         ),
@@ -290,14 +296,14 @@ class _EmployeeCard extends StatelessWidget {
     );
   }
 
-  String _getRoleLabel(String role) {
+  String _getRoleLabel(AppLocalizations l10n, String role) {
     switch (role) {
       case 'admin':
-        return 'ADMIN';
+        return l10n.roleAdmin;
       case 'manager':
-        return 'MANAGER';
+        return l10n.roleManager;
       case 'cashier':
-        return 'CASHIER';
+        return l10n.roleCashier;
       default:
         return role.toUpperCase();
     }

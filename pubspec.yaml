@@ -36,6 +36,13 @@ dependencies:
   # UI
   intl: ^0.20.2
 
+  # 차트
+  fl_chart: ^0.69.0
+
+  # PDF & 인쇄
+  pdf: ^3.11.0
+  printing: ^5.13.0
+
   # 바코드 스캔
   mobile_scanner: ^7.1.4
 
@@ -46,6 +53,16 @@ dependencies:
   # 유틸리티
   uuid: ^4.4.0
   logger: ^2.3.0
+
+  # 오디오
+  audioplayers: ^6.0.0
+  table_calendar: ^3.2.0
+
+  # 이미지 처리
+  image_picker: ^1.0.7
+  image_cropper: ^5.0.1
+  cached_network_image: ^3.3.1
+  image: ^4.1.7
 
 dev_dependencies:
   flutter_test:
@@ -61,3 +78,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true  # Enable l10n code generation
+
+  # Font assets for PDF generation
+  assets:
+    - assets/fonts/NotoSansKR-Regular.ttf
+    - assets/sounds/

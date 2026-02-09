@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../providers/sales_provider.dart';
 import 'sale_detail_screen.dart';
 
@@ -12,6 +13,7 @@ class SalesHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final filter = ref.watch(selectedDateFilterProvider);
     final salesAsync = ref.watch(salesListProvider);
 
@@ -21,9 +23,9 @@ class SalesHistoryScreen extends ConsumerWidget {
         backgroundColor: AppTheme.cardWhite,
         elevation: 0,
         titleSpacing: 16,
-        title: const Text(
-          '주문내역',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+        title: Text(
+          l10n.salesHistory,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -79,9 +81,9 @@ class SalesHistoryScreen extends ConsumerWidget {
                       children: [
                         const Icon(Icons.receipt_long_outlined, size: 56, color: AppTheme.textDisabled),
                         const SizedBox(height: 12),
-                        const Text(
-                          '주문 기록이 없습니다',
-                          style: TextStyle(fontSize: 16, color: AppTheme.textDisabled),
+                        Text(
+                          l10n.noSalesHistory,
+                          style: const TextStyle(fontSize: 16, color: AppTheme.textDisabled),
                         ),
                       ],
                     ),
@@ -110,11 +112,11 @@ class SalesHistoryScreen extends ConsumerWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                _formatDate(dateKey),
+                                _formatDate(l10n, dateKey),
                                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textSecondary),
                               ),
                               Text(
-                                '합계 ₩${_fmt(dayTotal)}',
+                                '${l10n.total} ₩${_fmt(dayTotal)}',
                                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.primary),
                               ),
                             ],
@@ -138,7 +140,7 @@ class SalesHistoryScreen extends ConsumerWidget {
                   children: [
                     const Icon(Icons.error_outline, size: 40, color: AppTheme.error),
                     const SizedBox(height: 8),
-                    Text('오류: $err', style: const TextStyle(color: AppTheme.error)),
+                    Text(l10n.msgError(err.toString()), style: const TextStyle(color: AppTheme.error)),
                   ],
                 ),
               ),
@@ -157,6 +159,7 @@ class _SaleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isRefunded = sale.status == 'refunded';
 
     return InkWell(
@@ -210,14 +213,14 @@ class _SaleCard extends StatelessWidget {
                             color: const Color(0xFFFDEBEB),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Text('환불', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.error)),
+                          child: Text(l10n.refunded, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.error)),
                         ),
                       ],
                     ],
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    '${_fmtTime(sale.saleDate)} · ${_paymentLabel(sale.paymentMethod)}',
+                    '${_fmtTime(sale.saleDate)} · ${_paymentLabel(l10n, sale.paymentMethod)}',
                     style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                   ),
                 ],
@@ -263,14 +266,14 @@ String _fmt(double price) {
 }
 
 /// 날짜 포맷: 오늘이면 "오늘", 어제면 "어제", 아니면 MM/DD
-String _formatDate(DateTime date) {
+String _formatDate(AppLocalizations l10n, DateTime date) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   final yesterday = today.subtract(const Duration(days: 1));
 
-  if (date == today) return '오늘';
-  if (date == yesterday) return '어제';
-  return '${date.month}월 ${date.day}일';
+  if (date == today) return l10n.today;
+  if (date == yesterday) return l10n.yesterday;
+  return l10n.dateMonth(date.month, date.day);
 }
 
 /// 시간 포맷 HH:MM
@@ -286,9 +289,9 @@ IconData _paymentIcon(String method) => switch (method) {
     };
 
 /// 결제 방법 → 라벨
-String _paymentLabel(String method) => switch (method) {
-      'cash' => '현금',
-      'card' => '카드',
-      'qr' => 'QR',
+String _paymentLabel(AppLocalizations l10n, String method) => switch (method) {
+      'cash' => l10n.cash,
+      'card' => l10n.card,
+      'qr' => l10n.qr,
       _ => method,
     };

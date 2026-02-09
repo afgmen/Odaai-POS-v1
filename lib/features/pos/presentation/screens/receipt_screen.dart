@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../providers/currency_provider.dart';
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../widgets/print_options_modal.dart';
 
 /// 영수증 화면
 /// 결제 완료 후 주문 상세 정보를 영수증 형태로 표시
-class ReceiptScreen extends StatelessWidget {
+class ReceiptScreen extends ConsumerWidget {
   final String saleNumber;
   final List<SaleItem> items;
   final double subtotal;
@@ -28,10 +32,11 @@ class ReceiptScreen extends StatelessWidget {
   });
 
   // ── 결제 방법 라벨 매핑 ──────────────────────
-  String get _paymentLabel => switch (paymentMethod) {
-        'cash' => '현금',
-        'card' => '카드',
+  String _getPaymentLabel(AppLocalizations l10n) => switch (paymentMethod) {
+        'cash' => l10n.cash,
+        'card' => l10n.card,
         'qr' => 'QR',
+        'transfer' => l10n.transfer,
         _ => paymentMethod,
       };
 
@@ -43,19 +48,28 @@ class ReceiptScreen extends StatelessWidget {
       };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final change = paymentMethod == 'cash' ? (cashPaid - total) : 0.0;
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         backgroundColor: AppTheme.cardWhite,
         elevation: 0,
-        title: const Text(
-          '영수증',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+        title: Text(
+          l10n.receipt,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () => _showPrintOptions(context),
+            icon: const Icon(Icons.print, color: AppTheme.primary),
+            tooltip: l10n.print,
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(height: 1, color: AppTheme.divider),
@@ -110,9 +124,9 @@ class ReceiptScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          '주문번호',
-                          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                        Text(
+                          l10n.orderNumber,
+                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(width: 10),
                         Text(
@@ -136,11 +150,11 @@ class ReceiptScreen extends StatelessWidget {
                     children: [
                       // 헤더 행
                       Row(
-                        children: const [
-                          Expanded(child: Text('상품명', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary))),
-                          SizedBox(width: 44, child: Text('수량', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary), textAlign: TextAlign.center)),
-                          SizedBox(width: 70, child: Text('단가', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary), textAlign: TextAlign.end)),
-                          SizedBox(width: 74, child: Text('소계', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary), textAlign: TextAlign.end)),
+                        children: [
+                          Expanded(child: Text(l10n.productName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary))),
+                          SizedBox(width: 44, child: Text(l10n.quantity, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary), textAlign: TextAlign.center)),
+                          SizedBox(width: 70, child: Text(l10n.unitPrice, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary), textAlign: TextAlign.end)),
+                          SizedBox(width: 74, child: Text(l10n.subtotal, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary), textAlign: TextAlign.end)),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -168,7 +182,7 @@ class ReceiptScreen extends StatelessWidget {
                             SizedBox(
                               width: 70,
                               child: Text(
-                                '₩${_fmt(item.unitPrice)}',
+                                priceFormatter.format(item.unitPrice),
                                 style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                                 textAlign: TextAlign.end,
                               ),
@@ -176,7 +190,7 @@ class ReceiptScreen extends StatelessWidget {
                             SizedBox(
                               width: 74,
                               child: Text(
-                                '₩${_fmt(item.total)}',
+                                priceFormatter.format(item.total),
                                 style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                                 textAlign: TextAlign.end,
                               ),
@@ -197,15 +211,15 @@ class ReceiptScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       // 소계
-                      _SummaryRow(label: '소계', value: subtotal),
+                      _SummaryRow(label: l10n.subtotal, value: subtotal),
                       // 할인 행 (할인이 있을 때만)
                       if (discount > 0) ...[
                         const SizedBox(height: 6),
-                        _SummaryRow(label: '할인', value: discount, isDiscount: true),
+                        _SummaryRow(label: l10n.discount, value: discount, isDiscount: true),
                       ],
                       const SizedBox(height: 6),
                       // 합계 (볼드)
-                      _SummaryRow(label: '합계', value: total, isBold: true),
+                      _SummaryRow(label: l10n.total, value: total, isBold: true),
                     ],
                   ),
                 ),
@@ -223,9 +237,9 @@ class ReceiptScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('결제 방법', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                          Text(l10n.paymentMethod, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
                           Text(
-                            '$_paymentIcon $_paymentLabel',
+                            '$_paymentIcon ${_getPaymentLabel(l10n)}',
                             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                           ),
                         ],
@@ -236,9 +250,9 @@ class ReceiptScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('투입금액', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                            Text(l10n.cashPaidAmount, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
                             Text(
-                              '₩${_fmt(cashPaid)}',
+                              priceFormatter.format(cashPaid),
                               style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
                             ),
                           ],
@@ -247,9 +261,9 @@ class ReceiptScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('거스름돈', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                            Text(l10n.change, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
                             Text(
-                              '₩${_fmt(change)}',
+                              priceFormatter.format(change),
                               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.success),
                             ),
                           ],
@@ -263,11 +277,11 @@ class ReceiptScreen extends StatelessWidget {
                 _DashedDivider(),
 
                 // ── 감사 메시지 ─────────────────────────
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 18),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
                   child: Text(
-                    '이용해 주셔서 감사합니다!',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                    l10n.thankYouMessage,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -276,22 +290,68 @@ class ReceiptScreen extends StatelessWidget {
           ),
         ),
       ),
-      // ── 하단: 새 주문 버튼 ────────────────────
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SizedBox(
-          height: 52,
-          child: ElevatedButton(
-            onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              elevation: 0,
-            ),
-            child: const Text('새 주문', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+      // ── 하단: 인쇄 + 새 주문 버튼 ────────────────
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // 인쇄 버튼
+              Expanded(
+                child: SizedBox(
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showPrintOptions(context),
+                    icon: const Icon(Icons.print, size: 20),
+                    label: Text(l10n.print, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.primary,
+                      side: const BorderSide(color: AppTheme.primary, width: 2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // 새 주문 버튼
+              Expanded(
+                flex: 2,
+                child: SizedBox(
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                    ),
+                    child: Text(l10n.newOrder, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// 인쇄 옵션 모달 표시
+  void _showPrintOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => PrintOptionsModal(
+        saleNumber: saleNumber,
+        items: items,
+        subtotal: subtotal,
+        discount: discount,
+        total: total,
+        paymentMethod: paymentMethod,
+        cashPaid: cashPaid,
+        saleDate: saleDate,
       ),
     );
   }
@@ -300,8 +360,8 @@ class ReceiptScreen extends StatelessWidget {
 // ── 유틸리티 헬퍼 ──────────────────────────────────
 
 /// 금액 포맷 (천단위 콤마)
-String _fmt(double price) {
-  return price.toInt().toString().replaceAllMapped(
+String _formatCurrency(double amount) {
+  return amount.toStringAsFixed(0).replaceAllMapped(
     RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
     (match) => '${match[1]},',
   );
@@ -317,7 +377,7 @@ String _p(int v) => v.toString().padLeft(2, '0');
 
 // ── 금액 요약 행 ──────────────────────────────────
 
-class _SummaryRow extends StatelessWidget {
+class _SummaryRow extends ConsumerWidget {
   final String label;
   final double value;
   final bool isBold;
@@ -331,7 +391,8 @@ class _SummaryRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final priceFormatter = ref.watch(priceFormatterProvider);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -344,7 +405,7 @@ class _SummaryRow extends StatelessWidget {
           ),
         ),
         Text(
-          isDiscount ? '-₩${_fmt(value)}' : '₩${_fmt(value)}',
+          isDiscount ? '-\${priceFormatter.format(value)}' : priceFormatter.format(value),
           style: TextStyle(
             fontSize: isBold ? 18 : 14,
             fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,

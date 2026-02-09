@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../providers/category_provider.dart';
 
 /// 카테고리 필터 리스트 (세로 배치)
@@ -10,6 +11,7 @@ class CategoryFilter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final categoriesAsync = ref.watch(categoryListProvider);
     final selected = ref.watch(selectedCategoryProvider);
 
@@ -26,21 +28,21 @@ class CategoryFilter extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ─── "전체" 버튼 ─────────────────
+                // ─── "All" button ─────────────────
                 _CategoryButton(
-                  label: '전체',
+                  label: l10n.categoryAll,
                   icon: Icons.apps_outlined,
                   isSelected: selected == null,
                   onTap: () => ref.read(selectedCategoryProvider.notifier).state = null,
                 ),
                 const Divider(height: 1, color: AppTheme.divider),
-                // ─── 카테고리 목록 ─────────────
+                // ─── Category list ─────────────
                 ...categories.map((category) {
                   final isActive = selected == category;
                   return Column(
                     children: [
                       _CategoryButton(
-                        label: category,
+                        label: _getLocalizedCategory(category, l10n),
                         icon: _getCategoryIcon(category),
                         isSelected: isActive,
                         onTap: () => ref.read(selectedCategoryProvider.notifier).state = category,
@@ -110,6 +112,21 @@ class _CategoryButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+String _getLocalizedCategory(String category, AppLocalizations l10n) {
+  switch (category) {
+    case '식품':
+      return l10n.categoryFood;
+    case '음료':
+      return l10n.categoryBeverage;
+    case '전자제품':
+      return l10n.categoryElectronics;
+    case '일용품':
+      return l10n.categoryDaily;
+    default:
+      return category; // Return original if no translation
   }
 }
 

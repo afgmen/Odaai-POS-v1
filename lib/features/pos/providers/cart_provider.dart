@@ -162,3 +162,11 @@ final cartTotalProvider = Provider<double>((ref) {
   final allDiscount = ref.watch(cartAllDiscountProvider);
   return (subtotal - allDiscount).clamp(0.0, subtotal);
 });
+
+// ── 로열티 관련 Provider ────────────────────────
+
+// Note: selectedCustomerProvider is defined in customers_provider.dart
+// Import from there to avoid duplication
+
+/// 사용할 포인트 (결제 시)
+final pointsToUseProvider = StateProvider<int>((ref) => 0);

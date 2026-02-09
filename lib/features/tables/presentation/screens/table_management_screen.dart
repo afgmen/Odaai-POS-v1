@@ -5,6 +5,7 @@ import '../../../../database/app_database.dart';
 import '../../data/tables_providers.dart';
 import '../widgets/table_widget.dart';
 import '../widgets/status_filter_tabs.dart';
+import 'reservations_screen.dart';
 
 /// 테이블 레이아웃 화면
 class TableManagementScreen extends ConsumerStatefulWidget {
@@ -14,24 +15,65 @@ class TableManagementScreen extends ConsumerStatefulWidget {
   ConsumerState<TableManagementScreen> createState() => _TableManagementScreenState();
 }
 
-class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
+class _TableManagementScreenState extends ConsumerState<TableManagementScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('테이블 관리'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.table_restaurant), text: '테이블 레이아웃'),
+            Tab(icon: Icon(Icons.event_note), text: '예약 관리'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _TableLayoutTab(),
+          const ReservationsScreen(),
+        ],
+      ),
+    );
+  }
+}
+
+/// 테이블 레이아웃 탭
+class _TableLayoutTab extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final filteredTablesAsync = ref.watch(filteredTablesProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('테이블 관리'),
+        title: const Text('테이블 레이아웃'),
         actions: [
           // 통계 표시
-          _buildStatistics(),
+          _buildStatistics(ref),
           const SizedBox(width: 8),
 
           // 테이블 추가 버튼
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
             tooltip: '테이블 추가',
-            onPressed: _showAddTableDialog,
+            onPressed: () => _showAddTableDialog(context, ref),
           ),
           const SizedBox(width: 8),
         ],
@@ -65,7 +107,7 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
                         ),
                         const SizedBox(height: 8),
                         ElevatedButton.icon(
-                          onPressed: _showAddTableDialog,
+                          onPressed: () => _showAddTableDialog(context, ref),
                           icon: const Icon(Icons.add),
                           label: const Text('테이블 추가'),
                         ),
@@ -74,7 +116,7 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
                   );
                 }
 
-                return _buildTableCanvas(tables);
+                return _buildTableCanvas(context, ref, tables);
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, stack) => Center(
@@ -95,7 +137,7 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
   }
 
   /// 통계 표시 위젯
-  Widget _buildStatistics() {
+  static Widget _buildStatistics(WidgetRef ref) {
     final availableCountAsync = ref.watch(availableTableCountProvider);
     final occupiedCountAsync = ref.watch(occupiedTableCountProvider);
 
@@ -119,7 +161,7 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
     );
   }
 
-  Widget _buildStatBadge(String label, int count, Color color) {
+  static Widget _buildStatBadge(String label, int count, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -160,15 +202,16 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
   }
 
   /// 테이블 캔버스 (드래그앤드롭)
-  Widget _buildTableCanvas(List<RestaurantTable> tables) {
+  static Widget _buildTableCanvas(
+      BuildContext context, WidgetRef ref, List<RestaurantTable> tables) {
     return Container(
       color: Colors.grey[100],
       child: Stack(
         children: tables.map((table) {
           return TableWidget(
             table: table,
-            onTap: () => _showTableDetail(table),
-            onDragEnd: (offset) => _handleTableDragEnd(table, offset),
+            onTap: () => _showTableDetail(context, ref, table),
+            onDragEnd: (offset) => _handleTableDragEnd(context, ref, table, offset),
           );
         }).toList(),
       ),
@@ -176,8 +219,8 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
   }
 
   /// 테이블 드래그 종료 처리
-  Future<void> _handleTableDragEnd(
-      RestaurantTable table, Offset offset) async {
+  static Future<void> _handleTableDragEnd(
+      BuildContext context, WidgetRef ref, RestaurantTable table, Offset offset) async {
     final dao = ref.read(tablesDaoProvider);
 
     // 캔버스 경계 체크 (0-1000 범위)
@@ -190,7 +233,7 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
       y: y,
     );
 
-    if (mounted) {
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('테이블 ${table.tableNumber} 위치 업데이트'),
@@ -201,7 +244,7 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
   }
 
   /// 테이블 상세 모달
-  void _showTableDetail(RestaurantTable table) {
+  static void _showTableDetail(BuildContext context, WidgetRef ref, RestaurantTable table) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -225,7 +268,7 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _showEditTableDialog(table);
+              _showEditTableDialog(context, ref, table);
             },
             child: const Text('수정'),
           ),
@@ -235,7 +278,7 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
   }
 
   /// 테이블 추가 다이얼로그
-  void _showAddTableDialog() {
+  static void _showAddTableDialog(BuildContext context, WidgetRef ref) {
     final tableNumberController = TextEditingController();
     final seatsController = TextEditingController(text: '4');
 
@@ -305,7 +348,7 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
   }
 
   /// 테이블 수정 다이얼로그
-  void _showEditTableDialog(RestaurantTable table) {
+  static void _showEditTableDialog(BuildContext context, WidgetRef ref, RestaurantTable table) {
     final tableNumberController =
         TextEditingController(text: table.tableNumber);
     final seatsController = TextEditingController(text: '${table.seats}');
@@ -397,7 +440,7 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen> {
     );
   }
 
-  String _formatTime(DateTime dateTime) {
+  static String _formatTime(DateTime dateTime) {
     return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 }

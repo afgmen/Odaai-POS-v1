@@ -1,11 +1,18 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
 import '../../../products/providers/products_management_provider.dart';
+import '../../domain/models/search_image_result.dart';
+import '../providers/image_providers.dart';
+import 'image_search_dialog.dart';
 
 /// 상품 추가 / 수정 폼 모달
 /// existingProduct == null → 추가 모드
@@ -35,6 +42,10 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
   late final TextEditingController _minStockCtrl;
   late final TextEditingController _categoryCtrl;
 
+  // ── 이미지 상태 ─────────────────────────
+  String? _imageUrl;
+  File? _localImageFile;
+
   bool get _isEditMode => widget.existingProduct != null;
 
   @override
@@ -49,6 +60,26 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     _stockCtrl = TextEditingController(text: p != null ? '${p.stock}' : '0');
     _minStockCtrl = TextEditingController(text: p != null ? '${p.minStock}' : '0');
     _categoryCtrl = TextEditingController(text: p?.category ?? '');
+
+    // Load existing image if in edit mode
+    _imageUrl = p?.imageUrl;
+    if (_imageUrl != null) {
+      _loadLocalImage();
+    }
+  }
+
+  Future<void> _loadLocalImage() async {
+    if (_imageUrl == null || widget.existingProduct == null) return;
+
+    final directory = await getApplicationDocumentsDirectory();
+    final imagePath = '${directory.path}/$_imageUrl';
+    final file = File(imagePath);
+
+    if (await file.exists()) {
+      setState(() {
+        _localImageFile = file;
+      });
+    }
   }
 
   @override
@@ -71,6 +102,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: const BoxDecoration(
         color: AppTheme.cardWhite,
@@ -96,7 +128,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _isEditMode ? '상품 수정' : '상품 추가',
+                    _isEditMode ? l10n.editProduct : l10n.addProduct,
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
                   ),
                   IconButton(
@@ -110,7 +142,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
               const SizedBox(height: 20),
 
               // ─── 기본정보 섹션 ──────────────
-              _sectionLabel('기본정보'),
+              _sectionLabel(l10n.basicInfo),
               _formField(
                 label: 'SKU *',
                 controller: _skuCtrl,
@@ -119,21 +151,21 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 onChanged: (_) => setState(() {}),
               ),
               _formField(
-                label: '상품명 *',
+                label: l10n.productNameRequired,
                 controller: _nameCtrl,
                 hint: '테스트 감자칩',
                 onChanged: (_) => setState(() {}),
               ),
               _formField(
-                label: '바코드',
+                label: l10n.barcode,
                 controller: _barcodeCtrl,
                 hint: '4000386123457',
               ),
 
               // ─── 가격정보 섹션 ──────────────
-              _sectionLabel('가격정보'),
+              _sectionLabel(l10n.priceInfo),
               _formField(
-                label: '판매가 *',
+                label: l10n.sellingPriceRequired,
                 controller: _priceCtrl,
                 hint: '10000',
                 isNumber: true,
@@ -141,7 +173,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 onChanged: (_) => setState(() {}),
               ),
               _formField(
-                label: '원가',
+                label: l10n.costPrice,
                 controller: _costCtrl,
                 hint: '7000',
                 isNumber: true,
@@ -149,9 +181,9 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
               ),
 
               // ─── 재고정보 섹션 ──────────────
-              _sectionLabel('재고정보'),
+              _sectionLabel(l10n.stockInfo),
               _formField(
-                label: '재고수량',
+                label: l10n.stockQuantity,
                 controller: _stockCtrl,
                 hint: '0',
                 isNumber: true,
@@ -159,17 +191,21 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 readOnly: _isEditMode, // 수정 시 재고조정 모달로만 변경
               ),
               _formField(
-                label: '최소재고',
+                label: l10n.minStock,
                 controller: _minStockCtrl,
                 hint: '10',
                 isNumber: true,
                 suffixText: '개',
               ),
               _formField(
-                label: '카테고리',
+                label: l10n.category,
                 controller: _categoryCtrl,
-                hint: '식품, 음료, 전자제품 등',
+                hint: l10n.categoryHint,
               ),
+
+              // ─── 이미지 섹션 ──────────────────
+              _sectionLabel('상품 이미지'),
+              _buildImageSection(),
               const SizedBox(height: 4),
 
               // ─── 액션 버튼 ──────────────────
@@ -182,7 +218,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('취소'),
+                      child: Text(l10n.cancel),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -199,7 +235,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                       ),
                       child: _isProcessing
                           ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                          : Text('저장', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                          : Text(l10n.save, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                     ),
                   ),
                 ],
@@ -213,6 +249,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
 
   // ── 폼 제출 ─────────────────────────────
   Future<void> _submitForm() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isProcessing = true);
     try {
       final dao = ref.read(productsDaoProvider);
@@ -237,7 +274,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           ref.invalidate(mgmtFilteredProductsProvider);
           ref.invalidate(mgmtCategoryListProvider);
           Navigator.of(context).pop();
-          _showSnackBar('상품이 수정되었습니다', AppTheme.success);
+          _showSnackBar(l10n.productUpdated, AppTheme.success);
         }
       } else {
         // 추가 모드
@@ -256,13 +293,13 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           ref.invalidate(mgmtFilteredProductsProvider);
           ref.invalidate(mgmtCategoryListProvider);
           Navigator.of(context).pop();
-          _showSnackBar('상품이 추가되었습니다', AppTheme.success);
+          _showSnackBar(l10n.productAdded, AppTheme.success);
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        _showSnackBar('오류: ${e.toString()}', AppTheme.error);
+        _showSnackBar(l10n.errorPrefix(e.toString()), AppTheme.error);
       }
     }
   }
@@ -330,5 +367,288 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           margin: const EdgeInsets.all(16),
         ),
       );
+  }
+
+  // ── 이미지 섹션 빌더 ─────────────────────────────
+  Widget _buildImageSection() {
+    final imageState = ref.watch(imageUploadStateProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Image preview or placeholder
+        Container(
+          height: 200,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppTheme.background,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.divider),
+          ),
+          child: _localImageFile != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    _localImageFile!,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.image_not_supported,
+                        size: 48,
+                        color: AppTheme.textDisabled,
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        '이미지 없음',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+        ),
+        const SizedBox(height: 12),
+
+        // Loading indicator
+        if (imageState is ImageUploadLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+
+        // Action buttons
+        if (imageState is! ImageUploadLoading)
+          Row(
+            children: [
+              // Camera button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _handleCameraUpload,
+                  icon: const Icon(Icons.camera_alt, size: 18),
+                  label: const Text('카메라'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Gallery button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _handleGalleryUpload,
+                  icon: const Icon(Icons.photo_library, size: 18),
+                  label: const Text('갤러리'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // AI Search button (new row)
+          const SizedBox(height: 8),
+          ElevatedButton.icon(
+            onPressed: _handleAISearch,
+            icon: const Icon(Icons.auto_awesome, size: 18),
+            label: const Text('AI 자동 검색'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+
+        // Delete button (if image exists)
+        if (_localImageFile != null && imageState is! ImageUploadLoading)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: TextButton.icon(
+              onPressed: _handleDeleteImage,
+              icon: const Icon(Icons.delete_outline, size: 18, color: AppTheme.error),
+              label: const Text(
+                '이미지 삭제',
+                style: TextStyle(color: AppTheme.error),
+              ),
+            ),
+          ),
+
+        // Error message
+        if (imageState is ImageUploadError)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              imageState.message,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppTheme.error,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // ── 이미지 핸들러 ─────────────────────────────
+  Future<void> _handleCameraUpload() async {
+    if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
+      _showSnackBar('SKU를 먼저 입력해주세요', AppTheme.error);
+      return;
+    }
+
+    final sku = _skuCtrl.text.trim();
+    final productId = widget.existingProduct?.id ?? 0;
+
+    final notifier = ref.read(imageUploadStateProvider.notifier);
+    final file = await notifier.uploadFromCamera(productId, sku);
+
+    if (file != null && mounted) {
+      setState(() {
+        _localImageFile = file;
+        _imageUrl = 'product_images/$sku.jpg';
+      });
+      _showSnackBar('이미지가 업로드되었습니다', AppTheme.success);
+    }
+  }
+
+  Future<void> _handleGalleryUpload() async {
+    if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
+      _showSnackBar('SKU를 먼저 입력해주세요', AppTheme.error);
+      return;
+    }
+
+    final sku = _skuCtrl.text.trim();
+    final productId = widget.existingProduct?.id ?? 0;
+
+    final notifier = ref.read(imageUploadStateProvider.notifier);
+    final file = await notifier.uploadFromGallery(productId, sku);
+
+    if (file != null && mounted) {
+      setState(() {
+        _localImageFile = file;
+        _imageUrl = 'product_images/$sku.jpg';
+      });
+      _showSnackBar('이미지가 업로드되었습니다', AppTheme.success);
+    }
+  }
+
+  Future<void> _handleDeleteImage() async {
+    if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('이미지 삭제'),
+        content: const Text('정말로 이미지를 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final sku = _skuCtrl.text.trim();
+    final productId = widget.existingProduct?.id ?? 0;
+
+    final notifier = ref.read(imageUploadStateProvider.notifier);
+    await notifier.deleteImage(productId, sku);
+
+    if (mounted) {
+      setState(() {
+        _localImageFile = null;
+        _imageUrl = null;
+      });
+      _showSnackBar('이미지가 삭제되었습니다', AppTheme.success);
+    }
+  }
+
+  Future<void> _handleAISearch() async {
+    // Validate product name
+    if (_nameCtrl.text.trim().isEmpty) {
+      _showSnackBar('상품명을 먼저 입력해주세요', AppTheme.error);
+      return;
+    }
+
+    if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
+      _showSnackBar('SKU를 먼저 입력해주세요', AppTheme.error);
+      return;
+    }
+
+    // Show AI search dialog
+    final SearchImageResult? selectedImage = await showDialog<SearchImageResult>(
+      context: context,
+      builder: (context) => ImageSearchDialog(
+        productName: _nameCtrl.text.trim(),
+      ),
+    );
+
+    if (selectedImage == null || !mounted) return;
+
+    // Download and save selected image
+    try {
+      setState(() => _isProcessing = true);
+
+      final searchService = ref.read(imageSearchServiceProvider);
+      final sku = _skuCtrl.text.trim();
+
+      final imagePath = await searchService.downloadAndSaveImage(
+        imageUrl: selectedImage.regularUrl,
+        sku: sku,
+      );
+
+      // Update DB if in edit mode
+      if (_isEditMode) {
+        final productId = widget.existingProduct!.id;
+        final dao = ref.read(productsDaoProvider);
+        await dao.updateProductImageUrl(
+          productId,
+          'product_images/$sku.jpg',
+        );
+      }
+
+      // Update local state
+      setState(() {
+        _localImageFile = File(imagePath);
+        _imageUrl = 'product_images/$sku.jpg';
+        _isProcessing = false;
+      });
+
+      _showSnackBar('AI 검색으로 이미지가 설정되었습니다', AppTheme.success);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        _showSnackBar('이미지 다운로드 실패: $e', AppTheme.error);
+      }
+    }
   }
 }

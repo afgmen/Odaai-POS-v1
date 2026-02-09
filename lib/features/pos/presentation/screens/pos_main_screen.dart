@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/app_localizations.dart';
+import '../../../../core/responsive/responsive_helper.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
@@ -13,6 +15,7 @@ import '../widgets/cart_panel.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/payment_modal.dart';
 import '../widgets/product_card.dart';
+import '../../../kds/presentation/screens/kds_screen.dart';
 
 /// POS 메인 화면
 class PosMainScreen extends ConsumerWidget {
@@ -31,35 +34,68 @@ class PosMainScreen extends ConsumerWidget {
         onScanPressed: () => _showBarcodeScanModal(context, ref),
         onBarcodeSsubmit: (barcode) => _handleBarcodeSubmit(context, ref, barcode),
       ),
-      body: Column(
-        children: [
-          // ─── 메인 콘텐츠 영역 ──────────────────
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final deviceType = ResponsiveHelper.getDeviceType(constraints.maxWidth);
+          final isWide = deviceType != DeviceType.mobile;
+
+          if (isWide) {
+            // ── 태블릿/데스크탑: 좌(카테고리+상품) + 우(장바구니) ──
+            return Row(
               children: [
-                // ── 좌측: 카테고리 필터 ──────────
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 140,
-                  child: CategoryFilter(),
-                ),
-                const SizedBox(width: 12),
-
-                // ── 중앙: 상품 그리드 ─────────────
+                // 좌측: 카테고리 + 상품 그리드
                 Expanded(
-                  child: _ProductGrid(),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: ResponsiveHelper.getCategoryFilterWidth(deviceType),
+                        child: CategoryFilter(),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: _ProductGrid(width: constraints.maxWidth - 300 - 140)),
+                      const SizedBox(width: 4),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 12),
+                // 우측: 장바구니 사이드 패널
+                SizedBox(
+                  width: ResponsiveHelper.getCartPanelWidth(deviceType),
+                  child: CartPanel(
+                    onCheckout: () => _showPaymentModal(context),
+                    isSidePanel: true,
+                  ),
+                ),
               ],
-            ),
-          ),
-
-          // ─── 하단: 장바구니 패널 ────────────────
-          CartPanel(
-            onCheckout: () => _showPaymentModal(context),
-          ),
-        ],
+            );
+          } else {
+            // ── 모바일: 상단(상품) + 하단(장바구니) ──
+            return Column(
+              children: [
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 140,
+                        child: CategoryFilter(),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: _ProductGrid(width: constraints.maxWidth - 140)),
+                      const SizedBox(width: 12),
+                    ],
+                  ),
+                ),
+                CartPanel(
+                  onCheckout: () => _showPaymentModal(context),
+                  isSidePanel: false,
+                ),
+              ],
+            );
+          }
+        },
       ),
     );
   }
@@ -116,6 +152,7 @@ class _PosAppBarState extends State<_PosAppBar> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final searchQuery = widget.searchQuery;
 
     return AppBar(
@@ -145,15 +182,51 @@ class _PosAppBarState extends State<_PosAppBar> {
                     color: const Color(0xFFFFF3CD),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    '● 오프라인',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF856404), fontWeight: FontWeight.w600),
+                  child: Text(
+                    '● ${l10n.offlineIndicator}',
+                    style: const TextStyle(fontSize: 11, color: Color(0xFF856404), fontWeight: FontWeight.w600),
                   ),
                 ),
                 const Spacer(),
+                // KDS 버튼
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const KdsScreen(),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.primary),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.restaurant_menu, size: 16, color: AppTheme.primary),
+                        SizedBox(width: 4),
+                        Text(
+                          '주방',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 // 직원 정보 + 로그아웃 버튼
                 const _EmployeeInfo(),
-                const Spacer(),
+                const SizedBox(width: 12),
                 // 직원명
                 const Row(
                   children: [
@@ -205,7 +278,7 @@ class _PosAppBarState extends State<_PosAppBar> {
                             )
                           : null,
                       contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                      hintText: '상품명, SKU, 바코드 검색...',
+                      hintText: l10n.searchProductHint,
                       hintStyle: const TextStyle(fontSize: 13, color: AppTheme.textDisabled),
                     ),
                     style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
@@ -239,13 +312,16 @@ class _PosAppBarState extends State<_PosAppBar> {
   }
 }
 
-/// 상품 그리드
+/// 상품 그리드 (반응형)
 class _ProductGrid extends ConsumerWidget {
-  const _ProductGrid();
+  final double width;
+  const _ProductGrid({this.width = 400});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final productsAsync = ref.watch(searchResultsProvider);
+    final crossAxisCount = ResponsiveHelper.getGridCrossAxisCount(width);
 
     return productsAsync.when(
       data: (products) {
@@ -256,9 +332,9 @@ class _ProductGrid extends ConsumerWidget {
               children: [
                 const Icon(Icons.search_off_outlined, size: 56, color: AppTheme.textDisabled),
                 const SizedBox(height: 12),
-                const Text(
-                  '상품이 없습니다',
-                  style: TextStyle(fontSize: 16, color: AppTheme.textDisabled),
+                Text(
+                  l10n.noProducts,
+                  style: const TextStyle(fontSize: 16, color: AppTheme.textDisabled),
                 ),
               ],
             ),
@@ -267,8 +343,8 @@ class _ProductGrid extends ConsumerWidget {
 
         return GridView.builder(
           padding: const EdgeInsets.only(right: 12, bottom: 8),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
             childAspectRatio: 0.85,
@@ -284,7 +360,7 @@ class _ProductGrid extends ConsumerWidget {
           children: [
             const Icon(Icons.error_outline, size: 40, color: AppTheme.error),
             const SizedBox(height: 8),
-            Text('오류 발생: $err', style: const TextStyle(color: AppTheme.error)),
+            Text(l10n.msgError(err.toString()), style: const TextStyle(color: AppTheme.error)),
           ],
         ),
       ),
@@ -317,19 +393,21 @@ Future<void> _handleBarcodeSubmit(BuildContext context, WidgetRef ref, String in
 
   if (!context.mounted) return;
 
+  final l10n = AppLocalizations.of(context)!;
+
   if (product != null) {
     if (product.stock > 0) {
       ref.read(cartProvider.notifier).addItem(product);
-      _showSnackBar(context, '${product.name}을(를) 장바구니에 추가했습니다', AppTheme.success);
+      _showSnackBar(context, l10n.addedToCart(product.name), AppTheme.success);
     } else {
-      _showSnackBar(context, '${product.name}은(는) 현재 품절 중입니다', AppTheme.error);
+      _showSnackBar(context, l10n.outOfStock(product.name), AppTheme.error);
     }
     // 조회 성공 시 검색바 초기화
     ref.read(searchQueryProvider.notifier).state = '';
   } else {
     // 상품 없음 → 검색 키워드로 남겨서 검색 결과 표시
     ref.read(searchQueryProvider.notifier).state = input;
-    _showSnackBar(context, '[$input] 상품을 찾을 수 없습니다', AppTheme.warning);
+    _showSnackBar(context, l10n.productNotFound(input), AppTheme.warning);
   }
 }
 
@@ -368,6 +446,7 @@ class _EmployeeInfo extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final currentEmployee = ref.watch(currentEmployeeProvider);
 
     if (currentEmployee == null) return const SizedBox.shrink();
@@ -416,7 +495,7 @@ class _EmployeeInfo extends ConsumerWidget {
         IconButton(
           onPressed: () => _showLogoutConfirmation(context, ref),
           icon: const Icon(Icons.logout, size: 20, color: AppTheme.textSecondary),
-          tooltip: '로그아웃',
+          tooltip: l10n.logout,
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
         ),
@@ -425,16 +504,17 @@ class _EmployeeInfo extends ConsumerWidget {
   }
 
   void _showLogoutConfirmation(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('로그아웃', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-        content: const Text('로그아웃 하시겠습니까?', style: TextStyle(fontSize: 14)),
+        title: Text(l10n.logout, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+        content: Text(l10n.logoutConfirm, style: const TextStyle(fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('취소', style: TextStyle(color: AppTheme.textSecondary)),
+            child: Text(l10n.cancel, style: const TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -457,7 +537,7 @@ class _EmployeeInfo extends ConsumerWidget {
               backgroundColor: AppTheme.error,
               foregroundColor: Colors.white,
             ),
-            child: const Text('로그아웃'),
+            child: Text(l10n.logout),
           ),
         ],
       ),

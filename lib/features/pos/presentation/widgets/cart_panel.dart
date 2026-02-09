@@ -1,26 +1,94 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../database/app_database.dart';
+import '../../../../providers/currency_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/auto_promotion_provider.dart';
+import '../../../customers/providers/customers_provider.dart';
 
 /// 장바구니 패널 (하단 또는 우측 사이드)
 class CartPanel extends ConsumerWidget {
   /// 결제 버튼 눌릴 때 콜백
   final VoidCallback onCheckout;
 
+  /// true: 태블릿/데스크탑에서 우측 사이드 패널로 표시
+  /// false: 모바일에서 하단 패널로 표시
+  final bool isSidePanel;
+
   const CartPanel({
     super.key,
     required this.onCheckout,
+    this.isSidePanel = false,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final cart = ref.watch(cartProvider);
     final subtotal = ref.watch(cartSubtotalProvider);
     final isEmpty = cart.isEmpty;
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
+    // ── 사이드 패널 모드 (태블릿/데스크탑) ──
+    if (isSidePanel) {
+      return Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.cardWhite,
+          border: Border(left: BorderSide(color: AppTheme.divider, width: 1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 헤더
+            _buildHeader(ref, isEmpty, l10n),
+            const Divider(height: 1, color: AppTheme.divider),
+            // 고객 선택
+            _CustomerSelection(),
+            const Divider(height: 1, color: AppTheme.divider),
+            // 아이템 리스트 (Expanded로 남은 공간 채움)
+            Expanded(
+              child: isEmpty
+                  ? Center(
+                      child: Text(
+                        l10n.cartEmpty,
+                        style: const TextStyle(color: AppTheme.textDisabled, fontSize: 14),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: EdgeInsets.zero,
+                      itemCount: cart.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(height: 1, color: AppTheme.divider),
+                      itemBuilder: (context, index) {
+                        final item = cart[index];
+                        return _CartItemRow(
+                          item: item,
+                          compact: true,
+                          onIncrease: () => ref.read(cartProvider.notifier).updateQuantity(
+                                item.product.id,
+                                item.quantity + 1,
+                              ),
+                          onDecrease: () => ref.read(cartProvider.notifier).updateQuantity(
+                                item.product.id,
+                                item.quantity - 1,
+                              ),
+                          onRemove: () => ref.read(cartProvider.notifier).removeItem(item.product.id),
+                        );
+                      },
+                    ),
+            ),
+            const Divider(height: 1, color: AppTheme.divider),
+            // 금액 요약 + 결제 버튼
+            _buildSummary(subtotal, isEmpty, l10n, priceFormatter),
+          ],
+        ),
+      );
+    }
+
+    // ── 하단 패널 모드 (모바일) ──
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.cardWhite,
@@ -36,44 +104,19 @@ class CartPanel extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ─── 장바구니 헤더 ─────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.shopping_cart_outlined, color: AppTheme.textPrimary, size: 20),
-                    const SizedBox(width: 8),
-                    const Text(
-                      '장바구니',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
-                    ),
-                  ],
-                ),
-                if (!isEmpty)
-                  TextButton(
-                    onPressed: () => ref.read(cartProvider.notifier).clear(),
-                    child: const Text(
-                      '초기화',
-                      style: TextStyle(fontSize: 13, color: AppTheme.error),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
+          _buildHeader(ref, isEmpty, l10n),
           const Divider(height: 1, color: AppTheme.divider),
-
-          // ─── 장바구니 아이템 리스트 ─────────────
+          // 고객 선택
+          _CustomerSelection(),
+          const Divider(height: 1, color: AppTheme.divider),
+          // 아이템 리스트 (제한된 높이)
           if (isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
               child: Text(
-                '장바구니가 비어있습니다',
+                l10n.cartEmpty,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textDisabled, fontSize: 14),
+                style: const TextStyle(color: AppTheme.textDisabled, fontSize: 14),
               ),
             )
           else
@@ -101,45 +144,67 @@ class CartPanel extends ConsumerWidget {
                 },
               ),
             ),
-
           const Divider(height: 1, color: AppTheme.divider),
+          _buildSummary(subtotal, isEmpty, l10n, priceFormatter),
+        ],
+      ),
+    );
+  }
 
-          // ─── 금액 요약 + 할인 + 결제 버튼 ────────
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 소계 행
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('소계', style: TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
-                    Text('₩${_formatPrice(subtotal)}', style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary)),
-                  ],
-                ),
-
-                // 할인 행 + 버튼
-                const SizedBox(height: 6),
-                _DiscountRow(),
-
-                // 자동 적용된 프로모션 표시
-                const SizedBox(height: 6),
-                _AutoPromotionsSection(),
-
-                const SizedBox(height: 8),
-                const Divider(height: 1, color: AppTheme.divider),
-                const SizedBox(height: 8),
-
-                // 합계 행
-                _TotalRow(),
-
-                const SizedBox(height: 12),
-                // 결제 버튼
-                _CheckoutButton(isEmpty: isEmpty, onCheckout: onCheckout),
-              ],
-            ),
+  /// 장바구니 헤더 공통 빌더
+  Widget _buildHeader(WidgetRef ref, bool isEmpty, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.shopping_cart_outlined, color: AppTheme.textPrimary, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                l10n.cart,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+              ),
+            ],
           ),
+          if (!isEmpty)
+            TextButton(
+              onPressed: () => ref.read(cartProvider.notifier).clear(),
+              child: Text(
+                l10n.clearCart,
+                style: const TextStyle(fontSize: 13, color: AppTheme.error),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 금액 요약 + 할인 + 결제 버튼 공통 빌더
+  Widget _buildSummary(double subtotal, bool isEmpty, AppLocalizations l10n, dynamic priceFormatter) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(l10n.subtotal, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
+              Text(priceFormatter.format(subtotal), style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const _DiscountRow(),
+          const SizedBox(height: 6),
+          const _AutoPromotionsSection(),
+          const SizedBox(height: 8),
+          const Divider(height: 1, color: AppTheme.divider),
+          const SizedBox(height: 8),
+          const _TotalRow(),
+          const SizedBox(height: 12),
+          _CheckoutButton(isEmpty: isEmpty, onCheckout: onCheckout),
         ],
       ),
     );
@@ -147,21 +212,72 @@ class CartPanel extends ConsumerWidget {
 }
 
 /// 장바구니 단일 행 (상품명, 수량 조절, 소계)
-class _CartItemRow extends StatelessWidget {
+class _CartItemRow extends ConsumerWidget {
   final CartItem item;
   final VoidCallback onIncrease;
   final VoidCallback onDecrease;
   final VoidCallback onRemove;
+  final bool compact;
 
   const _CartItemRow({
     required this.item,
     required this.onIncrease,
     required this.onDecrease,
     required this.onRemove,
+    this.compact = false,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final priceFormatter = ref.watch(priceFormatterProvider);
+    // compact 모드: 사이드 패널용 2줄 레이아웃
+    if (compact) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1행: 삭제 + 상품명
+            Row(
+              children: [
+                InkWell(
+                  onTap: onRemove,
+                  child: const Icon(Icons.close, size: 14, color: AppTheme.textDisabled),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    item.product.name,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textPrimary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            // 2행: 수량 조절 + 소계
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _QuantitySelector(
+                  quantity: item.quantity,
+                  onIncrease: onIncrease,
+                  onDecrease: onDecrease,
+                  small: true,
+                ),
+                Text(
+                  priceFormatter.format(item.subtotal),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 기본 모드: 하단 패널용 1줄 레이아웃
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -195,7 +311,7 @@ class _CartItemRow extends StatelessWidget {
           SizedBox(
             width: 72,
             child: Text(
-              '₩${_formatPrice(item.subtotal)}',
+              priceFormatter.format(item.subtotal),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
               textAlign: TextAlign.end,
             ),
@@ -211,15 +327,22 @@ class _QuantitySelector extends StatelessWidget {
   final int quantity;
   final VoidCallback onIncrease;
   final VoidCallback onDecrease;
+  final bool small;
 
   const _QuantitySelector({
     required this.quantity,
     required this.onIncrease,
     required this.onDecrease,
+    this.small = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final btnSize = small ? 24.0 : 28.0;
+    final iconSize = small ? 14.0 : 16.0;
+    final qtyWidth = small ? 28.0 : 32.0;
+    final fontSize = small ? 13.0 : 15.0;
+
     return Row(
       children: [
         // - 버튼
@@ -227,23 +350,23 @@ class _QuantitySelector extends StatelessWidget {
           onTap: onDecrease,
           borderRadius: BorderRadius.circular(6),
           child: Container(
-            width: 28,
-            height: 28,
+            width: btnSize,
+            height: btnSize,
             decoration: BoxDecoration(
               color: AppTheme.background,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: AppTheme.divider),
             ),
-            child: const Icon(Icons.remove, size: 16, color: AppTheme.textSecondary),
+            child: Icon(Icons.remove, size: iconSize, color: AppTheme.textSecondary),
           ),
         ),
         // 수량
         SizedBox(
-          width: 32,
+          width: qtyWidth,
           child: Text(
             '$quantity',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
           ),
         ),
         // + 버튼
@@ -251,13 +374,13 @@ class _QuantitySelector extends StatelessWidget {
           onTap: onIncrease,
           borderRadius: BorderRadius.circular(6),
           child: Container(
-            width: 28,
-            height: 28,
+            width: btnSize,
+            height: btnSize,
             decoration: BoxDecoration(
               color: AppTheme.primary,
               borderRadius: BorderRadius.circular(6),
             ),
-            child: const Icon(Icons.add, size: 16, color: Colors.white),
+            child: Icon(Icons.add, size: iconSize, color: Colors.white),
           ),
         ),
       ],
@@ -271,6 +394,7 @@ class _DiscountRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final allDiscount = ref.watch(cartAllDiscountProvider);
     final discountValue = ref.watch(discountValueProvider);
     final promoProductId = ref.watch(promotionProductIdProvider);
@@ -281,7 +405,7 @@ class _DiscountRow extends ConsumerWidget {
       children: [
         Row(
           children: [
-            const Text('할인', style: TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
+            Text(l10n.discount, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
             const SizedBox(width: 8),
             // 할인 버튼
             InkWell(
@@ -299,7 +423,7 @@ class _DiscountRow extends ConsumerWidget {
                     Icon(hasAny ? Icons.edit : Icons.add, size: 14, color: AppTheme.primary),
                     const SizedBox(width: 3),
                     Text(
-                      hasAny ? '수정' : '추가',
+                      hasAny ? l10n.edit : l10n.add,
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.primary),
                     ),
                   ],
@@ -322,7 +446,7 @@ class _DiscountRow extends ConsumerWidget {
         ),
         // 할인금액 표시
         Text(
-          hasAny ? '-₩${_formatPrice(allDiscount)}' : '₩0',
+          hasAny ? '-\${priceFormatter.format(allDiscount)}' : '₩0',
           style: TextStyle(
             fontSize: 14,
             fontWeight: hasAny ? FontWeight.w600 : FontWeight.w400,
@@ -349,13 +473,15 @@ class _TotalRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final total = ref.watch(cartTotalProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text('합계', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-        Text('₩${_formatPrice(total)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+        Text(l10n.total, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+        Text(priceFormatter.format(total), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
       ],
     );
   }
@@ -370,6 +496,7 @@ class _CheckoutButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final total = ref.watch(cartTotalProvider);
 
     return SizedBox(
@@ -384,7 +511,7 @@ class _CheckoutButton extends ConsumerWidget {
           elevation: 0,
         ),
         child: Text(
-          isEmpty ? '상품을 추가해주세요' : '결제 ₩${_formatPrice(total)}',
+          isEmpty ? l10n.addProductsPlease : '${l10n.checkout} ₩${_formatPrice(total)}',
           style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
         ),
       ),
@@ -424,6 +551,7 @@ class _DiscountModalState extends ConsumerState<_DiscountModal> with SingleTicke
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final subtotal = ref.watch(cartSubtotalProvider);
     final screenHeight = MediaQuery.of(context).size.height;
     final maxHeight = screenHeight * 0.75;
@@ -447,7 +575,7 @@ class _DiscountModalState extends ConsumerState<_DiscountModal> with SingleTicke
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('할인 설정', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                Text(l10n.discountSettings, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.close, size: 22, color: AppTheme.textSecondary),
@@ -475,9 +603,9 @@ class _DiscountModalState extends ConsumerState<_DiscountModal> with SingleTicke
                 unselectedLabelColor: AppTheme.textSecondary,
                 labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 dividerColor: Colors.transparent,
-                tabs: const [
-                  Tab(text: '할인'),
-                  Tab(text: '프로모션'),
+                tabs: [
+                  Tab(text: l10n.discount),
+                  Tab(text: l10n.promotion),
                 ],
               ),
             ),
@@ -515,8 +643,10 @@ class _DiscountTab extends ConsumerStatefulWidget {
 class _DiscountTabState extends ConsumerState<_DiscountTab> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final type = ref.watch(discountTypeProvider);
     final inputVal = double.tryParse(widget.ctrl.text) ?? 0;
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     // 미리 보는 할인금액
     final previewDiscount = switch (type) {
@@ -594,24 +724,24 @@ class _DiscountTabState extends ConsumerState<_DiscountTab> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('소계', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-                    Text('₩${_formatPrice(widget.subtotal)}', style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
+                    Text(l10n.subtotal, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                    Text(priceFormatter.format(widget.subtotal), style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('할인', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-                    Text('-₩${_formatPrice(previewDiscount)}', style: const TextStyle(fontSize: 13, color: AppTheme.error)),
+                    Text(l10n.discount, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                    Text('-\${priceFormatter.format(previewDiscount)}', style: const TextStyle(fontSize: 13, color: AppTheme.error)),
                   ],
                 ),
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('결제금액', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-                    Text('₩${_formatPrice(previewTotal)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+                    Text(l10n.paymentAmount, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                    Text(priceFormatter.format(previewTotal), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.primary)),
                   ],
                 ),
               ],
@@ -633,7 +763,7 @@ class _DiscountTabState extends ConsumerState<_DiscountTab> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
-              child: const Text('적용', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              child: Text(l10n.apply, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             ),
           ),
         ],
@@ -676,6 +806,8 @@ class _PromotionTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final priceFormatter = ref.watch(priceFormatterProvider);
+    final l10n = AppLocalizations.of(context)!;
     final cart = ref.watch(cartProvider);
     final promoProductId = ref.watch(promotionProductIdProvider);
     final promoType = ref.watch(promotionTypeProvider);
@@ -728,7 +860,7 @@ class _PromotionTab extends ConsumerWidget {
           const SizedBox(height: 14),
 
           // 상품 선택
-          const Text('적용 상품 선택', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          Text(l10n.appliedProducts, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
           const SizedBox(height: 8),
           ...cart.map((item) {
             final isSelected = promoProductId == item.product.id;
@@ -766,7 +898,7 @@ class _PromotionTab extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        '${item.quantity}개',
+                        l10n.itemCount(item.quantity),
                         style: TextStyle(
                           fontSize: 13,
                           color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
@@ -794,24 +926,24 @@ class _PromotionTab extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('소계', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-                    Text('₩${_formatPrice(subtotal)}', style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
+                    Text(l10n.subtotal, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                    Text(priceFormatter.format(subtotal), style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('프로모션', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-                    Text('-₩${_formatPrice(promoDiscount)}', style: const TextStyle(fontSize: 13, color: AppTheme.error)),
+                    Text(l10n.promotion, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                    Text('-\${priceFormatter.format(promoDiscount)}', style: const TextStyle(fontSize: 13, color: AppTheme.error)),
                   ],
                 ),
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('결제금액', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-                    Text('₩${_formatPrice(total)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+                    Text(l10n.paymentAmount, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                    Text(priceFormatter.format(total), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.primary)),
                   ],
                 ),
               ],
@@ -831,7 +963,7 @@ class _PromotionTab extends ConsumerWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
-              child: const Text('적용', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              child: Text(l10n.apply, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             ),
           ),
         ],
@@ -846,6 +978,7 @@ class _AutoPromotionsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final appliedPromos = ref.watch(appliedPromotionsListProvider);
     final autoDiscount = ref.watch(autoPromotionDiscountProvider);
 
@@ -860,9 +993,9 @@ class _AutoPromotionsSection extends ConsumerWidget {
           children: [
             const Icon(Icons.local_offer, size: 14, color: AppTheme.success),
             const SizedBox(width: 4),
-            const Text(
-              '자동 적용된 프로모션',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.success),
+            Text(
+              l10n.autoPromotionsApplied,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.success),
             ),
           ],
         ),
@@ -881,7 +1014,7 @@ class _AutoPromotionsSection extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  '-₩${_formatPrice(promo.discountAmount)}',
+                  '-\${priceFormatter.format(promo.discountAmount)}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -902,4 +1035,177 @@ String _formatPrice(double price) {
     RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
     (match) => '${match[1]},',
   );
+}
+
+/// 고객 선택 위젯
+class _CustomerSelection extends ConsumerWidget {
+  const _CustomerSelection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedCustomer = ref.watch(selectedCustomerProvider);
+
+    return InkWell(
+      onTap: () => _showCustomerSelector(context, ref),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(
+              selectedCustomer == null ? Icons.person_add_outlined : Icons.person_outlined,
+              size: 20,
+              color: selectedCustomer == null ? AppTheme.textSecondary : AppTheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: selectedCustomer == null
+                  ? const Text(
+                      'Select Customer',
+                      style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          selectedCustomer.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '${selectedCustomer.points.toInt()}P available',
+                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        ),
+                      ],
+                    ),
+            ),
+            if (selectedCustomer != null)
+              IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: () => ref.read(selectedCustomerProvider.notifier).state = null,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              )
+            else
+              const Icon(Icons.chevron_right, size: 20, color: AppTheme.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void _showCustomerSelector(BuildContext context, WidgetRef ref) {
+  showDialog(
+    context: context,
+    builder: (context) => const _CustomerSelectorDialog(),
+  );
+}
+
+/// 고객 선택 다이얼로그
+class _CustomerSelectorDialog extends ConsumerStatefulWidget {
+  const _CustomerSelectorDialog();
+
+  @override
+  _CustomerSelectorDialogState createState() => _CustomerSelectorDialogState();
+}
+
+class _CustomerSelectorDialogState extends ConsumerState<_CustomerSelectorDialog> {
+  String _searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final dao = ref.watch(customersDaoProvider);
+
+    return Dialog(
+      child: Container(
+        width: 500,
+        height: 600,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 헤더
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Select Customer',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // 검색
+            TextField(
+              decoration: const InputDecoration(
+                hintText: 'Search by name, phone, email...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) => setState(() => _searchQuery = value),
+            ),
+            const SizedBox(height: 16),
+            // 고객 리스트
+            Expanded(
+              child: FutureBuilder<List<Customer>>(
+                future: _searchQuery.isEmpty
+                    ? dao.getAllCustomers()
+                    : dao.searchCustomers(_searchQuery),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final customers = snapshot.data ?? [];
+
+                  if (customers.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No customers found',
+                        style: TextStyle(color: AppTheme.textSecondary),
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
+                    itemCount: customers.length,
+                    separatorBuilder: (context, index) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final customer = customers[index];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: AppTheme.primary.withOpacity(0.1),
+                          child: Text(
+                            customer.name[0].toUpperCase(),
+                            style: const TextStyle(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        title: Text(customer.name),
+                        subtitle: Text('${customer.phone} • ${customer.points.toInt()}P'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          ref.read(selectedCustomerProvider.notifier).state = customer;
+                          Navigator.of(context).pop();
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

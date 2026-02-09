@@ -2,23 +2,36 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
+import '../../../../providers/currency_provider.dart';
 import '../../../../providers/database_providers.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../customers/providers/customers_provider.dart';
+import '../../../loyalty/domain/services/loyalty_service.dart';
 import '../../providers/cart_provider.dart';
 import '../screens/receipt_screen.dart';
 
 /// 결제 방법 열거형
 enum PaymentMethod {
-  cash('현금', Icons.attach_money),
-  card('카드', Icons.credit_card),
-  qr('QR', Icons.qr_code);
+  cash(Icons.attach_money),
+  card(Icons.credit_card),
+  qr(Icons.qr_code),
+  transfer(Icons.account_balance);
 
-  final String label;
   final IconData icon;
 
-  const PaymentMethod(this.label, this.icon);
+  const PaymentMethod(this.icon);
+
+  String localizedLabel(AppLocalizations l10n) {
+    return switch (this) {
+      PaymentMethod.cash => l10n.cashPayment,
+      PaymentMethod.card => l10n.cardPayment,
+      PaymentMethod.qr => l10n.qrPayment,
+      PaymentMethod.transfer => l10n.transferPayment,
+    };
+  }
 }
 
 /// 결제 모달 (BottomSheet)
@@ -34,26 +47,39 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
   double _cashInput = 0;
   bool _isProcessing = false;
   late final TextEditingController _cashController;
+  late final TextEditingController _tableNumberController;
+  late final TextEditingController _specialInstructionsController;
 
   @override
   void initState() {
     super.initState();
     _cashController = TextEditingController();
+    _tableNumberController = TextEditingController();
+    _specialInstructionsController = TextEditingController();
   }
 
   @override
   void dispose() {
     _cashController.dispose();
+    _tableNumberController.dispose();
+    _specialInstructionsController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final subtotal = ref.watch(cartSubtotalProvider);
     final allDiscount = ref.watch(cartAllDiscountProvider);
     final total = ref.watch(cartTotalProvider);
-    final change = _selectedMethod == PaymentMethod.cash ? (_cashInput - total) : 0.0;
-    final isCashValid = _selectedMethod != PaymentMethod.cash || _cashInput >= total;
+    final selectedCustomer = ref.watch(selectedCustomerProvider);
+    final pointsToUse = ref.watch(pointsToUseProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
+
+    // 포인트 사용 후 최종 금액
+    final finalTotal = total - pointsToUse;
+    final change = _selectedMethod == PaymentMethod.cash ? (_cashInput - finalTotal) : 0.0;
+    final isCashValid = _selectedMethod != PaymentMethod.cash || _cashInput >= finalTotal;
 
     return Container(
       decoration: const BoxDecoration(
@@ -78,9 +104,9 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '결제 방법 선택',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                Text(
+                  l10n.selectPaymentMethod,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
@@ -94,17 +120,135 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             // 금액 요약
             if (allDiscount > 0) ...[
               Text(
-                '소계: ₩${_formatPrice(subtotal)}',
+                '${l10n.subtotal}: ₩${_formatPrice(subtotal)}',
                 style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
               ),
               Text(
-                '할인: -₩${_formatPrice(allDiscount)}',
+                '${l10n.discount}: -₩${_formatPrice(allDiscount)}',
                 style: const TextStyle(fontSize: 13, color: AppTheme.error),
               ),
             ],
             Text(
-              '결제 금액: ₩${_formatPrice(total)}',
+              '${l10n.paymentAmount}: ₩${_formatPrice(total)}',
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+            ),
+            // 포인트 사용 정보
+            if (selectedCustomer != null && pointsToUse > 0) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3E0),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFFFB74D)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.stars, color: Color(0xFFFF9800), size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${selectedCustomer.name} - 포인트 사용',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFE65100),
+                            ),
+                          ),
+                          Text(
+                            '-${_formatPrice(pointsToUse.toDouble())}P',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFFF9800),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '최종 결제 금액: ₩${_formatPrice(finalTotal)}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.success,
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+
+            // ─── 테이블 번호 & 특이사항 입력 (KDS 연동용) ────
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Table Number',
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _tableNumberController,
+                        decoration: InputDecoration(
+                          hintText: 'e.g. T01',
+                          prefixIcon: const Icon(Icons.table_restaurant, size: 18),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: AppTheme.divider),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: AppTheme.divider),
+                          ),
+                        ),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Special Instructions',
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _specialInstructionsController,
+                        decoration: InputDecoration(
+                          hintText: 'e.g. No sugar, Extra ice',
+                          prefixIcon: const Icon(Icons.edit_note, size: 18),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: AppTheme.divider),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: AppTheme.divider),
+                          ),
+                        ),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
 
@@ -133,7 +277,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                             Icon(method.icon, size: 28, color: isActive ? AppTheme.primary : AppTheme.iconColor),
                             const SizedBox(height: 6),
                             Text(
-                              method.label,
+                              method.localizedLabel(l10n),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
@@ -152,9 +296,9 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             // ─── 현금 입력 (현금 선택 시만 표시) ────
             if (_selectedMethod == PaymentMethod.cash) ...[
               const SizedBox(height: 18),
-              const Text(
-                '현금 투입 금액',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+              Text(
+                l10n.cashInputAmount,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 6),
               // 빠른 금액 버튼
@@ -186,9 +330,9 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                 controller: _cashController,
                 keyboardType: const TextInputType.numberWithOptions(),
                 decoration: InputDecoration(
-                  prefixText: '₩',
+                  prefixText: priceFormatter.currency.symbol,
                   prefixStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.primary),
-                  hintText: '금액 입력',
+                  hintText: l10n.enterAmount,
                 ),
                 onChanged: (value) {
                   final cleaned = value.replaceAll(',', '');
@@ -207,7 +351,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '거스름돈',
+                      l10n.change,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -243,7 +387,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                 ),
                 child: _isProcessing
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                    : const Text('결제 완료', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                    : Text(l10n.paymentComplete, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -253,16 +397,20 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
   }
 
   Future<void> _processPayment(double subtotal, double discountAmount, double total) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isProcessing = true);
 
     try {
       final cart = ref.read(cartProvider);
       final dao = ref.read(salesDaoProvider);
+      final db = ref.read(databaseProvider);
       final currentEmployee = ref.read(currentEmployeeProvider);
+      final selectedCustomer = ref.read(selectedCustomerProvider);
+      final pointsToUse = ref.read(pointsToUseProvider);
 
       // 현재 로그인한 직원이 없으면 에러
       if (currentEmployee == null) {
-        throw Exception('로그인한 직원이 없습니다');
+        throw Exception(l10n.noEmployeeLoggedIn);
       }
 
       // ── 매출 번호 생성 (SO-YYYYMMDD-NNNNN) ──
@@ -273,13 +421,33 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
       final seqStr = (now.millisecondsSinceEpoch % 100000).toString().padLeft(5, '0');
       final saleNumber = 'SO-$dateStr-$seqStr';
 
+      // ── 포인트 사용 처리 ──────────────────────
+      double finalTotal = total;
+      int usedPoints = 0;
+
+      if (selectedCustomer != null && pointsToUse > 0) {
+        // 포인트 검증
+        final loyaltyService = ref.read(loyaltyServiceProvider);
+        final validation = await loyaltyService.validatePointRedeem(
+          customerId: selectedCustomer.id,
+          pointsToUse: pointsToUse,
+          saleAmount: total,
+        );
+
+        if (validation.isValid) {
+          finalTotal = total - pointsToUse;
+          usedPoints = pointsToUse;
+        }
+      }
+
       // ── Sales 레코드 구성 ──────────────────
       final saleCompanion = SalesCompanion.insert(
         saleNumber: saleNumber,
-        paymentMethod: _selectedMethod.name, // 'cash' | 'card' | 'qr'
+        paymentMethod: _selectedMethod.name, // 'cash' | 'card' | 'qr' | 'transfer'
         subtotal: Value(subtotal),
         discount: Value(discountAmount),
-        total: Value(total),
+        total: Value(finalTotal),
+        customerId: Value(selectedCustomer?.id),
         employeeId: Value(currentEmployee.id),
         needsSync: const Value(true),
       );
@@ -298,7 +466,39 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
       }).toList();
 
       // ── DB 저장 (트랜잭션: 판매 기록 + 재고 차감) ─
-      final createdSale = await dao.createSale(sale: saleCompanion, items: saleItemsList);
+      final createdSale = await dao.createSale(
+        sale: saleCompanion,
+        items: saleItemsList,
+        tableNumber: _tableNumberController.text.trim().isNotEmpty ? _tableNumberController.text.trim() : null,
+        specialInstructions: _specialInstructionsController.text.trim().isNotEmpty ? _specialInstructionsController.text.trim() : null,
+        createKitchenOrder: true,
+      );
+
+      // ── 포인트 사용 및 적립 처리 ──────────────
+      if (selectedCustomer != null) {
+        final loyaltyService = ref.read(loyaltyServiceProvider);
+
+        // 1. 포인트 사용
+        if (usedPoints > 0) {
+          await loyaltyService.redeemPoints(
+            customerId: selectedCustomer.id,
+            pointsToUse: usedPoints,
+            saleId: createdSale.id,
+            employeeId: currentEmployee.id,
+          );
+        }
+
+        // 2. 포인트 적립 (실제 결제 금액 기준)
+        await loyaltyService.earnPointsForSale(
+          customerId: selectedCustomer.id,
+          saleId: createdSale.id,
+          saleAmount: finalTotal,
+          employeeId: currentEmployee.id,
+        );
+
+        // 3. 고객 누적 구매액 업데이트
+        await db.customersDao.updateTotalSpent(selectedCustomer.id, finalTotal.toInt());
+      }
 
       // ── 저장된 SaleItems 조회 (영수증용) ───────
       final savedItems = await dao.getSaleItems(createdSale.id);
@@ -309,6 +509,10 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         ref.read(discountValueProvider.notifier).state = 0;
         // 프로모션 state 초기화
         ref.read(promotionProductIdProvider.notifier).state = null;
+        // 고객 선택 및 포인트 사용 초기화
+        ref.read(selectedCustomerProvider.notifier).state = null;
+        ref.read(pointsToUseProvider.notifier).state = 0;
+
         // 결제 모달 닫고 영수증 화면으로 전이
         Navigator.of(context).pop();
         Navigator.of(context).push(
@@ -318,7 +522,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               items: savedItems,
               subtotal: subtotal,
               discount: discountAmount,
-              total: total,
+              total: finalTotal,
               paymentMethod: _selectedMethod.name,
               cashPaid: _cashInput,
               saleDate: createdSale.saleDate,
@@ -351,6 +555,7 @@ class _PaymentErrorDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
@@ -369,9 +574,9 @@ class _PaymentErrorDialog extends StatelessWidget {
               child: const Icon(Icons.error_outline, size: 40, color: AppTheme.error),
             ),
             const SizedBox(height: 16),
-            const Text(
-              '결제 실패',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.error),
+            Text(
+              l10n.paymentFailed,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.error),
             ),
             const SizedBox(height: 8),
             Text(
@@ -388,7 +593,7 @@ class _PaymentErrorDialog extends StatelessWidget {
                   backgroundColor: AppTheme.primary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text('확인'),
+                child: Text(l10n.confirm),
               ),
             ),
           ],

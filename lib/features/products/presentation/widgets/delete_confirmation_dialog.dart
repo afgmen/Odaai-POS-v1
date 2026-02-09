@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// 상품 삭제 확인 다이얼로그
 /// 결과: true (삭제 확인) / false (취소)
@@ -14,6 +15,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
@@ -32,13 +34,13 @@ class DeleteConfirmationDialog extends StatelessWidget {
               child: const Icon(Icons.warning_amber_outlined, size: 40, color: AppTheme.warning),
             ),
             const SizedBox(height: 16),
-            const Text(
-              '상품 삭제',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+            Text(
+              l10n.deleteProductTitle,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
             ),
             const SizedBox(height: 8),
             Text(
-              "'$productName'을(를) 삭제하겠습니까?\n삭제된 상품은 복원할 수 없습니다.",
+              l10n.deleteProductConfirm(productName),
               style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
               textAlign: TextAlign.center,
             ),
@@ -52,7 +54,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: const Text('취소'),
+                    child: Text(l10n.cancel),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -65,7 +67,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: const Text('삭제'),
+                    child: Text(l10n.delete),
                   ),
                 ),
               ],

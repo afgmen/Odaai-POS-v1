@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/providers/auth_provider.dart';
 
 /// 직원 추가/수정 모달
@@ -43,6 +44,7 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEdit = widget.employee != null;
 
     return Dialog(
@@ -62,7 +64,7 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      isEdit ? '직원 정보 수정' : '새 직원 추가',
+                      isEdit ? l10n.editEmployee : l10n.addEmployee,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -83,17 +85,17 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
                 TextFormField(
                   controller: _usernameCtrl,
                   enabled: !isEdit, // 수정 시에는 사용자명 변경 불가
-                  decoration: const InputDecoration(
-                    labelText: '사용자명 (로그인 ID)',
-                    hintText: '예: john_doe',
-                    prefixIcon: Icon(Icons.person_outline),
+                  decoration: InputDecoration(
+                    labelText: l10n.usernameLabel,
+                    hintText: l10n.usernameHint,
+                    prefixIcon: const Icon(Icons.person_outline),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '사용자명을 입력하세요';
+                      return l10n.usernameRequired;
                     }
                     if (value.length < 3) {
-                      return '사용자명은 3자 이상이어야 합니다';
+                      return l10n.usernameMinLength;
                     }
                     return null;
                   },
@@ -103,14 +105,14 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
                 // 이름
                 TextFormField(
                   controller: _nameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: '이름',
-                    hintText: '예: 홍길동',
-                    prefixIcon: Icon(Icons.badge_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.nameLabel,
+                    hintText: l10n.nameHint,
+                    prefixIcon: const Icon(Icons.badge_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '이름을 입력하세요';
+                      return l10n.nameRequired;
                     }
                     return null;
                   },
@@ -120,14 +122,14 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
                 // 역할
                 DropdownButtonFormField<String>(
                   value: _selectedRole,
-                  decoration: const InputDecoration(
-                    labelText: '역할',
-                    prefixIcon: Icon(Icons.work_outline),
+                  decoration: InputDecoration(
+                    labelText: l10n.roleLabel,
+                    prefixIcon: const Icon(Icons.work_outline),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'cashier', child: Text('캐셔 (Cashier)')),
-                    DropdownMenuItem(value: 'manager', child: Text('매니저 (Manager)')),
-                    DropdownMenuItem(value: 'admin', child: Text('관리자 (Admin)')),
+                  items: [
+                    DropdownMenuItem(value: 'cashier', child: Text(l10n.roleCashier)),
+                    DropdownMenuItem(value: 'manager', child: Text(l10n.roleManager)),
+                    DropdownMenuItem(value: 'admin', child: Text(l10n.roleAdmin)),
                   ],
                   onChanged: (value) {
                     setState(() => _selectedRole = value!);
@@ -141,20 +143,20 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
                   keyboardType: TextInputType.number,
                   maxLength: 4,
                   decoration: InputDecoration(
-                    labelText: isEdit ? 'PIN 변경 (선택사항)' : 'PIN (4자리 숫자)',
-                    hintText: '1234',
+                    labelText: isEdit ? l10n.pinChangeLabel : l10n.pinNewLabel,
+                    hintText: l10n.pinHint,
                     prefixIcon: const Icon(Icons.lock_outline),
-                    helperText: isEdit ? '비워두면 PIN이 변경되지 않습니다' : '4자리 숫자를 입력하세요',
+                    helperText: isEdit ? l10n.pinNoChangeHelper : l10n.pinNewHelper,
                   ),
                   validator: (value) {
                     if (!isEdit && (value == null || value.isEmpty)) {
-                      return 'PIN을 입력하세요';
+                      return l10n.pinRequired;
                     }
                     if (value != null && value.isNotEmpty && value.length != 4) {
-                      return 'PIN은 4자리여야 합니다';
+                      return l10n.pinLengthError;
                     }
                     if (value != null && value.isNotEmpty && !RegExp(r'^\d{4}$').hasMatch(value)) {
-                      return 'PIN은 숫자만 입력 가능합니다';
+                      return l10n.pinDigitsOnly;
                     }
                     return null;
                   },
@@ -175,8 +177,8 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
                       Expanded(
                         child: Text(
                           isEdit
-                              ? '직원 정보를 수정합니다. PIN을 변경하려면 새로운 4자리 숫자를 입력하세요.'
-                              : '새 직원이 생성됩니다. PIN을 사용하여 로그인할 수 있습니다.',
+                              ? l10n.employeeInfoEdit
+                              : l10n.employeeInfoNew,
                           style: const TextStyle(fontSize: 12, color: AppTheme.primary),
                         ),
                       ),
@@ -195,7 +197,7 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           side: const BorderSide(color: AppTheme.divider),
                         ),
-                        child: const Text('취소'),
+                        child: Text(l10n.cancel),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -216,7 +218,7 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
                                   color: Colors.white,
                                 ),
                               )
-                            : Text(isEdit ? '수정' : '추가'),
+                            : Text(isEdit ? l10n.edit : l10n.add),
                       ),
                     ),
                   ],
@@ -237,6 +239,7 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
     try {
       final authService = ref.read(authServiceProvider);
       final pin = _pinCtrl.text.trim();
+      final l10n = AppLocalizations.of(context)!;
 
       if (widget.employee == null) {
         // 신규 직원 추가
@@ -249,7 +252,7 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
 
         if (mounted) {
           Navigator.of(context).pop();
-          _showSuccessMessage('새 직원이 추가되었습니다');
+          _showSuccessMessage(l10n.employeeAdded);
         }
       } else {
         // 기존 직원 수정
@@ -262,13 +265,14 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
 
         if (mounted) {
           Navigator.of(context).pop();
-          _showSuccessMessage('직원 정보가 수정되었습니다');
+          _showSuccessMessage(l10n.employeeUpdated);
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        _showErrorMessage('오류가 발생했습니다: ${e.toString()}');
+        final l10n = AppLocalizations.of(context)!;
+        _showErrorMessage(l10n.msgError(e.toString()));
       }
     }
   }

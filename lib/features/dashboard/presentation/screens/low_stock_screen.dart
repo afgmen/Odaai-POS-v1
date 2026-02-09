@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/database_providers.dart';
 import '../../providers/dashboard_provider.dart';
 
@@ -12,6 +13,7 @@ class LowStockScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final asyncProducts = ref.watch(lowStockStreamProvider);
 
     return Scaffold(
@@ -46,9 +48,9 @@ class LowStockScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 10),
-            const Text(
-              '재고 부족 알림',
-              style: TextStyle(
+            Text(
+              l10n.lowStockAlert,
+              style: const TextStyle(
                   fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
             ),
           ],
@@ -75,14 +77,14 @@ class LowStockScreen extends ConsumerWidget {
                     child: const Icon(Icons.check_circle_outlined, size: 36, color: AppTheme.success),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    '모든 상품의 재고가 충분합니다',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                  Text(
+                    l10n.allStockSufficient,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    '최소 재고 이상으로 유지되고 있습니다',
-                    style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                  Text(
+                    l10n.aboveMinStock,
+                    style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                   ),
                 ],
               ),
@@ -111,7 +113,7 @@ class LowStockScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 40, color: AppTheme.error),
               const SizedBox(height: 8),
-              Text('오류: $err', style: const TextStyle(color: AppTheme.error)),
+              Text(l10n.msgError(err.toString()), style: const TextStyle(color: AppTheme.error)),
             ],
           ),
         ),
@@ -121,6 +123,7 @@ class LowStockScreen extends ConsumerWidget {
 
   /// 재고 조정 다이얼로그
   Future<void> _showRestockDialog(BuildContext context, WidgetRef ref, Product product) async {
+    final l10n = AppLocalizations.of(context)!;
     final dao = ref.read(productsDaoProvider);
     int addQty = 0;
 
@@ -140,13 +143,13 @@ class LowStockScreen extends ConsumerWidget {
                 children: [
                   // 제목
                   Text(
-                    '재고 추가: ${product.name}',
+                    l10n.addStockTitle(product.name),
                     style: const TextStyle(
                         fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '현재 재고: ${product.stock} / 최소 재고: ${product.minStock}',
+                    l10n.currentStock(product.stock, product.minStock),
                     style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                   ),
                   const SizedBox(height: 18),
@@ -232,7 +235,7 @@ class LowStockScreen extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: AppTheme.divider),
                             ),
-                            child: const Center(child: Text('취소', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary))),
+                            child: Center(child: Text(l10n.cancel, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary))),
                           ),
                         ),
                       ),
@@ -249,7 +252,7 @@ class LowStockScreen extends ConsumerWidget {
                               color: addQty > 0 ? AppTheme.primary : AppTheme.textDisabled,
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Center(child: Text('재고 추가', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white))),
+                            child: Center(child: Text(l10n.addStock, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white))),
                           ),
                         ),
                       ),
@@ -269,13 +272,13 @@ class LowStockScreen extends ConsumerWidget {
         productId: product.id,
         quantity: addQty,
         type: 'in',
-        reason: '재고 보충 (부족 알림)',
+        reason: l10n.stockReplenishReason,
       );
       // Snackbar 표시
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${product.name} 재고 $addQty개 추가 완료'),
+            content: Text(l10n.stockAddedMsg(product.name, addQty)),
             duration: const Duration(seconds: 2),
             backgroundColor: AppTheme.success,
             shape: const RoundedRectangleBorder(
@@ -297,11 +300,12 @@ class _LowStockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // 재고 == 0 이면 빨강, 아니면 주황
     final isOutOfStock = product.stock <= 0;
     final statusColor = isOutOfStock ? AppTheme.error : AppTheme.warning;
     final statusBg = isOutOfStock ? const Color(0xFFFDEBEB) : const Color(0xFFFFF3E0);
-    final statusLabel = isOutOfStock ? '재고 없음' : '부족';
+    final statusLabel = isOutOfStock ? l10n.outOfStockLabel : l10n.lowStockLabel;
 
     // 재고 비율 (현재 / 최소) — 최소재고 기준으로 퍼센트
     final ratio = product.minStock > 0
@@ -360,9 +364,9 @@ class _LowStockCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _InfoChip(label: '현재 재고', value: '${product.stock}개'),
-              _InfoChip(label: '최소 재고', value: '${product.minStock}개'),
-              _InfoChip(label: '필요 보충', value: '${product.minStock - product.stock}개',
+              _InfoChip(label: l10n.currentStockLabel, value: '${product.stock}개'),
+              _InfoChip(label: l10n.minStockLabel, value: '${product.minStock}개'),
+              _InfoChip(label: l10n.needReplenish, value: '${product.minStock - product.stock}개',
                   valueColor: statusColor),
             ],
           ),
@@ -397,8 +401,8 @@ class _LowStockCard extends StatelessWidget {
                   children: [
                     const Icon(Icons.add_circle_outline, size: 18, color: AppTheme.primary),
                     const SizedBox(width: 6),
-                    const Text('재고 추가',
-                        style: TextStyle(
+                    Text(l10n.addStock,
+                        style: const TextStyle(
                             fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.primary)),
                   ],
                 ),

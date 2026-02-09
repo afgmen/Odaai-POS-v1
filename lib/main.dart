@@ -36,8 +36,8 @@ class OdaPosApp extends ConsumerWidget {
 
       // Supported locales
       supportedLocales: const [
+        Locale('en', ''),  // English (default)
         Locale('ko', ''),  // Korean
-        Locale('en', ''),  // English
         Locale('vi', ''),  // Vietnamese
       ],
 

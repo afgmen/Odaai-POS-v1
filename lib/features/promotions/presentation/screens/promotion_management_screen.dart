@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../providers/promotions_provider.dart';
 import '../widgets/promotion_form_modal.dart';
 
@@ -12,6 +13,7 @@ class PromotionManagementScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final promotionsAsync = ref.watch(allPromotionsProvider);
 
     return Scaffold(
@@ -26,13 +28,13 @@ class PromotionManagementScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.local_offer, size: 28, color: AppTheme.primary),
-                      SizedBox(width: 12),
+                      const Icon(Icons.local_offer, size: 28, color: AppTheme.primary),
+                      const SizedBox(width: 12),
                       Text(
-                        '프로모션 관리',
-                        style: TextStyle(
+                        l10n.promotionManagement,
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
@@ -43,7 +45,7 @@ class PromotionManagementScreen extends ConsumerWidget {
                   ElevatedButton.icon(
                     onPressed: () => _showPromotionForm(context, ref, null),
                     icon: const Icon(Icons.add, size: 20),
-                    label: const Text('프로모션 추가'),
+                    label: Text(l10n.addPromotion),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
@@ -67,7 +69,7 @@ class PromotionManagementScreen extends ConsumerWidget {
                             Icon(Icons.local_offer_outlined, size: 64, color: AppTheme.textDisabled),
                             const SizedBox(height: 16),
                             Text(
-                              '등록된 프로모션이 없습니다',
+                              l10n.noPromotions,
                               style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
                             ),
                           ],
@@ -96,7 +98,7 @@ class PromotionManagementScreen extends ConsumerWidget {
                   },
                   loading: () => const Center(child: CircularProgressIndicator()),
                   error: (error, stack) => Center(
-                    child: Text('오류: $error', style: TextStyle(color: AppTheme.error)),
+                    child: Text(l10n.msgError(error.toString()), style: TextStyle(color: AppTheme.error)),
                   ),
                 ),
               ),
@@ -120,20 +122,21 @@ class PromotionManagementScreen extends ConsumerWidget {
   }
 
   Future<void> _deletePromotion(BuildContext context, WidgetRef ref, Promotion promotion) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('프로모션 삭제'),
-        content: Text('정말로 "${promotion.name}" 프로모션을 삭제하시겠습니까?'),
+        title: Text(l10n.deletePromotion),
+        content: Text(l10n.deletePromotionConfirm(promotion.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-            child: const Text('삭제'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -162,8 +165,9 @@ class _PromotionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeLabel = _getTypeLabel(promotion.type);
-    final valueText = _getValueText(promotion.type, promotion.value);
+    final l10n = AppLocalizations.of(context)!;
+    final typeLabel = _getTypeLabel(l10n, promotion.type);
+    final valueText = _getValueText(l10n, promotion.type, promotion.value);
     final dateText = _getDateRangeText(promotion.startDate, promotion.endDate);
 
     return Container(
@@ -231,7 +235,7 @@ class _PromotionCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          promotion.isActive ? '활성' : '비활성',
+                          promotion.isActive ? l10n.active : l10n.inactive,
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
@@ -300,17 +304,20 @@ class _PromotionCard extends StatelessWidget {
                     break;
                 }
               },
-              itemBuilder: (context) => [
-                const PopupMenuItem(value: 'edit', child: Text('수정')),
-                PopupMenuItem(
-                  value: 'toggle',
-                  child: Text(promotion.isActive ? '비활성화' : '활성화'),
-                ),
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Text('삭제', style: TextStyle(color: AppTheme.error)),
-                ),
-              ],
+              itemBuilder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return [
+                  PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
+                  PopupMenuItem(
+                    value: 'toggle',
+                    child: Text(promotion.isActive ? l10n.deactivate : l10n.activate),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(l10n.delete, style: const TextStyle(color: AppTheme.error)),
+                  ),
+                ];
+              },
             ),
           ],
         ),
@@ -318,27 +325,27 @@ class _PromotionCard extends StatelessWidget {
     );
   }
 
-  String _getTypeLabel(String type) {
+  String _getTypeLabel(AppLocalizations l10n, String type) {
     switch (type) {
       case 'buy1get1':
-        return '1+1 이벤트';
+        return l10n.bogoLabel;
       case 'buy2get1':
-        return '2+1 이벤트';
+        return l10n.buy2Get1Label;
       case 'percentOff':
-        return '퍼센트 할인';
+        return l10n.percentOffLabel;
       case 'amountOff':
-        return '금액 할인';
+        return l10n.amountOffLabel;
       default:
         return type;
     }
   }
 
-  String _getValueText(String type, double value) {
+  String _getValueText(AppLocalizations l10n, String type, double value) {
     switch (type) {
       case 'buy1get1':
-        return '1개 무료';
+        return l10n.freeOne;
       case 'buy2get1':
-        return '1개 무료';
+        return l10n.freeOne;
       case 'percentOff':
         return '${value.toInt()}% OFF';
       case 'amountOff':

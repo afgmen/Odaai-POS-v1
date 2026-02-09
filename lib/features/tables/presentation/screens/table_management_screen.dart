@@ -224,8 +224,8 @@ class _TableLayoutTab extends ConsumerWidget {
     final dao = ref.read(tablesDaoProvider);
 
     // 캔버스 경계 체크 (0-1000 범위)
-    final x = offset.dx.clamp(0, 1000);
-    final y = offset.dy.clamp(0, 1000);
+    final x = offset.dx.clamp(0.0, 1000.0);
+    final y = offset.dy.clamp(0.0, 1000.0);
 
     await dao.updateTablePosition(
       tableId: table.id,

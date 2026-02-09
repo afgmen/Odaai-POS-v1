@@ -12,7 +12,7 @@ final tablesDaoProvider = Provider<TablesDao>((ref) {
 
 /// 전체 테이블 목록 (실시간)
 final allTablesProvider = StreamProvider<List<RestaurantTable>>((ref) {
-  return ref.watch(tablesDaoProvider).watchAllTables();
+  return ref.watch(tablesDaoProvider).watchAllActiveTables();
 });
 
 /// 테이블 상태 필터

@@ -221,10 +221,8 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// 예약 전체 업데이트
-  Future<bool> updateReservationFull(ReservationsCompanion reservation) {
-    return update(reservations)
-        .replace(reservation)
-        .then((count) => count > 0);
+  Future<bool> updateReservationFull(ReservationsCompanion reservation) async {
+    return await update(reservations).replace(reservation);
   }
 
   // ============================================================

@@ -294,7 +294,7 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
           ReservationsCompanion.insert(
             customerName: customerName,
             customerPhone: customerPhone,
-            partySize: drift.Value(partySize),
+            partySize: partySize,
             reservationDate: _selectedDate,
             reservationTime: reservationTime,
             status: drift.Value(_selectedStatus),

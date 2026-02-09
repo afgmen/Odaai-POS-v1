@@ -76,9 +76,9 @@ final filteredReservationsProvider = StreamProvider<List<Reservation>>((ref) {
           reservations.where((r) => r.status == selectedStatus).toList();
       return Stream.value(filtered);
     },
-    loading: () => Stream.value([]),
-    error: (err, stack) => Stream.value([]),
-  ).asyncExpand((reservations) => reservations);
+    loading: () => Stream.value(<Reservation>[]),
+    error: (err, stack) => Stream.value(<Reservation>[]),
+  ).asyncExpand((reservations) => Stream.value(reservations));
 });
 
 /// 예약 폼 표시 상태

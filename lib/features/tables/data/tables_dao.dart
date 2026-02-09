@@ -153,8 +153,8 @@ class TablesDao extends DatabaseAccessor<AppDatabase> with _$TablesDaoMixin {
   }
 
   /// 테이블 전체 업데이트
-  Future<bool> updateTable(RestaurantTablesCompanion table) {
-    return update(restaurantTables).replace(table).then((count) => count > 0);
+  Future<bool> updateTable(RestaurantTablesCompanion table) async {
+    return await update(restaurantTables).replace(table);
   }
 
   // ============================================================
@@ -202,8 +202,7 @@ class TablesDao extends DatabaseAccessor<AppDatabase> with _$TablesDaoMixin {
     final query = selectOnly(db.sales)
       ..addColumns([db.sales.id.count()])
       ..where(
-        db.sales.saleDate.isBetweenValues(startOfDay, endOfDay) &
-            db.sales.tableNumber.isNotNull(),
+        db.sales.saleDate.isBetweenValues(startOfDay, endOfDay),
       );
 
     final result = await query.getSingle();

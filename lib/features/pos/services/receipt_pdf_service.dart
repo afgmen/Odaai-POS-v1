@@ -106,7 +106,7 @@ class ReceiptPdfService {
               pw.Center(
                 child: pw.Text(
                   labels['thankYou'] ?? 'Thank you!',
-                  style: const pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                  style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
                 ),
               ),
               pw.SizedBox(height: 12),
@@ -136,15 +136,15 @@ class ReceiptPdfService {
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                 children: [
-                  _buildHeader(data, koreanFont),
+                  _buildHeader(data),
                   pw.SizedBox(height: 6),
-                  _buildOrderInfo(data, labels, koreanFont),
+                  _buildOrderInfo(data, labels),
                   _dashedDivider(),
-                  _buildItemsTable(data, labels, koreanFont),
+                  _buildItemsTable(data, labels),
                   _dashedDivider(),
-                  _buildSummary(data, labels, koreanFont),
+                  _buildSummary(data, labels),
                   _dashedDivider(),
-                  _buildPaymentInfo(data, labels, koreanFont),
+                  _buildPaymentInfo(data, labels),
                   _dashedDivider(),
                   pw.SizedBox(height: 12),
                   pw.Center(
@@ -259,11 +259,11 @@ class ReceiptPdfService {
   static pw.Widget _buildSummary(ReceiptData data, Map<String, String> labels) {
     return pw.Column(
       children: [
-        _summaryRow(labels['subtotal'] ?? 'Subtotal', _fmt(data.subtotal), font),
+        _summaryRow(labels['subtotal'] ?? 'Subtotal', _fmt(data.subtotal)),
         if (data.discount > 0)
-          _summaryRow(labels['discount'] ?? 'Discount', '-${_fmt(data.discount)}', font, isDiscount: true),
+          _summaryRow(labels['discount'] ?? 'Discount', '-${_fmt(data.discount)}', isDiscount: true),
         pw.SizedBox(height: 2),
-        _summaryRow(labels['total'] ?? 'Total', _fmt(data.total), font, isBold: true),
+        _summaryRow(labels['total'] ?? 'Total', _fmt(data.total), isBold: true),
       ],
     );
   }

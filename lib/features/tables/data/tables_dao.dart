@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 import '../../../database/app_database.dart';
+import '../../../database/tables/store_tables_management.dart';
+import '../../../database/tables/reservations.dart';
 
 part 'tables_dao.g.dart';
 

@@ -52,5 +52,5 @@ final mgmtFilteredProductsProvider = StreamProvider<List<Product>>((ref) {
     },
     loading: () => Stream.value([]),
     error: (err, stack) => Stream.value([]),
-  ).asyncExpand((products) => products);
+  ).asyncExpand((products) => Stream.value(products));
 });

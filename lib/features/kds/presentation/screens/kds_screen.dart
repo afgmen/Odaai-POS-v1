@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/enums/order_status.dart';
 import '../../domain/services/kitchen_service_provider.dart';
 import '../providers/kds_screen_provider.dart';
@@ -14,13 +15,14 @@ class KdsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final filteredOrders = ref.watch(filteredOrdersProvider);
     final selectedOrderId = ref.watch(selectedOrderIdProvider);
     final showDetail = ref.watch(showOrderDetailProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('주방 디스플레이 시스템'),
+        title: Text(l10n.kdsTitle),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         actions: [
@@ -39,19 +41,19 @@ class KdsScreen extends ConsumerWidget {
             child: filteredOrders.when(
               data: (orders) {
                 if (orders.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.restaurant_menu,
                           size: 80,
                           color: Colors.grey,
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
-                          '주문이 없습니다',
-                          style: TextStyle(
+                          l10n.kdsNoOrders,
+                          style: const TextStyle(
                             fontSize: 18,
                             color: Colors.grey,
                           ),
@@ -90,7 +92,7 @@ class KdsScreen extends ConsumerWidget {
                   children: [
                     const Icon(Icons.error, color: Colors.red, size: 48),
                     const SizedBox(height: 16),
-                    Text('오류 발생: $error'),
+                    Text(l10n.kdsErrorOccurred(error)),
                   ],
                 ),
               ),

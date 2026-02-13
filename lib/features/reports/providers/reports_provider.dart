@@ -3,18 +3,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../database/daos/sales_dao.dart';
 import '../../../providers/database_providers.dart';
 
-// ── 기간 열거형 ──────────────────────────────────
+// ── Period Enum ──────────────────────────────────
 enum ReportPeriod {
-  today('오늘', 'Today', 'Hôm nay'),
-  week('주간', 'Week', 'Tuần'),
-  month('월간', 'Month', 'Tháng'),
-  custom('직접 선택', 'Custom', 'Tùy chọn');
+  today,
+  week,
+  month,
+  custom;
 
-  final String labelKo;
-  final String labelEn;
-  final String labelVi;
-
-  const ReportPeriod(this.labelKo, this.labelEn, this.labelVi);
+  /// Get localization key for this period
+  String get localizationKey {
+    switch (this) {
+      case ReportPeriod.today:
+        return 'today';
+      case ReportPeriod.week:
+        return 'week';
+      case ReportPeriod.month:
+        return 'month';
+      case ReportPeriod.custom:
+        return 'customPeriod';
+    }
+  }
 }
 
 /// 현재 리포트 기간

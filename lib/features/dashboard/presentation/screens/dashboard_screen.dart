@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/responsive/responsive_helper.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/permission_gate_widget.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../providers/currency_provider.dart';
+import '../../../auth/domain/permission_modules.dart';
 import '../../providers/dashboard_provider.dart';
 
 /// 매출 대시보드 화면
@@ -13,7 +16,40 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+
+    return PermissionGateWidget(
+      permission: PermissionModules.REVENUE_DASHBOARD_VIEW,
+      fallback: Scaffold(
+        backgroundColor: AppTheme.background,
+        appBar: AppBar(
+          backgroundColor: AppTheme.cardWhite,
+          elevation: 0,
+          titleSpacing: 16,
+          title: Text(
+            l10n.salesDashboard,
+            style: const TextStyle(
+                fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+          ),
+        ),
+        body: const Center(
+          child: AccessDeniedCard(
+            message: '매출 대시보드를 볼 권한이 없습니다',
+          ),
+        ),
+      ),
+      child: _DashboardScreenContent(),
+    );
+  }
+}
+
+class _DashboardScreenContent extends ConsumerWidget {
+  const _DashboardScreenContent();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final filter = ref.watch(dashboardFilterProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -66,7 +102,7 @@ class DashboardScreen extends ConsumerWidget {
                               ),
                             ),
                             child: Text(
-                              f.label,
+                              _getLocalizedFilterLabel(l10n, f),
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight:
@@ -87,11 +123,11 @@ class DashboardScreen extends ConsumerWidget {
                 if (isWide)
                   Row(
                     children: [
-                      Expanded(child: _totalSalesCard(ref, l10n)),
+                      Expanded(child: _totalSalesCard(ref, l10n, priceFormatter)),
                       const SizedBox(width: 10),
                       Expanded(child: _orderCountCard(ref, l10n)),
                       const SizedBox(width: 10),
-                      Expanded(child: _avgOrderCard(ref, l10n)),
+                      Expanded(child: _avgOrderCard(ref, l10n, priceFormatter)),
                       const SizedBox(width: 10),
                       Expanded(child: _InventoryValueCompactCard()),
                     ],
@@ -99,7 +135,7 @@ class DashboardScreen extends ConsumerWidget {
                 else ...[
                   Row(
                     children: [
-                      Expanded(child: _totalSalesCard(ref, l10n)),
+                      Expanded(child: _totalSalesCard(ref, l10n, priceFormatter)),
                       const SizedBox(width: 10),
                       Expanded(child: _orderCountCard(ref, l10n)),
                     ],
@@ -107,7 +143,7 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Expanded(child: _avgOrderCard(ref, l10n)),
+                      Expanded(child: _avgOrderCard(ref, l10n, priceFormatter)),
                       const SizedBox(width: 10),
                       const Expanded(child: SizedBox()),
                     ],
@@ -161,9 +197,20 @@ class DashboardScreen extends ConsumerWidget {
       ),
     );
   }
+
+  String _getLocalizedFilterLabel(AppLocalizations l10n, DashboardFilter filter) {
+    switch (filter) {
+      case DashboardFilter.today:
+        return l10n.today;
+      case DashboardFilter.week:
+        return l10n.week;
+      case DashboardFilter.month:
+        return l10n.month;
+    }
+  }
 }
 
-// ── 통계 카드 공통 레이아웃 ────────────────────────
+// ── Statistics Card Common Layout ────────────────────────
 Widget _statCardLayout({
   required String title,
   required IconData icon,
@@ -212,14 +259,14 @@ Widget _asyncDoubleWidget(AsyncValue<double> async, Color color, String Function
 }
 
 // ── 매출 합계 카드 ─────────────────────────────────
-Widget _totalSalesCard(WidgetRef ref, AppLocalizations l10n) {
+Widget _totalSalesCard(WidgetRef ref, AppLocalizations l10n, priceFormatter) {
   final async = ref.watch(totalSalesProvider);
   return _statCardLayout(
     title: l10n.totalSalesAmount,
     icon: Icons.attach_money,
     color: AppTheme.primary,
     bgColor: const Color(0xFFE8F0FE),
-    valueWidget: _asyncDoubleWidget(async, AppTheme.primary, (v) => '₩${_fmt(v)}', l10n),
+    valueWidget: _asyncDoubleWidget(async, AppTheme.primary, (v) => priceFormatter.format(v), l10n),
   );
 }
 
@@ -240,14 +287,14 @@ Widget _orderCountCard(WidgetRef ref, AppLocalizations l10n) {
 }
 
 // ── 평균 주문금액 카드 ──────────────────────────────
-Widget _avgOrderCard(WidgetRef ref, AppLocalizations l10n) {
+Widget _avgOrderCard(WidgetRef ref, AppLocalizations l10n, priceFormatter) {
   final async = ref.watch(avgOrderProvider);
   return _statCardLayout(
     title: l10n.avgOrderAmount,
     icon: Icons.bar_chart,
     color: AppTheme.warning,
     bgColor: const Color(0xFFFFF3E0),
-    valueWidget: _asyncDoubleWidget(async, AppTheme.warning, (v) => '₩${_fmt(v)}', l10n),
+    valueWidget: _asyncDoubleWidget(async, AppTheme.warning, (v) => priceFormatter.format(v), l10n),
   );
 }
 
@@ -259,6 +306,7 @@ class _InventoryValueCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final asyncValue = ref.watch(inventoryValueProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -298,7 +346,7 @@ class _InventoryValueCard extends ConsumerWidget {
           ),
           asyncValue.when(
             data: (value) => Text(
-              '₩${_fmt(value)}',
+              priceFormatter.format(value),
               style: const TextStyle(
                   fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF7B1FA2)),
             ),
@@ -323,6 +371,7 @@ class _InventoryValueCompactCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final asyncValue = ref.watch(inventoryValueProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return _statCardLayout(
       title: l10n.inventoryValue,
@@ -331,7 +380,7 @@ class _InventoryValueCompactCard extends ConsumerWidget {
       bgColor: const Color(0xFFF3E5F5),
       valueWidget: asyncValue.when(
         data: (v) => Text(
-          '₩${_fmt(v)}',
+          priceFormatter.format(v),
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF7B1FA2)),
         ),
         loading: () => const SizedBox(
@@ -367,6 +416,7 @@ class _PaymentBreakdownSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final asyncValue = ref.watch(paymentBreakdownProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -430,7 +480,7 @@ class _PaymentBreakdownSection extends ConsumerWidget {
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              '₩${_fmt(stat.total)}',
+                              priceFormatter.format(stat.total),
                               style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
@@ -463,7 +513,7 @@ class _PaymentBreakdownSection extends ConsumerWidget {
             child: Center(child: CircularProgressIndicator(color: AppTheme.primary))),
         error: (_, _) => Padding(
             padding: const EdgeInsets.all(16),
-            child: Text(l10n.errorOccurred, style: const TextStyle(color: AppTheme.error))),
+            child: Text(l10n.errorOccurred(''), style: const TextStyle(color: AppTheme.error))),
       ),
     );
   }
@@ -477,6 +527,7 @@ class _TopSellingSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final asyncValue = ref.watch(topSellingProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -554,7 +605,7 @@ class _TopSellingSection extends ConsumerWidget {
                                         color: AppTheme.textPrimary),
                                   ),
                                   Text(
-                                    '₩${_fmt(item.totalSales)}',
+                                    priceFormatter.format(item.totalSales),
                                     style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
@@ -596,7 +647,7 @@ class _TopSellingSection extends ConsumerWidget {
             child: Center(child: CircularProgressIndicator(color: AppTheme.primary))),
         error: (_, _) => Padding(
             padding: const EdgeInsets.all(16),
-            child: Text(l10n.errorOccurred, style: const TextStyle(color: AppTheme.error))),
+            child: Text(l10n.errorOccurred(''), style: const TextStyle(color: AppTheme.error))),
       ),
     );
   }

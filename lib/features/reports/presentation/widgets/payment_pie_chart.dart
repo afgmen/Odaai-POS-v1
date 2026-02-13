@@ -2,8 +2,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 
-/// 결제 방법별 Pie 차트
+/// Payment method Pie chart
 class PaymentPieChart extends StatelessWidget {
   final Map<String, double> data;
 
@@ -11,13 +12,14 @@ class PaymentPieChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final total = data.values.fold(0.0, (sum, v) => sum + v);
 
     if (data.isEmpty || total == 0) {
       return _buildContainer(
-        child: const Center(
-          child: Text('데이터가 없습니다',
-              style: TextStyle(color: AppTheme.textDisabled)),
+        child: Center(
+          child: Text(l10n.noDataAvailable,
+              style: const TextStyle(color: AppTheme.textDisabled)),
         ),
       );
     }

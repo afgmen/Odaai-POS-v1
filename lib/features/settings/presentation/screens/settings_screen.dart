@@ -3,9 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/models/currency.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/permission_gate_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/currency_provider.dart';
 import '../../../../providers/locale_provider.dart';
+import '../../../auth/domain/permission_modules.dart';
+import '../../../auth/providers/rbac_providers.dart';
+import 'security_settings_screen.dart';
+import '../widgets/enable_rbac_button.dart';
 
 /// 설정 화면 — 언어, 통화, 매장 정보, 앱 정보 등
 class SettingsScreen extends ConsumerWidget {
@@ -16,6 +21,8 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final currentLang = ref.watch(currentLanguageProvider);
     final currentCurrency = ref.watch(currencyProvider);
+    final rbacEnabled = ref.watch(rbacSettingProvider);
+    final isOwner = ref.watch(isOwnerProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -26,6 +33,21 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // ─── RBAC Enable Button (Show if RBAC is not enabled) ──
+          rbacEnabled.when(
+            data: (enabled) => !enabled
+                ? Column(
+                    children: [
+                      const EnableRbacButton(),
+                      const SizedBox(height: 24),
+                    ],
+                  )
+                : const SizedBox.shrink(),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+
+          // ─── Original sections below ──
           // ─── 언어 & 통화 섹션 ─────────────────────────
           _SectionHeader(title: l10n.localeSettings, icon: Icons.language),
           const SizedBox(height: 8),
@@ -127,6 +149,38 @@ class SettingsScreen extends ConsumerWidget {
           ),
 
           const SizedBox(height: 24),
+
+          // ─── 보안 섹션 (Owner Only) ────────────────────
+          OwnerOnly(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SectionHeader(
+                  title: 'Security',
+                  icon: Icons.security,
+                ),
+                const SizedBox(height: 8),
+                _SettingsCard(
+                  children: [
+                    _InfoTile(
+                      icon: Icons.shield_outlined,
+                      label: 'RBAC Settings',
+                      value: 'Manage Permissions',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SecuritySettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
 
           // ─── 앱 정보 섹션 ─────────────────────────────
           _SectionHeader(
@@ -356,8 +410,6 @@ class _LanguageTile extends StatelessWidget {
 
   String _flagEmoji(AppLanguage lang, AppLocalizations l10n) {
     switch (lang) {
-      case AppLanguage.ko:
-        return '\u{1F1F0}\u{1F1F7} ${l10n.langKorean}';
       case AppLanguage.en:
         return '\u{1F1FA}\u{1F1F8} ${l10n.langEnglish}';
       case AppLanguage.vi:

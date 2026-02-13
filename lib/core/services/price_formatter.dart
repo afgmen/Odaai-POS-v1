@@ -9,19 +9,19 @@ class PriceFormatter {
     required this.exchangeRate,
   });
 
-  /// KRW 가격을 현재 통화로 변환
-  double convert(double priceInKRW) {
-    return priceInKRW * exchangeRate;
+  /// VND 가격을 현재 통화로 변환
+  double convert(double priceInVND) {
+    return priceInVND * exchangeRate;
   }
 
-  /// 현재 통화를 KRW로 역변환
-  double toKRW(double priceInCurrency) {
+  /// 현재 통화를 VND로 역변환
+  double toVND(double priceInCurrency) {
     return priceInCurrency / exchangeRate;
   }
 
   /// 가격을 현재 통화 형식으로 포맷팅
-  String format(double priceInKRW, {bool includeSymbol = true}) {
-    final convertedPrice = convert(priceInKRW);
+  String format(double priceInVND, {bool includeSymbol = true}) {
+    final convertedPrice = convert(priceInVND);
     final rounded = convertedPrice.toStringAsFixed(currency.decimalDigits);
 
     final parts = rounded.split('.');
@@ -38,7 +38,7 @@ class PriceFormatter {
   }
 
   /// 간단한 포맷팅 (format과 동일, 하위 호환성)
-  String formatSimple(double priceInKRW) {
-    return format(priceInKRW);
+  String formatSimple(double priceInVND) {
+    return format(priceInVND);
   }
 }

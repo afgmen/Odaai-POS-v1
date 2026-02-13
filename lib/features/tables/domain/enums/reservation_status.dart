@@ -3,25 +3,40 @@ import 'package:flutter/material.dart';
 /// 예약 상태
 enum ReservationStatus {
   /// 예약 대기 (신규 예약, 확인 전)
-  pending('PENDING', '예약 대기', Color(0xFF9E9E9E)),
+  pending('PENDING', Color(0xFF9E9E9E)),
 
   /// 예약 확정 (매니저 확인 완료)
-  confirmed('CONFIRMED', '예약 확정', Color(0xFF4CAF50)),
+  confirmed('CONFIRMED', Color(0xFF4CAF50)),
 
   /// 착석 완료 (고객이 도착하여 착석)
-  seated('SEATED', '착석 완료', Color(0xFF2196F3)),
+  seated('SEATED', Color(0xFF2196F3)),
 
   /// 예약 취소 (고객 또는 매장에서 취소)
-  cancelled('CANCELLED', '예약 취소', Color(0xFFE0E0E0)),
+  cancelled('CANCELLED', Color(0xFFE0E0E0)),
 
   /// 노쇼 (예약 시간에 나타나지 않음)
-  noShow('NO_SHOW', '노쇼', Color(0xFFF44336));
+  noShow('NO_SHOW', Color(0xFFF44336));
 
   final String value;
-  final String label;
   final Color color;
 
-  const ReservationStatus(this.value, this.label, this.color);
+  const ReservationStatus(this.value, this.color);
+
+  /// Get localization key for this status
+  String get localizationKey {
+    switch (this) {
+      case ReservationStatus.pending:
+        return 'reservationPending';
+      case ReservationStatus.confirmed:
+        return 'reservationConfirmed';
+      case ReservationStatus.seated:
+        return 'reservationSeated';
+      case ReservationStatus.cancelled:
+        return 'reservationCancelled';
+      case ReservationStatus.noShow:
+        return 'reservationNoShow';
+    }
+  }
 
   /// String → Enum 변환
   static ReservationStatus fromString(String value) {

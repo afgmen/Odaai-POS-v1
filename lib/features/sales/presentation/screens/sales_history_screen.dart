@@ -2,14 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/permission_gate_widget.dart';
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../auth/domain/permission_modules.dart';
 import '../../providers/sales_provider.dart';
 import 'sale_detail_screen.dart';
 
 /// 주문 내역 목록 화면
 class SalesHistoryScreen extends ConsumerWidget {
   const SalesHistoryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
+    // Sales history shows transaction details with amounts
+    // Requires permission to view daily revenue
+    return PermissionGateWidget(
+      permission: PermissionModules.REVENUE_DAILY_VIEW,
+      fallback: Scaffold(
+        backgroundColor: AppTheme.background,
+        appBar: AppBar(
+          backgroundColor: AppTheme.cardWhite,
+          elevation: 0,
+          titleSpacing: 16,
+          title: Text(
+            l10n.salesHistory,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+          ),
+        ),
+        body: const Center(
+          child: AccessDeniedCard(
+            message: '주문 내역을 볼 권한이 없습니다',
+          ),
+        ),
+      ),
+      child: _SalesHistoryContent(),
+    );
+  }
+}
+
+class _SalesHistoryContent extends ConsumerWidget {
+  const _SalesHistoryContent();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -56,7 +91,7 @@ class SalesHistoryScreen extends ConsumerWidget {
                         ),
                       ),
                       child: Text(
-                        f.label,
+                        _getLocalizedFilterLabel(l10n, f),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -150,9 +185,22 @@ class SalesHistoryScreen extends ConsumerWidget {
       ),
     );
   }
+
+  String _getLocalizedFilterLabel(AppLocalizations l10n, DateFilter filter) {
+    switch (filter) {
+      case DateFilter.today:
+        return l10n.today;
+      case DateFilter.week:
+        return l10n.week;
+      case DateFilter.month:
+        return l10n.month;
+      case DateFilter.all:
+        return l10n.all;
+    }
+  }
 }
 
-// ── 단일 주문 카드 ────────────────────────────────
+// ── Single Order Card ────────────────────────────────
 class _SaleCard extends StatelessWidget {
   final Sale sale;
   const _SaleCard({required this.sale});

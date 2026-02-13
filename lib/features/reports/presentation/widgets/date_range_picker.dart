@@ -3,14 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../providers/reports_provider.dart';
 
-/// 기간 선택 위젯 (칩 + 커스텀 날짜 범위)
+/// Date range picker widget (chips + custom date range)
 class DateRangePicker extends ConsumerWidget {
   const DateRangePicker({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final period = ref.watch(reportPeriodProvider);
     final customRange = ref.watch(customDateRangeProvider);
 
@@ -43,7 +45,7 @@ class DateRangePicker extends ConsumerWidget {
                   ),
                 ),
                 child: Text(
-                  p.labelKo,
+                  _getLocalizedPeriodLabel(l10n, p),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -120,6 +122,19 @@ class DateRangePicker extends ConsumerWidget {
         from: picked.start,
         to: picked.end.add(const Duration(days: 1)),
       );
+    }
+  }
+
+  String _getLocalizedPeriodLabel(AppLocalizations l10n, ReportPeriod period) {
+    switch (period) {
+      case ReportPeriod.today:
+        return l10n.today;
+      case ReportPeriod.week:
+        return l10n.week;
+      case ReportPeriod.month:
+        return l10n.month;
+      case ReportPeriod.custom:
+        return l10n.customPeriod;
     }
   }
 }

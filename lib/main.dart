@@ -1,16 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/app_localizations.dart';
 
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/screens/pin_login_screen.dart';
+import 'features/app_root_screen.dart';
 import 'providers/locale_provider.dart';
+import 'features/user_guide/presentation/providers/tutorial_preference_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize SharedPreferences
+  final sharedPreferences = await SharedPreferences.getInstance();
+
   runApp(
-    const ProviderScope(
-      child: OdaPosApp(),
+    ProviderScope(
+      overrides: [
+        // Override the SharedPreferences provider
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: const OdaPosApp(),
     ),
   );
 }
@@ -37,7 +49,6 @@ class OdaPosApp extends ConsumerWidget {
       // Supported locales
       supportedLocales: const [
         Locale('en', ''),  // English (default)
-        Locale('ko', ''),  // Korean
         Locale('vi', ''),  // Vietnamese
       ],
 
@@ -59,6 +70,11 @@ class OdaPosApp extends ConsumerWidget {
 
       theme: AppTheme.lightTheme,
       home: const PinLoginScreen(),
+
+      // Route configuration
+      routes: {
+        '/home': (context) => const AppRootScreen(),
+      },
     );
   }
 }

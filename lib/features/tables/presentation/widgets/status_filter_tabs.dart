@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/tables_providers.dart';
 import '../../domain/enums/table_status.dart';
 
-/// 테이블 상태 필터 탭
+/// Table status filter tabs
 class StatusFilterTabs extends ConsumerWidget {
   const StatusFilterTabs({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final selectedStatus = ref.watch(selectedTableStatusProvider);
     final tableCountAsync = ref.watch(tableCountByStatusProvider);
 
@@ -28,10 +30,10 @@ class StatusFilterTabs extends ConsumerWidget {
       child: tableCountAsync.when(
         data: (counts) => Row(
           children: [
-            // 전체 탭
+            // All tab
             _buildFilterTab(
               context: context,
-              label: '전체',
+              label: l10n.allTables,
               status: null,
               count: counts.values.fold(0, (sum, count) => sum + count),
               isSelected: selectedStatus == null,
@@ -42,13 +44,13 @@ class StatusFilterTabs extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
 
-            // 각 상태별 탭
+            // Status tabs
             ...TableStatus.allStatuses.map((status) {
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: _buildFilterTab(
                   context: context,
-                  label: status.label,
+                  label: _getLocalizedStatusLabel(l10n, status.value),
                   status: status.value,
                   count: counts[status.value] ?? 0,
                   isSelected: selectedStatus == status.value,
@@ -64,7 +66,7 @@ class StatusFilterTabs extends ConsumerWidget {
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(
-          child: Text('오류 발생: ${err.toString()}'),
+          child: Text(l10n.errorOccurred(err.toString())),
         ),
       ),
     );
@@ -122,5 +124,24 @@ class StatusFilterTabs extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _getLocalizedStatusLabel(AppLocalizations l10n, String statusValue) {
+    switch (statusValue) {
+      case 'available':
+        return l10n.emptyTables;
+      case 'occupied':
+        return l10n.occupiedTables;
+      case 'reserved':
+        return l10n.tableReserved;
+      case 'seated':
+        return l10n.tableSeated;
+      case 'payment_complete':
+        return l10n.tablePaymentComplete;
+      case 'cleaning':
+        return l10n.tableCleaning;
+      default:
+        return statusValue;
+    }
   }
 }

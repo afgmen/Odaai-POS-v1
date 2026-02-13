@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../../core/theme/app_theme.dart';
+import '../../../../database/app_database.dart';
+import '../../../../database/daos/employees_dao.dart';
+import '../../../../providers/database_providers.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
-import '../../../app_root_screen.dart';
+import '../../domain/auth_error.dart';
+import '../widgets/pin_pad_widget.dart';
 
 /// PIN 로그인 화면
 class PinLoginScreen extends ConsumerStatefulWidget {
@@ -15,324 +17,252 @@ class PinLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
+  int? _selectedEmployeeId;
   String _pin = '';
-  bool _isAuthenticating = false;
+  bool _isLoading = false;
   String? _errorMessage;
-
-  void _onNumberPressed(String number) {
-    if (_pin.length < 4) {
-      setState(() {
-        _pin += number;
-        _errorMessage = null;
-      });
-
-      // 4자리 입력 완료 시 자동 인증
-      if (_pin.length == 4) {
-        _authenticate();
-      }
-    }
-  }
-
-  void _onBackspace() {
-    if (_pin.isNotEmpty) {
-      setState(() {
-        _pin = _pin.substring(0, _pin.length - 1);
-        _errorMessage = null;
-      });
-    }
-  }
-
-  void _onClear() {
-    setState(() {
-      _pin = '';
-      _errorMessage = null;
-    });
-  }
-
-  Future<void> _authenticate() async {
-    setState(() {
-      _isAuthenticating = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final authService = ref.read(authServiceProvider);
-      final employee = await authService.authenticateWithPin(_pin);
-
-      if (employee != null) {
-        ref.read(currentEmployeeProvider.notifier).state = employee;
-
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const AppRootScreen()),
-          );
-        }
-      } else {
-        final l10n = AppLocalizations.of(context)!;
-        setState(() {
-          _errorMessage = l10n.pinMismatch;
-          _pin = '';
-        });
-      }
-    } catch (e) {
-      final l10n = AppLocalizations.of(context)!;
-      setState(() {
-        _errorMessage = l10n.loginError(e.toString());
-        _pin = '';
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _isAuthenticating = false);
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // 활성 직원 목록 조회
+    final employeesAsyncValue = ref.watch(_activeEmployeesProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 로고/제목
-                  const Icon(Icons.store, size: 80, color: AppTheme.primary),
-                  const SizedBox(height: 16),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // 로고 및 타이틀
+                const Icon(
+                  Icons.store,
+                  size: 64,
+                  color: Colors.blue,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Oda POS',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.employeeLogin,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 48),
+
+                // Employee selection dropdown
+                employeesAsyncValue.when(
+                  data: (employees) => _buildEmployeeSelector(employees, l10n),
+                  loading: () => const CircularProgressIndicator(),
+                  error: (error, stack) => Text('${l10n.employeeLoadError}: $error'),
+                ),
+
+                const SizedBox(height: 32),
+
+                // PIN input
+                if (_selectedEmployeeId != null) ...[
                   Text(
-                    l10n.appName,
+                    l10n.enterPinCode,
                     style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.pinLoginTitle,
-                    style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
-                  ),
-                  const SizedBox(height: 48),
-
-                  // PIN 입력 표시
-                  _PinDisplay(pin: _pin, isAuthenticating: _isAuthenticating),
                   const SizedBox(height: 16),
+
+                  // PIN 패드
+                  PinPadWidget(
+                    pin: _pin,
+                    maxLength: 4,
+                    onChanged: (newPin) {
+                      setState(() {
+                        _pin = newPin;
+                        _errorMessage = null;
+                      });
+                    },
+                    onSubmit: _handleLogin,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Login button
+                  SizedBox(
+                    width: 280,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _pin.length >= 4 && !_isLoading
+                          ? _handleLogin
+                          : null,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              l10n.loginButton,
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                    ),
+                  ),
 
                   // 에러 메시지
-                  if (_errorMessage != null)
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFDEBEB),
+                        color: Colors.red.shade50,
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade200),
                       ),
-                      child: Text(
-                        _errorMessage!,
-                        style: const TextStyle(fontSize: 13, color: AppTheme.error),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.error_outline,
+                              color: Colors.red.shade700),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                color: Colors.red.shade700,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  const SizedBox(height: 32),
+                  ],
 
-                  // 숫자 패드
-                  _NumberPad(
-                    onNumberPressed: _onNumberPressed,
-                    onBackspace: _onBackspace,
-                    onClear: _onClear,
-                    enabled: !_isAuthenticating,
+                  const SizedBox(height: 24),
+
+                  // Help text
+                  Text(
+                    l10n.forgotPin,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                 ],
-              ),
+              ],
             ),
           ),
         ),
       ),
     );
   }
-}
 
-/// PIN 입력 표시 (동그라미)
-class _PinDisplay extends StatelessWidget {
-  final String pin;
-  final bool isAuthenticating;
+  Widget _buildEmployeeSelector(List<Employee> employees, AppLocalizations l10n) {
+    if (employees.isEmpty) {
+      return Text(l10n.noEmployeesRegistered);
+    }
 
-  const _PinDisplay({required this.pin, required this.isAuthenticating});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(4, (index) {
-        final isFilled = index < pin.length;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isFilled ? AppTheme.primary : Colors.transparent,
-              border: Border.all(
-                color: isFilled ? AppTheme.primary : AppTheme.divider,
-                width: 2,
-              ),
-            ),
-            child: isAuthenticating && index == 3
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : null,
-          ),
-        );
-      }),
-    );
-  }
-}
-
-/// 숫자 패드
-class _NumberPad extends StatelessWidget {
-  final Function(String) onNumberPressed;
-  final VoidCallback onBackspace;
-  final VoidCallback onClear;
-  final bool enabled;
-
-  const _NumberPad({
-    required this.onNumberPressed,
-    required this.onBackspace,
-    required this.onClear,
-    required this.enabled,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // 1 2 3
-        Row(
-          children: [
-            _NumberButton(number: '1', onPressed: () => onNumberPressed('1'), enabled: enabled),
-            const SizedBox(width: 12),
-            _NumberButton(number: '2', onPressed: () => onNumberPressed('2'), enabled: enabled),
-            const SizedBox(width: 12),
-            _NumberButton(number: '3', onPressed: () => onNumberPressed('3'), enabled: enabled),
-          ],
-        ),
-        const SizedBox(height: 12),
-        // 4 5 6
-        Row(
-          children: [
-            _NumberButton(number: '4', onPressed: () => onNumberPressed('4'), enabled: enabled),
-            const SizedBox(width: 12),
-            _NumberButton(number: '5', onPressed: () => onNumberPressed('5'), enabled: enabled),
-            const SizedBox(width: 12),
-            _NumberButton(number: '6', onPressed: () => onNumberPressed('6'), enabled: enabled),
-          ],
-        ),
-        const SizedBox(height: 12),
-        // 7 8 9
-        Row(
-          children: [
-            _NumberButton(number: '7', onPressed: () => onNumberPressed('7'), enabled: enabled),
-            const SizedBox(width: 12),
-            _NumberButton(number: '8', onPressed: () => onNumberPressed('8'), enabled: enabled),
-            const SizedBox(width: 12),
-            _NumberButton(number: '9', onPressed: () => onNumberPressed('9'), enabled: enabled),
-          ],
-        ),
-        const SizedBox(height: 12),
-        // C 0 <-
-        Row(
-          children: [
-            _ActionButton(icon: Icons.clear, onPressed: onClear, enabled: enabled, label: 'C'),
-            const SizedBox(width: 12),
-            _NumberButton(number: '0', onPressed: () => onNumberPressed('0'), enabled: enabled),
-            const SizedBox(width: 12),
-            _ActionButton(icon: Icons.backspace_outlined, onPressed: onBackspace, enabled: enabled),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-/// 숫자 버튼
-class _NumberButton extends StatelessWidget {
-  final String number;
-  final VoidCallback onPressed;
-  final bool enabled;
-
-  const _NumberButton({
-    required this.number,
-    required this.onPressed,
-    required this.enabled,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: SizedBox(
-        height: 70,
-        child: ElevatedButton(
-          onPressed: enabled ? onPressed : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.cardWhite,
-            foregroundColor: AppTheme.textPrimary,
-            disabledBackgroundColor: AppTheme.background,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 0,
-            side: const BorderSide(color: AppTheme.divider),
-          ),
-          child: Text(
-            number,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-          ),
+    return Container(
+      width: 280,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: _selectedEmployeeId,
+          hint: Text(l10n.selectEmployee),
+          isExpanded: true,
+          items: employees.map((employee) {
+            return DropdownMenuItem<int>(
+              value: employee.id,
+              child: Text('${employee.name} (${_getRoleDisplay(employee.role, l10n)})'),
+            );
+          }).toList(),
+          onChanged: (employeeId) {
+            setState(() {
+              _selectedEmployeeId = employeeId;
+              _pin = '';
+              _errorMessage = null;
+            });
+          },
         ),
       ),
     );
   }
-}
 
-/// 액션 버튼 (지우기, 백스페이스)
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onPressed;
-  final bool enabled;
-  final String? label;
+  String _getRoleDisplay(String role, AppLocalizations l10n) {
+    switch (role.toUpperCase()) {
+      case 'MANAGER':
+        return l10n.roleManager;
+      case 'CASHIER':
+        return l10n.roleCashier;
+      case 'KITCHEN':
+        return l10n.roleKitchen;
+      default:
+        return role;
+    }
+  }
 
-  const _ActionButton({
-    required this.icon,
-    required this.onPressed,
-    required this.enabled,
-    this.label,
-  });
+  Future<void> _handleLogin() async {
+    if (_selectedEmployeeId == null || _pin.length < 4) return;
 
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: SizedBox(
-        height: 70,
-        child: ElevatedButton(
-          onPressed: enabled ? onPressed : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.background,
-            foregroundColor: AppTheme.textSecondary,
-            disabledBackgroundColor: AppTheme.background,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 0,
-            side: const BorderSide(color: AppTheme.divider),
-          ),
-          child: label != null
-              ? Text(label!, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600))
-              : Icon(icon, size: 28),
-        ),
-      ),
-    );
+    final l10n = AppLocalizations.of(context)!;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Login attempt
+      await ref.read(authProvider.notifier).login(_selectedEmployeeId!, _pin);
+
+      // Navigate to main screen on successful login
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    } on AuthError catch (e) {
+      // Authentication error handling
+      setState(() {
+        _errorMessage = e.userMessage;
+        _pin = '';
+      });
+    } catch (e) {
+      // Other error handling
+      setState(() {
+        _errorMessage = l10n.loginFailed(e.toString());
+        _pin = '';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }
+
+// ============================================================
+// Private Providers (화면 전용)
+// ============================================================
+
+/// 활성 직원 목록 Provider
+final _activeEmployeesProvider = FutureProvider<List<Employee>>((ref) async {
+  final employeesDao = ref.watch(employeesDaoProvider);
+  return await employeesDao.getAllEmployees();
+});

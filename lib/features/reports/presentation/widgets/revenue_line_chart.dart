@@ -4,8 +4,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/daos/sales_dao.dart';
+import '../../../../l10n/app_localizations.dart';
 
-/// 매출 추이 Line 차트
+/// Sales Trend Line Chart
 class RevenueLineChart extends StatelessWidget {
   final List<DailySalesData> data;
 
@@ -13,8 +14,10 @@ class RevenueLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (data.isEmpty) {
-      return const _EmptyChart(message: '데이터가 없습니다');
+      return _EmptyChart(message: l10n.noDataAvailable);
     }
 
     final maxY = data.fold(0.0, (max, d) => d.totalSales > max ? d.totalSales : max);
@@ -30,9 +33,9 @@ class RevenueLineChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '매출 추이',
-            style: TextStyle(
+          Text(
+            l10n.salesTrend,
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,

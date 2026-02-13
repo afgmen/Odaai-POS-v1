@@ -75,6 +75,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get yesterday => 'Hôm qua';
 
   @override
+  String get week => 'Tuần';
+
+  @override
+  String get month => 'Tháng';
+
+  @override
+  String get customPeriod => 'Tùy chọn';
+
+  @override
   String get none => 'Không có';
 
   @override
@@ -124,6 +133,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get navCashDrawer => 'Quỹ';
+
+  @override
+  String get navKds => 'Bếp';
+
+  @override
+  String get navDailyClosing => 'Chốt ca';
 
   @override
   String get cart => 'Giỏ hàng';
@@ -219,6 +234,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String outOfStock(Object name) {
     return '$name đã hết hàng';
   }
+
+  @override
+  String get outOfStockBadge => 'Hết hàng';
+
+  @override
+  String get lowStockBadge => 'Sắp hết';
 
   @override
   String productNotFound(Object input) {
@@ -349,9 +370,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get langVietnamese => 'Tiếng Việt';
 
   @override
-  String get currencyKRW => 'Won (₩)';
-
-  @override
   String get currencyUSD => 'Đô la Mỹ (\$)';
 
   @override
@@ -359,6 +377,29 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get employeeManagement => 'Quản lý nhân viên';
+
+  @override
+  String get employeeLogin => 'Đăng nhập nhân viên';
+
+  @override
+  String get selectEmployee => 'Chọn nhân viên';
+
+  @override
+  String get enterPinCode => 'Nhập mã PIN';
+
+  @override
+  String get noEmployeesRegistered => 'Chưa có nhân viên đăng ký';
+
+  @override
+  String get forgotPin => 'Quên mã PIN? Liên hệ quản lý';
+
+  @override
+  String get loginButton => 'Đăng nhập';
+
+  @override
+  String loginFailed(String error) {
+    return 'Đăng nhập thất bại: $error';
+  }
 
   @override
   String get employeeName => 'Tên';
@@ -422,6 +463,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get roleAdmin => 'Quản trị viên';
+
+  @override
+  String get roleKitchen => 'Nhà bếp';
 
   @override
   String get pinChangeLabel => 'Đổi PIN (tùy chọn)';
@@ -579,6 +623,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get totalSalesAmount => 'Tổng doanh thu';
 
   @override
+  String get totalSales => 'Tổng doanh thu';
+
+  @override
   String get orderCount => 'Đơn hàng';
 
   @override
@@ -602,7 +649,9 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get errorOccurred => 'Đã xảy ra lỗi';
+  String errorOccurred(String error) {
+    return 'Lỗi xảy ra: $error';
+  }
 
   @override
   String get salesHistory => 'Lịch sử bán hàng';
@@ -670,6 +719,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get salesReport => 'Báo cáo bán hàng';
+
+  @override
+  String get salesTrend => 'Xu hướng bán hàng';
+
+  @override
+  String get noDataAvailable => 'Không có dữ liệu';
 
   @override
   String get exportExcel => 'Xuất Excel';
@@ -750,13 +805,28 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tableManagement => 'Quản lý bàn';
 
   @override
+  String get tableLayout => 'Bố trí bàn';
+
+  @override
+  String get reservationManagement => 'Quản lý đặt chỗ';
+
+  @override
   String get addTable => 'Thêm bàn';
 
   @override
-  String get noTables => 'Vui lòng thêm bàn';
+  String get noTables => 'Không có bàn';
 
   @override
   String get noTablesFiltered => 'Không có bàn với trạng thái này';
+
+  @override
+  String get emptyTables => 'Bàn trống';
+
+  @override
+  String get occupiedTables => 'Đang sử dụng';
+
+  @override
+  String get allTables => 'Tất cả';
 
   @override
   String get tableAvailable => 'Trống';
@@ -768,13 +838,62 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tableReserved => 'Đã đặt';
 
   @override
+  String get tableSeated => 'Đang ngồi';
+
+  @override
+  String get tablePaymentComplete => 'Đã thanh toán';
+
+  @override
+  String get tableCleaning => 'Đang dọn';
+
+  @override
   String get tableNameLabel => 'Tên bàn *';
+
+  @override
+  String get tableNumber => 'Số bàn';
+
+  @override
+  String get tableNumberHint => 'VD: 1, A1, VIP-1';
+
+  @override
+  String get tableNumberRequired => 'Vui lòng nhập số bàn';
+
+  @override
+  String tableAdded(String number) {
+    return 'Đã thêm bàn $number';
+  }
+
+  @override
+  String editTable(String number) {
+    return 'Sửa bàn $number';
+  }
+
+  @override
+  String get deleteTable => 'Xóa bàn';
+
+  @override
+  String deleteTableConfirm(String number) {
+    return 'Bạn có muốn xóa bàn $number không?';
+  }
+
+  @override
+  String tableDeleted(String number) {
+    return 'Đã xóa bàn $number';
+  }
+
+  @override
+  String tableUpdated(String number) {
+    return 'Đã cập nhật bàn $number';
+  }
 
   @override
   String get tableNameHint => 'VD: Bàn 1, A-1';
 
   @override
   String get seatsLabel => 'Số ghế';
+
+  @override
+  String get seatsCount => 'Số ghế';
 
   @override
   String get zoneLabel => 'Khu vực';
@@ -1228,6 +1347,91 @@ class AppLocalizationsVi extends AppLocalizations {
   String get productAdded => 'Đã thêm sản phẩm';
 
   @override
+  String get productImage => 'Hình ảnh sản phẩm';
+
+  @override
+  String get noImage => 'Không có hình ảnh';
+
+  @override
+  String get camera => 'Máy ảnh';
+
+  @override
+  String get gallery => 'Thư viện';
+
+  @override
+  String get aiAutoSearch => 'Tìm kiếm tự động AI';
+
+  @override
+  String get aiImageSearch => 'Tìm kiếm hình ảnh AI';
+
+  @override
+  String get aiImageSearchComplete => 'Hoàn tất tìm kiếm hình ảnh AI';
+
+  @override
+  String get imageUploaded => 'Đã tải lên hình ảnh';
+
+  @override
+  String get deleteImage => 'Xóa hình ảnh';
+
+  @override
+  String get deleteImageConfirm =>
+      'Bạn có thực sự muốn xóa hình ảnh này không?';
+
+  @override
+  String get imageDeleted => 'Đã xóa hình ảnh';
+
+  @override
+  String get imageSetByAi => 'Hình ảnh được đặt bởi tìm kiếm AI';
+
+  @override
+  String imageDownloadFailed(String error) {
+    return 'Tải hình ảnh thất bại: $error';
+  }
+
+  @override
+  String get noProductsWithoutImage =>
+      'Không có sản phẩm nào không có hình ảnh';
+
+  @override
+  String get searching => 'Đang tìm kiếm...';
+
+  @override
+  String get searchFailed => 'Tìm kiếm thất bại';
+
+  @override
+  String get noSearchResults => 'Không có kết quả tìm kiếm';
+
+  @override
+  String noImagesFound(String product) {
+    return 'Không tìm thấy hình ảnh cho\n\"$product\"';
+  }
+
+  @override
+  String searchQuery(String query) {
+    return 'Tìm kiếm: $query';
+  }
+
+  @override
+  String get success => 'Thành công';
+
+  @override
+  String get failed => 'Thất bại';
+
+  @override
+  String get successRate => 'Tỷ lệ thành công';
+
+  @override
+  String failedProducts(int count) {
+    return 'Sản phẩm thất bại ($count)';
+  }
+
+  @override
+  String get image => 'Hình ảnh';
+
+  @override
+  String get unit => 'đơn vị';
+
+  @override
   String get deleteProductTitle => 'Xóa sản phẩm';
 
   @override
@@ -1629,4 +1833,380 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get kdsSpecialInstructions => 'Hướng dẫn đặc biệt';
+
+  @override
+  String get dailyClosing => 'Đóng quỹ hàng ngày';
+
+  @override
+  String get closingHistory => 'Lịch sử đóng quỹ';
+
+  @override
+  String get closingSummary => 'Tóm tắt đóng quỹ';
+
+  @override
+  String get selectClosingDate => 'Chọn ngày đóng quỹ';
+
+  @override
+  String get selectDate => 'Chọn ngày';
+
+  @override
+  String get salesAggregation => 'Tổng hợp doanh thu';
+
+  @override
+  String get totalTransactions => 'Tổng số giao dịch';
+
+  @override
+  String transactionsCount(int count) {
+    return '$count giao dịch';
+  }
+
+  @override
+  String get cashCount => 'Kiểm quỹ';
+
+  @override
+  String get expectedCash => 'Tiền mặt dự kiến';
+
+  @override
+  String get actualCash => 'Tiền mặt thực tế';
+
+  @override
+  String get cashDifference => 'Chênh lệch tiền mặt';
+
+  @override
+  String get enterActualCash => 'Nhập tiền mặt thực tế';
+
+  @override
+  String get actualCashHint => 'Nhập số tiền mặt thực tế';
+
+  @override
+  String get cashDifferenceAcceptable => 'Vượt quá phạm vi cho phép (±10.000₫)';
+
+  @override
+  String get specialNotes => 'Ghi chú đặc biệt';
+
+  @override
+  String get notesPlaceholder => 'Nhập ghi chú đặc biệt nếu có';
+
+  @override
+  String get performClosing => 'Thực hiện đóng quỹ';
+
+  @override
+  String get skipCashCount => 'Đóng quỹ không kiểm tiền';
+
+  @override
+  String get closingComplete => 'Đóng quỹ hoàn tất';
+
+  @override
+  String get closingFailed => 'Đã xảy ra lỗi khi đóng quỹ';
+
+  @override
+  String get loadingClosingData => 'Đang tải dữ liệu đóng quỹ...';
+
+  @override
+  String get noClosingHistory => 'Không có lịch sử đóng quỹ';
+
+  @override
+  String get loadClosingHistoryFailed => 'Không thể tải lịch sử đóng quỹ';
+
+  @override
+  String get tryAgainLater => 'Vui lòng thử lại sau';
+
+  @override
+  String get selectPeriod => 'Chọn kỳ';
+
+  @override
+  String get viewDetails => 'Xem chi tiết';
+
+  @override
+  String get generatePdf => 'Tạo PDF';
+
+  @override
+  String savePdfQuestion(String reportName) {
+    return 'Bạn có muốn lưu $reportName dưới dạng PDF không?';
+  }
+
+  @override
+  String get generate => 'Tạo';
+
+  @override
+  String editActualCash(String label) {
+    return 'Sửa $label';
+  }
+
+  @override
+  String get closingDetails => 'Chi tiết đóng quỹ';
+
+  @override
+  String get closingTime => 'Thời gian đóng quỹ';
+
+  @override
+  String get assignedEmployee => 'Người phụ trách';
+
+  @override
+  String get unknown => 'Không rõ';
+
+  @override
+  String get averageTransaction => 'Trung bình mỗi giao dịch';
+
+  @override
+  String get taxTotal => 'Tổng thuế';
+
+  @override
+  String get discountTotal => 'Tổng giảm giá';
+
+  @override
+  String get normalCashDifference => 'Trong phạm vi';
+
+  @override
+  String pdfSaved(String path) {
+    return 'Đã lưu PDF: $path';
+  }
+
+  @override
+  String pdfGenerationFailed(String error) {
+    return 'Tạo PDF thất bại: $error';
+  }
+
+  @override
+  String get alreadyClosed => 'Ngày này đã được đóng quỹ';
+
+  @override
+  String get cannotCloseFutureDate => 'Không thể đóng quỹ cho ngày tương lai';
+
+  @override
+  String get noSalesForDate => 'Không có doanh thu cho ngày này';
+
+  @override
+  String get loginRequired => 'Yêu cầu đăng nhập';
+
+  @override
+  String get closingProcessError =>
+      'Đã xảy ra lỗi khi đóng quỹ. Vui lòng thử lại sau';
+
+  @override
+  String get dailyClosingReport => 'Báo cáo đóng quỹ hàng ngày';
+
+  @override
+  String get closingInfo => 'Thông tin đóng quỹ';
+
+  @override
+  String get closingDate => 'Ngày đóng quỹ';
+
+  @override
+  String get paymentMethodBreakdown => 'Phân tích theo phương thức';
+
+  @override
+  String get qrPaymentSales => 'Thanh toán QR';
+
+  @override
+  String get transferSales => 'Chuyển khoản';
+
+  @override
+  String get cashReconciliation => 'Đối chiếu tiền mặt';
+
+  @override
+  String get signatureSection => 'Chữ ký';
+
+  @override
+  String get closingManager => 'Người đóng quỹ';
+
+  @override
+  String get verifier => 'Người xác nhận';
+
+  @override
+  String get signature => 'Chữ ký';
+
+  @override
+  String get userGuide => 'Hướng dẫn sử dụng';
+
+  @override
+  String get tutorial => 'Hướng dẫn';
+
+  @override
+  String get tutorialSkip => 'Bỏ qua';
+
+  @override
+  String get tutorialNext => 'Tiếp theo';
+
+  @override
+  String get tutorialPrevious => 'Trước';
+
+  @override
+  String get tutorialFinish => 'Hoàn thành';
+
+  @override
+  String get tutorialDontShowAgain => 'Không hiện lại';
+
+  @override
+  String get tutorial_daily_closing_welcome_title =>
+      'Chào mừng đến với Đóng quỹ hàng ngày';
+
+  @override
+  String get tutorial_daily_closing_welcome_desc =>
+      'Sử dụng Đóng quỹ hàng ngày để đối chiếu và ghi lại doanh thu trong ngày. Hãy bắt đầu với hướng dẫn nhanh.';
+
+  @override
+  String get tutorial_daily_closing_date_title => 'Chọn ngày đóng quỹ';
+
+  @override
+  String get tutorial_daily_closing_date_desc =>
+      'Nhấn vào đây để chọn ngày bạn muốn đóng quỹ. Ngày hôm nay được chọn mặc định.';
+
+  @override
+  String get tutorial_daily_closing_summary_title => 'Tóm tắt doanh thu';
+
+  @override
+  String get tutorial_daily_closing_summary_desc =>
+      'Thẻ này hiển thị tổng giao dịch, tổng doanh thu, trung bình mỗi giao dịch, thuế và giảm giá.';
+
+  @override
+  String get tutorial_daily_closing_payment_title =>
+      'Phân tích theo phương thức thanh toán';
+
+  @override
+  String get tutorial_daily_closing_payment_desc =>
+      'Xem doanh thu theo từng phương thức: tiền mặt, thẻ, thanh toán QR và chuyển khoản.';
+
+  @override
+  String get tutorial_daily_closing_cash_title => 'Đối chiếu tiền mặt';
+
+  @override
+  String get tutorial_daily_closing_cash_desc =>
+      'So sánh tiền mặt dự kiến với số tiền mặt thực tế để xác minh chênh lệch.';
+
+  @override
+  String get tutorial_daily_closing_actual_cash_title =>
+      'Nhập tiền mặt thực tế';
+
+  @override
+  String get tutorial_daily_closing_actual_cash_desc =>
+      'Nhấn nút này để nhập số tiền mặt thực tế bạn đã đếm. Hệ thống sẽ xác minh xem chênh lệch có trong phạm vi chấp nhận được không.';
+
+  @override
+  String get tutorial_daily_closing_notes_title => 'Ghi chú đặc biệt';
+
+  @override
+  String get tutorial_daily_closing_notes_desc =>
+      'Bạn có thể thêm ghi chú về các sự kiện đặc biệt khi đóng quỹ, chẳng hạn như hoàn tiền hoặc thiếu hụt.';
+
+  @override
+  String get tutorial_daily_closing_perform_title => 'Thực hiện đóng quỹ';
+
+  @override
+  String get tutorial_daily_closing_perform_desc =>
+      'Sau khi xác minh tất cả thông tin, nhấn nút này để hoàn tất đóng quỹ. Lưu ý: Không thể hoàn tác đóng quỹ.';
+
+  @override
+  String get tutorial_daily_closing_history_title => 'Lịch sử đóng quỹ';
+
+  @override
+  String get tutorial_daily_closing_history_desc =>
+      'Xem các bản ghi đóng quỹ trước đó và tải xuống dưới dạng báo cáo PDF.';
+
+  @override
+  String get reservations => 'Đặt chỗ';
+
+  @override
+  String get addReservation => 'Thêm đặt chỗ';
+
+  @override
+  String get reservationDetail => 'Chi tiết đặt chỗ';
+
+  @override
+  String get deleteReservation => 'Xóa đặt chỗ';
+
+  @override
+  String deleteReservationConfirm(String customer) {
+    return 'Bạn có chắc chắn muốn xóa đặt chỗ của $customer?';
+  }
+
+  @override
+  String get reservationDeleted => 'Đã xóa đặt chỗ';
+
+  @override
+  String get noReservations => 'Không có đặt chỗ';
+
+  @override
+  String reservationStatusChanged(String status) {
+    return 'Trạng thái đặt chỗ đã thay đổi thành $status';
+  }
+
+  @override
+  String get reservationPending => 'Chờ xử lý';
+
+  @override
+  String get reservationConfirmed => 'Đã xác nhận';
+
+  @override
+  String get reservationSeated => 'Đã ngồi';
+
+  @override
+  String get reservationCancelled => 'Đã hủy';
+
+  @override
+  String get reservationNoShow => 'Không đến';
+
+  @override
+  String get confirmed => 'Đã xác nhận';
+
+  @override
+  String get pending => 'Chờ xử lý';
+
+  @override
+  String get customerName => 'Tên khách hàng';
+
+  @override
+  String get customerPhone => 'Liên hệ';
+
+  @override
+  String get partySize => 'Số người';
+
+  @override
+  String get table => 'Bàn';
+
+  @override
+  String partySizePeople(int count) {
+    return '$count người';
+  }
+
+  @override
+  String get reservationDate => 'Ngày đặt chỗ';
+
+  @override
+  String get reservationTime => 'Giờ đặt chỗ';
+
+  @override
+  String get specialRequests => 'Yêu cầu đặc biệt';
+
+  @override
+  String get specialRequestsOptional => 'Yêu cầu đặc biệt (Tùy chọn)';
+
+  @override
+  String get createdAt => 'Tạo lúc';
+
+  @override
+  String get allReservations => 'Tất cả';
+
+  @override
+  String errorOccurredWithMessage(String message) {
+    return 'Đã xảy ra lỗi: $message';
+  }
+
+  @override
+  String get editReservation => 'Chỉnh sửa đặt chỗ';
+
+  @override
+  String get customerNameRequired => 'Vui lòng nhập tên khách hàng';
+
+  @override
+  String get customerPhoneRequired => 'Vui lòng nhập số liên hệ';
+
+  @override
+  String get partySizeRequired => 'Vui lòng nhập số người';
+
+  @override
+  String get partySizeInvalid => 'Số người phải ít nhất là 1';
+
+  @override
+  String get people => 'người';
 }

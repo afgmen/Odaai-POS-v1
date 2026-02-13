@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../providers/currency_provider.dart';
 import '../../providers/cash_drawer_provider.dart';
 
 /// 시재 관리 (Cash Drawer) 화면
@@ -18,6 +19,7 @@ class CashDrawerScreen extends ConsumerWidget {
     final logsAsync = ref.watch(todayCashLogsProvider);
     final balanceAsync = ref.watch(currentDrawerBalanceProvider);
     final isOpenedAsync = ref.watch(isTodayOpenedProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
     final currencyFormat = NumberFormat('#,###');
     final timeFormat = DateFormat('HH:mm');
 
@@ -51,11 +53,11 @@ class CashDrawerScreen extends ConsumerWidget {
                           Text(l10n.currentCashDrawer, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
                           balanceAsync.when(
                             data: (balance) => Text(
-                              '₩${currencyFormat.format(balance.toInt())}',
+                              priceFormatter.format(balance),
                               style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
                             ),
                             loading: () => const Text('...', style: TextStyle(fontSize: 28)),
-                            error: (_, __) => const Text('₩0', style: TextStyle(fontSize: 28)),
+                            error: (_, __) => Text(priceFormatter.format(0), style: const TextStyle(fontSize: 28)),
                           ),
                         ],
                       ),
@@ -199,14 +201,14 @@ class CashDrawerScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  '${log.amount >= 0 ? '+' : ''}₩${currencyFormat.format(log.amount.toInt())}',
+                                  '${log.amount >= 0 ? '+' : ''}${priceFormatter.format(log.amount.abs())}',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     color: log.amount >= 0 ? AppTheme.success : AppTheme.error,
                                   ),
                                 ),
                                 Text(
-                                  l10n.balance(currencyFormat.format(log.balanceAfter.toInt())),
+                                  l10n.balance(priceFormatter.format(log.balanceAfter, includeSymbol: false)),
                                   style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                                 ),
                               ],
@@ -255,7 +257,11 @@ class CashDrawerScreen extends ConsumerWidget {
                 controller: amountCtrl,
                 keyboardType: TextInputType.number,
                 autofocus: true,
-                decoration: InputDecoration(labelText: l10n.amountLabel, prefixText: '₩ ', prefixIcon: const Icon(Icons.payments)),
+                decoration: InputDecoration(
+                  labelText: l10n.amountLabel,
+                  prefixText: '${ref.read(priceFormatterProvider).currency.symbol} ',
+                  prefixIcon: const Icon(Icons.payments)
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -303,6 +309,7 @@ class CashDrawerScreen extends ConsumerWidget {
   void _showCloseDialog(BuildContext context, WidgetRef ref) async {
     final dao = ref.read(cashDrawerDaoProvider);
     final currentBalance = await dao.getCurrentDrawerBalance();
+    final priceFormatter = ref.read(priceFormatterProvider);
     final currencyFormat = NumberFormat('#,###');
     final countCtrl = TextEditingController();
 
@@ -317,7 +324,7 @@ class CashDrawerScreen extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                l10n.systemBalance(currencyFormat.format(currentBalance.toInt())),
+                l10n.systemBalance(priceFormatter.format(currentBalance, includeSymbol: false)),
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
@@ -326,7 +333,7 @@ class CashDrawerScreen extends ConsumerWidget {
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: l10n.actualCashAmount,
-                  prefixText: '₩ ',
+                  prefixText: '${priceFormatter.currency.symbol} ',
                   prefixIcon: const Icon(Icons.calculate),
                   hintText: l10n.countCashHint,
                 ),
@@ -341,7 +348,7 @@ class CashDrawerScreen extends ConsumerWidget {
                 final diff = counted - currentBalance;
                 final note = diff == 0
                     ? l10n.normalClose
-                    : '${l10n.difference('${diff > 0 ? '+' : ''}₩${currencyFormat.format(diff.toInt())}')} (${l10n.actualCashAmount}: ₩${currencyFormat.format(counted.toInt())})';
+                    : '${l10n.difference('${diff > 0 ? '+' : ''}${priceFormatter.format(diff.abs(), includeSymbol: false)}')} (${l10n.actualCashAmount}: ${priceFormatter.format(counted, includeSymbol: false)})';
 
                 await dao.logCashDrawer(CashDrawerLogsCompanion.insert(
                   type: 'close',
@@ -404,7 +411,7 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-class _SummaryItem extends StatelessWidget {
+class _SummaryItem extends ConsumerWidget {
   final String label;
   final double value;
   final Color color;
@@ -412,15 +419,15 @@ class _SummaryItem extends StatelessWidget {
   const _SummaryItem({required this.label, required this.value, required this.color});
 
   @override
-  Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat('#,###');
+  Widget build(BuildContext context, WidgetRef ref) {
+    final priceFormatter = ref.watch(priceFormatterProvider);
     return Expanded(
       child: Column(
         children: [
           Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
           Text(
-            '₩${currencyFormat.format(value.toInt())}',
+            priceFormatter.format(value),
             style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color),
           ),
         ],

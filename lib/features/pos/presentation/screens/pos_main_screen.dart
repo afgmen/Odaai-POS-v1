@@ -188,6 +188,9 @@ class _PosAppBarState extends State<_PosAppBar> {
                   ),
                 ),
                 const Spacer(),
+                // KDS 통계 배지
+                const _KdsStatsBadges(),
+                const SizedBox(width: 12),
                 // KDS 버튼
                 InkWell(
                   onTap: () {
@@ -206,14 +209,14 @@ class _PosAppBarState extends State<_PosAppBar> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: AppTheme.primary),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.restaurant_menu, size: 16, color: AppTheme.primary),
-                        SizedBox(width: 4),
+                        const Icon(Icons.restaurant_menu, size: 16, color: AppTheme.primary),
+                        const SizedBox(width: 4),
                         Text(
-                          '주방',
-                          style: TextStyle(
+                          l10n.navKds,
+                          style: const TextStyle(
                             fontSize: 13,
                             color: AppTheme.primary,
                             fontWeight: FontWeight.w600,
@@ -226,18 +229,6 @@ class _PosAppBarState extends State<_PosAppBar> {
                 const SizedBox(width: 12),
                 // 직원 정보 + 로그아웃 버튼
                 const _EmployeeInfo(),
-                const SizedBox(width: 12),
-                // 직원명
-                const Row(
-                  children: [
-                    Icon(Icons.person_outline, size: 18, color: AppTheme.textSecondary),
-                    SizedBox(width: 4),
-                    Text(
-                      'admin',
-                      style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -523,8 +514,8 @@ class _EmployeeInfo extends ConsumerWidget {
               // 할인 초기화
               ref.read(discountValueProvider.notifier).state = 0;
               ref.read(promotionProductIdProvider.notifier).state = null;
-              // 현재 직원 초기화
-              ref.read(currentEmployeeProvider.notifier).state = null;
+              // 현재 직원 초기화는 로그아웃 시 자동 처리됨
+              // (Provider는 읽기 전용이므로 직접 변경 불가)
 
               // PIN 로그인 화면으로 이동
               Navigator.of(ctx).pop();
@@ -538,6 +529,87 @@ class _EmployeeInfo extends ConsumerWidget {
               foregroundColor: Colors.white,
             ),
             child: Text(l10n.logout),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// KDS 통계 배지 (완료, 진행중, 평균)
+class _KdsStatsBadges extends ConsumerWidget {
+  const _KdsStatsBadges();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildStatBadge(
+          icon: Icons.check_circle_outline,
+          label: l10n.kdsCompleted,
+          value: '0',
+          color: Colors.green,
+        ),
+        const SizedBox(width: 8),
+        _buildStatBadge(
+          icon: Icons.pending_outlined,
+          label: l10n.kdsInProgress,
+          value: '0',
+          color: Colors.orange,
+        ),
+        const SizedBox(width: 8),
+        _buildStatBadge(
+          icon: Icons.timer_outlined,
+          label: l10n.kdsAverage,
+          value: '0m 0s',
+          color: Colors.blue,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatBadge({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 9,
+                  color: color,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
         ],
       ),

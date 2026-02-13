@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../database/app_database.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../providers/currency_provider.dart';
@@ -20,6 +21,7 @@ class ProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final isOutOfStock = product.stock <= 0;
     final priceFormatter = ref.watch(priceFormatterProvider);
 
@@ -66,9 +68,9 @@ class ProductCard extends ConsumerWidget {
                               color: AppTheme.error,
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
-                              '품절',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.outOfStockBadge,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -86,9 +88,9 @@ class ProductCard extends ConsumerWidget {
                               color: AppTheme.warning,
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
-                              '잔재고',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.lowStockBadge,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -107,18 +109,21 @@ class ProductCard extends ConsumerWidget {
                   padding: const EdgeInsets.all(10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // 상품명
-                      Text(
-                        product.name,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
+                      Flexible(
+                        child: Text(
+                          product.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       // 가격
@@ -133,7 +138,7 @@ class ProductCard extends ConsumerWidget {
                       // 재고
                       const SizedBox(height: 2),
                       Text(
-                        '재고: ${product.stock}개',
+                        '${l10n.stock}: ${product.stock}',
                         style: const TextStyle(
                           fontSize: 11,
                           color: AppTheme.textDisabled,

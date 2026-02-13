@@ -4,9 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'database_providers.dart';
 
-/// 언어 열거형
+/// Language enumeration
 enum AppLanguage {
-  ko('ko', '한국어', 'KO'),
   en('en', 'English', 'EN'),
   vi('vi', 'Tiếng Việt', 'VI');
 
@@ -26,7 +25,7 @@ enum AppLanguage {
   }
 }
 
-/// 현재 로케일 Provider
+/// Current locale Provider
 final localeProvider = StateNotifierProvider<LocaleNotifier, Locale>((ref) {
   return LocaleNotifier(ref);
 });
@@ -49,13 +48,13 @@ class LocaleNotifier extends StateNotifier<Locale> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language_code', language.code);
 
-    // DB에도 저장 (AppSettings 테이블 추가 후 활성화)
+    // Also save to DB (activate after AppSettings table is added)
     // final db = ref.read(databaseProvider);
     // await db.updateLanguageSetting(language.code);
   }
 }
 
-/// 현재 언어 Provider
+/// Current language Provider
 final currentLanguageProvider = Provider<AppLanguage>((ref) {
   final locale = ref.watch(localeProvider);
   return AppLanguage.fromCode(locale.languageCode);

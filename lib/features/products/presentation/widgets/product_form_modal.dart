@@ -153,7 +153,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
               _formField(
                 label: l10n.productNameRequired,
                 controller: _nameCtrl,
-                hint: '테스트 감자칩',
+                hint: 'Test Potato Chips',
                 onChanged: (_) => setState(() {}),
               ),
               _formField(
@@ -187,15 +187,15 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 controller: _stockCtrl,
                 hint: '0',
                 isNumber: true,
-                suffixText: '개',
-                readOnly: _isEditMode, // 수정 시 재고조정 모달로만 변경
+                suffixText: l10n.unit,
+                readOnly: _isEditMode, // Edit mode: Change via stock adjustment modal only
               ),
               _formField(
                 label: l10n.minStock,
                 controller: _minStockCtrl,
                 hint: '10',
                 isNumber: true,
-                suffixText: '개',
+                suffixText: l10n.unit,
               ),
               _formField(
                 label: l10n.category,
@@ -203,8 +203,8 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 hint: l10n.categoryHint,
               ),
 
-              // ─── 이미지 섹션 ──────────────────
-              _sectionLabel('상품 이미지'),
+              // ─── Image section ──────────────────
+              _sectionLabel(l10n.productImage),
               _buildImageSection(),
               const SizedBox(height: 4),
 
@@ -369,8 +369,9 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
       );
   }
 
-  // ── 이미지 섹션 빌더 ─────────────────────────────
+  // ── Image section builder ─────────────────────────────
   Widget _buildImageSection() {
+    final l10n = AppLocalizations.of(context)!;
     final imageState = ref.watch(imageUploadStateProvider);
 
     return Column(
@@ -393,19 +394,19 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                     fit: BoxFit.cover,
                   ),
                 )
-              : const Center(
+              : Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.image_not_supported,
                         size: 48,
                         color: AppTheme.textDisabled,
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
-                        '이미지 없음',
-                        style: TextStyle(
+                        l10n.noImage,
+                        style: const TextStyle(
                           fontSize: 13,
                           color: AppTheme.textSecondary,
                         ),
@@ -434,7 +435,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 child: OutlinedButton.icon(
                   onPressed: _handleCameraUpload,
                   icon: const Icon(Icons.camera_alt, size: 18),
-                  label: const Text('카메라'),
+                  label: Text(l10n.camera),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -450,7 +451,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 child: OutlinedButton.icon(
                   onPressed: _handleGalleryUpload,
                   icon: const Icon(Icons.photo_library, size: 18),
-                  label: const Text('갤러리'),
+                  label: Text(l10n.gallery),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -467,7 +468,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           ElevatedButton.icon(
             onPressed: _handleAISearch,
             icon: const Icon(Icons.auto_awesome, size: 18),
-            label: const Text('AI 자동 검색'),
+            label: Text(l10n.aiAutoSearch),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primary,
               foregroundColor: Colors.white,
@@ -485,9 +486,9 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
             child: TextButton.icon(
               onPressed: _handleDeleteImage,
               icon: const Icon(Icons.delete_outline, size: 18, color: AppTheme.error),
-              label: const Text(
-                '이미지 삭제',
-                style: TextStyle(color: AppTheme.error),
+              label: Text(
+                l10n.deleteImage,
+                style: const TextStyle(color: AppTheme.error),
               ),
             ),
           ),
@@ -510,6 +511,8 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
 
   // ── 이미지 핸들러 ─────────────────────────────
   Future<void> _handleCameraUpload() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
       _showSnackBar('SKU를 먼저 입력해주세요', AppTheme.error);
       return;
@@ -526,11 +529,13 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
         _localImageFile = file;
         _imageUrl = 'product_images/$sku.jpg';
       });
-      _showSnackBar('이미지가 업로드되었습니다', AppTheme.success);
+      _showSnackBar(l10n.imageUploaded, AppTheme.success);
     }
   }
 
   Future<void> _handleGalleryUpload() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
       _showSnackBar('SKU를 먼저 입력해주세요', AppTheme.error);
       return;
@@ -547,7 +552,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
         _localImageFile = file;
         _imageUrl = 'product_images/$sku.jpg';
       });
-      _showSnackBar('이미지가 업로드되었습니다', AppTheme.success);
+      _showSnackBar(l10n.imageUploaded, AppTheme.success);
     }
   }
 
@@ -556,20 +561,21 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('이미지 삭제'),
-        content: const Text('정말로 이미지를 삭제하시겠습니까?'),
+        title: Text(l10n.deleteImage),
+        content: Text(l10n.deleteImageConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-            child: const Text('삭제'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -588,11 +594,13 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
         _localImageFile = null;
         _imageUrl = null;
       });
-      _showSnackBar('이미지가 삭제되었습니다', AppTheme.success);
+      _showSnackBar(l10n.imageDeleted, AppTheme.success);
     }
   }
 
   Future<void> _handleAISearch() async {
+    final l10n = AppLocalizations.of(context)!;
+
     // Validate product name
     if (_nameCtrl.text.trim().isEmpty) {
       _showSnackBar('상품명을 먼저 입력해주세요', AppTheme.error);
@@ -643,11 +651,11 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
         _isProcessing = false;
       });
 
-      _showSnackBar('AI 검색으로 이미지가 설정되었습니다', AppTheme.success);
+      _showSnackBar(l10n.imageSetByAi, AppTheme.success);
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        _showSnackBar('이미지 다운로드 실패: $e', AppTheme.error);
+        _showSnackBar(l10n.imageDownloadFailed(e.toString()), AppTheme.error);
       }
     }
   }

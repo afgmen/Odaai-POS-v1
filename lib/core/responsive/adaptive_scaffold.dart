@@ -110,8 +110,6 @@ class AdaptiveScaffold extends StatelessWidget {
   String _getMoreLabel(BuildContext context) {
     final locale = Localizations.localeOf(context).languageCode;
     switch (locale) {
-      case 'ko':
-        return '더보기';
       case 'vi':
         return 'Thêm';
       default:
@@ -210,6 +208,7 @@ class AdaptiveScaffold extends StatelessWidget {
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: List.generate(destinations.length, (i) {
                         final d = destinations[i];
                         final isSelected = currentIndex == i;
@@ -302,6 +301,7 @@ class _NavRailItem extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Material(
               color: bgColor,
@@ -316,14 +316,19 @@ class _NavRailItem extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: color,
+            SizedBox(
+              width: 60,
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: color,
+                ),
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                maxLines: 1,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

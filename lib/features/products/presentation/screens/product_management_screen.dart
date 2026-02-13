@@ -9,6 +9,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
+import '../../../../providers/currency_provider.dart';
 import '../../domain/models/search_image_result.dart';
 import '../../providers/products_management_provider.dart';
 import '../../services/excel_service.dart';
@@ -88,13 +89,13 @@ class _ProductManagementScreenState extends ConsumerState<ProductManagementScree
               ],
             ),
           ),
-          // ── AI 자동 이미지 검색 버튼 ──────────
+          // ── AI Auto Image Search Button ──────────
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: OutlinedButton.icon(
               onPressed: () => _handleBatchImageProcess(ref),
               icon: const Icon(Icons.auto_awesome, size: 18),
-              label: const Text('AI 이미지 검색'),
+              label: Text(l10n.aiImageSearch),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.primary,
                 side: const BorderSide(color: AppTheme.primary),
@@ -521,6 +522,7 @@ class _BatchProcessResultDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final hasErrors = result.failed > 0;
 
     return Dialog(
@@ -541,9 +543,9 @@ class _BatchProcessResultDialog extends StatelessWidget {
                   size: 28,
                 ),
                 const SizedBox(width: 10),
-                const Text(
-                  'AI 이미지 검색 완료',
-                  style: TextStyle(
+                Text(
+                  l10n.aiImageSearchComplete,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimary,
@@ -564,21 +566,21 @@ class _BatchProcessResultDialog extends StatelessWidget {
                 children: [
                   _ResultRow(
                     Icons.check_circle_outline,
-                    '성공',
+                    l10n.success,
                     result.success,
                     AppTheme.success,
                   ),
                   const Divider(color: AppTheme.divider, height: 1),
                   _ResultRow(
                     Icons.error_outline,
-                    '실패',
+                    l10n.failed,
                     result.failed,
                     AppTheme.error,
                   ),
                   const Divider(color: AppTheme.divider, height: 1),
                   _ResultRow(
                     Icons.inventory_2_outlined,
-                    '총 처리',
+                    l10n.totalProcessed,
                     result.total,
                     AppTheme.textPrimary,
                   ),
@@ -589,10 +591,10 @@ class _BatchProcessResultDialog extends StatelessWidget {
                       children: [
                         const Icon(Icons.percent, size: 20, color: AppTheme.primary),
                         const SizedBox(width: 10),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            '성공률',
-                            style: TextStyle(fontSize: 14, color: AppTheme.textPrimary),
+                            l10n.successRate,
+                            style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
                           ),
                         ),
                         Text(
@@ -624,7 +626,7 @@ class _BatchProcessResultDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '실패한 상품 (${result.failedProducts.length}개)',
+                      l10n.failedProducts(result.failedProducts.length),
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -648,7 +650,7 @@ class _BatchProcessResultDialog extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 3),
                         child: Text(
-                          '외 ${result.failedProducts.length - 5}개',
+                          l10n.more,
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppTheme.textSecondary,
@@ -674,9 +676,9 @@ class _BatchProcessResultDialog extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text(
-                  '확인',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                child: Text(
+                  l10n.confirm,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -728,7 +730,7 @@ class _CategoryChip extends StatelessWidget {
 }
 
 /// 상품 테이블
-class _ProductTable extends StatelessWidget {
+class _ProductTable extends ConsumerWidget {
   final List<Product> products;
   final ValueChanged<Product> onEdit;
   final ValueChanged<Product> onStockAdjust;
@@ -742,8 +744,9 @@ class _ProductTable extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final priceFormatter = ref.watch(priceFormatterProvider);
     if (products.isEmpty) {
       return Center(
         child: Column(
@@ -776,7 +779,7 @@ class _ProductTable extends StatelessWidget {
               headingTextStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
               dataTextStyle: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
               columns: [
-                const DataColumn(label: Text('이미지')),
+                DataColumn(label: Text(l10n.image)),
                 DataColumn(label: Text(l10n.productName)),
                 const DataColumn(label: Text('SKU')),
                 DataColumn(label: Text(l10n.category)),
@@ -815,9 +818,9 @@ class _ProductTable extends StatelessWidget {
                       onTap: () => onEdit(p),
                     ),
                     // 판매가
-                    DataCell(Text('₩${_formatPrice(p.price)}', style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.primary)), onTap: () => onEdit(p)),
+                    DataCell(Text(priceFormatter.format(p.price), style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.primary)), onTap: () => onEdit(p)),
                     // 원가
-                    DataCell(Text('₩${_formatPrice(p.cost)}'), onTap: () => onEdit(p)),
+                    DataCell(Text(priceFormatter.format(p.cost)), onTap: () => onEdit(p)),
                     // 재고
                     DataCell(
                       Text(

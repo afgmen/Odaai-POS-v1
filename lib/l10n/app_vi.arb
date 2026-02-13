@@ -23,6 +23,9 @@
   "all": "Tất cả",
   "today": "Hôm nay",
   "yesterday": "Hôm qua",
+  "week": "Tuần",
+  "month": "Tháng",
+  "customPeriod": "Tùy chọn",
   "none": "Không có",
   "apply": "Áp dụng",
   "activate": "Kích hoạt",
@@ -41,6 +44,8 @@
   "navTables": "Bàn",
   "navRefunds": "Hoàn tiền",
   "navCashDrawer": "Quỹ",
+  "navKds": "Bếp",
+  "navDailyClosing": "Chốt ca",
 
   "cart": "Giỏ hàng",
   "subtotal": "Tạm tính",
@@ -72,6 +77,8 @@
   "searchProductHint": "Tìm theo tên, SKU, mã vạch...",
   "addedToCart": "Đã thêm {name} vào giỏ hàng",
   "outOfStock": "{name} đã hết hàng",
+  "outOfStockBadge": "Hết hàng",
+  "lowStockBadge": "Sắp hết",
   "productNotFound": "[{input}] Không tìm thấy sản phẩm",
 
   "paymentMethod": "Phương thức thanh toán",
@@ -119,11 +126,17 @@
   "langEnglish": "English",
   "langVietnamese": "Tiếng Việt",
 
-  "currencyKRW": "Won (₩)",
   "currencyUSD": "Đô la Mỹ ($)",
   "currencyVND": "Đồng Việt Nam (₫)",
 
   "employeeManagement": "Quản lý nhân viên",
+  "employeeLogin": "Đăng nhập nhân viên",
+  "selectEmployee": "Chọn nhân viên",
+  "enterPinCode": "Nhập mã PIN",
+  "noEmployeesRegistered": "Chưa có nhân viên đăng ký",
+  "forgotPin": "Quên mã PIN? Liên hệ quản lý",
+  "loginButton": "Đăng nhập",
+  "loginFailed": "Đăng nhập thất bại: {error}",
   "employeeName": "Tên",
   "employeeRole": "Vai trò",
   "employeeUsername": "Tên người dùng",
@@ -145,6 +158,7 @@
   "roleCashier": "Thu ngân",
   "roleManager": "Quản lý",
   "roleAdmin": "Quản trị viên",
+  "roleKitchen": "Nhà bếp",
   "pinChangeLabel": "Đổi PIN (tùy chọn)",
   "pinNewLabel": "PIN (4 chữ số)",
   "pinHint": "1234",
@@ -198,6 +212,7 @@
   "paymentMethodSales": "Doanh thu theo phương thức",
   "productRanking": "Xếp hạng sản phẩm",
   "totalSalesAmount": "Tổng doanh thu",
+  "totalSales": "Tổng doanh thu",
   "orderCount": "Đơn hàng",
   "orderUnit": "đơn",
   "avgOrderAmount": "Giá trị TB/đơn",
@@ -228,6 +243,8 @@
   "needReplenish": "Cần bổ sung",
 
   "salesReport": "Báo cáo bán hàng",
+  "salesTrend": "Xu hướng bán hàng",
+  "noDataAvailable": "Không có dữ liệu",
   "exportExcel": "Xuất Excel",
   "excelSaved": "Đã lưu Excel: {path}",
   "exportFailed": "Xuất thất bại: {error}",
@@ -254,15 +271,64 @@
   "customerNoteLabel": "Ghi chú",
 
   "tableManagement": "Quản lý bàn",
+  "tableLayout": "Bố trí bàn",
+  "reservationManagement": "Quản lý đặt chỗ",
   "addTable": "Thêm bàn",
-  "noTables": "Vui lòng thêm bàn",
+  "noTables": "Không có bàn",
+  "emptyTables": "Bàn trống",
+  "occupiedTables": "Đang sử dụng",
+  "allTables": "Tất cả",
   "noTablesFiltered": "Không có bàn với trạng thái này",
   "tableAvailable": "Trống",
   "tableOccupied": "Đang dùng",
   "tableReserved": "Đã đặt",
+  "tableSeated": "Đang ngồi",
+  "tablePaymentComplete": "Đã thanh toán",
+  "tableCleaning": "Đang dọn",
+  "errorOccurred": "Lỗi xảy ra: {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
   "tableNameLabel": "Tên bàn *",
+  "tableNumber": "Số bàn",
+  "tableNumberHint": "VD: 1, A1, VIP-1",
+  "tableNumberRequired": "Vui lòng nhập số bàn",
+  "tableAdded": "Đã thêm bàn {number}",
+  "@tableAdded": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "editTable": "Sửa bàn {number}",
+  "@editTable": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "deleteTable": "Xóa bàn",
+  "deleteTableConfirm": "Bạn có muốn xóa bàn {number} không?",
+  "@deleteTableConfirm": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "tableDeleted": "Đã xóa bàn {number}",
+  "@tableDeleted": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "tableUpdated": "Đã cập nhật bàn {number}",
+  "@tableUpdated": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
   "tableNameHint": "VD: Bàn 1, A-1",
   "seatsLabel": "Số ghế",
+  "seatsCount": "Số ghế",
   "zoneLabel": "Khu vực",
   "zoneHint": "VD: Sảnh, Sân thượng, Phòng",
   "startUse": "Bắt đầu",
@@ -409,6 +475,51 @@
   "categoryHint": "Thực phẩm, Đồ uống, Điện tử, v.v.",
   "productUpdated": "Đã cập nhật sản phẩm",
   "productAdded": "Đã thêm sản phẩm",
+  "productImage": "Hình ảnh sản phẩm",
+  "noImage": "Không có hình ảnh",
+  "camera": "Máy ảnh",
+  "gallery": "Thư viện",
+  "aiAutoSearch": "Tìm kiếm tự động AI",
+  "aiImageSearch": "Tìm kiếm hình ảnh AI",
+  "aiImageSearchComplete": "Hoàn tất tìm kiếm hình ảnh AI",
+  "imageUploaded": "Đã tải lên hình ảnh",
+  "deleteImage": "Xóa hình ảnh",
+  "deleteImageConfirm": "Bạn có thực sự muốn xóa hình ảnh này không?",
+  "imageDeleted": "Đã xóa hình ảnh",
+  "imageSetByAi": "Hình ảnh được đặt bởi tìm kiếm AI",
+  "imageDownloadFailed": "Tải hình ảnh thất bại: {error}",
+  "@imageDownloadFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "noProductsWithoutImage": "Không có sản phẩm nào không có hình ảnh",
+  "searching": "Đang tìm kiếm...",
+  "searchFailed": "Tìm kiếm thất bại",
+  "noSearchResults": "Không có kết quả tìm kiếm",
+  "noImagesFound": "Không tìm thấy hình ảnh cho\n\"{product}\"",
+  "@noImagesFound": {
+    "placeholders": {
+      "product": {"type": "String"}
+    }
+  },
+  "searchQuery": "Tìm kiếm: {query}",
+  "@searchQuery": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+  "success": "Thành công",
+  "failed": "Thất bại",
+  "successRate": "Tỷ lệ thành công",
+  "failedProducts": "Sản phẩm thất bại ({count})",
+  "@failedProducts": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "image": "Hình ảnh",
+  "unit": "đơn vị",
   "deleteProductTitle": "Xóa sản phẩm",
   "deleteProductConfirm": "Xóa '{name}'?\nHành động này không thể hoàn tác.",
   "receipt": "Hóa đơn",
@@ -530,5 +641,161 @@
   "kdsMarkAsServed": "Đánh dấu đã phục vụ",
   "kdsElapsedMinutes": "Đã trôi qua {minutes} phút",
   "kdsTableNumber": "Số bàn",
-  "kdsSpecialInstructions": "Hướng dẫn đặc biệt"
+  "kdsSpecialInstructions": "Hướng dẫn đặc biệt",
+
+  "dailyClosing": "Đóng quỹ hàng ngày",
+  "closingHistory": "Lịch sử đóng quỹ",
+  "closingSummary": "Tóm tắt đóng quỹ",
+  "selectClosingDate": "Chọn ngày đóng quỹ",
+  "selectDate": "Chọn ngày",
+  "salesAggregation": "Tổng hợp doanh thu",
+  "totalTransactions": "Tổng số giao dịch",
+  "transactionsCount": "{count} giao dịch",
+  "@transactionsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "cashCount": "Kiểm quỹ",
+  "expectedCash": "Tiền mặt dự kiến",
+  "actualCash": "Tiền mặt thực tế",
+  "cashDifference": "Chênh lệch tiền mặt",
+  "enterActualCash": "Nhập tiền mặt thực tế",
+  "actualCashHint": "Nhập số tiền mặt thực tế",
+  "cashDifferenceAcceptable": "Vượt quá phạm vi cho phép (±10.000₫)",
+  "specialNotes": "Ghi chú đặc biệt",
+  "notesPlaceholder": "Nhập ghi chú đặc biệt nếu có",
+  "performClosing": "Thực hiện đóng quỹ",
+  "skipCashCount": "Đóng quỹ không kiểm tiền",
+  "closingComplete": "Đóng quỹ hoàn tất",
+  "closingFailed": "Đã xảy ra lỗi khi đóng quỹ",
+  "loadingClosingData": "Đang tải dữ liệu đóng quỹ...",
+  "noClosingHistory": "Không có lịch sử đóng quỹ",
+  "loadClosingHistoryFailed": "Không thể tải lịch sử đóng quỹ",
+  "tryAgainLater": "Vui lòng thử lại sau",
+  "selectPeriod": "Chọn kỳ",
+  "viewDetails": "Xem chi tiết",
+  "generatePdf": "Tạo PDF",
+  "savePdfQuestion": "Bạn có muốn lưu {reportName} dưới dạng PDF không?",
+  "@savePdfQuestion": {
+    "placeholders": {
+      "reportName": {"type": "String"}
+    }
+  },
+  "generate": "Tạo",
+  "editActualCash": "Sửa {label}",
+  "@editActualCash": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "closingDetails": "Chi tiết đóng quỹ",
+  "closingTime": "Thời gian đóng quỹ",
+  "assignedEmployee": "Người phụ trách",
+  "unknown": "Không rõ",
+  "averageTransaction": "Trung bình mỗi giao dịch",
+  "taxTotal": "Tổng thuế",
+  "discountTotal": "Tổng giảm giá",
+  "normalCashDifference": "Trong phạm vi",
+  "pdfSaved": "Đã lưu PDF: {path}",
+  "@pdfSaved": {
+    "placeholders": {
+      "path": {"type": "String"}
+    }
+  },
+  "pdfGenerationFailed": "Tạo PDF thất bại: {error}",
+  "@pdfGenerationFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "alreadyClosed": "Ngày này đã được đóng quỹ",
+  "cannotCloseFutureDate": "Không thể đóng quỹ cho ngày tương lai",
+  "noSalesForDate": "Không có doanh thu cho ngày này",
+  "loginRequired": "Yêu cầu đăng nhập",
+  "closingProcessError": "Đã xảy ra lỗi khi đóng quỹ. Vui lòng thử lại sau",
+  "dailyClosingReport": "Báo cáo đóng quỹ hàng ngày",
+  "closingInfo": "Thông tin đóng quỹ",
+  "closingDate": "Ngày đóng quỹ",
+  "paymentMethodBreakdown": "Phân tích theo phương thức",
+  "qrPaymentSales": "Thanh toán QR",
+  "transferSales": "Chuyển khoản",
+  "cashReconciliation": "Đối chiếu tiền mặt",
+  "signatureSection": "Chữ ký",
+  "closingManager": "Người đóng quỹ",
+  "verifier": "Người xác nhận",
+  "signature": "Chữ ký",
+
+  "userGuide": "Hướng dẫn sử dụng",
+  "tutorial": "Hướng dẫn",
+  "tutorialSkip": "Bỏ qua",
+  "tutorialNext": "Tiếp theo",
+  "tutorialPrevious": "Trước",
+  "tutorialFinish": "Hoàn thành",
+  "tutorialDontShowAgain": "Không hiện lại",
+
+  "tutorial_daily_closing_welcome_title": "Chào mừng đến với Đóng quỹ hàng ngày",
+  "tutorial_daily_closing_welcome_desc": "Sử dụng Đóng quỹ hàng ngày để đối chiếu và ghi lại doanh thu trong ngày. Hãy bắt đầu với hướng dẫn nhanh.",
+
+  "tutorial_daily_closing_date_title": "Chọn ngày đóng quỹ",
+  "tutorial_daily_closing_date_desc": "Nhấn vào đây để chọn ngày bạn muốn đóng quỹ. Ngày hôm nay được chọn mặc định.",
+
+  "tutorial_daily_closing_summary_title": "Tóm tắt doanh thu",
+  "tutorial_daily_closing_summary_desc": "Thẻ này hiển thị tổng giao dịch, tổng doanh thu, trung bình mỗi giao dịch, thuế và giảm giá.",
+
+  "tutorial_daily_closing_payment_title": "Phân tích theo phương thức thanh toán",
+  "tutorial_daily_closing_payment_desc": "Xem doanh thu theo từng phương thức: tiền mặt, thẻ, thanh toán QR và chuyển khoản.",
+
+  "tutorial_daily_closing_cash_title": "Đối chiếu tiền mặt",
+  "tutorial_daily_closing_cash_desc": "So sánh tiền mặt dự kiến với số tiền mặt thực tế để xác minh chênh lệch.",
+
+  "tutorial_daily_closing_actual_cash_title": "Nhập tiền mặt thực tế",
+  "tutorial_daily_closing_actual_cash_desc": "Nhấn nút này để nhập số tiền mặt thực tế bạn đã đếm. Hệ thống sẽ xác minh xem chênh lệch có trong phạm vi chấp nhận được không.",
+
+  "tutorial_daily_closing_notes_title": "Ghi chú đặc biệt",
+  "tutorial_daily_closing_notes_desc": "Bạn có thể thêm ghi chú về các sự kiện đặc biệt khi đóng quỹ, chẳng hạn như hoàn tiền hoặc thiếu hụt.",
+
+  "tutorial_daily_closing_perform_title": "Thực hiện đóng quỹ",
+  "tutorial_daily_closing_perform_desc": "Sau khi xác minh tất cả thông tin, nhấn nút này để hoàn tất đóng quỹ. Lưu ý: Không thể hoàn tác đóng quỹ.",
+
+  "tutorial_daily_closing_history_title": "Lịch sử đóng quỹ",
+  "tutorial_daily_closing_history_desc": "Xem các bản ghi đóng quỹ trước đó và tải xuống dưới dạng báo cáo PDF.",
+
+  "reservations": "Đặt chỗ",
+  "addReservation": "Thêm đặt chỗ",
+  "reservationDetail": "Chi tiết đặt chỗ",
+  "deleteReservation": "Xóa đặt chỗ",
+  "deleteReservationConfirm": "Bạn có chắc chắn muốn xóa đặt chỗ của {customer}?",
+  "reservationDeleted": "Đã xóa đặt chỗ",
+  "noReservations": "Không có đặt chỗ",
+  "reservationStatusChanged": "Trạng thái đặt chỗ đã thay đổi thành {status}",
+
+  "reservationPending": "Chờ xử lý",
+  "reservationConfirmed": "Đã xác nhận",
+  "reservationSeated": "Đã ngồi",
+  "reservationCancelled": "Đã hủy",
+  "reservationNoShow": "Không đến",
+
+  "confirmed": "Đã xác nhận",
+  "pending": "Chờ xử lý",
+
+  "customerName": "Tên khách hàng",
+  "customerPhone": "Liên hệ",
+  "partySize": "Số người",
+  "table": "Bàn",
+  "partySizePeople": "{count} người",
+  "reservationDate": "Ngày đặt chỗ",
+  "reservationTime": "Giờ đặt chỗ",
+  "status": "Trạng thái",
+  "specialRequests": "Yêu cầu đặc biệt",
+  "specialRequestsOptional": "Yêu cầu đặc biệt (Tùy chọn)",
+  "createdAt": "Tạo lúc",
+  "allReservations": "Tất cả",
+  "errorOccurredWithMessage": "Đã xảy ra lỗi: {message}",
+  "editReservation": "Chỉnh sửa đặt chỗ",
+  "customerNameRequired": "Vui lòng nhập tên khách hàng",
+  "customerPhoneRequired": "Vui lòng nhập số liên hệ",
+  "partySizeRequired": "Vui lòng nhập số người",
+  "partySizeInvalid": "Số người phải ít nhất là 1",
+  "people": "người"
 }

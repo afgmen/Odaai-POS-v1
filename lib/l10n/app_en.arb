@@ -23,6 +23,9 @@
   "all": "All",
   "today": "Today",
   "yesterday": "Yesterday",
+  "week": "Week",
+  "month": "Month",
+  "customPeriod": "Custom",
   "none": "None",
   "apply": "Apply",
   "activate": "Activate",
@@ -41,6 +44,8 @@
   "navTables": "Tables",
   "navRefunds": "Refunds",
   "navCashDrawer": "Cash",
+  "navKds": "Kitchen",
+  "navDailyClosing": "Daily Closing",
 
   "cart": "Cart",
   "subtotal": "Subtotal",
@@ -72,6 +77,8 @@
   "searchProductHint": "Search by name, SKU, barcode...",
   "addedToCart": "{name} added to cart",
   "outOfStock": "{name} is out of stock",
+  "outOfStockBadge": "Out of Stock",
+  "lowStockBadge": "Low Stock",
   "productNotFound": "[{input}] Product not found",
 
   "paymentMethod": "Payment Method",
@@ -119,11 +126,22 @@
   "langEnglish": "English",
   "langVietnamese": "Tiếng Việt",
 
-  "currencyKRW": "Korean Won (₩)",
   "currencyUSD": "US Dollar ($)",
   "currencyVND": "Vietnamese Dong (₫)",
 
   "employeeManagement": "Employee Management",
+  "employeeLogin": "Employee Login",
+  "selectEmployee": "Select Employee",
+  "enterPinCode": "Enter PIN Code",
+  "noEmployeesRegistered": "No employees registered",
+  "forgotPin": "Forgot your PIN? Contact manager",
+  "loginButton": "Login",
+  "loginFailed": "Login failed: {error}",
+  "@loginFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
   "employeeName": "Name",
   "employeeRole": "Role",
   "employeeUsername": "Username",
@@ -145,6 +163,7 @@
   "roleCashier": "Cashier",
   "roleManager": "Manager",
   "roleAdmin": "Admin",
+  "roleKitchen": "Kitchen",
   "pinChangeLabel": "Change PIN (optional)",
   "pinNewLabel": "PIN (4 digits)",
   "pinHint": "1234",
@@ -198,6 +217,7 @@
   "paymentMethodSales": "Sales by Payment Method",
   "productRanking": "Product Sales Ranking",
   "totalSalesAmount": "Total Sales",
+  "totalSales": "Total Sales",
   "orderCount": "Orders",
   "orderUnit": "orders",
   "avgOrderAmount": "Avg. Order Amount",
@@ -228,6 +248,8 @@
   "needReplenish": "Need Replenish",
 
   "salesReport": "Sales Report",
+  "salesTrend": "Sales Trend",
+  "noDataAvailable": "No data available",
   "exportExcel": "Export Excel",
   "excelSaved": "Excel saved: {path}",
   "exportFailed": "Export failed: {error}",
@@ -254,15 +276,64 @@
   "customerNoteLabel": "Notes",
 
   "tableManagement": "Table Management",
+  "tableLayout": "Table Layout",
+  "reservationManagement": "Reservation Management",
   "addTable": "Add Table",
-  "noTables": "Please add tables",
+  "noTables": "No tables available",
   "noTablesFiltered": "No tables with this status",
+  "emptyTables": "Empty Tables",
+  "occupiedTables": "Occupied",
+  "allTables": "All",
   "tableAvailable": "Available",
   "tableOccupied": "Occupied",
   "tableReserved": "Reserved",
+  "tableSeated": "Seated",
+  "tablePaymentComplete": "Payment Complete",
+  "tableCleaning": "Cleaning",
+  "errorOccurred": "Error occurred: {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
   "tableNameLabel": "Table Name *",
+  "tableNumber": "Table Number",
+  "tableNumberHint": "e.g. 1, A1, VIP-1",
+  "tableNumberRequired": "Please enter table number",
+  "tableAdded": "Table {number} added",
+  "@tableAdded": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "editTable": "Edit Table {number}",
+  "@editTable": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "deleteTable": "Delete Table",
+  "deleteTableConfirm": "Do you want to delete table {number}?",
+  "@deleteTableConfirm": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "tableDeleted": "Table {number} deleted",
+  "@tableDeleted": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "tableUpdated": "Table {number} updated",
+  "@tableUpdated": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
   "tableNameHint": "e.g. Table 1, A-1",
   "seatsLabel": "Seats",
+  "seatsCount": "Seats",
   "zoneLabel": "Zone",
   "zoneHint": "e.g. Hall, Terrace, Room",
   "startUse": "Start Use",
@@ -409,6 +480,51 @@
   "categoryHint": "Food, Beverage, Electronics, etc.",
   "productUpdated": "Product has been updated",
   "productAdded": "Product has been added",
+  "productImage": "Product Image",
+  "noImage": "No image",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "aiAutoSearch": "AI Auto Search",
+  "aiImageSearch": "AI Image Search",
+  "aiImageSearchComplete": "AI Image Search Complete",
+  "imageUploaded": "Image uploaded",
+  "deleteImage": "Delete Image",
+  "deleteImageConfirm": "Do you really want to delete this image?",
+  "imageDeleted": "Image deleted",
+  "imageSetByAi": "Image set by AI search",
+  "imageDownloadFailed": "Image download failed: {error}",
+  "@imageDownloadFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "noProductsWithoutImage": "No products without images",
+  "searching": "Searching...",
+  "searchFailed": "Search failed",
+  "noSearchResults": "No search results",
+  "noImagesFound": "No images found for\n\"{product}\"",
+  "@noImagesFound": {
+    "placeholders": {
+      "product": {"type": "String"}
+    }
+  },
+  "searchQuery": "Search: {query}",
+  "@searchQuery": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+  "success": "Success",
+  "failed": "Failed",
+  "successRate": "Success Rate",
+  "failedProducts": "Failed Products ({count})",
+  "@failedProducts": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "image": "Image",
+  "unit": "unit",
   "deleteProductTitle": "Delete Product",
   "deleteProductConfirm": "Delete '{name}'?\nThis action cannot be undone.",
   "receipt": "Receipt",
@@ -530,5 +646,189 @@
   "kdsMarkAsServed": "Mark as Served",
   "kdsElapsedMinutes": "{minutes} min elapsed",
   "kdsTableNumber": "Table Number",
-  "kdsSpecialInstructions": "Special Instructions"
+  "kdsSpecialInstructions": "Special Instructions",
+
+  "dailyClosing": "Daily Closing",
+  "closingHistory": "Closing History",
+  "closingSummary": "Closing Summary",
+  "selectClosingDate": "Select Closing Date",
+  "selectDate": "Select Date",
+  "salesAggregation": "Sales Aggregation",
+  "totalTransactions": "Total Transactions",
+  "transactionsCount": "{count} transactions",
+  "@transactionsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "cashCount": "Cash Count",
+  "expectedCash": "Expected Cash",
+  "actualCash": "Actual Cash",
+  "cashDifference": "Cash Difference",
+  "enterActualCash": "Enter Actual Cash",
+  "actualCashHint": "Enter the actual cash amount",
+  "cashDifferenceAcceptable": "Exceeds acceptable range (±$10)",
+  "specialNotes": "Special Notes",
+  "notesPlaceholder": "Enter any special notes",
+  "performClosing": "Perform Closing",
+  "skipCashCount": "Close Without Cash Count",
+  "closingComplete": "Closing completed successfully",
+  "closingFailed": "An error occurred during closing",
+  "loadingClosingData": "Loading closing data...",
+  "noClosingHistory": "No closing history",
+  "loadClosingHistoryFailed": "Unable to load closing history",
+  "tryAgainLater": "Please try again later",
+  "selectPeriod": "Select Period",
+  "viewDetails": "View Details",
+  "generatePdf": "Generate PDF",
+  "savePdfQuestion": "Would you like to save {reportName} as PDF?",
+  "@savePdfQuestion": {
+    "placeholders": {
+      "reportName": {"type": "String"}
+    }
+  },
+  "generate": "Generate",
+  "editActualCash": "Edit {label}",
+  "@editActualCash": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "closingDetails": "Closing Details",
+  "closingTime": "Closing Time",
+  "assignedEmployee": "Assigned Employee",
+  "unknown": "Unknown",
+  "averageTransaction": "Average Transaction",
+  "taxTotal": "Total Tax",
+  "discountTotal": "Total Discount",
+  "normalCashDifference": "Within Range",
+  "pdfSaved": "PDF saved: {path}",
+  "@pdfSaved": {
+    "placeholders": {
+      "path": {"type": "String"}
+    }
+  },
+  "pdfGenerationFailed": "PDF generation failed: {error}",
+  "@pdfGenerationFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "alreadyClosed": "This date has already been closed",
+  "cannotCloseFutureDate": "Cannot close future dates",
+  "noSalesForDate": "No sales found for this date",
+  "loginRequired": "Login required",
+  "closingProcessError": "An error occurred during closing. Please try again later",
+  "dailyClosingReport": "Daily Closing Report",
+  "closingInfo": "Closing Information",
+  "closingDate": "Closing Date",
+  "paymentMethodBreakdown": "Payment Method Breakdown",
+  "qrPaymentSales": "QR Payment",
+  "transferSales": "Transfer",
+  "cashReconciliation": "Cash Reconciliation",
+  "signatureSection": "Signatures",
+  "closingManager": "Closing Manager",
+  "verifier": "Verifier",
+  "signature": "Signature",
+
+  "userGuide": "User Guide",
+  "tutorial": "Tutorial",
+  "tutorialSkip": "Skip",
+  "tutorialNext": "Next",
+  "tutorialPrevious": "Previous",
+  "tutorialFinish": "Finish",
+  "tutorialDontShowAgain": "Don't show again",
+
+  "tutorial_daily_closing_welcome_title": "Welcome to Daily Closing",
+  "tutorial_daily_closing_welcome_desc": "Use Daily Closing to reconcile and record your daily sales. Let's start with a quick guide.",
+
+  "tutorial_daily_closing_date_title": "Select Closing Date",
+  "tutorial_daily_closing_date_desc": "Tap here to select the date you want to close. Today's date is selected by default.",
+
+  "tutorial_daily_closing_summary_title": "Sales Summary",
+  "tutorial_daily_closing_summary_desc": "This card shows total transactions, total sales, average transaction, taxes, and discounts.",
+
+  "tutorial_daily_closing_payment_title": "Payment Method Breakdown",
+  "tutorial_daily_closing_payment_desc": "View sales breakdown by payment method: cash, card, QR payment, and transfer.",
+
+  "tutorial_daily_closing_cash_title": "Cash Reconciliation",
+  "tutorial_daily_closing_cash_desc": "Compare expected cash sales with actual cash count to verify differences.",
+
+  "tutorial_daily_closing_actual_cash_title": "Enter Actual Cash",
+  "tutorial_daily_closing_actual_cash_desc": "Tap this button to enter the actual cash amount you counted. The system will verify if the difference is within acceptable range.",
+
+  "tutorial_daily_closing_notes_title": "Record Special Notes",
+  "tutorial_daily_closing_notes_desc": "You can add notes about special occurrences during closing, such as refunds or shortages.",
+
+  "tutorial_daily_closing_perform_title": "Perform Closing",
+  "tutorial_daily_closing_perform_desc": "After verifying all information, tap this button to complete the closing. Note: Closing cannot be undone.",
+
+  "tutorial_daily_closing_history_title": "Closing History",
+  "tutorial_daily_closing_history_desc": "View previous closing records and download them as PDF reports.",
+
+  "reservations": "Reservations",
+  "addReservation": "Add Reservation",
+  "reservationDetail": "Reservation Detail",
+  "deleteReservation": "Delete Reservation",
+  "deleteReservationConfirm": "Are you sure you want to delete the reservation for {customer}?",
+  "@deleteReservationConfirm": {
+    "placeholders": {
+      "customer": {
+        "type": "String"
+      }
+    }
+  },
+  "reservationDeleted": "Reservation deleted",
+  "noReservations": "No reservations",
+  "reservationStatusChanged": "Reservation status changed to {status}",
+  "@reservationStatusChanged": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+
+  "reservationPending": "Pending",
+  "reservationConfirmed": "Confirmed",
+  "reservationSeated": "Seated",
+  "reservationCancelled": "Cancelled",
+  "reservationNoShow": "No Show",
+
+  "confirmed": "Confirmed",
+  "pending": "Pending",
+
+  "customerName": "Customer Name",
+  "customerPhone": "Contact",
+  "partySize": "Party Size",
+  "table": "Table",
+  "partySizePeople": "{count} people",
+  "@partySizePeople": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reservationDate": "Reservation Date",
+  "reservationTime": "Reservation Time",
+  "status": "Status",
+  "specialRequests": "Special Requests",
+  "specialRequestsOptional": "Special Requests (Optional)",
+  "createdAt": "Created At",
+  "allReservations": "All",
+  "errorOccurredWithMessage": "Error occurred: {message}",
+  "@errorOccurredWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "editReservation": "Edit Reservation",
+  "customerNameRequired": "Please enter customer name",
+  "customerPhoneRequired": "Please enter contact number",
+  "partySizeRequired": "Please enter party size",
+  "partySizeInvalid": "Party size must be at least 1",
+  "people": "people"
 }

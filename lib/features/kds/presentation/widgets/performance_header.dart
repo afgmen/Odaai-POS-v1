@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/services/kitchen_service_provider.dart';
 
 /// 주방 성과 헤더 위젯
@@ -8,6 +9,7 @@ class PerformanceHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final performanceAsync = ref.watch(kitchenPerformanceProvider);
 
     return performanceAsync.when(
@@ -16,8 +18,8 @@ class PerformanceHeader extends ConsumerWidget {
           // 오늘 처리된 주문
           _buildStatItem(
             icon: Icons.check_circle,
-            label: '완료',
-            value: '${performance.todayServedCount}건',
+            label: l10n.kdsCompleted,
+            value: l10n.kdsOrdersCount(performance.todayServedCount),
             color: Colors.green,
           ),
           const SizedBox(width: 16),
@@ -25,8 +27,8 @@ class PerformanceHeader extends ConsumerWidget {
           // 활성 주문 수
           _buildStatItem(
             icon: Icons.pending,
-            label: '진행중',
-            value: '${performance.totalActiveOrders}건',
+            label: l10n.kdsInProgress,
+            value: l10n.kdsOrdersCount(performance.totalActiveOrders),
             color: Colors.orange,
           ),
           const SizedBox(width: 16),
@@ -34,7 +36,7 @@ class PerformanceHeader extends ConsumerWidget {
           // 평균 조리 시간
           _buildStatItem(
             icon: Icons.timer,
-            label: '평균',
+            label: l10n.kdsAverage,
             value: performance.averagePrepTimeFormatted,
             color: Colors.blue,
           ),

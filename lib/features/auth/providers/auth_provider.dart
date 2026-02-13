@@ -1,113 +1,295 @@
-import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:crypto/crypto.dart';
-import 'dart:convert';
-
 import '../../../database/app_database.dart';
+import '../../../database/daos/employees_dao.dart';
 import '../../../providers/database_providers.dart';
+import '../domain/session.dart';
+import '../domain/auth_error.dart';
+import '../utils/pin_hasher.dart';
+import 'audit_logging_provider.dart';
 
-/// 현재 로그인한 직원
-final currentEmployeeProvider = StateProvider<Employee?>((ref) => null);
+/// 인증 상태
+class AuthState {
+  final Session? session;
+  final bool isLoading;
+  final AuthError? error;
 
-/// PIN 해시 생성 헬퍼
-String hashPin(String pin) {
-  final bytes = utf8.encode(pin);
-  final digest = sha256.convert(bytes);
-  return digest.toString();
-}
+  AuthState({
+    this.session,
+    this.isLoading = false,
+    this.error,
+  });
 
-/// PIN 인증 서비스
-class AuthService {
-  final AppDatabase db;
+  bool get isAuthenticated => session != null && session!.isValid;
 
-  AuthService(this.db);
-
-  /// PIN으로 직원 인증
-  Future<Employee?> authenticateWithPin(String pin) async {
-    final pinHash = hashPin(pin);
-
-    final employees = await (db.select(db.employees)
-          ..where((e) => e.pin.equals(pinHash))
-          ..where((e) => e.isActive.equals(true)))
-        .get();
-
-    return employees.isNotEmpty ? employees.first : null;
-  }
-
-  /// 직원 PIN 설정/변경
-  Future<void> setPin(int employeeId, String pin) async {
-    final pinHash = hashPin(pin);
-
-    await (db.update(db.employees)..where((e) => e.id.equals(employeeId)))
-        .write(EmployeesCompanion(pin: Value(pinHash)));
-  }
-
-  /// 직원 PIN 제거
-  Future<void> removePin(int employeeId) async {
-    await (db.update(db.employees)..where((e) => e.id.equals(employeeId)))
-        .write(const EmployeesCompanion(pin: Value(null)));
-  }
-
-  /// 모든 활성 직원 조회
-  Future<List<Employee>> getActiveEmployees() async {
-    return await (db.select(db.employees)
-          ..where((e) => e.isActive.equals(true))
-          ..orderBy([(e) => OrderingTerm(expression: e.name)]))
-        .get();
-  }
-
-  /// 직원 추가
-  Future<Employee> createEmployee({
-    required String username,
-    required String name,
-    required String role,
-    String? pin,
-  }) async {
-    final companion = EmployeesCompanion.insert(
-      username: username,
-      name: name,
-      passwordHash: 'temp', // TODO: 실제 비밀번호 해시 구현
-      role: Value(role),
-      pin: pin != null ? Value(hashPin(pin)) : const Value(null),
+  AuthState copyWith({
+    Session? Function()? session,
+    bool? isLoading,
+    AuthError? Function()? error,
+  }) {
+    return AuthState(
+      session: session != null ? session() : this.session,
+      isLoading: isLoading ?? this.isLoading,
+      error: error != null ? error() : this.error,
     );
-
-    final id = await db.into(db.employees).insert(companion);
-    return await (db.select(db.employees)..where((e) => e.id.equals(id))).getSingle();
-  }
-
-  /// 직원 수정
-  Future<void> updateEmployee({
-    required int id,
-    String? name,
-    String? role,
-    String? pin,
-    bool? isActive,
-  }) async {
-    await (db.update(db.employees)..where((e) => e.id.equals(id))).write(
-      EmployeesCompanion(
-        name: name != null ? Value(name) : const Value.absent(),
-        role: role != null ? Value(role) : const Value.absent(),
-        pin: pin != null ? Value(hashPin(pin)) : const Value.absent(),
-        isActive: isActive != null ? Value(isActive) : const Value.absent(),
-      ),
-    );
-  }
-
-  /// 직원 비활성화 (삭제 대신)
-  Future<void> deactivateEmployee(int id) async {
-    await (db.update(db.employees)..where((e) => e.id.equals(id)))
-        .write(const EmployeesCompanion(isActive: Value(false)));
   }
 }
 
-/// AuthService Provider
-final authServiceProvider = Provider<AuthService>((ref) {
+/// 인증 Provider
+class AuthNotifier extends StateNotifier<AuthState> {
+  final EmployeesDao _employeesDao;
+  final Ref _ref;
+
+  // 브루트포스 방지
+  final Map<int, int> _failedAttempts = {};
+  final Map<int, DateTime> _lockoutUntil = {};
+
+  AuthNotifier(this._employeesDao, this._ref) : super(AuthState());
+
+  /// 로그인
+  ///
+  /// [employeeId] 직원 ID
+  /// [pin] 평문 PIN
+  Future<void> login(int employeeId, String pin) async {
+    try {
+      state = state.copyWith(isLoading: true, error: () => null);
+
+      // 1. PIN 형식 검증
+      if (!PinHasher.isValidPinFormat(pin)) {
+        throw AuthErrors.invalidPinFormat();
+      }
+
+      // 2. 계정 잠금 확인
+      if (_isLocked(employeeId)) {
+        final lockoutTime = _lockoutUntil[employeeId]!;
+        final remaining = lockoutTime.difference(DateTime.now());
+        throw AuthErrors.accountLocked(duration: remaining);
+      }
+
+      // 3. PIN 검증
+      final isValid = await _employeesDao.verifyPIN(employeeId, pin);
+
+      if (!isValid) {
+        // 실패 카운트 증가
+        final attempts = (_failedAttempts[employeeId] ?? 0) + 1;
+        _failedAttempts[employeeId] = attempts;
+
+        if (attempts >= 5) {
+          // 5회 실패 시 1분 잠금
+          _lockoutUntil[employeeId] =
+              DateTime.now().add(const Duration(minutes: 1));
+          throw AuthErrors.accountLocked(
+              duration: const Duration(minutes: 1));
+        }
+
+        throw AuthErrors.invalidPin(attemptsLeft: 5 - attempts);
+      }
+
+      // 4. 성공 시 실패 카운트 초기화
+      _failedAttempts.remove(employeeId);
+      _lockoutUntil.remove(employeeId);
+
+      // 5. 세션 생성
+      await _employeesDao.createSession(employeeId);
+      final session = await _employeesDao.getSessionInfo(employeeId);
+
+      if (session == null) {
+        throw AuthError(
+          code: 'SYS_001',
+          message: '세션 생성에 실패했습니다.',
+        );
+      }
+
+      // 6. 로그 기록
+      await _ref
+          .read(auditLoggingProvider)
+          .logLogin(employeeId, success: true);
+
+      state = state.copyWith(
+        session: () => session,
+        isLoading: false,
+      );
+    } on AuthError catch (e) {
+      // 로그인 실패 로그 기록
+      await _ref
+          .read(auditLoggingProvider)
+          .logLogin(employeeId, success: false, errorCode: e.code);
+
+      state = state.copyWith(
+        isLoading: false,
+        error: () => e,
+      );
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: () => AuthError(
+          code: 'SYS_999',
+          message: '알 수 없는 오류가 발생했습니다: $e',
+        ),
+      );
+      rethrow;
+    }
+  }
+
+  /// 로그아웃
+  Future<void> logout() async {
+    final session = state.session;
+    if (session == null) return;
+
+    try {
+      // 세션 삭제
+      await _employeesDao.clearSession(session.employeeId);
+
+      // 로그아웃 로그 기록
+      await _ref
+          .read(auditLoggingProvider)
+          .logLogout(session.employeeId);
+
+      state = AuthState();
+    } catch (e) {
+      // 로그아웃 실패 시에도 상태는 초기화
+      state = AuthState();
+    }
+  }
+
+  /// 세션 복원 (앱 시작 시)
+  Future<void> restoreSession(String token) async {
+    try {
+      final session = await _employeesDao.getSessionByToken(token);
+
+      if (session != null && session.isValid) {
+        state = state.copyWith(session: () => session);
+      }
+    } catch (e) {
+      // 세션 복원 실패 시 무시
+    }
+  }
+
+  /// 세션 활동 갱신
+  Future<void> updateActivity() async {
+    final session = state.session;
+    if (session == null) return;
+
+    try {
+      await _employeesDao.updateSessionActivity(session.employeeId);
+
+      // 세션 객체 갱신
+      final updatedSession = session.copyWithActivity();
+      state = state.copyWith(session: () => updatedSession);
+    } catch (e) {
+      // 활동 갱신 실패 시 무시
+    }
+  }
+
+  /// 관리자 PIN 검증 (Manager Override용)
+  Future<bool> validateManagerPIN(String pin) async {
+    try {
+      // 관리자 목록 조회
+      final managers = await _employeesDao.getManagers();
+
+      if (managers.isEmpty) {
+        throw AuthErrors.employeeNotFound();
+      }
+
+      // 모든 관리자 PIN 확인
+      for (final manager in managers) {
+        if (manager.pinHash == null) continue;
+        final isValid = await _employeesDao.verifyPIN(manager.id, pin);
+        if (isValid) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// 관리자 ID 조회 (Manager Override용)
+  Future<int?> getManagerIdByPIN(String pin) async {
+    try {
+      final managers = await _employeesDao.getManagers();
+
+      for (final manager in managers) {
+        if (manager.pinHash == null) continue;
+        final isValid = await _employeesDao.verifyPIN(manager.id, pin);
+        if (isValid) {
+          return manager.id;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// 계정 잠금 여부 확인
+  bool _isLocked(int employeeId) {
+    final lockoutTime = _lockoutUntil[employeeId];
+    if (lockoutTime == null) return false;
+    return DateTime.now().isBefore(lockoutTime);
+  }
+
+  /// 에러 초기화
+  void clearError() {
+    state = state.copyWith(error: () => null);
+  }
+}
+
+// ============================================================
+// Providers
+// ============================================================
+
+/// EmployeesDao Provider
+final employeesDaoProvider = Provider<EmployeesDao>((ref) {
   final db = ref.watch(databaseProvider);
-  return AuthService(db);
+  return db.employeesDao;
 });
 
-/// 활성 직원 목록 Provider
+/// Auth Provider
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final employeesDao = ref.watch(employeesDaoProvider);
+  return AuthNotifier(employeesDao, ref);
+});
+
+/// 현재 세션 Provider (편의용)
+final currentSessionProvider = Provider<Session?>((ref) {
+  return ref.watch(authProvider).session;
+});
+
+/// 인증 여부 Provider (편의용)
+final isAuthenticatedProvider = Provider<bool>((ref) {
+  return ref.watch(authProvider).isAuthenticated;
+});
+
+// ============================================================
+// 레거시 호환성 (기존 코드와의 호환)
+// ============================================================
+
+/// 현재 로그인한 직원 (레거시 호환)
+final currentEmployeeProvider = Provider<Employee?>((ref) {
+  final session = ref.watch(currentSessionProvider);
+  if (session == null) return null;
+
+  // Session에서 Employee 객체 생성
+  return Employee(
+    id: session.employeeId,
+    name: session.employeeName,
+    pin: '', // PIN은 보안상 노출하지 않음
+    role: session.role,
+    isActive: true,
+    createdAt: DateTime.now(),
+    pinHash: null,
+    defaultRole: 'STAFF', // 기본값
+    storeScope: 'OWN_STORE', // 기본값
+    primaryStoreId: null,
+  );
+});
+
+/// 활성 직원 목록 조회
 final activeEmployeesProvider = FutureProvider<List<Employee>>((ref) async {
-  final authService = ref.watch(authServiceProvider);
-  return await authService.getActiveEmployees();
+  final db = ref.watch(databaseProvider);
+  return await db.employeesDao.getAllEmployees();
 });

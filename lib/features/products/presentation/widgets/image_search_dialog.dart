@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/models/search_image_result.dart';
 import '../providers/image_providers.dart';
 
@@ -32,6 +33,8 @@ class _ImageSearchDialogState extends ConsumerState<ImageSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
@@ -50,9 +53,9 @@ class _ImageSearchDialogState extends ConsumerState<ImageSearchDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'AI 이미지 검색',
-                        style: TextStyle(
+                      Text(
+                        l10n.aiImageSearch,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
@@ -60,7 +63,7 @@ class _ImageSearchDialogState extends ConsumerState<ImageSearchDialog> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '검색어: ${widget.productName}',
+                        '${l10n.searchQuery}: ${widget.productName}',
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppTheme.textSecondary,
@@ -86,17 +89,17 @@ class _ImageSearchDialogState extends ConsumerState<ImageSearchDialog> {
                 future: _searchFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
+                    return Center(
                       child: Padding(
-                        padding: EdgeInsets.all(40),
+                        padding: const EdgeInsets.all(40),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 16),
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 16),
                             Text(
-                              '이미지 검색 중...',
-                              style: TextStyle(color: AppTheme.textSecondary),
+                              l10n.searching,
+                              style: const TextStyle(color: AppTheme.textSecondary),
                             ),
                           ],
                         ),
@@ -118,7 +121,7 @@ class _ImageSearchDialogState extends ConsumerState<ImageSearchDialog> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              '검색 실패',
+                              l10n.searchFailed,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -136,7 +139,7 @@ class _ImageSearchDialogState extends ConsumerState<ImageSearchDialog> {
                             const SizedBox(height: 16),
                             OutlinedButton(
                               onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('수동 업로드로 전환'),
+                              child: Text(l10n.cancel),
                             ),
                           ],
                         ),
@@ -158,16 +161,16 @@ class _ImageSearchDialogState extends ConsumerState<ImageSearchDialog> {
                               color: AppTheme.textDisabled,
                             ),
                             const SizedBox(height: 12),
-                            const Text(
-                              '검색 결과가 없습니다',
-                              style: TextStyle(
+                            Text(
+                              l10n.noSearchResults,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '"${widget.productName}"에 대한\n이미지를 찾을 수 없습니다',
+                              l10n.noImagesFound(widget.productName),
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 fontSize: 13,
@@ -177,7 +180,7 @@ class _ImageSearchDialogState extends ConsumerState<ImageSearchDialog> {
                             const SizedBox(height: 16),
                             OutlinedButton(
                               onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('수동 업로드로 전환'),
+                              child: Text(l10n.cancel),
                             ),
                           ],
                         ),

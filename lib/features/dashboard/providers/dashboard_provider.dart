@@ -4,14 +4,22 @@ import '../../../database/app_database.dart';
 import '../../../database/daos/sales_dao.dart';
 import '../../../providers/database_providers.dart';
 
-// ── 날짜 필터 열거형 ──────────────────────────────
+// ── Date Filter Enum ──────────────────────────────
 enum DashboardFilter {
-  today('오늘'),
-  week('주간'),
-  month('월간');
+  today,
+  week,
+  month;
 
-  final String label;
-  const DashboardFilter(this.label);
+  String get localizationKey {
+    switch (this) {
+      case DashboardFilter.today:
+        return 'today';
+      case DashboardFilter.week:
+        return 'week';
+      case DashboardFilter.month:
+        return 'month';
+    }
+  }
 }
 
 /// 현재 대시보드 날짜 필터

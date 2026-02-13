@@ -75,6 +75,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yesterday => 'Yesterday';
 
   @override
+  String get week => 'Week';
+
+  @override
+  String get month => 'Month';
+
+  @override
+  String get customPeriod => 'Custom';
+
+  @override
   String get none => 'None';
 
   @override
@@ -124,6 +133,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navCashDrawer => 'Cash';
+
+  @override
+  String get navKds => 'Kitchen';
+
+  @override
+  String get navDailyClosing => 'Daily Closing';
 
   @override
   String get cart => 'Cart';
@@ -219,6 +234,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String outOfStock(Object name) {
     return '$name is out of stock';
   }
+
+  @override
+  String get outOfStockBadge => 'Out of Stock';
+
+  @override
+  String get lowStockBadge => 'Low Stock';
 
   @override
   String productNotFound(Object input) {
@@ -349,9 +370,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get langVietnamese => 'Tiếng Việt';
 
   @override
-  String get currencyKRW => 'Korean Won (₩)';
-
-  @override
   String get currencyUSD => 'US Dollar (\$)';
 
   @override
@@ -359,6 +377,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get employeeManagement => 'Employee Management';
+
+  @override
+  String get employeeLogin => 'Employee Login';
+
+  @override
+  String get selectEmployee => 'Select Employee';
+
+  @override
+  String get enterPinCode => 'Enter PIN Code';
+
+  @override
+  String get noEmployeesRegistered => 'No employees registered';
+
+  @override
+  String get forgotPin => 'Forgot your PIN? Contact manager';
+
+  @override
+  String get loginButton => 'Login';
+
+  @override
+  String loginFailed(String error) {
+    return 'Login failed: $error';
+  }
 
   @override
   String get employeeName => 'Name';
@@ -422,6 +463,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roleAdmin => 'Admin';
+
+  @override
+  String get roleKitchen => 'Kitchen';
 
   @override
   String get pinChangeLabel => 'Change PIN (optional)';
@@ -579,6 +623,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalSalesAmount => 'Total Sales';
 
   @override
+  String get totalSales => 'Total Sales';
+
+  @override
   String get orderCount => 'Orders';
 
   @override
@@ -602,7 +649,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get errorOccurred => 'An error occurred';
+  String errorOccurred(String error) {
+    return 'Error occurred: $error';
+  }
 
   @override
   String get salesHistory => 'Sales History';
@@ -670,6 +719,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salesReport => 'Sales Report';
+
+  @override
+  String get salesTrend => 'Sales Trend';
+
+  @override
+  String get noDataAvailable => 'No data available';
 
   @override
   String get exportExcel => 'Export Excel';
@@ -750,13 +805,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tableManagement => 'Table Management';
 
   @override
+  String get tableLayout => 'Table Layout';
+
+  @override
+  String get reservationManagement => 'Reservation Management';
+
+  @override
   String get addTable => 'Add Table';
 
   @override
-  String get noTables => 'Please add tables';
+  String get noTables => 'No tables available';
 
   @override
   String get noTablesFiltered => 'No tables with this status';
+
+  @override
+  String get emptyTables => 'Empty Tables';
+
+  @override
+  String get occupiedTables => 'Occupied';
+
+  @override
+  String get allTables => 'All';
 
   @override
   String get tableAvailable => 'Available';
@@ -768,13 +838,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tableReserved => 'Reserved';
 
   @override
+  String get tableSeated => 'Seated';
+
+  @override
+  String get tablePaymentComplete => 'Payment Complete';
+
+  @override
+  String get tableCleaning => 'Cleaning';
+
+  @override
   String get tableNameLabel => 'Table Name *';
+
+  @override
+  String get tableNumber => 'Table Number';
+
+  @override
+  String get tableNumberHint => 'e.g. 1, A1, VIP-1';
+
+  @override
+  String get tableNumberRequired => 'Please enter table number';
+
+  @override
+  String tableAdded(String number) {
+    return 'Table $number added';
+  }
+
+  @override
+  String editTable(String number) {
+    return 'Edit Table $number';
+  }
+
+  @override
+  String get deleteTable => 'Delete Table';
+
+  @override
+  String deleteTableConfirm(String number) {
+    return 'Do you want to delete table $number?';
+  }
+
+  @override
+  String tableDeleted(String number) {
+    return 'Table $number deleted';
+  }
+
+  @override
+  String tableUpdated(String number) {
+    return 'Table $number updated';
+  }
 
   @override
   String get tableNameHint => 'e.g. Table 1, A-1';
 
   @override
   String get seatsLabel => 'Seats';
+
+  @override
+  String get seatsCount => 'Seats';
 
   @override
   String get zoneLabel => 'Zone';
@@ -1228,6 +1347,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get productAdded => 'Product has been added';
 
   @override
+  String get productImage => 'Product Image';
+
+  @override
+  String get noImage => 'No image';
+
+  @override
+  String get camera => 'Camera';
+
+  @override
+  String get gallery => 'Gallery';
+
+  @override
+  String get aiAutoSearch => 'AI Auto Search';
+
+  @override
+  String get aiImageSearch => 'AI Image Search';
+
+  @override
+  String get aiImageSearchComplete => 'AI Image Search Complete';
+
+  @override
+  String get imageUploaded => 'Image uploaded';
+
+  @override
+  String get deleteImage => 'Delete Image';
+
+  @override
+  String get deleteImageConfirm => 'Do you really want to delete this image?';
+
+  @override
+  String get imageDeleted => 'Image deleted';
+
+  @override
+  String get imageSetByAi => 'Image set by AI search';
+
+  @override
+  String imageDownloadFailed(String error) {
+    return 'Image download failed: $error';
+  }
+
+  @override
+  String get noProductsWithoutImage => 'No products without images';
+
+  @override
+  String get searching => 'Searching...';
+
+  @override
+  String get searchFailed => 'Search failed';
+
+  @override
+  String get noSearchResults => 'No search results';
+
+  @override
+  String noImagesFound(String product) {
+    return 'No images found for\n\"$product\"';
+  }
+
+  @override
+  String searchQuery(String query) {
+    return 'Search: $query';
+  }
+
+  @override
+  String get success => 'Success';
+
+  @override
+  String get failed => 'Failed';
+
+  @override
+  String get successRate => 'Success Rate';
+
+  @override
+  String failedProducts(int count) {
+    return 'Failed Products ($count)';
+  }
+
+  @override
+  String get image => 'Image';
+
+  @override
+  String get unit => 'unit';
+
+  @override
   String get deleteProductTitle => 'Delete Product';
 
   @override
@@ -1628,4 +1830,377 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kdsSpecialInstructions => 'Special Instructions';
+
+  @override
+  String get dailyClosing => 'Daily Closing';
+
+  @override
+  String get closingHistory => 'Closing History';
+
+  @override
+  String get closingSummary => 'Closing Summary';
+
+  @override
+  String get selectClosingDate => 'Select Closing Date';
+
+  @override
+  String get selectDate => 'Select Date';
+
+  @override
+  String get salesAggregation => 'Sales Aggregation';
+
+  @override
+  String get totalTransactions => 'Total Transactions';
+
+  @override
+  String transactionsCount(int count) {
+    return '$count transactions';
+  }
+
+  @override
+  String get cashCount => 'Cash Count';
+
+  @override
+  String get expectedCash => 'Expected Cash';
+
+  @override
+  String get actualCash => 'Actual Cash';
+
+  @override
+  String get cashDifference => 'Cash Difference';
+
+  @override
+  String get enterActualCash => 'Enter Actual Cash';
+
+  @override
+  String get actualCashHint => 'Enter the actual cash amount';
+
+  @override
+  String get cashDifferenceAcceptable => 'Exceeds acceptable range (±\$10)';
+
+  @override
+  String get specialNotes => 'Special Notes';
+
+  @override
+  String get notesPlaceholder => 'Enter any special notes';
+
+  @override
+  String get performClosing => 'Perform Closing';
+
+  @override
+  String get skipCashCount => 'Close Without Cash Count';
+
+  @override
+  String get closingComplete => 'Closing completed successfully';
+
+  @override
+  String get closingFailed => 'An error occurred during closing';
+
+  @override
+  String get loadingClosingData => 'Loading closing data...';
+
+  @override
+  String get noClosingHistory => 'No closing history';
+
+  @override
+  String get loadClosingHistoryFailed => 'Unable to load closing history';
+
+  @override
+  String get tryAgainLater => 'Please try again later';
+
+  @override
+  String get selectPeriod => 'Select Period';
+
+  @override
+  String get viewDetails => 'View Details';
+
+  @override
+  String get generatePdf => 'Generate PDF';
+
+  @override
+  String savePdfQuestion(String reportName) {
+    return 'Would you like to save $reportName as PDF?';
+  }
+
+  @override
+  String get generate => 'Generate';
+
+  @override
+  String editActualCash(String label) {
+    return 'Edit $label';
+  }
+
+  @override
+  String get closingDetails => 'Closing Details';
+
+  @override
+  String get closingTime => 'Closing Time';
+
+  @override
+  String get assignedEmployee => 'Assigned Employee';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get averageTransaction => 'Average Transaction';
+
+  @override
+  String get taxTotal => 'Total Tax';
+
+  @override
+  String get discountTotal => 'Total Discount';
+
+  @override
+  String get normalCashDifference => 'Within Range';
+
+  @override
+  String pdfSaved(String path) {
+    return 'PDF saved: $path';
+  }
+
+  @override
+  String pdfGenerationFailed(String error) {
+    return 'PDF generation failed: $error';
+  }
+
+  @override
+  String get alreadyClosed => 'This date has already been closed';
+
+  @override
+  String get cannotCloseFutureDate => 'Cannot close future dates';
+
+  @override
+  String get noSalesForDate => 'No sales found for this date';
+
+  @override
+  String get loginRequired => 'Login required';
+
+  @override
+  String get closingProcessError =>
+      'An error occurred during closing. Please try again later';
+
+  @override
+  String get dailyClosingReport => 'Daily Closing Report';
+
+  @override
+  String get closingInfo => 'Closing Information';
+
+  @override
+  String get closingDate => 'Closing Date';
+
+  @override
+  String get paymentMethodBreakdown => 'Payment Method Breakdown';
+
+  @override
+  String get qrPaymentSales => 'QR Payment';
+
+  @override
+  String get transferSales => 'Transfer';
+
+  @override
+  String get cashReconciliation => 'Cash Reconciliation';
+
+  @override
+  String get signatureSection => 'Signatures';
+
+  @override
+  String get closingManager => 'Closing Manager';
+
+  @override
+  String get verifier => 'Verifier';
+
+  @override
+  String get signature => 'Signature';
+
+  @override
+  String get userGuide => 'User Guide';
+
+  @override
+  String get tutorial => 'Tutorial';
+
+  @override
+  String get tutorialSkip => 'Skip';
+
+  @override
+  String get tutorialNext => 'Next';
+
+  @override
+  String get tutorialPrevious => 'Previous';
+
+  @override
+  String get tutorialFinish => 'Finish';
+
+  @override
+  String get tutorialDontShowAgain => 'Don\'t show again';
+
+  @override
+  String get tutorial_daily_closing_welcome_title => 'Welcome to Daily Closing';
+
+  @override
+  String get tutorial_daily_closing_welcome_desc =>
+      'Use Daily Closing to reconcile and record your daily sales. Let\'s start with a quick guide.';
+
+  @override
+  String get tutorial_daily_closing_date_title => 'Select Closing Date';
+
+  @override
+  String get tutorial_daily_closing_date_desc =>
+      'Tap here to select the date you want to close. Today\'s date is selected by default.';
+
+  @override
+  String get tutorial_daily_closing_summary_title => 'Sales Summary';
+
+  @override
+  String get tutorial_daily_closing_summary_desc =>
+      'This card shows total transactions, total sales, average transaction, taxes, and discounts.';
+
+  @override
+  String get tutorial_daily_closing_payment_title => 'Payment Method Breakdown';
+
+  @override
+  String get tutorial_daily_closing_payment_desc =>
+      'View sales breakdown by payment method: cash, card, QR payment, and transfer.';
+
+  @override
+  String get tutorial_daily_closing_cash_title => 'Cash Reconciliation';
+
+  @override
+  String get tutorial_daily_closing_cash_desc =>
+      'Compare expected cash sales with actual cash count to verify differences.';
+
+  @override
+  String get tutorial_daily_closing_actual_cash_title => 'Enter Actual Cash';
+
+  @override
+  String get tutorial_daily_closing_actual_cash_desc =>
+      'Tap this button to enter the actual cash amount you counted. The system will verify if the difference is within acceptable range.';
+
+  @override
+  String get tutorial_daily_closing_notes_title => 'Record Special Notes';
+
+  @override
+  String get tutorial_daily_closing_notes_desc =>
+      'You can add notes about special occurrences during closing, such as refunds or shortages.';
+
+  @override
+  String get tutorial_daily_closing_perform_title => 'Perform Closing';
+
+  @override
+  String get tutorial_daily_closing_perform_desc =>
+      'After verifying all information, tap this button to complete the closing. Note: Closing cannot be undone.';
+
+  @override
+  String get tutorial_daily_closing_history_title => 'Closing History';
+
+  @override
+  String get tutorial_daily_closing_history_desc =>
+      'View previous closing records and download them as PDF reports.';
+
+  @override
+  String get reservations => 'Reservations';
+
+  @override
+  String get addReservation => 'Add Reservation';
+
+  @override
+  String get reservationDetail => 'Reservation Detail';
+
+  @override
+  String get deleteReservation => 'Delete Reservation';
+
+  @override
+  String deleteReservationConfirm(String customer) {
+    return 'Are you sure you want to delete the reservation for $customer?';
+  }
+
+  @override
+  String get reservationDeleted => 'Reservation deleted';
+
+  @override
+  String get noReservations => 'No reservations';
+
+  @override
+  String reservationStatusChanged(String status) {
+    return 'Reservation status changed to $status';
+  }
+
+  @override
+  String get reservationPending => 'Pending';
+
+  @override
+  String get reservationConfirmed => 'Confirmed';
+
+  @override
+  String get reservationSeated => 'Seated';
+
+  @override
+  String get reservationCancelled => 'Cancelled';
+
+  @override
+  String get reservationNoShow => 'No Show';
+
+  @override
+  String get confirmed => 'Confirmed';
+
+  @override
+  String get pending => 'Pending';
+
+  @override
+  String get customerName => 'Customer Name';
+
+  @override
+  String get customerPhone => 'Contact';
+
+  @override
+  String get partySize => 'Party Size';
+
+  @override
+  String get table => 'Table';
+
+  @override
+  String partySizePeople(int count) {
+    return '$count people';
+  }
+
+  @override
+  String get reservationDate => 'Reservation Date';
+
+  @override
+  String get reservationTime => 'Reservation Time';
+
+  @override
+  String get specialRequests => 'Special Requests';
+
+  @override
+  String get specialRequestsOptional => 'Special Requests (Optional)';
+
+  @override
+  String get createdAt => 'Created At';
+
+  @override
+  String get allReservations => 'All';
+
+  @override
+  String errorOccurredWithMessage(String message) {
+    return 'Error occurred: $message';
+  }
+
+  @override
+  String get editReservation => 'Edit Reservation';
+
+  @override
+  String get customerNameRequired => 'Please enter customer name';
+
+  @override
+  String get customerPhoneRequired => 'Please enter contact number';
+
+  @override
+  String get partySizeRequired => 'Please enter party size';
+
+  @override
+  String get partySizeInvalid => 'Party size must be at least 1';
+
+  @override
+  String get people => 'people';
 }

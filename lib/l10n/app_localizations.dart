@@ -6,7 +6,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
-import 'app_localizations_ko.dart';
 import 'app_localizations_vi.dart';
 
 // ignore_for_file: type=lint
@@ -96,7 +95,6 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('ko'),
     Locale('vi'),
   ];
 
@@ -232,6 +230,24 @@ abstract class AppLocalizations {
   /// **'Yesterday'**
   String get yesterday;
 
+  /// No description provided for @week.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get week;
+
+  /// No description provided for @month.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get month;
+
+  /// No description provided for @customPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get customPeriod;
+
   /// No description provided for @none.
   ///
   /// In en, this message translates to:
@@ -333,6 +349,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cash'**
   String get navCashDrawer;
+
+  /// No description provided for @navKds.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen'**
+  String get navKds;
+
+  /// No description provided for @navDailyClosing.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Closing'**
+  String get navDailyClosing;
 
   /// No description provided for @cart.
   ///
@@ -507,6 +535,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} is out of stock'**
   String outOfStock(Object name);
+
+  /// No description provided for @outOfStockBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of Stock'**
+  String get outOfStockBadge;
+
+  /// No description provided for @lowStockBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Stock'**
+  String get lowStockBadge;
 
   /// No description provided for @productNotFound.
   ///
@@ -760,12 +800,6 @@ abstract class AppLocalizations {
   /// **'Tiếng Việt'**
   String get langVietnamese;
 
-  /// No description provided for @currencyKRW.
-  ///
-  /// In en, this message translates to:
-  /// **'Korean Won (₩)'**
-  String get currencyKRW;
-
   /// No description provided for @currencyUSD.
   ///
   /// In en, this message translates to:
@@ -783,6 +817,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Employee Management'**
   String get employeeManagement;
+
+  /// No description provided for @employeeLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee Login'**
+  String get employeeLogin;
+
+  /// No description provided for @selectEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Employee'**
+  String get selectEmployee;
+
+  /// No description provided for @enterPinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter PIN Code'**
+  String get enterPinCode;
+
+  /// No description provided for @noEmployeesRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'No employees registered'**
+  String get noEmployeesRegistered;
+
+  /// No description provided for @forgotPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot your PIN? Contact manager'**
+  String get forgotPin;
+
+  /// No description provided for @loginButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get loginButton;
+
+  /// No description provided for @loginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Login failed: {error}'**
+  String loginFailed(String error);
 
   /// No description provided for @employeeName.
   ///
@@ -909,6 +985,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Admin'**
   String get roleAdmin;
+
+  /// No description provided for @roleKitchen.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen'**
+  String get roleKitchen;
 
   /// No description provided for @pinChangeLabel.
   ///
@@ -1216,6 +1298,12 @@ abstract class AppLocalizations {
   /// **'Total Sales'**
   String get totalSalesAmount;
 
+  /// No description provided for @totalSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Sales'**
+  String get totalSales;
+
   /// No description provided for @orderCount.
   ///
   /// In en, this message translates to:
@@ -1261,8 +1349,8 @@ abstract class AppLocalizations {
   /// No description provided for @errorOccurred.
   ///
   /// In en, this message translates to:
-  /// **'An error occurred'**
-  String get errorOccurred;
+  /// **'Error occurred: {error}'**
+  String errorOccurred(String error);
 
   /// No description provided for @salesHistory.
   ///
@@ -1377,6 +1465,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sales Report'**
   String get salesReport;
+
+  /// No description provided for @salesTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Trend'**
+  String get salesTrend;
+
+  /// No description provided for @noDataAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No data available'**
+  String get noDataAvailable;
 
   /// No description provided for @exportExcel.
   ///
@@ -1522,6 +1622,18 @@ abstract class AppLocalizations {
   /// **'Table Management'**
   String get tableManagement;
 
+  /// No description provided for @tableLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Table Layout'**
+  String get tableLayout;
+
+  /// No description provided for @reservationManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Reservation Management'**
+  String get reservationManagement;
+
   /// No description provided for @addTable.
   ///
   /// In en, this message translates to:
@@ -1531,7 +1643,7 @@ abstract class AppLocalizations {
   /// No description provided for @noTables.
   ///
   /// In en, this message translates to:
-  /// **'Please add tables'**
+  /// **'No tables available'**
   String get noTables;
 
   /// No description provided for @noTablesFiltered.
@@ -1539,6 +1651,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No tables with this status'**
   String get noTablesFiltered;
+
+  /// No description provided for @emptyTables.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty Tables'**
+  String get emptyTables;
+
+  /// No description provided for @occupiedTables.
+  ///
+  /// In en, this message translates to:
+  /// **'Occupied'**
+  String get occupiedTables;
+
+  /// No description provided for @allTables.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allTables;
 
   /// No description provided for @tableAvailable.
   ///
@@ -1558,11 +1688,83 @@ abstract class AppLocalizations {
   /// **'Reserved'**
   String get tableReserved;
 
+  /// No description provided for @tableSeated.
+  ///
+  /// In en, this message translates to:
+  /// **'Seated'**
+  String get tableSeated;
+
+  /// No description provided for @tablePaymentComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Complete'**
+  String get tablePaymentComplete;
+
+  /// No description provided for @tableCleaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning'**
+  String get tableCleaning;
+
   /// No description provided for @tableNameLabel.
   ///
   /// In en, this message translates to:
   /// **'Table Name *'**
   String get tableNameLabel;
+
+  /// No description provided for @tableNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Table Number'**
+  String get tableNumber;
+
+  /// No description provided for @tableNumberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 1, A1, VIP-1'**
+  String get tableNumberHint;
+
+  /// No description provided for @tableNumberRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter table number'**
+  String get tableNumberRequired;
+
+  /// No description provided for @tableAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Table {number} added'**
+  String tableAdded(String number);
+
+  /// No description provided for @editTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Table {number}'**
+  String editTable(String number);
+
+  /// No description provided for @deleteTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Table'**
+  String get deleteTable;
+
+  /// No description provided for @deleteTableConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to delete table {number}?'**
+  String deleteTableConfirm(String number);
+
+  /// No description provided for @tableDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Table {number} deleted'**
+  String tableDeleted(String number);
+
+  /// No description provided for @tableUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Table {number} updated'**
+  String tableUpdated(String number);
 
   /// No description provided for @tableNameHint.
   ///
@@ -1575,6 +1777,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Seats'**
   String get seatsLabel;
+
+  /// No description provided for @seatsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Seats'**
+  String get seatsCount;
 
   /// No description provided for @zoneLabel.
   ///
@@ -2404,6 +2612,156 @@ abstract class AppLocalizations {
   /// **'Product has been added'**
   String get productAdded;
 
+  /// No description provided for @productImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Image'**
+  String get productImage;
+
+  /// No description provided for @noImage.
+  ///
+  /// In en, this message translates to:
+  /// **'No image'**
+  String get noImage;
+
+  /// No description provided for @camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get camera;
+
+  /// No description provided for @gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get gallery;
+
+  /// No description provided for @aiAutoSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Auto Search'**
+  String get aiAutoSearch;
+
+  /// No description provided for @aiImageSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Image Search'**
+  String get aiImageSearch;
+
+  /// No description provided for @aiImageSearchComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Image Search Complete'**
+  String get aiImageSearchComplete;
+
+  /// No description provided for @imageUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Image uploaded'**
+  String get imageUploaded;
+
+  /// No description provided for @deleteImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Image'**
+  String get deleteImage;
+
+  /// No description provided for @deleteImageConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you really want to delete this image?'**
+  String get deleteImageConfirm;
+
+  /// No description provided for @imageDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Image deleted'**
+  String get imageDeleted;
+
+  /// No description provided for @imageSetByAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Image set by AI search'**
+  String get imageSetByAi;
+
+  /// No description provided for @imageDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Image download failed: {error}'**
+  String imageDownloadFailed(String error);
+
+  /// No description provided for @noProductsWithoutImage.
+  ///
+  /// In en, this message translates to:
+  /// **'No products without images'**
+  String get noProductsWithoutImage;
+
+  /// No description provided for @searching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching...'**
+  String get searching;
+
+  /// No description provided for @searchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Search failed'**
+  String get searchFailed;
+
+  /// No description provided for @noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No search results'**
+  String get noSearchResults;
+
+  /// No description provided for @noImagesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No images found for\n\"{product}\"'**
+  String noImagesFound(String product);
+
+  /// No description provided for @searchQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Search: {query}'**
+  String searchQuery(String query);
+
+  /// No description provided for @success.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get success;
+
+  /// No description provided for @failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get failed;
+
+  /// No description provided for @successRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Success Rate'**
+  String get successRate;
+
+  /// No description provided for @failedProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed Products ({count})'**
+  String failedProducts(int count);
+
+  /// No description provided for @image.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get image;
+
+  /// No description provided for @unit.
+  ///
+  /// In en, this message translates to:
+  /// **'unit'**
+  String get unit;
+
   /// No description provided for @deleteProductTitle.
   ///
   /// In en, this message translates to:
@@ -3123,6 +3481,696 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Special Instructions'**
   String get kdsSpecialInstructions;
+
+  /// No description provided for @dailyClosing.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Closing'**
+  String get dailyClosing;
+
+  /// No description provided for @closingHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing History'**
+  String get closingHistory;
+
+  /// No description provided for @closingSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing Summary'**
+  String get closingSummary;
+
+  /// No description provided for @selectClosingDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Closing Date'**
+  String get selectClosingDate;
+
+  /// No description provided for @selectDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Date'**
+  String get selectDate;
+
+  /// No description provided for @salesAggregation.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Aggregation'**
+  String get salesAggregation;
+
+  /// No description provided for @totalTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Transactions'**
+  String get totalTransactions;
+
+  /// No description provided for @transactionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} transactions'**
+  String transactionsCount(int count);
+
+  /// No description provided for @cashCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Count'**
+  String get cashCount;
+
+  /// No description provided for @expectedCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected Cash'**
+  String get expectedCash;
+
+  /// No description provided for @actualCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual Cash'**
+  String get actualCash;
+
+  /// No description provided for @cashDifference.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Difference'**
+  String get cashDifference;
+
+  /// No description provided for @enterActualCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Actual Cash'**
+  String get enterActualCash;
+
+  /// No description provided for @actualCashHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the actual cash amount'**
+  String get actualCashHint;
+
+  /// No description provided for @cashDifferenceAcceptable.
+  ///
+  /// In en, this message translates to:
+  /// **'Exceeds acceptable range (±\$10)'**
+  String get cashDifferenceAcceptable;
+
+  /// No description provided for @specialNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Special Notes'**
+  String get specialNotes;
+
+  /// No description provided for @notesPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter any special notes'**
+  String get notesPlaceholder;
+
+  /// No description provided for @performClosing.
+  ///
+  /// In en, this message translates to:
+  /// **'Perform Closing'**
+  String get performClosing;
+
+  /// No description provided for @skipCashCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Without Cash Count'**
+  String get skipCashCount;
+
+  /// No description provided for @closingComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing completed successfully'**
+  String get closingComplete;
+
+  /// No description provided for @closingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred during closing'**
+  String get closingFailed;
+
+  /// No description provided for @loadingClosingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading closing data...'**
+  String get loadingClosingData;
+
+  /// No description provided for @noClosingHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No closing history'**
+  String get noClosingHistory;
+
+  /// No description provided for @loadClosingHistoryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load closing history'**
+  String get loadClosingHistoryFailed;
+
+  /// No description provided for @tryAgainLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again later'**
+  String get tryAgainLater;
+
+  /// No description provided for @selectPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Period'**
+  String get selectPeriod;
+
+  /// No description provided for @viewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get viewDetails;
+
+  /// No description provided for @generatePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate PDF'**
+  String get generatePdf;
+
+  /// No description provided for @savePdfQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Would you like to save {reportName} as PDF?'**
+  String savePdfQuestion(String reportName);
+
+  /// No description provided for @generate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get generate;
+
+  /// No description provided for @editActualCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {label}'**
+  String editActualCash(String label);
+
+  /// No description provided for @closingDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing Details'**
+  String get closingDetails;
+
+  /// No description provided for @closingTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing Time'**
+  String get closingTime;
+
+  /// No description provided for @assignedEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned Employee'**
+  String get assignedEmployee;
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// No description provided for @averageTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Average Transaction'**
+  String get averageTransaction;
+
+  /// No description provided for @taxTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Tax'**
+  String get taxTotal;
+
+  /// No description provided for @discountTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Discount'**
+  String get discountTotal;
+
+  /// No description provided for @normalCashDifference.
+  ///
+  /// In en, this message translates to:
+  /// **'Within Range'**
+  String get normalCashDifference;
+
+  /// No description provided for @pdfSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF saved: {path}'**
+  String pdfSaved(String path);
+
+  /// No description provided for @pdfGenerationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF generation failed: {error}'**
+  String pdfGenerationFailed(String error);
+
+  /// No description provided for @alreadyClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'This date has already been closed'**
+  String get alreadyClosed;
+
+  /// No description provided for @cannotCloseFutureDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot close future dates'**
+  String get cannotCloseFutureDate;
+
+  /// No description provided for @noSalesForDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales found for this date'**
+  String get noSalesForDate;
+
+  /// No description provided for @loginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Login required'**
+  String get loginRequired;
+
+  /// No description provided for @closingProcessError.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred during closing. Please try again later'**
+  String get closingProcessError;
+
+  /// No description provided for @dailyClosingReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Closing Report'**
+  String get dailyClosingReport;
+
+  /// No description provided for @closingInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing Information'**
+  String get closingInfo;
+
+  /// No description provided for @closingDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing Date'**
+  String get closingDate;
+
+  /// No description provided for @paymentMethodBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Method Breakdown'**
+  String get paymentMethodBreakdown;
+
+  /// No description provided for @qrPaymentSales.
+  ///
+  /// In en, this message translates to:
+  /// **'QR Payment'**
+  String get qrPaymentSales;
+
+  /// No description provided for @transferSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get transferSales;
+
+  /// No description provided for @cashReconciliation.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Reconciliation'**
+  String get cashReconciliation;
+
+  /// No description provided for @signatureSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Signatures'**
+  String get signatureSection;
+
+  /// No description provided for @closingManager.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing Manager'**
+  String get closingManager;
+
+  /// No description provided for @verifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifier'**
+  String get verifier;
+
+  /// No description provided for @signature.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature'**
+  String get signature;
+
+  /// No description provided for @userGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'User Guide'**
+  String get userGuide;
+
+  /// No description provided for @tutorial.
+  ///
+  /// In en, this message translates to:
+  /// **'Tutorial'**
+  String get tutorial;
+
+  /// No description provided for @tutorialSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get tutorialSkip;
+
+  /// No description provided for @tutorialNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get tutorialNext;
+
+  /// No description provided for @tutorialPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get tutorialPrevious;
+
+  /// No description provided for @tutorialFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get tutorialFinish;
+
+  /// No description provided for @tutorialDontShowAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show again'**
+  String get tutorialDontShowAgain;
+
+  /// No description provided for @tutorial_daily_closing_welcome_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Daily Closing'**
+  String get tutorial_daily_closing_welcome_title;
+
+  /// No description provided for @tutorial_daily_closing_welcome_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Daily Closing to reconcile and record your daily sales. Let\'s start with a quick guide.'**
+  String get tutorial_daily_closing_welcome_desc;
+
+  /// No description provided for @tutorial_daily_closing_date_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Closing Date'**
+  String get tutorial_daily_closing_date_title;
+
+  /// No description provided for @tutorial_daily_closing_date_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap here to select the date you want to close. Today\'s date is selected by default.'**
+  String get tutorial_daily_closing_date_desc;
+
+  /// No description provided for @tutorial_daily_closing_summary_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Summary'**
+  String get tutorial_daily_closing_summary_title;
+
+  /// No description provided for @tutorial_daily_closing_summary_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'This card shows total transactions, total sales, average transaction, taxes, and discounts.'**
+  String get tutorial_daily_closing_summary_desc;
+
+  /// No description provided for @tutorial_daily_closing_payment_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Method Breakdown'**
+  String get tutorial_daily_closing_payment_title;
+
+  /// No description provided for @tutorial_daily_closing_payment_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'View sales breakdown by payment method: cash, card, QR payment, and transfer.'**
+  String get tutorial_daily_closing_payment_desc;
+
+  /// No description provided for @tutorial_daily_closing_cash_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Reconciliation'**
+  String get tutorial_daily_closing_cash_title;
+
+  /// No description provided for @tutorial_daily_closing_cash_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare expected cash sales with actual cash count to verify differences.'**
+  String get tutorial_daily_closing_cash_desc;
+
+  /// No description provided for @tutorial_daily_closing_actual_cash_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Actual Cash'**
+  String get tutorial_daily_closing_actual_cash_title;
+
+  /// No description provided for @tutorial_daily_closing_actual_cash_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap this button to enter the actual cash amount you counted. The system will verify if the difference is within acceptable range.'**
+  String get tutorial_daily_closing_actual_cash_desc;
+
+  /// No description provided for @tutorial_daily_closing_notes_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Special Notes'**
+  String get tutorial_daily_closing_notes_title;
+
+  /// No description provided for @tutorial_daily_closing_notes_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add notes about special occurrences during closing, such as refunds or shortages.'**
+  String get tutorial_daily_closing_notes_desc;
+
+  /// No description provided for @tutorial_daily_closing_perform_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Perform Closing'**
+  String get tutorial_daily_closing_perform_title;
+
+  /// No description provided for @tutorial_daily_closing_perform_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'After verifying all information, tap this button to complete the closing. Note: Closing cannot be undone.'**
+  String get tutorial_daily_closing_perform_desc;
+
+  /// No description provided for @tutorial_daily_closing_history_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing History'**
+  String get tutorial_daily_closing_history_title;
+
+  /// No description provided for @tutorial_daily_closing_history_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'View previous closing records and download them as PDF reports.'**
+  String get tutorial_daily_closing_history_desc;
+
+  /// No description provided for @reservations.
+  ///
+  /// In en, this message translates to:
+  /// **'Reservations'**
+  String get reservations;
+
+  /// No description provided for @addReservation.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Reservation'**
+  String get addReservation;
+
+  /// No description provided for @reservationDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Reservation Detail'**
+  String get reservationDetail;
+
+  /// No description provided for @deleteReservation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Reservation'**
+  String get deleteReservation;
+
+  /// No description provided for @deleteReservationConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the reservation for {customer}?'**
+  String deleteReservationConfirm(String customer);
+
+  /// No description provided for @reservationDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Reservation deleted'**
+  String get reservationDeleted;
+
+  /// No description provided for @noReservations.
+  ///
+  /// In en, this message translates to:
+  /// **'No reservations'**
+  String get noReservations;
+
+  /// No description provided for @reservationStatusChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Reservation status changed to {status}'**
+  String reservationStatusChanged(String status);
+
+  /// No description provided for @reservationPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get reservationPending;
+
+  /// No description provided for @reservationConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get reservationConfirmed;
+
+  /// No description provided for @reservationSeated.
+  ///
+  /// In en, this message translates to:
+  /// **'Seated'**
+  String get reservationSeated;
+
+  /// No description provided for @reservationCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get reservationCancelled;
+
+  /// No description provided for @reservationNoShow.
+  ///
+  /// In en, this message translates to:
+  /// **'No Show'**
+  String get reservationNoShow;
+
+  /// No description provided for @confirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get confirmed;
+
+  /// No description provided for @pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get pending;
+
+  /// No description provided for @customerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer Name'**
+  String get customerName;
+
+  /// No description provided for @customerPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get customerPhone;
+
+  /// No description provided for @partySize.
+  ///
+  /// In en, this message translates to:
+  /// **'Party Size'**
+  String get partySize;
+
+  /// No description provided for @table.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get table;
+
+  /// No description provided for @partySizePeople.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} people'**
+  String partySizePeople(int count);
+
+  /// No description provided for @reservationDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Reservation Date'**
+  String get reservationDate;
+
+  /// No description provided for @reservationTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Reservation Time'**
+  String get reservationTime;
+
+  /// No description provided for @specialRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Special Requests'**
+  String get specialRequests;
+
+  /// No description provided for @specialRequestsOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Special Requests (Optional)'**
+  String get specialRequestsOptional;
+
+  /// No description provided for @createdAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Created At'**
+  String get createdAt;
+
+  /// No description provided for @allReservations.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allReservations;
+
+  /// No description provided for @errorOccurredWithMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error occurred: {message}'**
+  String errorOccurredWithMessage(String message);
+
+  /// No description provided for @editReservation.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Reservation'**
+  String get editReservation;
+
+  /// No description provided for @customerNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter customer name'**
+  String get customerNameRequired;
+
+  /// No description provided for @customerPhoneRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter contact number'**
+  String get customerPhoneRequired;
+
+  /// No description provided for @partySizeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter party size'**
+  String get partySizeRequired;
+
+  /// No description provided for @partySizeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Party size must be at least 1'**
+  String get partySizeInvalid;
+
+  /// No description provided for @people.
+  ///
+  /// In en, this message translates to:
+  /// **'people'**
+  String get people;
 }
 
 class _AppLocalizationsDelegate
@@ -3136,7 +4184,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'ko', 'vi'].contains(locale.languageCode);
+      <String>['en', 'vi'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -3147,8 +4195,6 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
-    case 'ko':
-      return AppLocalizationsKo();
     case 'vi':
       return AppLocalizationsVi();
   }

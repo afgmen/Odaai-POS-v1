@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/reservations_providers.dart';
 import '../../domain/enums/reservation_status.dart';
 import '../widgets/reservation_form.dart';
@@ -22,6 +23,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final selectedDate = ref.watch(selectedDateProvider);
     final selectedStatus = ref.watch(selectedReservationStatusProvider);
     final filteredReservationsAsync = ref.watch(filteredReservationsProvider);
@@ -29,11 +31,11 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('예약 관리'),
+        title: Text(l10n.reservations),
         actions: [
           // 통계 표시
           reservationCountAsync.when(
-            data: (counts) => _buildStatistics(counts),
+            data: (counts) => _buildStatistics(context, counts),
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
           ),
@@ -42,7 +44,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           // 예약 추가 버튼
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
-            tooltip: '예약 추가',
+            tooltip: l10n.addReservation,
             onPressed: () => _showReservationForm(context),
           ),
           const SizedBox(width: 8),
@@ -72,7 +74,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                   children: [
                     const Icon(Icons.error_outline, size: 48, color: Colors.red),
                     const SizedBox(height: 16),
-                    Text('오류 발생: ${err.toString()}'),
+                    Text(l10n.errorOccurredWithMessage(err.toString())),
                   ],
                 ),
               ),
@@ -84,7 +86,8 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
   }
 
   /// 통계 표시
-  Widget _buildStatistics(Map<String, int> counts) {
+  Widget _buildStatistics(BuildContext context, Map<String, int> counts) {
+    final l10n = AppLocalizations.of(context)!;
     final confirmedCount = counts['CONFIRMED'] ?? 0;
     final pendingCount = counts['PENDING'] ?? 0;
 
@@ -92,9 +95,9 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
-          _buildStatBadge('확정', confirmedCount, Colors.green),
+          _buildStatBadge(l10n.confirmed, confirmedCount, Colors.green),
           const SizedBox(width: 8),
-          _buildStatBadge('대기', pendingCount, Colors.orange),
+          _buildStatBadge(l10n.pending, pendingCount, Colors.orange),
         ],
       ),
     );
@@ -228,6 +231,8 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
 
   /// 상태 필터
   Widget _buildStatusFilter(String? selectedStatus) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -246,7 +251,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
         children: [
           // 전체 탭
           _buildFilterTab(
-            label: '전체',
+            label: l10n.allReservations,
             status: null,
             isSelected: selectedStatus == null,
             color: Colors.grey[700]!,
@@ -261,7 +266,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: _buildFilterTab(
-                label: status.label,
+                label: _getLocalizedStatusLabel(l10n, status),
                 status: status.value,
                 isSelected: selectedStatus == status.value,
                 color: status.color,
@@ -275,6 +280,21 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
         ],
       ),
     );
+  }
+
+  String _getLocalizedStatusLabel(AppLocalizations l10n, ReservationStatus status) {
+    switch (status) {
+      case ReservationStatus.pending:
+        return l10n.reservationPending;
+      case ReservationStatus.confirmed:
+        return l10n.reservationConfirmed;
+      case ReservationStatus.seated:
+        return l10n.reservationSeated;
+      case ReservationStatus.cancelled:
+        return l10n.reservationCancelled;
+      case ReservationStatus.noShow:
+        return l10n.reservationNoShow;
+    }
   }
 
   Widget _buildFilterTab({
@@ -331,6 +351,8 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
 
   /// 빈 상태
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -342,7 +364,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            '예약이 없습니다',
+            l10n.noReservations,
             style: TextStyle(
               fontSize: 18,
               color: Colors.grey[600],
@@ -352,7 +374,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           ElevatedButton.icon(
             onPressed: () => _showReservationForm(context),
             icon: const Icon(Icons.add),
-            label: const Text('예약 추가'),
+            label: Text(l10n.addReservation),
           ),
         ],
       ),
@@ -374,8 +396,10 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
 
   /// 예약 상세 표시
   void _showReservationDetail(Reservation reservation) {
+    final l10n = AppLocalizations.of(context)!;
     final status = ReservationStatus.fromString(reservation.status);
-    final dateFormat = DateFormat('yyyy-MM-dd (E)', 'ko_KR');
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat('yyyy-MM-dd (E)', locale);
 
     showDialog(
       context: context,
@@ -384,7 +408,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           children: [
             Icon(status.icon, color: status.color),
             const SizedBox(width: 8),
-            Text('예약 상세'),
+            Text(l10n.reservationDetail),
           ],
         ),
         content: SingleChildScrollView(
@@ -392,21 +416,21 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('고객명', reservation.customerName),
-              _buildDetailRow('연락처', reservation.customerPhone),
-              _buildDetailRow('인원', '${reservation.partySize}명'),
+              _buildDetailRow(l10n.customerName, reservation.customerName),
+              _buildDetailRow(l10n.customerPhone, reservation.customerPhone),
+              _buildDetailRow(l10n.partySize, l10n.partySizePeople(reservation.partySize)),
               _buildDetailRow(
-                '예약일',
+                l10n.reservationDate,
                 dateFormat.format(reservation.reservationDate),
               ),
-              _buildDetailRow('예약 시간', reservation.reservationTime),
-              _buildDetailRow('상태', status.label),
+              _buildDetailRow(l10n.reservationTime, reservation.reservationTime),
+              _buildDetailRow(l10n.status, _getLocalizedStatusLabel(l10n, status)),
               if (reservation.tableId != null)
-                _buildDetailRow('테이블', '${reservation.tableId}번'),
+                _buildDetailRow(l10n.table, '${reservation.tableId}'),
               if (reservation.specialRequests != null)
-                _buildDetailRow('특이사항', reservation.specialRequests!),
+                _buildDetailRow(l10n.specialRequests, reservation.specialRequests!),
               _buildDetailRow(
-                '생성일',
+                l10n.createdAt,
                 DateFormat('yyyy-MM-dd HH:mm').format(reservation.createdAt),
               ),
             ],
@@ -415,7 +439,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
+            child: Text(l10n.close),
           ),
           if (!status.isFinal)
             ElevatedButton(
@@ -423,7 +447,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                 Navigator.pop(context);
                 _showReservationForm(context, reservation: reservation);
               },
-              child: const Text('수정'),
+              child: Text(l10n.edit),
             ),
         ],
       ),
@@ -460,6 +484,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
   /// 예약 상태 변경
   Future<void> _updateReservationStatus(
       Reservation reservation, String newStatus) async {
+    final l10n = AppLocalizations.of(context)!;
     final dao = ref.read(reservationsDaoProvider);
     final success = await dao.updateReservationStatus(
       reservationId: reservation.id,
@@ -467,11 +492,10 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
     );
 
     if (mounted && success) {
+      final statusLabel = _getLocalizedStatusLabel(l10n, ReservationStatus.fromString(newStatus));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '예약 상태가 ${ReservationStatus.fromString(newStatus).label}(으)로 변경되었습니다',
-          ),
+          content: Text(l10n.reservationStatusChanged(statusLabel)),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -480,22 +504,23 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
 
   /// 예약 삭제
   Future<void> _deleteReservation(Reservation reservation) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('예약 삭제'),
-        content: Text('${reservation.customerName}님의 예약을 삭제하시겠습니까?'),
+        title: Text(l10n.deleteReservation),
+        content: Text(l10n.deleteReservationConfirm(reservation.customerName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: const Text('삭제'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -507,9 +532,9 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('예약이 삭제되었습니다'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(l10n.reservationDeleted),
+            duration: const Duration(seconds: 2),
           ),
         );
       }

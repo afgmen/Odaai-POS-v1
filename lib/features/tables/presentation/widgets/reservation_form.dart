@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:intl/intl.dart';
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/reservations_providers.dart';
 import '../../domain/enums/reservation_status.dart';
 
@@ -76,11 +77,12 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEditMode = widget.reservation != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditMode ? '예약 수정' : '예약 추가'),
+        title: Text(isEditMode ? l10n.editReservation : l10n.addReservation),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -97,14 +99,14 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
             // 고객명
             TextFormField(
               controller: _customerNameController,
-              decoration: const InputDecoration(
-                labelText: '고객명',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
+              decoration: InputDecoration(
+                labelText: l10n.customerName,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.person),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return '고객명을 입력하세요';
+                  return l10n.customerNameRequired;
                 }
                 return null;
               },
@@ -114,16 +116,16 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
             // 연락처
             TextFormField(
               controller: _customerPhoneController,
-              decoration: const InputDecoration(
-                labelText: '연락처',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.phone),
+              decoration: InputDecoration(
+                labelText: l10n.customerPhone,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.phone),
                 hintText: '010-1234-5678',
               ),
               keyboardType: TextInputType.phone,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return '연락처를 입력하세요';
+                  return l10n.customerPhoneRequired;
                 }
                 return null;
               },
@@ -133,20 +135,20 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
             // 인원
             TextFormField(
               controller: _partySizeController,
-              decoration: const InputDecoration(
-                labelText: '인원',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.people),
-                suffixText: '명',
+              decoration: InputDecoration(
+                labelText: l10n.partySize,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.people),
+                suffixText: l10n.people,
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return '인원을 입력하세요';
+                  return l10n.partySizeRequired;
                 }
                 final partySize = int.tryParse(value);
                 if (partySize == null || partySize < 1) {
-                  return '1명 이상 입력하세요';
+                  return l10n.partySizeInvalid;
                 }
                 return null;
               },
@@ -157,13 +159,13 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
             InkWell(
               onTap: () => _selectDate(context),
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: '예약 날짜',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.calendar_today),
+                decoration: InputDecoration(
+                  labelText: l10n.reservationDate,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.calendar_today),
                 ),
                 child: Text(
-                  DateFormat('yyyy-MM-dd (E)', 'ko_KR').format(_selectedDate),
+                  DateFormat('yyyy-MM-dd (E)', Localizations.localeOf(context).toString()).format(_selectedDate),
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
@@ -174,10 +176,10 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
             InkWell(
               onTap: () => _selectTime(context),
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: '예약 시간',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.access_time),
+                decoration: InputDecoration(
+                  labelText: l10n.reservationTime,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.access_time),
                 ),
                 child: Text(
                   _formatTimeOfDay(_selectedTime),
@@ -191,19 +193,20 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
             if (isEditMode)
               DropdownButtonFormField<String>(
                 value: _selectedStatus,
-                decoration: const InputDecoration(
-                  labelText: '상태',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.flag),
+                decoration: InputDecoration(
+                  labelText: l10n.status,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.flag),
                 ),
                 items: ReservationStatus.allStatuses.map((status) {
+                  final l10n = AppLocalizations.of(context)!;
                   return DropdownMenuItem(
                     value: status.value,
                     child: Row(
                       children: [
                         Icon(status.icon, color: status.color, size: 20),
                         const SizedBox(width: 8),
-                        Text(status.label),
+                        Text(_getLocalizedStatusLabel(l10n, status)),
                       ],
                     ),
                   );
@@ -221,10 +224,10 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
             // 특이사항
             TextFormField(
               controller: _specialRequestsController,
-              decoration: const InputDecoration(
-                labelText: '특이사항 (선택)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.notes),
+              decoration: InputDecoration(
+                labelText: l10n.specialRequestsOptional,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.notes),
                 hintText: '예: 창가 자리 선호, 유아 의자 필요',
               ),
               maxLines: 3,
@@ -238,7 +241,7 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 textStyle: const TextStyle(fontSize: 16),
               ),
-              child: Text(isEditMode ? '수정' : '추가'),
+              child: Text(l10n.save),
             ),
           ],
         ),
@@ -303,11 +306,12 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
         );
 
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('예약이 추가되었습니다'),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: Text('${l10n.addReservation} - ${l10n.msgSaved}'),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -332,24 +336,41 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
         }
 
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('예약이 수정되었습니다'),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: Text('${l10n.editReservation} - ${l10n.msgSaved}'),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류 발생: ${e.toString()}'),
+            content: Text(l10n.msgError(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
       }
+    }
+  }
+
+  String _getLocalizedStatusLabel(AppLocalizations l10n, ReservationStatus status) {
+    switch (status) {
+      case ReservationStatus.pending:
+        return l10n.reservationPending;
+      case ReservationStatus.confirmed:
+        return l10n.reservationConfirmed;
+      case ReservationStatus.seated:
+        return l10n.reservationSeated;
+      case ReservationStatus.cancelled:
+        return l10n.reservationCancelled;
+      case ReservationStatus.noShow:
+        return l10n.reservationNoShow;
     }
   }
 }

@@ -13,13 +13,13 @@ final currencyProvider = StateNotifierProvider<CurrencyNotifier, AppCurrency>((r
 class CurrencyNotifier extends StateNotifier<AppCurrency> {
   final Ref ref;
 
-  CurrencyNotifier(this.ref) : super(AppCurrency.usd) {
+  CurrencyNotifier(this.ref) : super(AppCurrency.vnd) {
     _loadSavedCurrency();
   }
 
   Future<void> _loadSavedCurrency() async {
     final prefs = await SharedPreferences.getInstance();
-    final currencyCode = prefs.getString('currency_code') ?? 'USD';
+    final currencyCode = prefs.getString('currency_code') ?? 'VND';
     print('🔍 [CurrencyProvider] Loading currency: $currencyCode');
     state = AppCurrency.fromCode(currencyCode);
     print('✅ [CurrencyProvider] Loaded currency: ${state.code} ${state.symbol}');
@@ -42,7 +42,7 @@ class CurrencyNotifier extends StateNotifier<AppCurrency> {
 final exchangeRateProvider = Provider.family<double, String>((ref, toCurrency) {
   // TODO: 데이터베이스에서 환율 조회
   // final db = ref.watch(databaseProvider);
-  // return db.getExchangeRate('KRW', toCurrency);
+  // return db.getExchangeRate('VND', toCurrency);
 
   // 임시: 기본 환율 사용
   return AppCurrency.fromCode(toCurrency).defaultRate;

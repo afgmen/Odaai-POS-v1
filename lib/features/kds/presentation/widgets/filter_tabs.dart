@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/enums/order_status.dart';
 import '../providers/kds_screen_provider.dart';
 
@@ -9,6 +10,7 @@ class FilterTabs extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final selectedFilter = ref.watch(selectedFilterProvider);
 
     return Container(
@@ -19,7 +21,7 @@ class FilterTabs extends ConsumerWidget {
           _buildFilterChip(
             context: context,
             ref: ref,
-            label: '전체',
+            label: l10n.kdsFilterAll,
             status: null,
             isSelected: selectedFilter == null,
             color: Colors.grey,
@@ -28,7 +30,7 @@ class FilterTabs extends ConsumerWidget {
           _buildFilterChip(
             context: context,
             ref: ref,
-            label: '대기',
+            label: l10n.kdsFilterPending,
             status: OrderStatus.pending,
             isSelected: selectedFilter == OrderStatus.pending,
             color: Color(int.parse(
@@ -38,7 +40,7 @@ class FilterTabs extends ConsumerWidget {
           _buildFilterChip(
             context: context,
             ref: ref,
-            label: '조리중',
+            label: l10n.kdsFilterPreparing,
             status: OrderStatus.preparing,
             isSelected: selectedFilter == OrderStatus.preparing,
             color: Color(int.parse(
@@ -48,7 +50,7 @@ class FilterTabs extends ConsumerWidget {
           _buildFilterChip(
             context: context,
             ref: ref,
-            label: '완료',
+            label: l10n.kdsFilterReady,
             status: OrderStatus.ready,
             isSelected: selectedFilter == OrderStatus.ready,
             color: Color(int.parse(

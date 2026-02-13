@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/permission_gate_widget.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../providers/currency_provider.dart';
+import '../../../auth/domain/permission_modules.dart';
 import '../../providers/reports_provider.dart';
 import '../../services/report_excel_service.dart';
 import '../widgets/date_range_picker.dart';
@@ -19,6 +22,44 @@ class ReportsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+
+    // Reports screen shows revenue data across different time periods
+    // Using REVENUE_DAILY_VIEW as the minimum permission requirement
+    return PermissionGateWidget(
+      permission: PermissionModules.REVENUE_DAILY_VIEW,
+      fallback: Scaffold(
+        backgroundColor: AppTheme.background,
+        appBar: AppBar(
+          backgroundColor: AppTheme.cardWhite,
+          elevation: 0,
+          titleSpacing: 16,
+          title: Text(
+            l10n.salesReport,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+        ),
+        body: const Center(
+          child: AccessDeniedCard(
+            message: '매출 보고서를 볼 권한이 없습니다',
+          ),
+        ),
+      ),
+      child: _ReportsScreenContent(),
+    );
+  }
+}
+
+class _ReportsScreenContent extends ConsumerWidget {
+  const _ReportsScreenContent();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -59,7 +100,7 @@ class ReportsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
 
             // ── KPI 카드 ──
-            _buildKpiSection(ref, l10n),
+            _buildKpiSection(ref, l10n, priceFormatter),
             const SizedBox(height: 16),
 
             // ── 매출 추이 (Line chart) ──
@@ -80,7 +121,7 @@ class ReportsScreen extends ConsumerWidget {
   }
 
   /// KPI 카드 섹션
-  Widget _buildKpiSection(WidgetRef ref, AppLocalizations l10n) {
+  Widget _buildKpiSection(WidgetRef ref, AppLocalizations l10n, dynamic priceFormatter) {
     final totalAsync = ref.watch(reportTotalSalesProvider);
     final countAsync = ref.watch(reportOrderCountProvider);
     final avgAsync = ref.watch(reportAvgOrderProvider);
@@ -97,7 +138,7 @@ class ReportsScreen extends ConsumerWidget {
               final growth = growthAsync.valueOrNull;
               return KpiSummaryCard(
                 title: l10n.totalSalesAmount,
-                value: '₩${_fmt(total)}',
+                value: priceFormatter.format(total),
                 icon: Icons.attach_money,
                 color: AppTheme.primary,
                 bgColor: const Color(0xFFE8F0FE),
@@ -129,7 +170,7 @@ class ReportsScreen extends ConsumerWidget {
           child: avgAsync.when(
             data: (avg) => KpiSummaryCard(
               title: l10n.avgOrderAmount,
-              value: '₩${_fmt(avg)}',
+              value: priceFormatter.format(avg),
               icon: Icons.bar_chart,
               color: AppTheme.warning,
               bgColor: const Color(0xFFFFF3E0),
@@ -316,7 +357,7 @@ class ReportsScreen extends ConsumerWidget {
         border: Border.all(color: AppTheme.divider),
       ),
       child: Center(
-        child: Text(l10n.errorOccurred, style: const TextStyle(color: AppTheme.error)),
+        child: Text(l10n.errorOccurred(''), style: const TextStyle(color: AppTheme.error)),
       ),
     );
   }

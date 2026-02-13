@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/tables_providers.dart';
 import '../widgets/table_widget.dart';
 import '../widgets/status_filter_tabs.dart';
 import 'reservations_screen.dart';
 
-/// 테이블 레이아웃 화면
+/// Table Layout Screen
 class TableManagementScreen extends ConsumerStatefulWidget {
   const TableManagementScreen({super.key});
 
@@ -33,14 +34,16 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('테이블 관리'),
+        title: Text(l10n.tableManagement),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.table_restaurant), text: '테이블 레이아웃'),
-            Tab(icon: Icon(Icons.event_note), text: '예약 관리'),
+          tabs: [
+            Tab(icon: const Icon(Icons.table_restaurant), text: l10n.tableLayout),
+            Tab(icon: const Icon(Icons.event_note), text: l10n.reservationManagement),
           ],
         ),
       ),
@@ -55,24 +58,25 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen>
   }
 }
 
-/// 테이블 레이아웃 탭
+/// Table Layout Tab
 class _TableLayoutTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final filteredTablesAsync = ref.watch(filteredTablesProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('테이블 레이아웃'),
+        title: Text(l10n.tableLayout),
         actions: [
-          // 통계 표시
+          // Statistics display
           _buildStatistics(ref),
           const SizedBox(width: 8),
 
-          // 테이블 추가 버튼
+          // Add table button
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
-            tooltip: '테이블 추가',
+            tooltip: l10n.addTable,
             onPressed: () => _showAddTableDialog(context, ref),
           ),
           const SizedBox(width: 8),
@@ -99,7 +103,7 @@ class _TableLayoutTab extends ConsumerWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          '테이블이 없습니다',
+                          l10n.noTables,
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.grey[600],
@@ -109,7 +113,7 @@ class _TableLayoutTab extends ConsumerWidget {
                         ElevatedButton.icon(
                           onPressed: () => _showAddTableDialog(context, ref),
                           icon: const Icon(Icons.add),
-                          label: const Text('테이블 추가'),
+                          label: Text(l10n.addTable),
                         ),
                       ],
                     ),
@@ -125,7 +129,7 @@ class _TableLayoutTab extends ConsumerWidget {
                   children: [
                     const Icon(Icons.error_outline, size: 48, color: Colors.red),
                     const SizedBox(height: 16),
-                    Text('오류 발생: ${err.toString()}'),
+                    Text(l10n.errorOccurred(err.toString())),
                   ],
                 ),
               ),
@@ -136,7 +140,7 @@ class _TableLayoutTab extends ConsumerWidget {
     );
   }
 
-  /// 통계 표시 위젯
+  /// Statistics display widget
   static Widget _buildStatistics(WidgetRef ref) {
     final availableCountAsync = ref.watch(availableTableCountProvider);
     final occupiedCountAsync = ref.watch(occupiedTableCountProvider);
@@ -146,13 +150,13 @@ class _TableLayoutTab extends ConsumerWidget {
       child: Row(
         children: [
           availableCountAsync.when(
-            data: (count) => _buildStatBadge('빈 테이블', count, Colors.green),
+            data: (count) => _buildStatBadge('Empty', count, Colors.green),
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
           ),
           const SizedBox(width: 8),
           occupiedCountAsync.when(
-            data: (count) => _buildStatBadge('점유 중', count, Colors.red),
+            data: (count) => _buildStatBadge('Occupied', count, Colors.red),
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
           ),
@@ -277,30 +281,31 @@ class _TableLayoutTab extends ConsumerWidget {
     );
   }
 
-  /// 테이블 추가 다이얼로그
+  /// Add table dialog
   static void _showAddTableDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final tableNumberController = TextEditingController();
     final seatsController = TextEditingController(text: '4');
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('테이블 추가'),
+        title: Text(l10n.addTable),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: tableNumberController,
-              decoration: const InputDecoration(
-                labelText: '테이블 번호',
-                hintText: '예: 1, A1, VIP-1',
+              decoration: InputDecoration(
+                labelText: l10n.tableNumber,
+                hintText: l10n.tableNumberHint,
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: seatsController,
-              decoration: const InputDecoration(
-                labelText: '좌석 수',
+              decoration: InputDecoration(
+                labelText: l10n.seatsCount,
               ),
               keyboardType: TextInputType.number,
             ),
@@ -309,7 +314,7 @@ class _TableLayoutTab extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -318,7 +323,7 @@ class _TableLayoutTab extends ConsumerWidget {
 
               if (tableNumber.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('테이블 번호를 입력하세요')),
+                  SnackBar(content: Text(l10n.tableNumberRequired)),
                 );
                 return;
               }
@@ -336,11 +341,11 @@ class _TableLayoutTab extends ConsumerWidget {
               if (context.mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('테이블 $tableNumber 추가됨')),
+                  SnackBar(content: Text(l10n.tableAdded(tableNumber))),
                 );
               }
             },
-            child: const Text('추가'),
+            child: Text(l10n.add),
           ),
         ],
       ),

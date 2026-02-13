@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/enums/reservation_status.dart';
 
 /// 예약 목록 아이템 위젯
@@ -22,8 +23,10 @@ class ReservationListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final status = ReservationStatus.fromString(reservation.status);
-    final dateFormat = DateFormat('yyyy-MM-dd (E)', 'ko_KR');
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat('yyyy-MM-dd (E)', locale);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -58,7 +61,7 @@ class ReservationListItem extends StatelessWidget {
                       border: Border.all(color: status.color),
                     ),
                     child: Text(
-                      status.label,
+                      _getLocalizedStatusLabel(l10n, status),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -170,7 +173,7 @@ class ReservationListItem extends StatelessWidget {
                     // 상태 변경 버튼
                     _buildActionButton(
                       context,
-                      label: _getNextStatusLabel(status),
+                      label: _getNextStatusLabel(context, status),
                       icon: Icons.arrow_forward,
                       color: Colors.blue,
                       onPressed: () {
@@ -255,9 +258,11 @@ class ReservationListItem extends StatelessWidget {
     );
   }
 
-  String _getNextStatusLabel(ReservationStatus currentStatus) {
+  String _getNextStatusLabel(BuildContext context, ReservationStatus currentStatus) {
+    final l10n = AppLocalizations.of(context)!;
     final nextStatus = _getNextStatus(currentStatus);
-    return nextStatus?.label ?? '확정';
+    if (nextStatus == null) return l10n.reservationConfirmed;
+    return _getLocalizedStatusLabel(l10n, nextStatus);
   }
 
   ReservationStatus? _getNextStatus(ReservationStatus currentStatus) {
@@ -268,6 +273,21 @@ class ReservationListItem extends StatelessWidget {
         return ReservationStatus.seated;
       default:
         return null;
+    }
+  }
+
+  String _getLocalizedStatusLabel(AppLocalizations l10n, ReservationStatus status) {
+    switch (status) {
+      case ReservationStatus.pending:
+        return l10n.reservationPending;
+      case ReservationStatus.confirmed:
+        return l10n.reservationConfirmed;
+      case ReservationStatus.seated:
+        return l10n.reservationSeated;
+      case ReservationStatus.cancelled:
+        return l10n.reservationCancelled;
+      case ReservationStatus.noShow:
+        return l10n.reservationNoShow;
     }
   }
 }

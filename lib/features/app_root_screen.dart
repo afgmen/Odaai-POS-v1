@@ -5,6 +5,7 @@ import '../core/responsive/adaptive_scaffold.dart';
 import '../l10n/app_localizations.dart';
 import 'cash_drawer/presentation/screens/cash_drawer_screen.dart';
 import 'customers/presentation/screens/customer_management_screen.dart';
+import 'daily_closing/presentation/screens/daily_closing_screen.dart';
 import 'pos/presentation/screens/pos_main_screen.dart';
 import 'products/presentation/screens/product_management_screen.dart';
 import 'sales/presentation/screens/sales_history_screen.dart';
@@ -35,15 +36,16 @@ class _AppRootScreenState extends ConsumerState<AppRootScreen> {
     ProductManagementScreen(), // 1
     SalesHistoryScreen(),      // 2
     DashboardScreen(),         // 3
-    CustomerManagementScreen(),// 4  ← NEW
-    TableManagementScreen(),   // 5  ← NEW
-    RefundScreen(),            // 6  ← NEW
-    CashDrawerScreen(),        // 7  ← NEW
-    LowStockScreen(),          // 8
-    EmployeeManagementScreen(),// 9
-    PromotionManagementScreen(),// 10
-    ReportsScreen(),           // 11
-    SettingsScreen(),          // 12
+    CustomerManagementScreen(),// 4
+    TableManagementScreen(),   // 5
+    RefundScreen(),            // 6
+    CashDrawerScreen(),        // 7
+    DailyClosingScreen(),      // 8  ← NEW
+    LowStockScreen(),          // 9
+    EmployeeManagementScreen(),// 10
+    PromotionManagementScreen(),// 11
+    ReportsScreen(),           // 12
+    SettingsScreen(),          // 13
   ];
 
   /// 네비게이션 아이템 목록을 l10n 기반으로 빌드
@@ -66,6 +68,8 @@ class _AppRootScreenState extends ConsumerState<AppRootScreen> {
           label: l10n?.navRefunds ?? 'Refunds'),
       NavigationItem(icon: Icons.account_balance_wallet_outlined, selectedIcon: Icons.account_balance_wallet,
           label: l10n?.navCashDrawer ?? 'Cash'),
+      NavigationItem(icon: Icons.event_note_outlined, selectedIcon: Icons.event_note,
+          label: l10n?.navDailyClosing ?? 'Daily Closing'),
       // ─── 기존 기능 ─────────────────────
       NavigationItem(icon: Icons.warning_amber_outlined, selectedIcon: Icons.warning_amber_rounded,
           label: l10n?.navInventory ?? 'Low Stock'),

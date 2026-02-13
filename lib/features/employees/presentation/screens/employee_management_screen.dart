@@ -1,15 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:drift/drift.dart' hide Column;
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/permission_gate_widget.dart';
 import '../../../../database/app_database.dart';
+import '../../../../database/daos/employees_dao.dart';
+import '../../../../providers/database_providers.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../auth/domain/permission_modules.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../auth/providers/rbac_providers.dart';
 import '../widgets/employee_form_modal.dart';
+import '../widgets/quick_set_owner_button.dart';
 
 /// 직원 관리 화면
 class EmployeeManagementScreen extends ConsumerWidget {
   const EmployeeManagementScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return PermissionGateWidget(
+      permission: PermissionModules.STAFF_MANAGE,
+      fallback: Scaffold(
+        backgroundColor: AppTheme.background,
+        appBar: AppBar(
+          backgroundColor: AppTheme.cardWhite,
+          elevation: 0,
+          title: Row(
+            children: [
+              const Icon(Icons.people, color: AppTheme.primary, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                l10n.employeeManagement,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+              ),
+            ],
+          ),
+        ),
+        body: const Center(
+          child: AccessDeniedCard(
+            message: '직원 관리 권한이 없습니다',
+          ),
+        ),
+      ),
+      child: _EmployeeManagementContent(),
+    );
+  }
+}
+
+class _EmployeeManagementContent extends ConsumerWidget {
+  const _EmployeeManagementContent();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,18 +75,21 @@ class EmployeeManagementScreen extends ConsumerWidget {
           ],
         ),
         actions: [
-          // 새 직원 추가 버튼
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: ElevatedButton.icon(
-              onPressed: () => _showEmployeeFormModal(context, ref, null),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
+          // 새 직원 추가 버튼 (Permission Guard)
+          PermissionGuard(
+            permission: PermissionModules.STAFF_MANAGE,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: ElevatedButton.icon(
+                onPressed: () => _showEmployeeFormModal(context, ref, null),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.add, size: 20),
+                label: Text(l10n.addEmployee, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ),
-              icon: const Icon(Icons.add, size: 20),
-              label: Text(l10n.addEmployee, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -68,22 +114,66 @@ class EmployeeManagementScreen extends ConsumerWidget {
 
           return Padding(
             padding: const EdgeInsets.all(16),
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 320,
-                childAspectRatio: 2.5,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: employees.length,
-              itemBuilder: (context, index) {
-                final employee = employees[index];
-                return _EmployeeCard(
-                  employee: employee,
-                  onEdit: () => _showEmployeeFormModal(context, ref, employee),
-                  onToggleActive: () => _toggleEmployeeActive(ref, employee),
-                );
-              },
+            child: Column(
+              children: [
+                // RBAC Setup Banner (show if RBAC not enabled)
+                Consumer(
+                  builder: (context, ref, child) {
+                    final rbacEnabled = ref.watch(rbacSettingProvider);
+                    return rbacEnabled.when(
+                      data: (enabled) => !enabled
+                          ? Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppTheme.primary, width: 2),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline, color: AppTheme.primary, size: 24),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      '💡 Tip: Click "Set as OWNER" button on any employee card below to enable RBAC security',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: AppTheme.textPrimary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    );
+                  },
+                ),
+                // Employee Grid
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 380,
+                      childAspectRatio: 1.6,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: employees.length,
+                    itemBuilder: (context, index) {
+                      final employee = employees[index];
+                      return _EmployeeCard(
+                        employee: employee,
+                        onEdit: () => _showEmployeeFormModal(context, ref, employee),
+                        onToggleActive: () => _toggleEmployeeActive(ref, employee),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -110,11 +200,13 @@ class EmployeeManagementScreen extends ConsumerWidget {
   }
 
   Future<void> _toggleEmployeeActive(WidgetRef ref, Employee employee) async {
-    final authService = ref.read(authServiceProvider);
+    final employeesDao = ref.read(employeesDaoProvider);
     try {
-      await authService.updateEmployee(
-        id: employee.id,
-        isActive: !employee.isActive,
+      await employeesDao.updateEmployee(
+        employee.id,
+        EmployeesCompanion(
+          isActive: Value(!employee.isActive),
+        ),
       );
       ref.invalidate(activeEmployeesProvider);
     } catch (e) {
@@ -124,7 +216,7 @@ class EmployeeManagementScreen extends ConsumerWidget {
 }
 
 /// 직원 카드
-class _EmployeeCard extends StatelessWidget {
+class _EmployeeCard extends ConsumerWidget {
   final Employee employee;
   final VoidCallback onEdit;
   final VoidCallback onToggleActive;
@@ -136,11 +228,12 @@ class _EmployeeCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final roleLabel = _getRoleLabel(l10n, employee.role);
     final roleColor = _getRoleColor(employee.role);
-    final hasPin = employee.pin != null;
+    final hasPin = employee.pinHash != null;
+    final rbacEnabled = ref.watch(rbacSettingProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -150,8 +243,12 @@ class _EmployeeCard extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Top Section
+            Row(
+              children: [
             // 아바타
             Container(
               width: 50,
@@ -292,6 +389,17 @@ class _EmployeeCard extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        // Set as OWNER button (show if RBAC not enabled)
+        rbacEnabled.when(
+          data: (enabled) => !enabled
+              ? QuickSetOwnerButton(employee: employee)
+              : const SizedBox.shrink(),
+          loading: () => const SizedBox.shrink(),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+      ],
+    ),
       ),
     );
   }

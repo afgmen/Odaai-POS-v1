@@ -11,12 +11,18 @@ import 'daos/employees_dao.dart';
 import 'daos/products_dao.dart';
 import 'daos/sales_dao.dart';
 import 'daos/sync_dao.dart';
+import 'daos/permissions_dao.dart';
+import 'daos/role_permissions_dao.dart';
+import 'daos/user_roles_dao.dart';
+import 'daos/store_assignments_dao.dart';
 import '../features/loyalty/data/loyalty_dao.dart';
 import '../features/backup/data/backup_dao.dart';
 import '../features/attendance/data/attendance_dao.dart';
 import '../features/kds/data/kitchen_orders_dao.dart';
 import '../features/tables/data/tables_dao.dart';
 import '../features/tables/data/reservations_dao.dart';
+import '../features/auth/data/permission_logs_dao.dart';
+import '../features/daily_closing/data/daily_closing_dao.dart';
 import 'tables/employees.dart';
 import 'tables/products.dart';
 import 'tables/promotions.dart';
@@ -34,6 +40,12 @@ import 'tables/leave_balances.dart';
 import 'tables/kitchen_orders.dart';
 import 'tables/store_tables_management.dart';
 import 'tables/reservations.dart';
+import 'tables/permission_logs.dart';
+import 'tables/daily_closings.dart';
+import 'tables/permissions.dart';
+import 'tables/role_permissions.dart';
+import 'tables/user_roles.dart';
+import 'tables/store_assignments.dart';
 
 part 'app_database.g.dart';
 
@@ -62,6 +74,12 @@ part 'app_database.g.dart';
     KitchenOrders,
     RestaurantTables,
     Reservations,
+    PermissionLogs,
+    DailyClosings,
+    Permissions,
+    RolePermissions,
+    UserRoles,
+    StoreAssignments,
   ],
   daos: [
     ProductsDao,
@@ -75,6 +93,12 @@ part 'app_database.g.dart';
     KitchenOrdersDao,
     TablesDao,
     ReservationsDao,
+    PermissionLogsDao,
+    DailyClosingDao,
+    PermissionsDao,
+    RolePermissionsDao,
+    UserRolesDao,
+    StoreAssignmentsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -83,7 +107,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration {
@@ -139,6 +163,18 @@ class AppDatabase extends _$AppDatabase {
         if (from < 9) {
           // v8 → v9: 테이블 관리 시스템 (Table Management) 추가
           await _migrateTableManagementSystem(m);
+        }
+        if (from < 10) {
+          // v9 → v10: 직원 권한 관리 시스템 (Staff Permission System) 추가
+          await _migratePermissionSystem(m);
+        }
+        if (from < 11) {
+          // v10 → v11: 일일 마감 리포트 시스템 (Daily Closing Report) 추가
+          await _migrateDailyClosingSystem(m);
+        }
+        if (from < 12) {
+          // v11 → v12: RBAC 시스템 (Role-Based Access Control) 추가
+          await _migrateRBACSystem(m);
         }
       },
       beforeOpen: (details) async {
@@ -366,8 +402,8 @@ class AppDatabase extends _$AppDatabase {
         username: 'admin',
         name: 'Administrator',
         passwordHash: 'admin123',
-        role: const Value('admin'),
-        pin: const Value('03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4'),
+        role: const Value('MANAGER'),
+        pinHash: const Value('e1c30c7b89e49eb8db1d46b4f3e5a73a909036bb4e607f344e4d5e680f085a4d'),
       ),
     );
 
@@ -375,33 +411,33 @@ class AppDatabase extends _$AppDatabase {
       batch.insertAll(products, [
         ProductsCompanion.insert(
           sku: 'DEMO001',
-          name: '테스트 감자칩',
+          name: 'Potato Chips',
           barcode: const Value('4000386123457'),
           price: const Value(10000),
           cost: const Value(7000),
           stock: const Value(100),
           minStock: const Value(10),
-          category: const Value('식품'),
+          category: const Value('Snacks'),
         ),
         ProductsCompanion.insert(
           sku: 'DEMO002',
-          name: '테스트 라면',
+          name: 'Instant Noodles',
           barcode: const Value('8800001234568'),
           price: const Value(5000),
           cost: const Value(3000),
           stock: const Value(50),
           minStock: const Value(5),
-          category: const Value('식품'),
+          category: const Value('Food'),
         ),
         ProductsCompanion.insert(
           sku: 'DEMO003',
-          name: '테스트 음료',
+          name: 'Soft Drink',
           barcode: const Value('6901234567890'),
           price: const Value(25000),
           cost: const Value(18000),
           stock: const Value(30),
           minStock: const Value(10),
-          category: const Value('음료'),
+          category: const Value('Beverages'),
         ),
       ]);
     });
@@ -751,6 +787,229 @@ class AppDatabase extends _$AppDatabase {
       });
     } catch (_) {
       // 이미 존재하는 경우 무시
+    }
+  }
+
+  /// v9 → v10 마이그레이션: 직원 권한 관리 시스템
+  Future<void> _migratePermissionSystem(Migrator m) async {
+    // 1. Employees 테이블 확장 - 권한 시스템 필드 추가
+    // 기존 'role' 컬럼의 기본값을 'CASHIER'로 변경 (기존은 'cashier')
+    await _safeAddColumn('employees', 'pin_hash', 'TEXT NULL');
+    await _safeAddColumn('employees', 'pin_changed_at', 'INTEGER NULL');
+    await _safeAddColumn('employees', 'last_login_at', 'INTEGER NULL');
+    await _safeAddColumn('employees', 'session_token', 'TEXT NULL');
+    await _safeAddColumn('employees', 'session_expires_at', 'INTEGER NULL');
+
+    // 2. 기존 직원의 role 값을 대문자로 변환 (cashier → CASHIER, admin → MANAGER)
+    try {
+      await customStatement('''
+        UPDATE employees
+        SET role = CASE
+          WHEN UPPER(role) = 'ADMIN' THEN 'MANAGER'
+          WHEN UPPER(role) = 'MANAGER' THEN 'MANAGER'
+          WHEN UPPER(role) = 'CASHIER' THEN 'CASHIER'
+          WHEN UPPER(role) = 'KITCHEN' THEN 'KITCHEN'
+          ELSE 'CASHIER'
+        END
+      ''');
+    } catch (_) {
+      // 업데이트 실패 시 무시
+    }
+
+    // 3. 권한 로그 테이블 생성
+    await _safeCreateTable(m, permissionLogs, 'permission_logs');
+
+    // 4. 인덱스 생성
+    try {
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_permission_logs_employee '
+        'ON permission_logs(employee_id)'
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_permission_logs_created '
+        'ON permission_logs(created_at DESC)'
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_permission_logs_action '
+        'ON permission_logs(action_type)'
+      );
+    } catch (_) {
+      // 인덱스가 이미 존재하면 무시
+    }
+
+    // 5. 첫 번째 직원을 관리자로 설정 (기본 관리자 계정 생성)
+    try {
+      final firstEmployee = await customSelect(
+        'SELECT id FROM employees ORDER BY id LIMIT 1'
+      ).getSingleOrNull();
+
+      if (firstEmployee != null) {
+        await customStatement('''
+          UPDATE employees
+          SET role = 'MANAGER'
+          WHERE id = ?
+        ''', [firstEmployee.data['id']]);
+      }
+    } catch (_) {
+      // 직원이 없거나 업데이트 실패 시 무시
+    }
+  }
+
+  /// v10 → v11 마이그레이션: 일일 마감 리포트 시스템
+  Future<void> _migrateDailyClosingSystem(Migrator m) async {
+    // 1. daily_closings 테이블 생성
+    await _safeCreateTable(m, dailyClosings, 'daily_closings');
+
+    // 2. 성능 최적화 및 중복 방지 인덱스 생성
+    try {
+      // UNIQUE INDEX: 날짜별 중복 마감 방지
+      await customStatement(
+        'CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_closings_date '
+        'ON daily_closings(closing_date)'
+      );
+
+      // 직원별 마감 이력 조회용 인덱스
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_daily_closings_employee '
+        'ON daily_closings(closed_by_employee_id)'
+      );
+
+      // 마감 시각 역순 정렬 인덱스
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_daily_closings_closed_at '
+        'ON daily_closings(closed_at DESC)'
+      );
+    } catch (_) {
+      // 인덱스가 이미 존재하면 무시
+    }
+  }
+
+  /// v11 → v12 마이그레이션: RBAC 시스템 (Role-Based Access Control)
+  Future<void> _migrateRBACSystem(Migrator m) async {
+    // 1. RBAC 테이블 생성
+    await _safeCreateTable(m, permissions, 'permissions');
+    await _safeCreateTable(m, rolePermissions, 'role_permissions');
+    await _safeCreateTable(m, userRoles, 'user_roles');
+    await _safeCreateTable(m, storeAssignments, 'store_assignments');
+
+    // 2. Employees 테이블에 RBAC 필드 추가
+    await _safeAddColumn('employees', 'default_role', 'TEXT NOT NULL DEFAULT \'STAFF\'');
+    await _safeAddColumn('employees', 'store_scope', 'TEXT NOT NULL DEFAULT \'OWN_STORE\'');
+    await _safeAddColumn('employees', 'primary_store_id', 'TEXT NULL');
+
+    // 3. RBAC 기본 설정 추가 (기본값: 비활성화로 후방 호환성 유지)
+    try {
+      // Note: system_settings 테이블이 존재한다고 가정
+      await customStatement(
+        "INSERT OR IGNORE INTO system_settings (key, value, updated_at) "
+        "VALUES ('rbac_enabled', 'false', CURRENT_TIMESTAMP)"
+      );
+    } catch (_) {
+      // system_settings 테이블이 없으면 무시 (나중에 수동 추가)
+    }
+
+    // 4. 기존 직원 역할 마이그레이션
+    try {
+      await customStatement('''
+        UPDATE employees
+        SET default_role = CASE
+          WHEN UPPER(role) = 'MANAGER' THEN 'OWNER'
+          WHEN UPPER(role) = 'ADMIN' THEN 'OWNER'
+          WHEN UPPER(role) = 'CASHIER' THEN 'STAFF'
+          WHEN UPPER(role) = 'KITCHEN' THEN 'STAFF'
+          ELSE 'STAFF'
+        END,
+        store_scope = CASE
+          WHEN UPPER(role) IN ('MANAGER', 'ADMIN') THEN 'ALL_STORES'
+          ELSE 'OWN_STORE'
+        END
+      ''');
+    } catch (_) {
+      // 업데이트 실패 시 무시
+    }
+
+    // 5. 권한 시드 데이터 삽입
+    await _seedRBACPermissions();
+
+    // 6. 인덱스 생성
+    try {
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_role_permissions_role '
+        'ON role_permissions(role)'
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_user_roles_user '
+        'ON user_roles(user_id)'
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_store_assignments_user '
+        'ON store_assignments(user_id)'
+      );
+    } catch (_) {
+      // 인덱스가 이미 존재하면 무시
+    }
+  }
+
+  /// RBAC 권한 시드 데이터 삽입
+  Future<void> _seedRBACPermissions() async {
+    try {
+      final permissionsList = [
+        // POS Module
+        ['pos.open', 'pos', 'Open POS terminal', 0],
+        ['pos.refund', 'pos', 'Process refunds', 0],
+        ['pos.discount', 'pos', 'Apply discounts', 0],
+        ['pos.price.override', 'pos', 'Override prices', 0],
+        ['pos.cash.drawer.open', 'pos', 'Open cash drawer manually', 0],
+
+        // Orders Module
+        ['order.create', 'order', 'Create orders', 0],
+        ['order.cancel', 'order', 'Cancel orders', 0],
+        ['order.view', 'order', 'View order history', 0],
+
+        // Inventory Module
+        ['inventory.view', 'inventory', 'View inventory levels', 0],
+        ['inventory.edit', 'inventory', 'Edit product information', 0],
+        ['inventory.adjust', 'inventory', 'Adjust stock levels', 0],
+        ['inventory.writeoff', 'inventory', 'Write off damaged/lost items', 0],
+
+        // Revenue Module (Sensitive)
+        ['revenue.dashboard.view', 'revenue', 'View revenue dashboard', 1],
+        ['revenue.daily.view', 'revenue', 'View daily revenue', 1],
+        ['revenue.weekly.view', 'revenue', 'View weekly revenue', 1],
+        ['revenue.monthly.view', 'revenue', 'View monthly revenue', 1],
+        ['revenue.multistore.view', 'revenue', 'View multi-store revenue', 1],
+        ['revenue.export', 'revenue', 'Export revenue reports', 1],
+
+        // Staff Module
+        ['staff.view', 'staff', 'View staff list', 0],
+        ['staff.manage', 'staff', 'Add/edit/delete staff', 0],
+
+        // Settings Module
+        ['settings.store.edit', 'settings', 'Edit store settings', 0],
+        ['settings.tax.edit', 'settings', 'Edit tax settings', 0],
+        ['settings.payment.edit', 'settings', 'Edit payment settings', 0],
+      ];
+
+      for (var i = 0; i < permissionsList.length; i++) {
+        final perm = permissionsList[i];
+        await customStatement(
+          "INSERT OR IGNORE INTO permissions (id, name, module, description, is_sensitive, created_at) "
+          "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
+          [
+            'perm_${i + 1}', // Simple ID for seeding
+            perm[0], // name
+            perm[1], // module
+            perm[2], // description
+            perm[3], // is_sensitive
+          ],
+        );
+      }
+
+      // Note: 역할별 기본 권한 설정은 나중에 UI에서 Owner가 수동으로 설정
+      // 또는 별도의 초기화 함수에서 처리
+    } catch (e) {
+      // 시드 데이터 삽입 실패 시 무시 (이미 존재하거나 다른 오류)
+      print('RBAC seed data insertion failed: $e');
     }
   }
 }

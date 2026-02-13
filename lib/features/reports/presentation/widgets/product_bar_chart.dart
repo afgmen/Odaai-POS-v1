@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/daos/sales_dao.dart';
+import '../../../../l10n/app_localizations.dart';
 
-/// 상품별 매출 Bar 차트
+/// Product sales Bar chart
 class ProductBarChart extends StatelessWidget {
   final List<ProductSalesStats> data;
 
@@ -12,11 +13,13 @@ class ProductBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (data.isEmpty) {
       return _buildContainer(
-        child: const Center(
-          child: Text('판매 데이터 없음',
-              style: TextStyle(color: AppTheme.textDisabled)),
+        child: Center(
+          child: Text(l10n.noDataAvailable,
+              style: const TextStyle(color: AppTheme.textDisabled)),
         ),
       );
     }

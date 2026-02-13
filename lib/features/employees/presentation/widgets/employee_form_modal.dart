@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:drift/drift.dart' hide Column;
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
+import '../../../../database/daos/employees_dao.dart';
+import '../../../../providers/database_providers.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../auth/utils/pin_hasher.dart';
 
 /// 직원 추가/수정 모달
 class EmployeeFormModal extends ConsumerStatefulWidget {
@@ -237,18 +241,25 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
     setState(() => _isLoading = true);
 
     try {
-      final authService = ref.read(authServiceProvider);
+      final employeesDao = ref.read(employeesDaoProvider);
       final pin = _pinCtrl.text.trim();
       final l10n = AppLocalizations.of(context)!;
 
       if (widget.employee == null) {
         // 신규 직원 추가
-        await authService.createEmployee(
-          username: _usernameCtrl.text.trim(),
-          name: _nameCtrl.text.trim(),
-          role: _selectedRole,
-          pin: pin.isNotEmpty ? pin : null,
+        final employeeId = await employeesDao.createEmployee(
+          EmployeesCompanion.insert(
+            username: _usernameCtrl.text.trim(),
+            name: _nameCtrl.text.trim(),
+            passwordHash: 'unused',
+            role: Value(_selectedRole),
+          ),
         );
+
+        // PIN 설정
+        if (pin.isNotEmpty && PinHasher.isValidPinFormat(pin)) {
+          await employeesDao.setPIN(employeeId, pin);
+        }
 
         if (mounted) {
           Navigator.of(context).pop();
@@ -256,12 +267,18 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
         }
       } else {
         // 기존 직원 수정
-        await authService.updateEmployee(
-          id: widget.employee!.id,
-          name: _nameCtrl.text.trim(),
-          role: _selectedRole,
-          pin: pin.isNotEmpty ? pin : null,
+        await employeesDao.updateEmployee(
+          widget.employee!.id,
+          EmployeesCompanion(
+            name: Value(_nameCtrl.text.trim()),
+            role: Value(_selectedRole),
+          ),
         );
+
+        // PIN 업데이트 (입력된 경우)
+        if (pin.isNotEmpty && PinHasher.isValidPinFormat(pin)) {
+          await employeesDao.setPIN(widget.employee!.id, pin);
+        }
 
         if (mounted) {
           Navigator.of(context).pop();

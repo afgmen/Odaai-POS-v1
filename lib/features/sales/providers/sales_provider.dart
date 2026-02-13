@@ -3,15 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../database/app_database.dart';
 import '../../../providers/database_providers.dart';
 
-// ── 날짜 필터 열거형 ──────────────────────────────
+// ── Date Filter Enum ──────────────────────────────
 enum DateFilter {
-  today('오늘'),
-  week('주간'),
-  month('월간'),
-  all('전체');
+  today,
+  week,
+  month,
+  all;
 
-  final String label;
-  const DateFilter(this.label);
+  String get localizationKey {
+    switch (this) {
+      case DateFilter.today:
+        return 'today';
+      case DateFilter.week:
+        return 'week';
+      case DateFilter.month:
+        return 'month';
+      case DateFilter.all:
+        return 'all';
+    }
+  }
 }
 
 /// 현재 날짜 필터 상태

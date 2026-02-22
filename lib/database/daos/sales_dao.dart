@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 
 import '../app_database.dart';
 import '../tables/products.dart';
@@ -52,7 +53,7 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
           );
         } catch (e) {
           // KDS 기능이 없는 경우 무시
-          print('Kitchen order creation skipped: $e');
+          debugPrint('Kitchen order creation skipped: $e');
         }
       }
 
@@ -267,16 +268,47 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
     return map;
   }
 
-  /// 주문 건수 (기간별)
+  /// 주문 건수 (기간별) — SQL COUNT 사용으로 최적화
   Future<int> getOrderCount(DateTime from, DateTime to) async {
-    final salesList = await (select(sales)
-          ..where((s) =>
-              s.saleDate.isBiggerOrEqualValue(from) &
-              s.saleDate.isSmallerOrEqualValue(to) &
-              s.status.equals('completed')))
-        .get();
-    return salesList.length;
+    final query = selectOnly(sales)
+      ..addColumns([sales.id.count()])
+      ..where(
+        sales.saleDate.isBiggerOrEqualValue(from) &
+            sales.saleDate.isSmallerOrEqualValue(to) &
+            sales.status.equals('completed'),
+      );
+    final result = await query.getSingle();
+    return result.read(sales.id.count()) ?? 0;
   }
+
+  /// 결제 방법별 매출 합계 — SQL GROUP BY 사용으로 최적화
+  Future<List<PaymentMethodTotal>> getPaymentBreakdown(DateTime from, DateTime to) async {
+    final query = selectOnly(sales)
+      ..addColumns([sales.paymentMethod, sales.total.sum()])
+      ..where(
+        sales.saleDate.isBiggerOrEqualValue(from) &
+            sales.saleDate.isSmallerOrEqualValue(to) &
+            sales.status.equals('completed'),
+      )
+      ..groupBy([sales.paymentMethod])
+      ..orderBy([OrderingTerm.desc(sales.total.sum())]);
+
+    final results = await query.get();
+    return results.map((row) {
+      return PaymentMethodTotal(
+        method: row.read(sales.paymentMethod)!,
+        total: row.read(sales.total.sum()) ?? 0,
+      );
+    }).toList();
+  }
+}
+
+/// 결제 방법별 합계 모델
+class PaymentMethodTotal {
+  final String method;
+  final double total;
+
+  PaymentMethodTotal({required this.method, required this.total});
 }
 
 /// 일별 매출 데이터 모델

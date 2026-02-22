@@ -7,10 +7,12 @@ import '../../../../core/widgets/permission_gate_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/currency_provider.dart';
 import '../../../../providers/locale_provider.dart';
-import '../../../auth/domain/permission_modules.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../../../auth/providers/rbac_providers.dart';
 import 'security_settings_screen.dart';
 import '../widgets/enable_rbac_button.dart';
+import '../widgets/delivery_server_settings.dart';
+import '../../../delivery/presentation/screens/delivery_platform_settings_screen.dart';
 
 /// 설정 화면 — 언어, 통화, 매장 정보, 앱 정보 등
 class SettingsScreen extends ConsumerWidget {
@@ -22,7 +24,6 @@ class SettingsScreen extends ConsumerWidget {
     final currentLang = ref.watch(currentLanguageProvider);
     final currentCurrency = ref.watch(currencyProvider);
     final rbacEnabled = ref.watch(rbacSettingProvider);
-    final isOwner = ref.watch(isOwnerProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -44,7 +45,7 @@ class SettingsScreen extends ConsumerWidget {
                   )
                 : const SizedBox.shrink(),
             loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
 
           // ─── Original sections below ──
@@ -182,6 +183,46 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
+          // ─── Delivery Server 섹션 ─────────────────────
+          _SectionHeader(
+            title: l10n.deliveryConnectionStatus,
+            icon: Icons.delivery_dining_outlined,
+          ),
+          const SizedBox(height: 8),
+          _SettingsCard(
+            children: const [
+              DeliveryServerSettings(),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // ─── Delivery Platforms 섹션 ──────────────────
+          _SectionHeader(
+            title: l10n.deliveryPlatformSettings,
+            icon: Icons.storefront_outlined,
+          ),
+          const SizedBox(height: 8),
+          _SettingsCard(
+            children: [
+              _InfoTile(
+                icon: Icons.storefront_outlined,
+                label: l10n.deliveryPlatformSettings,
+                value: 'GrabFood, ShopeeFood',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const DeliveryPlatformSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
           // ─── 앱 정보 섹션 ─────────────────────────────
           _SectionHeader(
             title: l10n.appInfo,
@@ -216,7 +257,7 @@ class SettingsScreen extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => _showLogoutConfirm(context),
+              onPressed: () => _showLogoutConfirm(context, ref),
               icon: const Icon(Icons.logout, color: AppTheme.error),
               label: Text(
                 l10n.logout,
@@ -266,7 +307,7 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showLogoutConfirm(BuildContext context) {
+  void _showLogoutConfirm(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
@@ -279,10 +320,13 @@ class SettingsScreen extends ConsumerWidget {
             child: Text(l10n.cancel),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              // 로그인 화면으로 돌아가기
-              Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+              // 세션 무효화 후 로그인 화면으로 돌아가기
+              await ref.read(authProvider.notifier).logout();
+              if (context.mounted) {
+                Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
             child: Text(l10n.logout),
@@ -388,19 +432,24 @@ class _LanguageTile extends StatelessWidget {
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
-            ...AppLanguage.values.map((lang) => RadioListTile<AppLanguage>(
-              title: Text(lang.nativeName),
-              subtitle: Text(_flagEmoji(lang, l10n)),
-              value: lang,
+            RadioGroup<AppLanguage>(
               groupValue: currentLang,
-              activeColor: AppTheme.primary,
               onChanged: (val) {
                 if (val != null) {
                   onChanged(val);
                   Navigator.pop(ctx);
                 }
               },
-            )),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: AppLanguage.values.map((lang) => RadioListTile<AppLanguage>(
+                  title: Text(lang.nativeName),
+                  subtitle: Text(_flagEmoji(lang, l10n)),
+                  value: lang,
+                  activeColor: AppTheme.primary,
+                )).toList(),
+              ),
+            ),
             const SizedBox(height: 16),
           ],
         ),
@@ -465,19 +514,24 @@ class _CurrencyTile extends StatelessWidget {
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
-            ...AppCurrency.values.map((currency) => RadioListTile<AppCurrency>(
-              title: Text('${currency.symbol} ${currency.code}'),
-              subtitle: Text(currency.name),
-              value: currency,
+            RadioGroup<AppCurrency>(
               groupValue: currentCurrency,
-              activeColor: AppTheme.primary,
               onChanged: (val) {
                 if (val != null) {
                   onChanged(val);
                   Navigator.pop(ctx);
                 }
               },
-            )),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: AppCurrency.values.map((currency) => RadioListTile<AppCurrency>(
+                  title: Text('${currency.symbol} ${currency.code}'),
+                  subtitle: Text(currency.name),
+                  value: currency,
+                  activeColor: AppTheme.primary,
+                )).toList(),
+              ),
+            ),
             const SizedBox(height: 16),
           ],
         ),
@@ -543,7 +597,7 @@ class _SwitchTile extends StatelessWidget {
       secondary: Icon(icon, color: AppTheme.textSecondary, size: 22),
       title: Text(label, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
       value: value,
-      activeColor: AppTheme.primary,
+      activeThumbColor: AppTheme.primary,
       onChanged: onChanged,
     );
   }

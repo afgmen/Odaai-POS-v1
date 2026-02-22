@@ -59,7 +59,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
         backgroundColor: AppTheme.cardWhite,
         elevation: 0,
         title: const Text(
-          '주문 상세',
+          'Order Details',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
         ),
         centerTitle: true,
@@ -135,7 +135,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
                   Padding(
                     padding: const EdgeInsets.only(left: 18, right: 18, top: 16, bottom: 10),
                     child: const Text(
-                      '상품 목록',
+                      'Products',
                       style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
                     ),
                   ),
@@ -172,12 +172,12 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    '₩${_fmt(item.total)}',
+                                    '₫${_fmt(item.total)}',
                                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '${item.quantity}개 × ₩${_fmt(item.unitPrice)}',
+                                    '${item.quantity} x ₫${_fmt(item.unitPrice)}',
                                     style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                                   ),
                                 ],
@@ -206,13 +206,13 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
               ),
               child: Column(
                 children: [
-                  _AmountRow(label: '소계', value: sale.subtotal),
-                  if (sale.discount > 0) _AmountRow(label: '할인', value: -sale.discount, color: AppTheme.success),
-                  if (sale.tax > 0) _AmountRow(label: '세금', value: sale.tax),
+                  _AmountRow(label: 'Subtotal', value: sale.subtotal),
+                  if (sale.discount > 0) _AmountRow(label: 'Discount', value: -sale.discount, color: AppTheme.success),
+                  if (sale.tax > 0) _AmountRow(label: 'Tax', value: sale.tax),
                   const SizedBox(height: 8),
                   const Divider(height: 1, color: AppTheme.divider),
                   const SizedBox(height: 8),
-                  _AmountRow(label: '합계', value: sale.total, isBold: true),
+                  _AmountRow(label: 'Total', value: sale.total, isBold: true),
                 ],
               ),
             ),
@@ -226,7 +226,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _isRefunding ? null : () => _showRefundConfirmation(),
                   icon: const Icon(Icons.replay_outlined, size: 18),
-                  label: const Text('환불 요청'),
+                  label: const Text('Refund Request'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.error,
                     side: const BorderSide(color: AppTheme.error, width: 1.5),
@@ -255,12 +255,12 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
               const Icon(Icons.warning_amber_outlined, size: 40, color: AppTheme.warning),
               const SizedBox(height: 12),
               const Text(
-                '환불 확인',
+                'Refund Confirmation',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
               ),
               const SizedBox(height: 8),
               Text(
-                '주문 ${_sale!.saleNumber}의 전체 금액\n₩${_fmt(_sale!.total)}을 환불하겠습니까?',
+                'Hoàn toàn bộ ₫${_fmt(_sale!.total)} cho đơn ${_sale!.saleNumber}?',
                 style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                 textAlign: TextAlign.center,
               ),
@@ -275,7 +275,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
                         foregroundColor: AppTheme.textSecondary,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: const Text('취소'),
+                      child: const Text('Cancel'),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -287,7 +287,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: const Text('환불'),
+                      child: const Text('Refund'),
                     ),
                   ),
                 ],
@@ -317,7 +317,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
           ..hideCurrentSnackBar()
           ..showSnackBar(
             SnackBar(
-              content: const Text('환불이 완료되었습니다', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+              content: const Text('Refund completed.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
               backgroundColor: AppTheme.success,
               duration: const Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
@@ -333,7 +333,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
           ..hideCurrentSnackBar()
           ..showSnackBar(
             SnackBar(
-              content: Text('환불 실패: $e', style: const TextStyle(color: Colors.white)),
+              content: Text('Refund failed: $e', style: const TextStyle(color: Colors.white)),
               backgroundColor: AppTheme.error,
               duration: const Duration(seconds: 3),
               behavior: SnackBarBehavior.floating,
@@ -361,7 +361,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        isRefunded ? '환불완료' : '결제완료',
+        isRefunded ? 'Refunded' : 'Paid',
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
@@ -395,7 +395,7 @@ class _AmountRow extends StatelessWidget {
           ),
         ),
         Text(
-          '₩${_fmt(value.abs())}',
+          '₫${_fmt(value.abs())}',
           style: TextStyle(
             fontSize: isBold ? 18 : 14,
             fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
@@ -423,8 +423,8 @@ String _formatDateTime(DateTime dt) {
 String _p(int v) => v.toString().padLeft(2, '0');
 
 String _paymentLabel(String method) => switch (method) {
-      'cash' => '현금',
-      'card' => '카드',
+      'cash' => 'Cash',
+      'card' => 'Card',
       'qr' => 'QR',
       _ => method,
     };

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../../../database/app_database.dart';
 import '../../data/reservations_providers.dart';
 import '../../domain/enums/reservation_status.dart';
@@ -40,7 +39,7 @@ class _ReservationSelectorWidgetState
                 const Icon(Icons.event_note, size: 20, color: Colors.blue),
                 const SizedBox(width: 8),
                 const Text(
-                  '예약 연결',
+                  'Link Reservation',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -50,7 +49,7 @@ class _ReservationSelectorWidgetState
                 if (widget.selectedReservation != null)
                   IconButton(
                     icon: const Icon(Icons.clear, size: 18),
-                    tooltip: '예약 연결 해제',
+                    tooltip: 'Unlink Reservation',
                     onPressed: () => widget.onReservationSelected(null),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -69,7 +68,7 @@ class _ReservationSelectorWidgetState
 
                 if (confirmedReservations.isEmpty) {
                   return Text(
-                    '오늘 예약이 없습니다',
+                    'No reservations today',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -98,7 +97,7 @@ class _ReservationSelectorWidgetState
                 child: Center(child: CircularProgressIndicator()),
               ),
               error: (err, stack) => Text(
-                '오류: ${err.toString()}',
+                'Error: ${err.toString()}',
                 style: const TextStyle(fontSize: 12, color: Colors.red),
               ),
             ),
@@ -118,7 +117,7 @@ class _ReservationSelectorWidgetState
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.blue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.blue),
           ),
@@ -145,7 +144,7 @@ class _ReservationSelectorWidgetState
                   Icon(Icons.access_time, size: 12, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
-                    '${reservation.reservationTime} / ${reservation.partySize}명',
+                    '${reservation.reservationTime} / ${reservation.partySize} pax',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey[700],
@@ -161,12 +160,10 @@ class _ReservationSelectorWidgetState
   }
 
   Widget _buildSelectedReservation(Reservation reservation) {
-    final status = ReservationStatus.fromString(reservation.status);
-
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
+        color: Colors.green.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.green, width: 2),
       ),
@@ -187,7 +184,7 @@ class _ReservationSelectorWidgetState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${reservation.reservationTime} / ${reservation.partySize}명 / ${reservation.customerPhone}',
+                  '${reservation.reservationTime} / ${reservation.partySize} pax / ${reservation.customerPhone}',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[700],

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -54,8 +55,8 @@ class ReceiptPdfService {
       _koreanFont = pw.Font.ttf(fontData);
       return _koreanFont!;
     } catch (e) {
-      print('Warning: Failed to load Korean font: $e');
-      print('Using default PDF font instead');
+      debugPrint('Warning: Failed to load Korean font: $e');
+      debugPrint('Using default PDF font instead');
       return null;
     }
   }
@@ -63,7 +64,7 @@ class ReceiptPdfService {
   /// 80mm 폭 영수증 PDF 문서 생성
   static Future<pw.Document> generateReceipt(ReceiptData data, {Map<String, String> labels = const {}}) async {
     // 한글 폰트 로드 시도 (실패해도 계속 진행)
-    final koreanFont = await _loadKoreanFont();
+    await _loadKoreanFont();
 
     // 80mm 열감지 용지 (기본 영수증 프린터)
     final pageFormat = PdfPageFormat(
@@ -122,7 +123,7 @@ class ReceiptPdfService {
   /// A4 영수증 (일반 프린터용)
   static Future<pw.Document> generateReceiptA4(ReceiptData data, {Map<String, String> labels = const {}}) async {
     // 한글 폰트 로드
-    final koreanFont = await _loadKoreanFont();
+    await _loadKoreanFont();
 
     final doc = pw.Document();
 

@@ -23,7 +23,7 @@ class PermissionError implements Exception {
       message: 'You do not have permission to perform this action',
       details: {
         'permission': permission,
-        if (role != null) 'role': role,
+        'role': ?role,
       },
     );
   }

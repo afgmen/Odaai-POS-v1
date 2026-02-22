@@ -120,7 +120,7 @@ class SyncService {
       'sale' => _apiClient.syncSale(payload),
       'product' => _apiClient.syncProduct(payload),
       'employee' => _apiClient.syncEmployee(payload),
-      _ => Future.value(ApiResponse.error(message: '알 수 없는 엔티티 타입: $entityType')),
+      _ => Future.value(ApiResponse.error(message: 'Unknown entity type: $entityType')),
     };
   }
 }

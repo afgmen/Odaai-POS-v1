@@ -107,7 +107,7 @@ class RevenueLineChart extends StatelessWidget {
                       return touchedSpots.map((spot) {
                         final d = data[spot.x.toInt()];
                         return LineTooltipItem(
-                          '${DateFormat('M/d').format(d.date)}\n₩${_formatNumber(d.totalSales)}',
+                          '${DateFormat('d/M').format(d.date)}\n₫${_formatNumber(d.totalSales)}',
                           const TextStyle(
                             color: Colors.white,
                             fontSize: 12,

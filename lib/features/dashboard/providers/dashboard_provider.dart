@@ -49,14 +49,12 @@ final totalSalesProvider = FutureProvider<double>((ref) async {
   return await dao.getTotalSales(range.from, range.to);
 });
 
-// ── 기간별 주문 수 ─────────────────────────────────
+// ── 기간별 주문 수 (SQL COUNT 최적화) ──────────────
 final orderCountProvider = FutureProvider<int>((ref) async {
   final dao = ref.watch(salesDaoProvider);
   final filter = ref.watch(dashboardFilterProvider);
   final range = _dateRange(filter);
-  final sales = await dao.getSalesByDateRange(range.from, range.to);
-  // completed만 카운팅
-  return sales.where((s) => s.status == 'completed').length;
+  return await dao.getOrderCount(range.from, range.to);
 });
 
 // ── 평균 주문금액 ──────────────────────────────────
@@ -66,25 +64,17 @@ final avgOrderProvider = FutureProvider<double>((ref) async {
   return count > 0 ? total / count : 0;
 });
 
-// ── 결제 방법별 매출 분석 ──────────────────────────
+// ── 결제 방법별 매출 분석 (SQL GROUP BY 최적화) ─────
 final paymentBreakdownProvider =
     FutureProvider<List<PaymentStat>>((ref) async {
   final dao = ref.watch(salesDaoProvider);
   final filter = ref.watch(dashboardFilterProvider);
   final range = _dateRange(filter);
-  final sales = await dao.getSalesByDateRange(range.from, range.to);
+  final breakdown = await dao.getPaymentBreakdown(range.from, range.to);
 
-  final map = <String, double>{};
-  for (final sale in sales) {
-    if (sale.status != 'completed') continue;
-    map[sale.paymentMethod] =
-        (map[sale.paymentMethod] ?? 0) + sale.total;
-  }
-
-  return map.entries
-      .map((e) => PaymentStat(method: e.key, total: e.value))
-      .toList()
-    ..sort((a, b) => b.total.compareTo(a.total));
+  return breakdown
+      .map((e) => PaymentStat(method: e.method, total: e.total))
+      .toList();
 });
 
 // ── 상품별 매출 순위 (Top 5) ───────────────────────

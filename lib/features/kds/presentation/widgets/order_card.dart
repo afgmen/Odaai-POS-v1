@@ -41,7 +41,7 @@ class OrderCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: priority.isUrgent
-                ? Colors.red.withOpacity(0.05)
+                ? Colors.red.withValues(alpha: 0.05)
                 : Colors.white,
           ),
           child: Column(
@@ -62,7 +62,7 @@ class OrderCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      order.tableNumber ?? '포장 #${order.id}',
+                      order.tableNumber ?? 'Takeaway #${order.id}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -111,7 +111,7 @@ class OrderCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  '$elapsedTime 분 경과',
+                  '${elapsedTime}m elapsed',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -137,7 +137,7 @@ class OrderCard extends StatelessWidget {
                         const Icon(Icons.restaurant, size: 16, color: Colors.grey),
                         const SizedBox(width: 4),
                         Text(
-                          '주문 메뉴 (${orderWithItems.totalQuantity}개)',
+                          'Order Items (${orderWithItems.totalQuantity})',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.grey,
@@ -186,7 +186,7 @@ class OrderCard extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.2),
+                  color: statusColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -217,7 +217,7 @@ class OrderCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
+                    color: Colors.amber.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(color: Colors.amber),
                   ),

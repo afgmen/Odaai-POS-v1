@@ -102,7 +102,7 @@ class _CustomerManagementScreenState extends ConsumerState<CustomerManagementScr
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   itemCount: filtered.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) =>
                       _CustomerCard(customer: filtered[index]),
                 );
@@ -264,11 +264,11 @@ class _CustomerCard extends ConsumerWidget {
                   const SizedBox(height: 4),
                   totalSpentAsync.when(
                     data: (total) => Text(
-                      '₩${currencyFormat.format(total.toInt())}',
+                      '₫${currencyFormat.format(total.toInt())}',
                       style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                     ),
                     loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
                   ),
                 ],
               ),
@@ -280,7 +280,6 @@ class _CustomerCard extends ConsumerWidget {
   }
 
   void _showCustomerDetail(BuildContext context, WidgetRef ref) {
-    final historyAsync = ref.read(customerHistoryProvider(customer.id));
     final currencyFormat = NumberFormat('#,###');
     final dateFormat = DateFormat('MM/dd HH:mm');
 
@@ -399,7 +398,7 @@ class _CustomerCard extends ConsumerWidget {
                             title: Text('#${sale.saleNumber}'),
                             subtitle: Text(dateFormat.format(sale.createdAt)),
                             trailing: Text(
-                              '₩${currencyFormat.format(sale.total.toInt())}',
+                              '₫${currencyFormat.format(sale.total.toInt())}',
                               style: const TextStyle(fontWeight: FontWeight.w600),
                             ),
                           );

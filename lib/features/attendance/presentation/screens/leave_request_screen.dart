@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../features/auth/providers/auth_provider.dart';
-import '../../data/attendance_dao.dart';
 import '../../domain/services/attendance_service.dart';
 
 /// 휴가 신청 화면
@@ -37,13 +36,13 @@ class _LeaveRequestScreenState extends ConsumerState<LeaveRequestScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('휴가 관리'),
+        title: const Text('Leave Management'),
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: '신청하기'),
-            Tab(text: '신청 내역'),
+            Tab(text: 'Apply'),
+            Tab(text: 'History'),
           ],
         ),
       ),
@@ -76,12 +75,12 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
   bool _isSubmitting = false;
 
   final Map<String, String> _leaveTypeNames = {
-    'annual': '연차',
-    'sick': '병가',
-    'personal': '개인 사유',
-    'maternity': '출산 휴가',
-    'paternity': '육아 휴가',
-    'unpaid': '무급 휴가',
+    'annual': 'Annual Leave',
+    'sick': 'Sick Leave',
+    'personal': 'Personal Leave',
+    'maternity': 'Maternity Leave',
+    'paternity': 'Paternity Leave',
+    'unpaid': 'Unpaid Leave',
   };
 
   @override
@@ -166,11 +165,11 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
           _leaveType = 'annual';
         });
       } else {
-        _showErrorDialog(result.errorMessage ?? '휴가 신청에 실패했습니다.');
+        _showErrorDialog(result.errorMessage ?? 'Leave request failed.');
       }
     } catch (e) {
       if (!mounted) return;
-      _showErrorDialog('오류가 발생했습니다: $e');
+      _showErrorDialog('An error occurred: $e');
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -186,14 +185,14 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
           children: [
             Icon(Icons.check_circle, color: Colors.green[600]),
             const SizedBox(width: 8),
-            const Text('신청 완료'),
+            const Text('Request Submitted'),
           ],
         ),
-        content: const Text('휴가 신청이 완료되었습니다.\n관리자 승인 후 확정됩니다.'),
+        content: const Text('Your leave request has been submitted.\nIt will be confirmed after manager approval.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -208,14 +207,14 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
           children: [
             Icon(Icons.error_outline, color: Colors.red[600]),
             const SizedBox(width: 8),
-            const Text('알림'),
+            const Text('Notice'),
           ],
         ),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -228,7 +227,7 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
     final attendanceDao = ref.watch(attendanceDaoProvider);
 
     if (employee == null) {
-      return const Center(child: Text('로그인이 필요합니다.'));
+      return const Center(child: Text('Please log in.'));
     }
 
     final year = DateTime.now().year;
@@ -241,7 +240,7 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 휴가 잔여 카드
+            // Leave balance card
             FutureBuilder<LeaveBalance?>(
               future: attendanceDao.getLeaveBalance(employee.id, year),
               builder: (context, snapshot) {
@@ -259,20 +258,20 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
                   return const Card(
                     child: Padding(
                       padding: EdgeInsets.all(20),
-                      child: Text('휴가 정보를 불러올 수 없습니다.'),
+                      child: Text('Unable to load leave information.'),
                     ),
                   );
                 }
 
                 return Card(
-                  color: AppTheme.primary.withOpacity(0.1),
+                  color: AppTheme.primary.withValues(alpha: 0.1),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          '휴가 잔여 현황',
+                          'Leave Balance',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -280,10 +279,10 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
                         ),
                         const Divider(height: 24),
                         _buildBalanceRow(
-                            '연차', balance.annualRemaining, balance.annualTotal),
+                            'Annual', balance.annualRemaining, balance.annualTotal),
                         _buildBalanceRow(
-                            '병가', balance.sickRemaining, balance.sickTotal),
-                        _buildBalanceRow('개인 사유', balance.personalRemaining,
+                            'Sick', balance.sickRemaining, balance.sickTotal),
+                        _buildBalanceRow('Personal', balance.personalRemaining,
                             balance.personalTotal),
                       ],
                     ),
@@ -293,11 +292,11 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
             ),
             const SizedBox(height: 24),
 
-            // 휴가 유형
+            // Leave type
             DropdownButtonFormField<String>(
-              value: _leaveType,
+              initialValue: _leaveType,
               decoration: const InputDecoration(
-                labelText: '휴가 유형',
+                labelText: 'Leave Type',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.category),
               ),
@@ -315,34 +314,34 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
             ),
             const SizedBox(height: 16),
 
-            // 시작일
+            // Start date
             InkWell(
               onTap: _selectStartDate,
               child: InputDecorator(
                 decoration: const InputDecoration(
-                  labelText: '시작일',
+                  labelText: 'Start Date',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.calendar_today),
                 ),
                 child: Text(
-                  DateFormat('yyyy-MM-dd (E)', 'ko').format(_startDate),
+                  DateFormat('dd/MM/yyyy (E)', 'vi').format(_startDate),
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
             ),
             const SizedBox(height: 16),
 
-            // 종료일
+            // End date
             InkWell(
               onTap: _selectEndDate,
               child: InputDecorator(
                 decoration: const InputDecoration(
-                  labelText: '종료일',
+                  labelText: 'End Date',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.event),
                 ),
                 child: Text(
-                  DateFormat('yyyy-MM-dd (E)', 'ko').format(_endDate),
+                  DateFormat('dd/MM/yyyy (E)', 'vi').format(_endDate),
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
@@ -361,14 +360,14 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    '총 휴가 일수',
+                    'Total Leave Days',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
-                    '$days일 (주말 제외)',
+                    '$days days (excl. weekends)',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -384,22 +383,22 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
             TextFormField(
               controller: _reasonController,
               decoration: const InputDecoration(
-                labelText: '사유',
-                hintText: '휴가 사유를 입력하세요',
+                labelText: 'Reason',
+                hintText: 'Enter your reason for leave',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.description),
               ),
               maxLines: 4,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return '사유를 입력해주세요';
+                  return 'Please enter a reason';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 24),
 
-            // 신청 버튼
+            // Submit button
             _isSubmitting
                 ? const Center(child: CircularProgressIndicator())
                 : ElevatedButton(
@@ -413,7 +412,7 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
                       ),
                     ),
                     child: const Text(
-                      '신청하기',
+                      'Submit Request',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -437,7 +436,7 @@ class _LeaveRequestFormState extends ConsumerState<_LeaveRequestForm> {
             style: const TextStyle(fontSize: 16),
           ),
           Text(
-            '${remaining.toStringAsFixed(1)}일 / ${total.toStringAsFixed(1)}일',
+            '${remaining.toStringAsFixed(1)} / ${total.toStringAsFixed(1)} days',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -459,7 +458,7 @@ class _LeaveRequestHistory extends ConsumerWidget {
     final attendanceDao = ref.watch(attendanceDaoProvider);
 
     if (employee == null) {
-      return const Center(child: Text('로그인이 필요합니다.'));
+      return const Center(child: Text('Please log in.'));
     }
 
     return StreamBuilder<List<LeaveRequest>>(
@@ -470,7 +469,7 @@ class _LeaveRequestHistory extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('오류가 발생했습니다: ${snapshot.error}'));
+          return Center(child: Text('An error occurred: ${snapshot.error}'));
         }
 
         final requests = snapshot.data ?? [];
@@ -487,7 +486,7 @@ class _LeaveRequestHistory extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '신청 내역이 없습니다',
+                  'No requests found',
                   style: TextStyle(
                     fontSize: 18,
                     color: Colors.grey[600],
@@ -527,22 +526,22 @@ class _LeaveRequestCard extends StatelessWidget {
       case 'pending':
         statusColor = Colors.orange;
         statusIcon = Icons.pending;
-        statusText = '승인 대기';
+        statusText = 'Pending';
         break;
       case 'approved':
         statusColor = Colors.green;
         statusIcon = Icons.check_circle;
-        statusText = '승인';
+        statusText = 'Approved';
         break;
       case 'rejected':
         statusColor = Colors.red;
         statusIcon = Icons.cancel;
-        statusText = '거절';
+        statusText = 'Rejected';
         break;
       case 'cancelled':
         statusColor = Colors.grey;
         statusIcon = Icons.block;
-        statusText = '취소';
+        statusText = 'Cancelled';
         break;
       default:
         statusColor = Colors.grey;
@@ -572,7 +571,7 @@ class _LeaveRequestCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: statusColor, width: 1),
                   ),
@@ -609,7 +608,7 @@ class _LeaveRequestCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${request.days.toStringAsFixed(1)}일',
+                  '${request.days.toStringAsFixed(1)} days',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -651,14 +650,14 @@ class _LeaveRequestCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.05),
+                  color: statusColor.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${statusText} • ${DateFormat('yyyy-MM-dd HH:mm').format(request.reviewedAt!)}',
+                      '$statusText • ${DateFormat('yyyy-MM-dd HH:mm').format(request.reviewedAt!)}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -680,7 +679,7 @@ class _LeaveRequestCard extends StatelessWidget {
             // 신청 일시
             const SizedBox(height: 8),
             Text(
-              '신청 일시: ${DateFormat('yyyy-MM-dd HH:mm').format(request.createdAt)}',
+              'Submitted: ${DateFormat('yyyy-MM-dd HH:mm').format(request.createdAt)}',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey[600],
@@ -695,17 +694,17 @@ class _LeaveRequestCard extends StatelessWidget {
   String _getLeaveTypeName(String type) {
     switch (type) {
       case 'annual':
-        return '연차';
+        return 'Annual Leave';
       case 'sick':
-        return '병가';
+        return 'Sick Leave';
       case 'personal':
-        return '개인 사유';
+        return 'Personal Leave';
       case 'maternity':
-        return '출산 휴가';
+        return 'Maternity Leave';
       case 'paternity':
-        return '육아 휴가';
+        return 'Paternity Leave';
       case 'unpaid':
-        return '무급 휴가';
+        return 'Unpaid Leave';
       default:
         return type;
     }

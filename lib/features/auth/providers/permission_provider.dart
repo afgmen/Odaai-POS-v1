@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/user_role.dart';
 import '../domain/permission.dart';
 import '../domain/role_permission_map.dart';
-import '../domain/session.dart';
 import '../domain/auth_error.dart';
 import 'auth_provider.dart';
 import 'audit_logging_provider.dart';
@@ -66,7 +65,7 @@ class PermissionChecker {
   /// Throws: AuthError if role does not match
   void requireRole(UserRole role) {
     if (!hasRole(role)) {
-      throw AuthErrors.permissionDenied('${role.displayName} 역할이 필요합니다');
+      throw AuthErrors.permissionDenied('${role.displayName} role required');
     }
   }
 

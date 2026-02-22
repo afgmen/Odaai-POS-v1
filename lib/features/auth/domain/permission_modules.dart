@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 /// Permission naming convention: module.action
 /// All available permissions in the RBAC system
 class PermissionModules {
@@ -114,90 +116,65 @@ class PermissionModules {
     }
   }
 
-  /// Get module display name (Korean)
+  /// Get module display name (Korean) — kept for backward compatibility
   static String getModuleDisplayNameKo(String module) {
-    switch (module) {
-      case MODULE_POS:
-        return 'POS';
-      case MODULE_ORDER:
-        return '주문';
-      case MODULE_INVENTORY:
-        return '재고';
-      case MODULE_REVENUE:
-        return '매출';
-      case MODULE_STAFF:
-        return '직원';
-      case MODULE_SETTINGS:
-        return '설정';
-      default:
-        return module.toUpperCase();
-    }
+    return getModuleDisplayName(module);
   }
 
   /// Get permission display name
   static String getPermissionDisplayName(String permission) {
-    // Convert "revenue.daily.view" → "View Daily Revenue"
-    final parts = permission.split('.');
-    if (parts.length < 2) return permission;
-
-    final action = parts.sublist(1).map((p) => _capitalize(p)).join(' ');
-    return action;
-  }
-
-  /// Get permission display name (Korean)
-  static String getPermissionDisplayNameKo(String permission) {
     final displayNames = {
       // POS
-      POS_OPEN: 'POS 열기',
-      POS_REFUND: '환불 처리',
-      POS_DISCOUNT: '할인 적용',
-      POS_PRICE_OVERRIDE: '가격 변경',
-      POS_CASH_DRAWER_OPEN: '현금함 열기',
+      POS_OPEN: 'Open POS',
+      POS_REFUND: 'Process Refunds',
+      POS_DISCOUNT: 'Apply Discounts',
+      POS_PRICE_OVERRIDE: 'Override Prices',
+      POS_CASH_DRAWER_OPEN: 'Open Cash Drawer',
 
       // Orders
-      ORDER_CREATE: '주문 생성',
-      ORDER_CANCEL: '주문 취소',
-      ORDER_VIEW: '주문 내역 조회',
+      ORDER_CREATE: 'Create Orders',
+      ORDER_CANCEL: 'Cancel Orders',
+      ORDER_VIEW: 'View Order History',
 
       // Inventory
-      INVENTORY_VIEW: '재고 조회',
-      INVENTORY_EDIT: '상품 정보 편집',
-      INVENTORY_ADJUST: '재고 조정',
-      INVENTORY_WRITEOFF: '상품 폐기',
+      INVENTORY_VIEW: 'View Inventory',
+      INVENTORY_EDIT: 'Edit Products',
+      INVENTORY_ADJUST: 'Adjust Stock',
+      INVENTORY_WRITEOFF: 'Write Off Items',
 
       // Revenue (Sensitive)
-      REVENUE_DASHBOARD_VIEW: '매출 대시보드 조회',
-      REVENUE_DAILY_VIEW: '일일 매출 조회',
-      REVENUE_WEEKLY_VIEW: '주간 매출 조회',
-      REVENUE_MONTHLY_VIEW: '월간 매출 조회',
-      REVENUE_MULTISTORE_VIEW: '다중 매장 매출 조회',
-      REVENUE_EXPORT: '매출 리포트 내보내기',
-      REVENUE_PNL_VIEW: '손익계산서 조회',
+      REVENUE_DASHBOARD_VIEW: 'Dashboard View',
+      REVENUE_DAILY_VIEW: 'Daily Revenue',
+      REVENUE_WEEKLY_VIEW: 'Weekly Revenue',
+      REVENUE_MONTHLY_VIEW: 'Monthly Revenue',
+      REVENUE_MULTISTORE_VIEW: 'Multi-store Revenue',
+      REVENUE_EXPORT: 'Export Reports',
+      REVENUE_PNL_VIEW: 'P&L Statement',
 
       // Staff
-      STAFF_VIEW: '직원 목록 조회',
-      STAFF_MANAGE: '직원 관리',
-      STAFF_ROLE_ASSIGN: '직원 역할 할당',
+      STAFF_VIEW: 'View Staff List',
+      STAFF_MANAGE: 'Manage Staff',
+      STAFF_ROLE_ASSIGN: 'Assign Roles',
 
       // Settings
-      SETTINGS_STORE_EDIT: '매장 설정 편집',
-      SETTINGS_TAX_EDIT: '세금 설정 편집',
-      SETTINGS_PAYMENT_EDIT: '결제 설정 편집',
-      SETTINGS_INTEGRATION_EDIT: '연동 설정 편집',
+      SETTINGS_STORE_EDIT: 'Store Settings',
+      SETTINGS_TAX_EDIT: 'Tax Settings',
+      SETTINGS_PAYMENT_EDIT: 'Payment Settings',
+      SETTINGS_INTEGRATION_EDIT: 'Integration Settings',
     };
 
     return displayNames[permission] ?? permission;
+  }
+
+  /// Get permission display name (Korean) — now returns English for consistency
+  static String getPermissionDisplayNameKo(String permission) {
+    return getPermissionDisplayName(permission);
   }
 
   /// Check if permission is sensitive (involves financial data)
   static bool isSensitive(String permission) {
     return permission.startsWith('revenue.') ||
            permission.startsWith('settings.');
-  }
-
-  static String _capitalize(String s) {
-    if (s.isEmpty) return s;
-    return s[0].toUpperCase() + s.substring(1);
   }
 
   /// Get all permissions as a list

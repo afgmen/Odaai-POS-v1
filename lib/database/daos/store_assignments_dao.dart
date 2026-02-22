@@ -1,22 +1,27 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
+import '../tables/store_assignments.dart';
 
 part 'store_assignments_dao.g.dart';
 
 @DriftAccessor(tables: [StoreAssignments])
-class StoreAssignmentsDao extends DatabaseAccessor<AppDatabase> with _$StoreAssignmentsDaoMixin {
-  StoreAssignmentsDao(AppDatabase db) : super(db);
+class StoreAssignmentsDao extends DatabaseAccessor<AppDatabase>
+    with _$StoreAssignmentsDaoMixin {
+  StoreAssignmentsDao(super.db);
 
   /// Get all store assignments for a user
   Future<List<StoreAssignment>> getUserStoreAssignments(int userId) {
-    return (select(storeAssignments)..where((sa) => sa.userId.equals(userId))).get();
+    return (select(
+      storeAssignments,
+    )..where((sa) => sa.userId.equals(userId))).get();
   }
 
   /// Get specific store assignment
   Future<StoreAssignment?> getStoreAssignment(int userId, String storeId) {
-    return (select(storeAssignments)
-      ..where((sa) => sa.userId.equals(userId) & sa.storeId.equals(storeId)))
-      .getSingleOrNull();
+    return (select(
+          storeAssignments,
+        )..where((sa) => sa.userId.equals(userId) & sa.storeId.equals(storeId)))
+        .getSingleOrNull();
   }
 
   /// Check if user has access to store
@@ -43,11 +48,15 @@ class StoreAssignmentsDao extends DatabaseAccessor<AppDatabase> with _$StoreAssi
 
   /// Delete all store assignments for a user
   Future<void> deleteUserStoreAssignments(int userId) {
-    return (delete(storeAssignments)..where((sa) => sa.userId.equals(userId))).go();
+    return (delete(
+      storeAssignments,
+    )..where((sa) => sa.userId.equals(userId))).go();
   }
 
   /// Batch insert store assignments
-  Future<void> insertStoreAssignments(List<StoreAssignmentsCompanion> assignmentsList) {
+  Future<void> insertStoreAssignments(
+    List<StoreAssignmentsCompanion> assignmentsList,
+  ) {
     return batch((batch) {
       batch.insertAll(storeAssignments, assignmentsList);
     });

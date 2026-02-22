@@ -361,9 +361,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logoutConfirm => 'Are you sure you want to logout?';
 
   @override
-  String get langKorean => '한국어';
-
-  @override
   String get langEnglish => 'English';
 
   @override
@@ -1832,6 +1829,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kdsSpecialInstructions => 'Special Instructions';
 
   @override
+  String get kdsMenuSummaryTitle => 'Menu Summary';
+
+  @override
+  String get kdsMenuSummaryToggle => 'Toggle Menu Summary';
+
+  @override
+  String get kdsMenuSummaryEmpty => 'No active menu items';
+
+  @override
+  String get kdsMenuSummaryTotalItems => 'Total Items';
+
+  @override
+  String get kdsMenuSummaryUniqueItems => 'menu items';
+
+  @override
+  String get kdsMenuSummaryScreenTitle => 'Menu Summary';
+
+  @override
+  String get kdsModeSelection => 'Select KDS Mode';
+
+  @override
+  String get kdsModeOrderView => 'Order View';
+
+  @override
+  String get kdsModeOrderViewDesc => 'View orders by table, sorted by time';
+
+  @override
+  String get kdsModeMenuSummary => 'Menu Summary View';
+
+  @override
+  String get kdsModeMenuSummaryDesc =>
+      'View all items to prepare, grouped by menu';
+
+  @override
+  String get kdsTotalItems => 'Total Items';
+
+  @override
+  String kdsUniqueMenus(int count) {
+    return '$count menus';
+  }
+
+  @override
+  String kdsOrders(int count) {
+    return '$count orders';
+  }
+
+  @override
   String get dailyClosing => 'Daily Closing';
 
   @override
@@ -2203,4 +2247,139 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get people => 'people';
+
+  @override
+  String get deliveryTitle => 'Delivery Orders';
+
+  @override
+  String get deliveryNewOrders => 'New';
+
+  @override
+  String get deliveryActiveOrders => 'Active';
+
+  @override
+  String get deliveryFilterAll => 'All';
+
+  @override
+  String get deliveryFilterManual => 'Manual';
+
+  @override
+  String get deliveryAccept => 'Accept';
+
+  @override
+  String get deliveryReject => 'Reject';
+
+  @override
+  String get deliveryRejectReason => 'Rejection reason';
+
+  @override
+  String get deliveryStatusNew => 'New Order';
+
+  @override
+  String get deliveryStatusAccepted => 'Accepted';
+
+  @override
+  String get deliveryStatusPreparing => 'Preparing';
+
+  @override
+  String get deliveryStatusReadyForPickup => 'Ready for Pickup';
+
+  @override
+  String get deliveryStatusPickedUp => 'Picked Up';
+
+  @override
+  String get deliveryStatusCompleted => 'Completed';
+
+  @override
+  String get deliveryStatusCancelled => 'Cancelled';
+
+  @override
+  String get deliveryCustomer => 'Customer';
+
+  @override
+  String get deliveryAddress => 'Delivery Address';
+
+  @override
+  String get deliveryDriver => 'Driver';
+
+  @override
+  String get deliveryEstimatedPickup => 'Est. Pickup';
+
+  @override
+  String get deliveryTotalAmount => 'Total';
+
+  @override
+  String get deliveryNoOrders => 'No delivery orders';
+
+  @override
+  String get deliveryCreateManual => 'Create Manual Order';
+
+  @override
+  String get deliveryConnectionStatus => 'Server Connection';
+
+  @override
+  String get deliveryConnected => 'Connected';
+
+  @override
+  String get deliveryDisconnected => 'Disconnected';
+
+  @override
+  String get menuSyncTitle => 'Sync Menu to Delivery Platforms';
+
+  @override
+  String get menuSyncButton => 'Sync Now';
+
+  @override
+  String get menuSyncSuccess => 'Menu synced successfully';
+
+  @override
+  String get menuSyncFailed => 'Menu sync failed';
+
+  @override
+  String get menuSyncInProgress => 'Syncing menu...';
+
+  @override
+  String get deliveryReport => 'Delivery Report';
+
+  @override
+  String get deliveryRevenue => 'Delivery Revenue';
+
+  @override
+  String get deliveryVsDineIn => 'Delivery vs Dine-in';
+
+  @override
+  String get deliveryManualOrder => 'Manual Order';
+
+  @override
+  String get deliveryManualOrderCreate => 'Create Manual Order';
+
+  @override
+  String get deliveryCustomerName => 'Customer Name';
+
+  @override
+  String get deliveryCustomerPhone => 'Customer Phone';
+
+  @override
+  String get deliveryAddressInput => 'Delivery Address';
+
+  @override
+  String get deliverySelectItems => 'Select Items';
+
+  @override
+  String get deliveryPlatformSettings => 'Delivery Platforms';
+
+  @override
+  String get deliveryPlatformActive => 'Active';
+
+  @override
+  String get deliveryPlatformNotConfigured => 'Not Configured';
+
+  @override
+  String get deliveryTestConnection => 'Test';
+
+  @override
+  String get deliveryPlatformInactive => 'Inactive';
+
+  @override
+  String get deliveryLastSync => 'Last Sync';
 }

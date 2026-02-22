@@ -5,7 +5,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../domain/services/loyalty_service.dart';
 import '../../providers/loyalty_provider.dart';
-import '../widgets/point_card_widget.dart';
 
 /// 로열티 프로그램 대시보드 화면
 class LoyaltyDashboardScreen extends ConsumerWidget {
@@ -20,12 +19,12 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('로열티 프로그램'),
+        title: const Text('Loyalty Program'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => _showSettingsDialog(context, ref),
-            tooltip: '설정',
+            tooltip: 'Settings',
           ),
         ],
       ),
@@ -34,19 +33,19 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 오늘의 포인트 통계
+            // Today's point stats
             _buildTodayStats(todayStatsAsync, totalPointsAsync),
             const SizedBox(height: 24),
 
-            // 등급별 고객 분포
+            // Tier distribution
             _buildTierDistribution(tierCountAsync, allTiersAsync),
             const SizedBox(height: 24),
 
-            // 생일 고객 목록
+            // Birthday customers
             _buildBirthdayCustomers(context, ref),
             const SizedBox(height: 24),
 
-            // 빠른 액션
+            // Quick actions
             _buildQuickActions(context, ref),
           ],
         ),
@@ -54,7 +53,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
     );
   }
 
-  /// 오늘의 포인트 통계
+  /// Today's point stats
   Widget _buildTodayStats(
     AsyncValue<Map<String, int>> todayStatsAsync,
     AsyncValue<int> totalPointsAsync,
@@ -76,7 +75,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                     const Icon(Icons.today, color: AppTheme.primary),
                     const SizedBox(width: 8),
                     const Text(
-                      '오늘의 포인트 현황',
+                      "Today's Points",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -89,7 +88,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: _buildStatCard(
-                        '적립',
+                        'Earned',
                         earned,
                         Colors.green,
                         Icons.arrow_upward,
@@ -98,7 +97,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildStatCard(
-                        '사용',
+                        'Redeemed',
                         redeemed,
                         Colors.orange,
                         Icons.arrow_downward,
@@ -107,7 +106,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildStatCard(
-                        '전체 유효',
+                        'Total Active',
                         totalPoints,
                         AppTheme.primary,
                         Icons.account_balance_wallet,
@@ -129,7 +128,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
       error: (err, stack) => Card(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Text('오류: $err', style: const TextStyle(color: Colors.red)),
+          child: Text('Error: $err', style: const TextStyle(color: Colors.red)),
         ),
       ),
     );
@@ -140,9 +139,9 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -169,7 +168,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
     );
   }
 
-  /// 등급별 고객 분포
+  /// Tier distribution
   Widget _buildTierDistribution(
     AsyncValue<Map<String, int>> tierCountAsync,
     AsyncValue<List<MembershipTier>> allTiersAsync,
@@ -185,7 +184,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                 const Icon(Icons.people, color: AppTheme.primary),
                 const SizedBox(width: 8),
                 const Text(
-                  '등급별 고객 분포',
+                  'Customer by Tier',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -242,7 +241,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                               SizedBox(
                                 width: 80,
                                 child: Text(
-                                  '$count명 ($percent%)',
+                                  '$count ($percent%)',
                                   textAlign: TextAlign.right,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -256,11 +255,11 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                     );
                   },
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (err, stack) => Text('오류: $err'),
+                  error: (err, stack) => Text('Error: $err'),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Text('오류: $err'),
+              error: (err, stack) => Text('Error: $err'),
             ),
           ],
         ),
@@ -268,7 +267,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
     );
   }
 
-  /// 생일 고객 목록
+  /// Birthday customers
   Widget _buildBirthdayCustomers(BuildContext context, WidgetRef ref) {
     final birthdayCustomersAsync = ref.watch(todayBirthdayCustomersProvider);
 
@@ -283,7 +282,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                 const Icon(Icons.cake, color: Colors.pink),
                 const SizedBox(width: 8),
                 const Text(
-                  '오늘의 생일 고객',
+                  "Today's Birthday Customers",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -299,7 +298,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Text(
-                        '오늘 생일인 고객이 없습니다',
+                        'No birthday customers today',
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                     ),
@@ -318,7 +317,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                       trailing: ElevatedButton.icon(
                         onPressed: () => _grantBirthdayBonus(context, ref, customer),
                         icon: const Icon(Icons.card_giftcard, size: 18),
-                        label: const Text('보너스 지급'),
+                        label: const Text('Grant Bonus'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.pink,
                           foregroundColor: Colors.white,
@@ -329,7 +328,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Text('오류: $err'),
+              error: (err, stack) => Text('Error: $err'),
             ),
           ],
         ),
@@ -337,7 +336,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
     );
   }
 
-  /// 빠른 액션
+  /// Quick actions
   Widget _buildQuickActions(BuildContext context, WidgetRef ref) {
     return Card(
       child: Padding(
@@ -346,7 +345,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '빠른 액션',
+              'Quick Actions',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -358,25 +357,25 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
               runSpacing: 12,
               children: [
                 _buildActionButton(
-                  '고객 검색',
+                  'Customer Search',
                   Icons.search,
                   AppTheme.primary,
                   () => _searchCustomer(context, ref),
                 ),
                 _buildActionButton(
-                  '포인트 조정',
+                  'Adjust Points',
                   Icons.edit,
                   Colors.orange,
                   () => _adjustPoints(context, ref),
                 ),
                 _buildActionButton(
-                  '등급 관리',
+                  'Tier Management',
                   Icons.military_tech,
                   Colors.purple,
                   () => _manageTiers(context, ref),
                 ),
                 _buildActionButton(
-                  '설정',
+                  'Settings',
                   Icons.settings,
                   Colors.grey,
                   () => _showSettingsDialog(context, ref),
@@ -449,16 +448,16 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('생일 보너스 지급'),
-        content: Text('${customer.name}님께 생일 보너스 포인트를 지급하시겠습니까?'),
+        title: const Text('Grant Birthday Bonus'),
+        content: Text('Grant birthday bonus points to ${customer.name}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('지급'),
+            child: const Text('Grant'),
           ),
         ],
       ),
@@ -472,14 +471,14 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('생일 보너스가 지급되었습니다')),
+            const SnackBar(content: Text('Birthday bonus granted')),
           );
           ref.invalidate(todayBirthdayCustomersProvider);
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('오류: $e')),
+            SnackBar(content: Text('Error: $e')),
           );
         }
       }
@@ -489,21 +488,21 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
   void _searchCustomer(BuildContext context, WidgetRef ref) {
     // TODO: 고객 검색 화면으로 이동
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('고객 검색 기능 (구현 예정)')),
+      const SnackBar(content: Text('Customer search (coming soon)')),
     );
   }
 
   void _adjustPoints(BuildContext context, WidgetRef ref) {
     // TODO: 포인트 조정 다이얼로그 표시
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('포인트 조정 기능 (구현 예정)')),
+      const SnackBar(content: Text('Point adjustment (coming soon)')),
     );
   }
 
   void _manageTiers(BuildContext context, WidgetRef ref) {
     // TODO: 등급 관리 화면으로 이동
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('등급 관리 기능 (구현 예정)')),
+      const SnackBar(content: Text('Tier management (coming soon)')),
     );
   }
 
@@ -513,7 +512,7 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('로열티 설정'),
+        title: const Text('Loyalty Settings'),
         content: SizedBox(
           width: 400,
           child: settingsAsync.when(
@@ -522,29 +521,29 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildSettingRow('최소 사용 포인트', settings['min_redeem_points'] ?? '-'),
-                    _buildSettingRow('최대 사용 비율', '${settings['max_redeem_percent'] ?? '-'}%'),
-                    _buildSettingRow('포인트 사용 단위', settings['point_unit'] ?? '-'),
-                    _buildSettingRow('생일 보너스', settings['birthday_bonus_points'] ?? '-'),
+                    _buildSettingRow('Min Redeem Points', settings['min_redeem_points'] ?? '-'),
+                    _buildSettingRow('Max Redeem %', '${settings['max_redeem_percent'] ?? '-'}%'),
+                    _buildSettingRow('Point Unit', settings['point_unit'] ?? '-'),
+                    _buildSettingRow('Birthday Bonus', settings['birthday_bonus_points'] ?? '-'),
                   ],
                 ),
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Text('오류: $err'),
+            error: (err, stack) => Text('Error: $err'),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('닫기'),
+            child: const Text('Close'),
           ),
           ElevatedButton(
             onPressed: () {
               // TODO: 설정 편집 기능
               Navigator.of(context).pop();
             },
-            child: const Text('편집'),
+            child: const Text('Edit'),
           ),
         ],
       ),

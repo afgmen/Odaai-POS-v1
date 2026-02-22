@@ -152,13 +152,13 @@ class _TableLayoutTab extends ConsumerWidget {
           availableCountAsync.when(
             data: (count) => _buildStatBadge('Empty', count, Colors.green),
             loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
           const SizedBox(width: 8),
           occupiedCountAsync.when(
             data: (count) => _buildStatBadge('Occupied', count, Colors.red),
             loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
         ],
       ),
@@ -169,7 +169,7 @@ class _TableLayoutTab extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color, width: 1),
       ),
@@ -240,7 +240,7 @@ class _TableLayoutTab extends ConsumerWidget {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('테이블 ${table.tableNumber} 위치 업데이트'),
+          content: Text('Table ${table.tableNumber} position updated'),
           duration: const Duration(seconds: 1),
         ),
       );
@@ -252,29 +252,29 @@ class _TableLayoutTab extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('테이블 ${table.tableNumber}'),
+        title: Text('Table ${table.tableNumber}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('상태: ${table.status}'),
-            Text('좌석: ${table.seats}명'),
-            Text('위치: (${table.positionX.toInt()}, ${table.positionY.toInt()})'),
+            Text('Status: ${table.status}'),
+            Text('Seats: ${table.seats}'),
+            Text('Position: (${table.positionX.toInt()}, ${table.positionY.toInt()})'),
             if (table.occupiedAt != null)
-              Text('착석 시간: ${_formatTime(table.occupiedAt!)}'),
+              Text('Occupied at: ${_formatTime(table.occupiedAt!)}'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
+            child: const Text('Close'),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _showEditTableDialog(context, ref, table);
             },
-            child: const Text('수정'),
+            child: const Text('Edit'),
           ),
         ],
       ),
@@ -361,18 +361,18 @@ class _TableLayoutTab extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('테이블 ${table.tableNumber} 수정'),
+        title: Text('Edit Table ${table.tableNumber}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: tableNumberController,
-              decoration: const InputDecoration(labelText: '테이블 번호'),
+              decoration: const InputDecoration(labelText: 'Table Number'),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: seatsController,
-              decoration: const InputDecoration(labelText: '좌석 수'),
+              decoration: const InputDecoration(labelText: 'Seats'),
               keyboardType: TextInputType.number,
             ),
           ],
@@ -380,26 +380,26 @@ class _TableLayoutTab extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () async {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('테이블 삭제'),
-                  content: Text('테이블 ${table.tableNumber}를 삭제하시겠습니까?'),
+                  title: const Text('Delete Table'),
+                  content: Text('Delete table ${table.tableNumber}?'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('취소'),
+                      child: const Text('Cancel'),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(context, true),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
-                      child: const Text('삭제'),
+                      child: const Text('Delete'),
                     ),
                   ],
                 ),
@@ -412,12 +412,12 @@ class _TableLayoutTab extends ConsumerWidget {
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('테이블 ${table.tableNumber} 삭제됨')),
+                    SnackBar(content: Text('Table ${table.tableNumber} deleted')),
                   );
                 }
               }
             },
-            child: const Text('삭제', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -434,11 +434,11 @@ class _TableLayoutTab extends ConsumerWidget {
               if (context.mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('테이블 정보 업데이트됨')),
+                  const SnackBar(content: Text('Table info updated')),
                 );
               }
             },
-            child: const Text('저장'),
+            child: const Text('Save'),
           ),
         ],
       ),

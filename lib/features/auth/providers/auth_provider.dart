@@ -3,6 +3,7 @@ import '../../../database/app_database.dart';
 import '../../../database/daos/employees_dao.dart';
 import '../../../providers/database_providers.dart';
 import '../domain/session.dart';
+import '../domain/user_role.dart';
 import '../domain/auth_error.dart';
 import '../utils/pin_hasher.dart';
 import 'audit_logging_provider.dart';
@@ -13,11 +14,7 @@ class AuthState {
   final bool isLoading;
   final AuthError? error;
 
-  AuthState({
-    this.session,
-    this.isLoading = false,
-    this.error,
-  });
+  AuthState({this.session, this.isLoading = false, this.error});
 
   bool get isAuthenticated => session != null && session!.isValid;
 
@@ -75,10 +72,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
         if (attempts >= 5) {
           // 5회 실패 시 1분 잠금
-          _lockoutUntil[employeeId] =
-              DateTime.now().add(const Duration(minutes: 1));
-          throw AuthErrors.accountLocked(
-              duration: const Duration(minutes: 1));
+          _lockoutUntil[employeeId] = DateTime.now().add(
+            const Duration(minutes: 1),
+          );
+          throw AuthErrors.accountLocked(duration: const Duration(minutes: 1));
         }
 
         throw AuthErrors.invalidPin(attemptsLeft: 5 - attempts);
@@ -93,39 +90,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final session = await _employeesDao.getSessionInfo(employeeId);
 
       if (session == null) {
-        throw AuthError(
-          code: 'SYS_001',
-          message: '세션 생성에 실패했습니다.',
-        );
+        throw AuthError(code: 'SYS_001', message: 'Failed to create session.');
       }
 
       // 6. 로그 기록
-      await _ref
-          .read(auditLoggingProvider)
-          .logLogin(employeeId, success: true);
+      await _ref.read(auditLoggingProvider).logLogin(employeeId, success: true);
 
-      state = state.copyWith(
-        session: () => session,
-        isLoading: false,
-      );
+      state = state.copyWith(session: () => session, isLoading: false);
     } on AuthError catch (e) {
       // 로그인 실패 로그 기록
       await _ref
           .read(auditLoggingProvider)
           .logLogin(employeeId, success: false, errorCode: e.code);
 
-      state = state.copyWith(
-        isLoading: false,
-        error: () => e,
-      );
+      state = state.copyWith(isLoading: false, error: () => e);
       rethrow;
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: () => AuthError(
-          code: 'SYS_999',
-          message: '알 수 없는 오류가 발생했습니다: $e',
-        ),
+        error: () =>
+            AuthError(code: 'SYS_999', message: 'An unexpected error occurred: $e'),
       );
       rethrow;
     }
@@ -141,9 +125,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _employeesDao.clearSession(session.employeeId);
 
       // 로그아웃 로그 기록
-      await _ref
-          .read(auditLoggingProvider)
-          .logLogout(session.employeeId);
+      await _ref.read(auditLoggingProvider).logLogout(session.employeeId);
 
       state = AuthState();
     } catch (e) {
@@ -276,15 +258,21 @@ final currentEmployeeProvider = Provider<Employee?>((ref) {
   // Session에서 Employee 객체 생성
   return Employee(
     id: session.employeeId,
+    username: 'user_${session.employeeId}',
     name: session.employeeName,
-    pin: '', // PIN은 보안상 노출하지 않음
-    role: session.role,
-    isActive: true,
-    createdAt: DateTime.now(),
-    pinHash: null,
+    passwordHash: '', // 레거시(미사용)
+    role: session.role.value,
     defaultRole: 'STAFF', // 기본값
     storeScope: 'OWN_STORE', // 기본값
     primaryStoreId: null,
+    pinHash: null,
+    pinChangedAt: null,
+    lastLoginAt: DateTime.now(),
+    sessionToken: null,
+    sessionExpiresAt: null,
+    isActive: true,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
   );
 });
 

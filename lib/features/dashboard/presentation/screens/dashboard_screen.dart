@@ -33,7 +33,7 @@ class DashboardScreen extends ConsumerWidget {
         ),
         body: const Center(
           child: AccessDeniedCard(
-            message: '매출 대시보드를 볼 권한이 없습니다',
+            message: 'No permission to view sales dashboard',
           ),
         ),
       ),
@@ -654,13 +654,6 @@ class _TopSellingSection extends ConsumerWidget {
 }
 
 // ── 유틸리티 ──────────────────────────────────────
-
-String _fmt(double price) {
-  return price.toInt().toString().replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-    (match) => '${match[1]},',
-  );
-}
 
 Color _paymentColor(String method) => switch (method) {
       'cash' => const Color(0xFF03B26C),     // 초록

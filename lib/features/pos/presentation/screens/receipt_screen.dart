@@ -359,14 +359,6 @@ class ReceiptScreen extends ConsumerWidget {
 
 // ── 유틸리티 헬퍼 ──────────────────────────────────
 
-/// 금액 포맷 (천단위 콤마)
-String _formatCurrency(double amount) {
-  return amount.toStringAsFixed(0).replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-    (match) => '${match[1]},',
-  );
-}
-
 /// 날짜·시간 포맷
 String _formatDateTime(DateTime dt) {
   return '${dt.year}-${_p(dt.month)}-${_p(dt.day)} '

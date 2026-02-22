@@ -34,7 +34,7 @@ class SalesHistoryScreen extends ConsumerWidget {
         ),
         body: const Center(
           child: AccessDeniedCard(
-            message: '주문 내역을 볼 권한이 없습니다',
+            message: 'No permission to view order history',
           ),
         ),
       ),
@@ -151,7 +151,7 @@ class _SalesHistoryContent extends ConsumerWidget {
                                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textSecondary),
                               ),
                               Text(
-                                '${l10n.total} ₩${_fmt(dayTotal)}',
+                                '${l10n.total} ₫${_fmt(dayTotal)}',
                                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.primary),
                               ),
                             ],
@@ -277,7 +277,7 @@ class _SaleCard extends StatelessWidget {
 
             // 우측: 금액
             Text(
-              '₩${_fmt(sale.total)}',
+              '₫${_fmt(sale.total)}',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,

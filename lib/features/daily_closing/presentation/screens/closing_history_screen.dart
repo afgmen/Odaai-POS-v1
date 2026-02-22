@@ -101,7 +101,7 @@ class _ClosingHistoryCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final currencyFormat =
-        NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
+        NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
     final dateFormat = DateFormat('yyyy-MM-dd');
 
     final hasCashDifference = closing.actualCash != null &&
@@ -275,7 +275,7 @@ class _ClosingHistoryCard extends ConsumerWidget {
   void _showDetailDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final currencyFormat =
-        NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
+        NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
 
     showDialog(

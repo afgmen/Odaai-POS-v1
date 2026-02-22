@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart';
 import '../../../database/app_database.dart';
-import '../../../database/tables/permission_logs.dart';
 import '../../../providers/database_providers.dart';
 import '../data/permission_logs_dao.dart';
 

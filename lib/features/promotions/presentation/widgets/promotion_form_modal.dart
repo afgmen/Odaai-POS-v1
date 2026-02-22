@@ -102,7 +102,7 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
 
               // 프로모션 타입
               DropdownButtonFormField<String>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 decoration: InputDecoration(labelText: l10n.promotionTypeLabel),
                 items: [
                   DropdownMenuItem(value: 'buy1get1', child: Text(l10n.typeBogo)),
@@ -252,7 +252,7 @@ class _ProductSelector extends ConsumerWidget {
     return productsAsync.when(
       data: (products) {
         return DropdownButtonFormField<Product?>(
-          value: selectedProduct,
+          initialValue: selectedProduct,
           decoration: InputDecoration(
             labelText: l10n.targetProduct,
             hintText: l10n.allProducts,
@@ -265,7 +265,7 @@ class _ProductSelector extends ConsumerWidget {
         );
       },
       loading: () => const CircularProgressIndicator(),
-      error: (_, __) => Text(l10n.productLoadFailed),
+      error: (_, _) => Text(l10n.productLoadFailed),
     );
   }
 }

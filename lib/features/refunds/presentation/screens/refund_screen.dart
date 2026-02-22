@@ -111,7 +111,7 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '₩${currencyFormat.format(_foundSale!.total.toInt())} · ${_foundSale!.paymentMethod}',
+                        '₫${currencyFormat.format(_foundSale!.total.toInt())} · ${_foundSale!.paymentMethod}',
                         style: const TextStyle(color: AppTheme.textSecondary),
                       ),
                       Text(
@@ -201,7 +201,7 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                       title: Text('#${r.originalSaleNumber}'),
                       subtitle: Text('${r.refundType == 'full' ? l10n.fullRefundType : l10n.partialRefundType} · ${r.reason ?? '-'}'),
                       trailing: Text(
-                        '-₩${currencyFormat.format(r.refundAmount.toInt())}',
+                        '-₫${currencyFormat.format(r.refundAmount.toInt())}',
                         style: const TextStyle(color: AppTheme.error, fontWeight: FontWeight.w700),
                       ),
                     ),
@@ -266,7 +266,7 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
     final db = ref.read(databaseProvider);
 
     // 환불 기록 생성
-    final refundId = await dao.createRefund(RefundsCompanion.insert(
+    await dao.createRefund(RefundsCompanion.insert(
       originalSaleId: _foundSale!.id,
       originalSaleNumber: _foundSale!.saleNumber,
       refundAmount: _foundSale!.total,
@@ -387,7 +387,7 @@ class _RefundItemRow extends StatelessWidget {
               children: [
                 Text(item.productName, style: const TextStyle(fontWeight: FontWeight.w500)),
                 Text(
-                  '₩${currencyFormat.format(item.unitPrice.toInt())} x ${item.quantity}',
+                  '₫${currencyFormat.format(item.unitPrice.toInt())} x ${item.quantity}',
                   style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
               ],

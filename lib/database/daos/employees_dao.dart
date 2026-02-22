@@ -15,14 +15,15 @@ class EmployeesDao extends DatabaseAccessor<AppDatabase>
 
   /// 직원 조회
   Future<Employee?> getEmployee(int id) {
-    return (select(employees)..where((e) => e.id.equals(id)))
-        .getSingleOrNull();
+    return (select(employees)..where((e) => e.id.equals(id))).getSingleOrNull();
   }
+
+  /// Alias: 직원 조회 (by id)
+  Future<Employee?> getEmployeeById(int id) => getEmployee(id);
 
   /// 모든 직원 조회
   Future<List<Employee>> getAllEmployees() {
-    return (select(employees)..where((e) => e.isActive.equals(true)))
-        .get();
+    return (select(employees)..where((e) => e.isActive.equals(true))).get();
   }
 
   /// 직원 생성
@@ -32,9 +33,9 @@ class EmployeesDao extends DatabaseAccessor<AppDatabase>
 
   /// 직원 업데이트
   Future<bool> updateEmployee(int id, EmployeesCompanion updates) {
-    return (update(employees)..where((e) => e.id.equals(id)))
-        .write(updates)
-        .then((rows) => rows > 0);
+    return (update(
+      employees,
+    )..where((e) => e.id.equals(id))).write(updates).then((rows) => rows > 0);
   }
 
   // ============================================================
@@ -135,9 +136,9 @@ class EmployeesDao extends DatabaseAccessor<AppDatabase>
   /// [token] 세션 토큰
   /// Returns: 세션 객체 (없으면 null)
   Future<Session?> getSessionByToken(String token) async {
-    final employee = await (select(employees)
-          ..where((e) => e.sessionToken.equals(token)))
-        .getSingleOrNull();
+    final employee = await (select(
+      employees,
+    )..where((e) => e.sessionToken.equals(token))).getSingleOrNull();
 
     if (employee == null) return null;
 
@@ -148,9 +149,7 @@ class EmployeesDao extends DatabaseAccessor<AppDatabase>
   ///
   /// [employeeId] 직원 ID
   Future<void> updateSessionActivity(int employeeId) async {
-    final updates = EmployeesCompanion(
-      lastLoginAt: Value(DateTime.now()),
-    );
+    final updates = EmployeesCompanion(lastLoginAt: Value(DateTime.now()));
 
     await updateEmployee(employeeId, updates);
   }
@@ -171,9 +170,7 @@ class EmployeesDao extends DatabaseAccessor<AppDatabase>
   ///
   /// [employeeId] 직원 ID
   Future<void> updateLastLogin(int employeeId) async {
-    final updates = EmployeesCompanion(
-      lastLoginAt: Value(DateTime.now()),
-    );
+    final updates = EmployeesCompanion(lastLoginAt: Value(DateTime.now()));
 
     await updateEmployee(employeeId, updates);
   }

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -17,6 +16,7 @@ import '../providers/image_providers.dart';
 import '../widgets/delete_confirmation_dialog.dart';
 import '../widgets/product_form_modal.dart';
 import '../widgets/stock_adjustment_modal.dart';
+import '../../../delivery/presentation/widgets/menu_sync_button.dart';
 
 /// 상품관리 메인 화면
 class ProductManagementScreen extends ConsumerStatefulWidget {
@@ -50,6 +50,13 @@ class _ProductManagementScreenState extends ConsumerState<ProductManagementScree
           child: Container(height: 1, color: AppTheme.divider),
         ),
         actions: [
+          // ── Sync menu to delivery platforms ──
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: MenuSyncButton(
+              products: productsAsync.valueOrNull ?? [],
+            ),
+          ),
           // ── 엑셀 업로드 / 다운로드 드롭다운 ──
           Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -965,11 +972,4 @@ class _ProductImage extends StatelessWidget {
       return null;
     }
   }
-}
-
-String _formatPrice(double price) {
-  return price.toInt().toString().replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-    (match) => '${match[1]},',
-  );
 }

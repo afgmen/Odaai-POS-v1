@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import 'package:drift/drift.dart';
 import '../../../../database/app_database.dart';
 import '../permission_error.dart';
 import 'permission_service.dart';
@@ -37,7 +38,9 @@ class RolePermissionService {
     }
 
     // Get permission from database
-    final permission = await _db.permissionsDao.getPermissionByName(permissionName);
+    final permission = await _db.permissionsDao.getPermissionByName(
+      permissionName,
+    );
     if (permission == null) {
       throw PermissionError(
         code: 'PERMISSION_NOT_FOUND',
@@ -46,7 +49,10 @@ class RolePermissionService {
     }
 
     // Get current value (if exists)
-    final existing = await _db.rolePermissionsDao.getRolePermission(role, permission.id);
+    final existing = await _db.rolePermissionsDao.getRolePermission(
+      role,
+      permission.id,
+    );
     final oldValue = existing?.isEnabled ?? false;
 
     // Update or insert
@@ -65,7 +71,7 @@ class RolePermissionService {
           id: const Uuid().v4(),
           role: role,
           permissionId: permission.id,
-          isEnabled: enabled,
+          isEnabled: Value(enabled),
           updatedBy: actorId,
         ),
       );
@@ -95,7 +101,9 @@ class RolePermissionService {
     final allPermissions = await _db.permissionsDao.getAllPermissions();
 
     // Get role's current permission settings
-    final rolePermissions = await _db.rolePermissionsDao.getRolePermissions(role);
+    final rolePermissions = await _db.rolePermissionsDao.getRolePermissions(
+      role,
+    );
 
     // Create map with all permissions and their status
     final result = <String, bool>{};
@@ -113,7 +121,9 @@ class RolePermissionService {
   /// Get permissions grouped by module for a role
   ///
   /// Returns a map of module name → {permission name → enabled status}
-  Future<Map<String, Map<String, bool>>> getRolePermissionsByModule(String role) async {
+  Future<Map<String, Map<String, bool>>> getRolePermissionsByModule(
+    String role,
+  ) async {
     final permissions = await getRolePermissions(role);
 
     final grouped = <String, Map<String, bool>>{};

@@ -17,7 +17,7 @@ final loyaltyDaoProvider = Provider<LoyaltyDao>((ref) {
 /// 로열티 비즈니스 로직
 class LoyaltyService {
   final LoyaltyDao _dao;
-  AppDatabase get _db => _dao.attachedDatabase as AppDatabase;
+  AppDatabase get _db => _dao.attachedDatabase;
 
   LoyaltyService(this._dao);
 
@@ -41,7 +41,7 @@ class LoyaltyService {
       final pointsToEarn = (saleAmount * finalRate).floor();
 
       if (pointsToEarn <= 0) {
-        return PointEarnResult(success: false, message: '적립 포인트가 0입니다');
+        return PointEarnResult(success: false, message: 'Points to earn is 0');
       }
 
       // 4. 포인트 적립
@@ -52,7 +52,7 @@ class LoyaltyService {
       await _dao.earnPoints(
         customerId: customerId,
         amount: pointsToEarn,
-        description: '구매 적립 (판매 #$saleId)',
+        description: 'Purchase earn (sale #$saleId)',
         saleId: saleId,
         employeeId: employeeId,
         metadata: metadata,
@@ -72,7 +72,7 @@ class LoyaltyService {
         newTierCode: wasUpgraded ? (await _dao.getCustomerTier(customerId)).tierCode : null,
       );
     } catch (e) {
-      return PointEarnResult(success: false, message: '적립 실패: $e');
+      return PointEarnResult(success: false, message: 'Earn failed: $e');
     }
   }
 
@@ -96,21 +96,21 @@ class LoyaltyService {
       if (pointsToUse < minPoints) {
         return PointRedeemValidation(
           isValid: false,
-          message: '최소 ${minPoints}P 이상 사용 가능합니다',
+          message: 'Minimum ${minPoints}P required',
         );
       }
 
       if (pointsToUse > customerPoints) {
         return PointRedeemValidation(
           isValid: false,
-          message: '보유 포인트가 부족합니다 (보유: ${customerPoints}P)',
+          message: 'Insufficient points (balance: ${customerPoints}P)',
         );
       }
 
       if (pointsToUse % pointUnit != 0) {
         return PointRedeemValidation(
           isValid: false,
-          message: '${pointUnit}P 단위로 사용 가능합니다',
+          message: 'Must use in multiples of ${pointUnit}P',
         );
       }
 
@@ -118,7 +118,7 @@ class LoyaltyService {
       if (pointsToUse > maxAllowedPoints) {
         return PointRedeemValidation(
           isValid: false,
-          message: '결제 금액의 ${maxPercent}%까지 사용 가능합니다 (최대: ${maxAllowedPoints}P)',
+          message: 'Up to $maxPercent% of total allowed (max: ${maxAllowedPoints}P)',
         );
       }
 
@@ -127,7 +127,7 @@ class LoyaltyService {
         discountAmount: pointsToUse.toDouble(), // 1P = 1원
       );
     } catch (e) {
-      return PointRedeemValidation(isValid: false, message: '검증 실패: $e');
+      return PointRedeemValidation(isValid: false, message: 'Validation failed: $e');
     }
   }
 
@@ -142,13 +142,13 @@ class LoyaltyService {
       final success = await _dao.redeemPoints(
         customerId: customerId,
         amount: pointsToUse,
-        description: '구매 사용 (판매 #$saleId)',
+        description: 'Purchase redeem (sale #$saleId)',
         saleId: saleId,
         employeeId: employeeId,
       );
 
       if (!success) {
-        return PointRedeemResult(success: false, message: '포인트 사용 실패');
+        return PointRedeemResult(success: false, message: 'Point redemption failed');
       }
 
       final newBalance = await _getCustomerPoints(customerId);
@@ -159,7 +159,7 @@ class LoyaltyService {
         newBalance: newBalance,
       );
     } catch (e) {
-      return PointRedeemResult(success: false, message: '사용 실패: $e');
+      return PointRedeemResult(success: false, message: 'Redeem failed: $e');
     }
   }
 
@@ -171,7 +171,7 @@ class LoyaltyService {
     await _dao.earnPoints(
       customerId: customerId,
       amount: bonusPoints,
-      description: '생일 축하 보너스',
+      description: 'Birthday bonus',
       employeeId: employeeId,
     );
   }

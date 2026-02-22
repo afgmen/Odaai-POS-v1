@@ -192,7 +192,7 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
             // 상태 (수정 모드일 때만)
             if (isEditMode)
               DropdownButtonFormField<String>(
-                value: _selectedStatus,
+                initialValue: _selectedStatus,
                 decoration: InputDecoration(
                   labelText: l10n.status,
                   border: const OutlineInputBorder(),
@@ -228,7 +228,7 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
                 labelText: l10n.specialRequestsOptional,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.notes),
-                hintText: '예: 창가 자리 선호, 유아 의자 필요',
+                hintText: 'e.g. Window seat preferred, high chair needed',
               ),
               maxLines: 3,
             ),
@@ -255,7 +255,7 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      locale: const Locale('ko', 'KR'),
+      locale: const Locale('vi', 'VN'),
     );
 
     if (picked != null) {

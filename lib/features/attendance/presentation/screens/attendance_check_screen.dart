@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../database/app_database.dart';
 import '../../../../features/auth/providers/auth_provider.dart';
 import '../../domain/services/attendance_service.dart';
 
@@ -29,7 +30,7 @@ class _AttendanceCheckScreenState
   Future<void> _handleCheckIn() async {
     final employee = ref.read(currentEmployeeProvider);
     if (employee == null) {
-      _showErrorDialog('로그인 정보를 찾을 수 없습니다.');
+      _showErrorDialog('Login information not found.');
       return;
     }
 
@@ -42,7 +43,7 @@ class _AttendanceCheckScreenState
         note: _noteController.text.trim().isEmpty
             ? null
             : _noteController.text.trim(),
-        location: '본사', // TODO: GPS 위치 연동
+        location: 'Main Office', // TODO: GPS integration
       );
 
       if (!mounted) return;
@@ -50,16 +51,16 @@ class _AttendanceCheckScreenState
       if (result.success) {
         _noteController.clear();
         _showSuccessDialog(
-          result.isLate ? '지각 처리되었습니다' : '출근 처리되었습니다',
+          result.isLate ? 'Checked In Late' : 'Checked In',
           result.message ?? '',
         );
-        setState(() {}); // 상태 갱신
+        setState(() {});
       } else {
-        _showErrorDialog(result.message ?? '출근 처리에 실패했습니다.');
+        _showErrorDialog(result.message ?? 'Check-in failed.');
       }
     } catch (e) {
       if (!mounted) return;
-      _showErrorDialog('오류가 발생했습니다: $e');
+      _showErrorDialog('An error occurred: $e');
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -70,7 +71,7 @@ class _AttendanceCheckScreenState
   Future<void> _handleCheckOut() async {
     final employee = ref.read(currentEmployeeProvider);
     if (employee == null) {
-      _showErrorDialog('로그인 정보를 찾을 수 없습니다.');
+      _showErrorDialog('Login information not found.');
       return;
     }
 
@@ -92,16 +93,16 @@ class _AttendanceCheckScreenState
         final hours = (result.totalMinutes ?? 0) ~/ 60;
         final minutes = (result.totalMinutes ?? 0) % 60;
         _showSuccessDialog(
-          result.isEarlyLeave ? '조퇴 처리되었습니다' : '퇴근 처리되었습니다',
-          '총 근무 시간: ${hours}시간 ${minutes}분',
+          result.isEarlyLeave ? 'Early Check-Out' : 'Checked Out',
+          'Total work time: ${hours}h ${minutes}m',
         );
-        setState(() {}); // 상태 갱신
+        setState(() {});
       } else {
-        _showErrorDialog(result.message ?? '퇴근 처리에 실패했습니다.');
+        _showErrorDialog(result.message ?? 'Check-out failed.');
       }
     } catch (e) {
       if (!mounted) return;
-      _showErrorDialog('오류가 발생했습니다: $e');
+      _showErrorDialog('An error occurred: $e');
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -124,7 +125,7 @@ class _AttendanceCheckScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -139,14 +140,14 @@ class _AttendanceCheckScreenState
           children: [
             Icon(Icons.error_outline, color: Colors.red[600]),
             const SizedBox(width: 8),
-            const Text('알림'),
+            const Text('Notice'),
           ],
         ),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -162,14 +163,14 @@ class _AttendanceCheckScreenState
     if (employee == null) {
       return const Scaffold(
         body: Center(
-          child: Text('로그인이 필요합니다.'),
+          child: Text('Please log in.'),
         ),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('출퇴근 관리'),
+        title: const Text('Attendance'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -221,8 +222,8 @@ class _AttendanceCheckScreenState
                     TextField(
                       controller: _noteController,
                       decoration: const InputDecoration(
-                        labelText: '메모 (선택)',
-                        hintText: '출퇴근 메모를 입력하세요',
+                        labelText: 'Note (optional)',
+                        hintText: 'Enter a note for check-in/out',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.note),
                       ),
@@ -252,7 +253,7 @@ class _AttendanceCheckScreenState
     );
   }
 
-  Widget _buildEmployeeCard(employee) {
+  Widget _buildEmployeeCard(Employee employee) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -276,7 +277,7 @@ class _AttendanceCheckScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${employee.name}님',
+                    employee.name,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -285,10 +286,10 @@ class _AttendanceCheckScreenState
                   const SizedBox(height: 4),
                   Text(
                     employee.role == 'admin'
-                        ? '관리자'
+                        ? 'Admin'
                         : employee.role == 'manager'
-                            ? '매니저'
-                            : '직원',
+                            ? 'Manager'
+                            : 'Staff',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],
@@ -305,13 +306,13 @@ class _AttendanceCheckScreenState
 
   Widget _buildCurrentTimeCard() {
     return Card(
-      color: AppTheme.primary.withOpacity(0.1),
+      color: AppTheme.primary.withValues(alpha: 0.1),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             const Text(
-              '현재 시각',
+              'Current Time',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -332,7 +333,7 @@ class _AttendanceCheckScreenState
               },
             ),
             Text(
-              DateFormat('yyyy년 MM월 dd일 (E)', 'ko').format(DateTime.now()),
+              DateFormat('dd/MM/yyyy (E)', 'vi').format(DateTime.now()),
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
@@ -344,7 +345,7 @@ class _AttendanceCheckScreenState
     );
   }
 
-  Widget _buildScheduleCard(schedule) {
+  Widget _buildScheduleCard(WorkSchedule? schedule) {
     if (schedule == null || schedule.shiftType == 'off') {
       return Card(
         color: Colors.orange[50],
@@ -355,7 +356,7 @@ class _AttendanceCheckScreenState
               Icon(Icons.event_busy, color: Colors.orange),
               SizedBox(width: 12),
               Text(
-                '오늘은 휴무일입니다',
+                'Today is a day off',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -378,7 +379,7 @@ class _AttendanceCheckScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  '오늘의 근무 시간',
+                  "Today's Work Hours",
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey,
@@ -400,7 +401,7 @@ class _AttendanceCheckScreenState
     );
   }
 
-  Widget _buildStatusCard(todayLog, bool isCheckedIn, bool isWorking) {
+  Widget _buildStatusCard(AttendanceLog? todayLog, bool isCheckedIn, bool isWorking) {
     Color statusColor;
     IconData statusIcon;
     String statusText;
@@ -409,29 +410,29 @@ class _AttendanceCheckScreenState
     if (!isCheckedIn) {
       statusColor = Colors.grey;
       statusIcon = Icons.pending;
-      statusText = '출근 전';
+      statusText = 'Not Checked In';
       detailText = null;
     } else if (isWorking) {
       statusColor = Colors.green;
       statusIcon = Icons.work;
-      statusText = '근무 중';
-      final checkInTime = DateFormat('HH:mm').format(todayLog.checkInTime);
-      detailText = '출근 시간: $checkInTime';
+      statusText = 'Working';
+      final checkInTime = DateFormat('HH:mm').format(todayLog!.checkInTime);
+      detailText = 'Check-in: $checkInTime';
       if (todayLog.isLate) {
-        detailText += ' (지각)';
+        detailText += ' (Late)';
       }
     } else {
       statusColor = Colors.blue;
       statusIcon = Icons.check_circle;
-      statusText = '퇴근 완료';
-      final checkOutTime = DateFormat('HH:mm').format(todayLog.checkOutTime);
+      statusText = 'Checked Out';
+      final checkOutTime = DateFormat('HH:mm').format(todayLog!.checkOutTime!);
       final hours = (todayLog.totalMinutes ?? 0) ~/ 60;
       final minutes = (todayLog.totalMinutes ?? 0) % 60;
-      detailText = '퇴근 시간: $checkOutTime\n총 근무: ${hours}시간 ${minutes}분';
+      detailText = 'Check-out: $checkOutTime\nTotal: ${hours}h ${minutes}m';
     }
 
     return Card(
-      color: statusColor.withOpacity(0.1),
+      color: statusColor.withValues(alpha: 0.1),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -478,7 +479,7 @@ class _AttendanceCheckScreenState
           Icon(Icons.login, size: 28),
           SizedBox(width: 12),
           Text(
-            '출근하기',
+            'Check In',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -506,7 +507,7 @@ class _AttendanceCheckScreenState
           Icon(Icons.logout, size: 28),
           SizedBox(width: 12),
           Text(
-            '퇴근하기',
+            'Check Out',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -544,21 +545,21 @@ class _AttendanceCheckScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '이번 달 근무 통계 (${now.month}월)',
+                  'This Month\'s Stats (Month ${now.month})',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const Divider(height: 24),
-                _buildStatRow('총 근무', report.formattedTotalWorkTime),
-                _buildStatRow('연장 근무', report.formattedOvertimeWorkTime),
-                _buildStatRow('출근 일수',
-                    '${report.actualWorkDays}일 / ${report.totalWorkDays}일'),
-                _buildStatRow('지각', '${report.lateDays}회', isWarning: true),
-                _buildStatRow('조퇴', '${report.earlyLeaveDays}회',
+                _buildStatRow('Total Work', report.formattedTotalWorkTime),
+                _buildStatRow('Overtime', report.formattedOvertimeWorkTime),
+                _buildStatRow('Work Days',
+                    '${report.actualWorkDays} / ${report.totalWorkDays} days'),
+                _buildStatRow('Late', '${report.lateDays}x', isWarning: true),
+                _buildStatRow('Early Leave', '${report.earlyLeaveDays}x',
                     isWarning: true),
-                _buildStatRow('결근', '${report.absentDays}일',
+                _buildStatRow('Absent', '${report.absentDays} days',
                     isWarning: true),
               ],
             ),
@@ -583,7 +584,7 @@ class _AttendanceCheckScreenState
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: isWarning && value != '0회' && value != '0일'
+              color: isWarning && value != '0x' && value != '0 days'
                   ? Colors.red
                   : Colors.black,
             ),

@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
 // 조건부 import: 플랫폼에 따라 적절한 DB 연결 사용
 import 'connection/unsupported.dart'
@@ -23,6 +23,8 @@ import '../features/tables/data/tables_dao.dart';
 import '../features/tables/data/reservations_dao.dart';
 import '../features/auth/data/permission_logs_dao.dart';
 import '../features/daily_closing/data/daily_closing_dao.dart';
+import '../features/delivery/data/delivery_orders_dao.dart';
+import 'tables/delivery_orders.dart';
 import 'tables/employees.dart';
 import 'tables/products.dart';
 import 'tables/promotions.dart';
@@ -46,6 +48,7 @@ import 'tables/permissions.dart';
 import 'tables/role_permissions.dart';
 import 'tables/user_roles.dart';
 import 'tables/store_assignments.dart';
+import 'tables/system_settings.dart';
 
 part 'app_database.g.dart';
 
@@ -80,6 +83,8 @@ part 'app_database.g.dart';
     RolePermissions,
     UserRoles,
     StoreAssignments,
+    SystemSettings,
+    DeliveryOrders,
   ],
   daos: [
     ProductsDao,
@@ -99,6 +104,7 @@ part 'app_database.g.dart';
     RolePermissionsDao,
     UserRolesDao,
     StoreAssignmentsDao,
+    DeliveryOrdersDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -107,7 +113,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration {
@@ -117,14 +123,46 @@ class AppDatabase extends _$AppDatabase {
         await _seedInitialData();
         await _seedMembershipTiers();
         await _seedLoyaltySettings();
+        await _seedRBACPermissions();
+        await _seedDefaultRolePermissions();
+        await _ensureAdminOwnerRole();
+
+        // ── 핵심 테이블 인덱스 생성 ──
+        // Sales 테이블: 날짜 범위 조회, 상태 필터, 고객/직원 조회 최적화
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_sales_date_status '
+          'ON sales(sale_date DESC, status)'
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_sales_customer '
+          'ON sales(customer_id) WHERE customer_id IS NOT NULL'
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_sales_employee '
+          'ON sales(employee_id) WHERE employee_id IS NOT NULL'
+        );
+
+        // Products 테이블: 카테고리 필터, 바코드/SKU 조회 최적화
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_products_category '
+          'ON products(category)'
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_products_barcode '
+          'ON products(barcode) WHERE barcode IS NOT NULL'
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_products_sku '
+          'ON products(sku)'
+        );
 
         // 포인트 트랜잭션 인덱스 생성
         await customStatement(
-          'CREATE INDEX idx_point_transactions_customer_created '
+          'CREATE INDEX IF NOT EXISTS idx_point_transactions_customer_created '
           'ON point_transactions(customer_id, created_at DESC)'
         );
         await customStatement(
-          'CREATE INDEX idx_point_transactions_sale '
+          'CREATE INDEX IF NOT EXISTS idx_point_transactions_sale '
           'ON point_transactions(sale_id) WHERE sale_id IS NOT NULL'
         );
       },
@@ -176,6 +214,24 @@ class AppDatabase extends _$AppDatabase {
           // v11 → v12: RBAC 시스템 (Role-Based Access Control) 추가
           await _migrateRBACSystem(m);
         }
+        if (from < 13) {
+          // v12 → v13: system_settings 테이블 추가 (RBAC 토글 등)
+          await _migrateSystemSettings(m);
+        }
+        if (from < 14) {
+          // v13 → v14: Employees 테이블 RBAC 컬럼 추가 (camelCase 컬럼명)
+          await _migrateEmployeesRbacColumns();
+        }
+        if (from < 15) {
+          // v14 → v15: Fix CURRENT_TIMESTAMP text values in permissions and system_settings
+          // Drift stores DateTimeColumn as integer epoch seconds, but CURRENT_TIMESTAMP
+          // inserted text like "2026-02-15 00:02:41" causing FormatException on read.
+          await _migrateFixTimestampColumns();
+        }
+        if (from < 16) {
+          // v15 → v16: Delivery orders table for GrabFood / ShopeeFood / manual orders
+          await _safeCreateTable(m, deliveryOrders, 'delivery_orders');
+        }
       },
       beforeOpen: (details) async {
         if (!kIsWeb) {
@@ -183,34 +239,46 @@ class AppDatabase extends _$AppDatabase {
           await customStatement('PRAGMA synchronous = NORMAL');
         }
         await customStatement('PRAGMA foreign_keys = ON');
+
+        // permissions / role_permissions / user_roles 시드 데이터는
+        // INSERT OR IGNORE를 사용하므로 항상 안전하게 실행 가능
+        // (이미 존재하는 행은 건너뜀, 빠진 행만 추가)
+        await _seedRBACPermissions();
+        await _seedDefaultRolePermissions();
+        await _ensureAdminOwnerRole();
       },
     );
   }
 
   /// 컬럼이 이미 존재하면 무시하는 안전한 ALTER TABLE
   Future<void> _safeAddColumn(String table, String column, String type) async {
+    // 컬럼 존재 여부를 먼저 확인하여 불필요한 예외를 방지
+    final result = await customSelect(
+      "SELECT COUNT(*) as cnt FROM pragma_table_info('$table') WHERE name = ?",
+      variables: [Variable.withString(column)],
+    ).getSingle();
+    final exists = (result.data['cnt'] as int) > 0;
+    if (exists) return;
+
     try {
       await customStatement('ALTER TABLE $table ADD COLUMN $column $type');
-    } catch (_) {
-      // 이미 존재하는 경우 무시
+    } catch (e) {
+      // 컬럼 존재 외의 진짜 오류는 로깅
+      debugPrint('[Migration] Failed to add column $column to $table: $e');
     }
   }
 
   /// 테이블이 이미 존재하면 무시하는 안전한 CREATE TABLE
   Future<void> _safeCreateTable(Migrator m, TableInfo table, String tableName) async {
-    try {
-      final result = await customSelect(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-        variables: [Variable.withString(tableName)],
-      ).get();
-      if (result.isEmpty) {
-        await m.createTable(table);
-      }
-    } catch (_) {
+    final result = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+      variables: [Variable.withString(tableName)],
+    ).get();
+    if (result.isEmpty) {
       try {
         await m.createTable(table);
-      } catch (_) {
-        // 이미 존재하는 경우 무시
+      } catch (e) {
+        debugPrint('[Migration] Failed to create table $tableName: $e');
       }
     }
   }
@@ -230,19 +298,15 @@ class AppDatabase extends _$AppDatabase {
     await _safeCreateTable(m, membershipTiers, 'membership_tiers');
     await _safeCreateTable(m, loyaltySettings, 'loyalty_settings');
 
-    // 3. 인덱스 생성
-    try {
-      await customStatement(
-        'CREATE INDEX IF NOT EXISTS idx_point_transactions_customer_created '
-        'ON point_transactions(customer_id, created_at DESC)'
-      );
-      await customStatement(
-        'CREATE INDEX IF NOT EXISTS idx_point_transactions_sale '
-        'ON point_transactions(sale_id) WHERE sale_id IS NOT NULL'
-      );
-    } catch (_) {
-      // 인덱스가 이미 존재하면 무시
-    }
+    // 3. 인덱스 생성 (IF NOT EXISTS로 중복 방지)
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_point_transactions_customer_created '
+      'ON point_transactions(customer_id, created_at DESC)'
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_point_transactions_sale '
+      'ON point_transactions(sale_id) WHERE sale_id IS NOT NULL'
+    );
 
     // 4. 기존 고객 데이터 마이그레이션: 누적 구매액 계산
     try {
@@ -272,8 +336,9 @@ class AppDatabase extends _$AppDatabase {
       await customStatement("UPDATE customers SET membership_tier = 'platinum' WHERE total_spent >= 1000000");
       await customStatement("UPDATE customers SET membership_tier = 'gold' WHERE total_spent >= 500000 AND total_spent < 1000000");
       await customStatement("UPDATE customers SET membership_tier = 'silver' WHERE total_spent >= 100000 AND total_spent < 500000");
-    } catch (_) {
-      // 마이그레이션 실패 시 무시 (새 데이터베이스인 경우)
+    } catch (e) {
+      // 새 데이터베이스이거나 테이블이 아직 없는 경우
+      debugPrint('[Migration v5] Loyalty data migration skipped: $e');
     }
 
     // 6. 멤버십 등급 시드 데이터
@@ -330,8 +395,8 @@ class AppDatabase extends _$AppDatabase {
           ),
         ], mode: InsertMode.insertOrIgnore);
       });
-    } catch (_) {
-      // 이미 존재하는 경우 무시
+    } catch (e) {
+      debugPrint('[Seed] Membership tiers seed skipped: $e');
     }
   }
 
@@ -344,55 +409,55 @@ class AppDatabase extends _$AppDatabase {
             settingKey: 'base_point_rate',
             settingValue: '0.01',
             settingType: 'double',
-            description: const Value('기본 포인트 적립률 (1%)'),
+            description: const Value('Base point earn rate (1%)'),
             category: 'points',
           ),
           LoyaltySettingsCompanion.insert(
             settingKey: 'min_redeem_points',
             settingValue: '1000',
             settingType: 'int',
-            description: const Value('최소 사용 포인트'),
+            description: const Value('Minimum redeemable points'),
             category: 'points',
           ),
           LoyaltySettingsCompanion.insert(
             settingKey: 'max_redeem_percent',
             settingValue: '50',
             settingType: 'int',
-            description: const Value('최대 사용 비율 (%)'),
+            description: const Value('Max redemption ratio (%)'),
             category: 'points',
           ),
           LoyaltySettingsCompanion.insert(
             settingKey: 'point_unit',
             settingValue: '100',
             settingType: 'int',
-            description: const Value('포인트 사용 단위'),
+            description: const Value('Point unit size'),
             category: 'points',
           ),
           LoyaltySettingsCompanion.insert(
             settingKey: 'point_expiry_months',
             settingValue: '0',
             settingType: 'int',
-            description: const Value('포인트 유효기간 (개월, 0=무제한)'),
+            description: const Value('Point expiry (months, 0=unlimited)'),
             category: 'points',
           ),
           LoyaltySettingsCompanion.insert(
             settingKey: 'auto_upgrade_enabled',
             settingValue: 'true',
             settingType: 'bool',
-            description: const Value('자동 등급 승급 활성화'),
+            description: const Value('Enable auto tier upgrade'),
             category: 'membership',
           ),
           LoyaltySettingsCompanion.insert(
             settingKey: 'birthday_bonus_points',
             settingValue: '1000',
             settingType: 'int',
-            description: const Value('생일 보너스 포인트'),
+            description: const Value('Birthday bonus points'),
             category: 'membership',
           ),
         ], mode: InsertMode.insertOrIgnore);
       });
-    } catch (_) {
-      // 이미 존재하는 경우 무시
+    } catch (e) {
+      debugPrint('[Seed] Loyalty settings seed skipped: $e');
     }
   }
 
@@ -401,7 +466,7 @@ class AppDatabase extends _$AppDatabase {
       EmployeesCompanion.insert(
         username: 'admin',
         name: 'Administrator',
-        passwordHash: 'admin123',
+        passwordHash: '', // 레거시 필드 (미사용) — 평문 저장 금지
         role: const Value('MANAGER'),
         pinHash: const Value('e1c30c7b89e49eb8db1d46b4f3e5a73a909036bb4e607f344e4d5e680f085a4d'),
       ),
@@ -459,8 +524,8 @@ class AppDatabase extends _$AppDatabase {
         'CREATE INDEX IF NOT EXISTS idx_backup_logs_status '
         'ON backup_logs(status, created_at DESC)'
       );
-    } catch (_) {
-      // 인덱스가 이미 존재하면 무시
+    } catch (e) {
+      debugPrint('[Migration] Index creation skipped: $e');
     }
 
     // 3. 백업 설정 시드 데이터
@@ -477,28 +542,28 @@ class AppDatabase extends _$AppDatabase {
             settingKey: 'auto_backup_enabled',
             settingValue: 'true',
             settingType: 'bool',
-            description: const Value('자동 백업 활성화'),
+            description: const Value('Enable automatic backup'),
             category: 'schedule',
           ),
           BackupSettingsCompanion.insert(
             settingKey: 'backup_frequency',
             settingValue: 'daily',
             settingType: 'string',
-            description: const Value('백업 주기 (daily/weekly/monthly)'),
+            description: const Value('Backup frequency (daily/weekly/monthly)'),
             category: 'schedule',
           ),
           BackupSettingsCompanion.insert(
             settingKey: 'backup_time',
             settingValue: '02:00',
             settingType: 'time',
-            description: const Value('백업 시간 (HH:mm)'),
+            description: const Value('Backup time (HH:mm)'),
             category: 'schedule',
           ),
           BackupSettingsCompanion.insert(
             settingKey: 'backup_on_close',
             settingValue: 'false',
             settingType: 'bool',
-            description: const Value('앱 종료 시 백업'),
+            description: const Value('Backup on app close'),
             category: 'schedule',
           ),
 
@@ -507,14 +572,14 @@ class AppDatabase extends _$AppDatabase {
             settingKey: 'max_backups_to_keep',
             settingValue: '30',
             settingType: 'int',
-            description: const Value('보관할 최대 백업 수'),
+            description: const Value('Max backups to retain'),
             category: 'storage',
           ),
           BackupSettingsCompanion.insert(
             settingKey: 'local_backup_enabled',
             settingValue: 'true',
             settingType: 'bool',
-            description: const Value('로컬 백업 활성화'),
+            description: const Value('Enable local backup'),
             category: 'storage',
           ),
 
@@ -523,14 +588,14 @@ class AppDatabase extends _$AppDatabase {
             settingKey: 'cloud_backup_enabled',
             settingValue: 'false',
             settingType: 'bool',
-            description: const Value('클라우드 백업 활성화'),
+            description: const Value('Enable cloud backup'),
             category: 'cloud',
           ),
           BackupSettingsCompanion.insert(
             settingKey: 'cloud_auto_upload',
             settingValue: 'true',
             settingType: 'bool',
-            description: const Value('백업 후 자동 업로드'),
+            description: const Value('Auto upload after backup'),
             category: 'cloud',
           ),
 
@@ -539,20 +604,20 @@ class AppDatabase extends _$AppDatabase {
             settingKey: 'encryption_enabled',
             settingValue: 'false',
             settingType: 'bool',
-            description: const Value('백업 암호화 활성화'),
+            description: const Value('Enable backup encryption'),
             category: 'security',
           ),
           BackupSettingsCompanion.insert(
             settingKey: 'compression_enabled',
             settingValue: 'true',
             settingType: 'bool',
-            description: const Value('백업 압축 활성화'),
+            description: const Value('Enable backup compression'),
             category: 'security',
           ),
         ], mode: InsertMode.insertOrIgnore);
       });
-    } catch (_) {
-      // 이미 존재하는 경우 무시
+    } catch (e) {
+      debugPrint('[Migration] Seed data skipped: $e');
     }
   }
 
@@ -591,8 +656,8 @@ class AppDatabase extends _$AppDatabase {
         'CREATE INDEX IF NOT EXISTS idx_work_schedules_employee '
         'ON work_schedules(employee_id, day_of_week)'
       );
-    } catch (_) {
-      // 인덱스가 이미 존재하면 무시
+    } catch (e) {
+      debugPrint('[Migration] Index creation skipped: $e');
     }
 
     // 3. 초기 데이터 시딩
@@ -678,8 +743,8 @@ class AppDatabase extends _$AppDatabase {
           }
         }
       });
-    } catch (_) {
-      // 마이그레이션 실패 시 무시 (새 데이터베이스인 경우)
+    } catch (e) {
+      debugPrint('[Migration] Leave balance seed skipped: $e');
     }
   }
 
@@ -707,8 +772,8 @@ class AppDatabase extends _$AppDatabase {
         'CREATE INDEX IF NOT EXISTS idx_kitchen_orders_created '
         'ON kitchen_orders(created_at DESC)'
       );
-    } catch (_) {
-      // 인덱스가 이미 존재하면 무시
+    } catch (e) {
+      debugPrint('[Migration] Index creation skipped: $e');
     }
   }
 
@@ -745,8 +810,8 @@ class AppDatabase extends _$AppDatabase {
         'CREATE INDEX IF NOT EXISTS idx_reservations_customer_phone '
         'ON reservations(customer_phone)'
       );
-    } catch (_) {
-      // 인덱스가 이미 존재하면 무시
+    } catch (e) {
+      debugPrint('[Migration] Index creation skipped: $e');
     }
 
     // 4. 기본 테이블 시드 데이터 (선택 사항)
@@ -785,8 +850,8 @@ class AppDatabase extends _$AppDatabase {
           );
         }
       });
-    } catch (_) {
-      // 이미 존재하는 경우 무시
+    } catch (e) {
+      debugPrint('[Migration] Seed data skipped: $e');
     }
   }
 
@@ -812,8 +877,8 @@ class AppDatabase extends _$AppDatabase {
           ELSE 'CASHIER'
         END
       ''');
-    } catch (_) {
-      // 업데이트 실패 시 무시
+    } catch (e) {
+      debugPrint('[Migration] Data update skipped: $e');
     }
 
     // 3. 권한 로그 테이블 생성
@@ -833,8 +898,8 @@ class AppDatabase extends _$AppDatabase {
         'CREATE INDEX IF NOT EXISTS idx_permission_logs_action '
         'ON permission_logs(action_type)'
       );
-    } catch (_) {
-      // 인덱스가 이미 존재하면 무시
+    } catch (e) {
+      debugPrint('[Migration] Index creation skipped: $e');
     }
 
     // 5. 첫 번째 직원을 관리자로 설정 (기본 관리자 계정 생성)
@@ -850,8 +915,8 @@ class AppDatabase extends _$AppDatabase {
           WHERE id = ?
         ''', [firstEmployee.data['id']]);
       }
-    } catch (_) {
-      // 직원이 없거나 업데이트 실패 시 무시
+    } catch (e) {
+      debugPrint('[Migration] Employee update skipped: $e');
     }
   }
 
@@ -879,8 +944,8 @@ class AppDatabase extends _$AppDatabase {
         'CREATE INDEX IF NOT EXISTS idx_daily_closings_closed_at '
         'ON daily_closings(closed_at DESC)'
       );
-    } catch (_) {
-      // 인덱스가 이미 존재하면 무시
+    } catch (e) {
+      debugPrint('[Migration] Index creation skipped: $e');
     }
   }
 
@@ -893,19 +958,19 @@ class AppDatabase extends _$AppDatabase {
     await _safeCreateTable(m, storeAssignments, 'store_assignments');
 
     // 2. Employees 테이블에 RBAC 필드 추가
-    await _safeAddColumn('employees', 'default_role', 'TEXT NOT NULL DEFAULT \'STAFF\'');
-    await _safeAddColumn('employees', 'store_scope', 'TEXT NOT NULL DEFAULT \'OWN_STORE\'');
-    await _safeAddColumn('employees', 'primary_store_id', 'TEXT NULL');
+    await _safeAddColumn('employees', 'defaultRole', "TEXT NOT NULL DEFAULT 'STAFF'");
+    await _safeAddColumn('employees', 'storeScope', "TEXT NOT NULL DEFAULT 'OWN_STORE'");
+    await _safeAddColumn('employees', 'primaryStoreId', 'TEXT NULL');
 
     // 3. RBAC 기본 설정 추가 (기본값: 비활성화로 후방 호환성 유지)
     try {
       // Note: system_settings 테이블이 존재한다고 가정
       await customStatement(
         "INSERT OR IGNORE INTO system_settings (key, value, updated_at) "
-        "VALUES ('rbac_enabled', 'false', CURRENT_TIMESTAMP)"
+        "VALUES ('rbac_enabled', 'false', CAST(strftime('%s', 'now') AS INTEGER))"
       );
-    } catch (_) {
-      // system_settings 테이블이 없으면 무시 (나중에 수동 추가)
+    } catch (e) {
+      debugPrint('[Migration] System settings seed skipped: $e');
     }
 
     // 4. 기존 직원 역할 마이그레이션
@@ -924,12 +989,16 @@ class AppDatabase extends _$AppDatabase {
           ELSE 'OWN_STORE'
         END
       ''');
-    } catch (_) {
-      // 업데이트 실패 시 무시
+    } catch (e) {
+      debugPrint('[Migration] Data update skipped: $e');
     }
 
     // 5. 권한 시드 데이터 삽입
     await _seedRBACPermissions();
+
+    // 5b. 역할별 기본 권한 시드 및 admin OWNER 지정
+    await _seedDefaultRolePermissions();
+    await _ensureAdminOwnerRole();
 
     // 6. 인덱스 생성
     try {
@@ -945,8 +1014,56 @@ class AppDatabase extends _$AppDatabase {
         'CREATE INDEX IF NOT EXISTS idx_store_assignments_user '
         'ON store_assignments(user_id)'
       );
-    } catch (_) {
-      // 인덱스가 이미 존재하면 무시
+    } catch (e) {
+      debugPrint('[Migration] Index creation skipped: $e');
+    }
+  }
+
+  /// v12 → v13 마이그레이션: system_settings 테이블
+  Future<void> _migrateSystemSettings(Migrator m) async {
+    await _safeCreateTable(m, systemSettings, 'system_settings');
+
+    // 기본 설정들 (없으면 생성)
+    try {
+      await customStatement(
+        "INSERT OR IGNORE INTO system_settings (key, value, updated_at) VALUES ('rbac_enabled', 'false', CAST(strftime('%s', 'now') AS INTEGER))"
+      );
+    } catch (e) {
+      debugPrint('[Migration] RBAC settings seed skipped: $e');
+    }
+  }
+
+  Future<void> _migrateEmployeesRbacColumns() async {
+    // Drift 테이블 정의(Employees)가 camelCase 컬럼명을 사용하고 있어
+    // 실제 SQLite 컬럼명도 동일하게 맞춰준다.
+    await _safeAddColumn('employees', 'defaultRole', "TEXT NOT NULL DEFAULT 'STAFF'");
+    await _safeAddColumn('employees', 'storeScope', "TEXT NOT NULL DEFAULT 'OWN_STORE'");
+    await _safeAddColumn('employees', 'primaryStoreId', 'TEXT NULL');
+  }
+
+  /// v14 → v15: Fix corrupt text timestamps in permissions and system_settings tables.
+  /// CURRENT_TIMESTAMP inserts text like "2026-02-15 00:02:41", but Drift expects integer epoch seconds.
+  Future<void> _migrateFixTimestampColumns() async {
+    try {
+      // Fix permissions.created_at: convert text timestamps to epoch seconds
+      await customStatement('''
+        UPDATE permissions
+        SET created_at = CAST(strftime('%s', created_at) AS INTEGER)
+        WHERE typeof(created_at) = 'text'
+      ''');
+    } catch (e) {
+      debugPrint('[Migration v15] Fix permissions timestamps: $e');
+    }
+
+    try {
+      // Fix system_settings.updated_at: convert text timestamps to epoch seconds
+      await customStatement('''
+        UPDATE system_settings
+        SET updated_at = CAST(strftime('%s', updated_at) AS INTEGER)
+        WHERE typeof(updated_at) = 'text'
+      ''');
+    } catch (e) {
+      debugPrint('[Migration v15] Fix system_settings timestamps: $e');
     }
   }
 
@@ -979,22 +1096,25 @@ class AppDatabase extends _$AppDatabase {
         ['revenue.monthly.view', 'revenue', 'View monthly revenue', 1],
         ['revenue.multistore.view', 'revenue', 'View multi-store revenue', 1],
         ['revenue.export', 'revenue', 'Export revenue reports', 1],
+        ['revenue.pnl.view', 'revenue', 'View P&L statement', 1],
 
         // Staff Module
         ['staff.view', 'staff', 'View staff list', 0],
         ['staff.manage', 'staff', 'Add/edit/delete staff', 0],
+        ['staff.role.assign', 'staff', 'Assign roles to staff', 0],
 
         // Settings Module
-        ['settings.store.edit', 'settings', 'Edit store settings', 0],
-        ['settings.tax.edit', 'settings', 'Edit tax settings', 0],
-        ['settings.payment.edit', 'settings', 'Edit payment settings', 0],
+        ['settings.store.edit', 'settings', 'Edit store settings', 1],
+        ['settings.tax.edit', 'settings', 'Edit tax settings', 1],
+        ['settings.payment.edit', 'settings', 'Edit payment settings', 1],
+        ['settings.integration.edit', 'settings', 'Edit integration settings', 1],
       ];
 
       for (var i = 0; i < permissionsList.length; i++) {
         final perm = permissionsList[i];
         await customStatement(
           "INSERT OR IGNORE INTO permissions (id, name, module, description, is_sensitive, created_at) "
-          "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
+          "VALUES (?, ?, ?, ?, ?, CAST(strftime('%s', 'now') AS INTEGER))",
           [
             'perm_${i + 1}', // Simple ID for seeding
             perm[0], // name
@@ -1009,7 +1129,118 @@ class AppDatabase extends _$AppDatabase {
       // 또는 별도의 초기화 함수에서 처리
     } catch (e) {
       // 시드 데이터 삽입 실패 시 무시 (이미 존재하거나 다른 오류)
-      print('RBAC seed data insertion failed: $e');
+      debugPrint('RBAC seed data insertion failed: $e');
+    }
+  }
+
+  /// 역할별 기본 권한 시드 데이터
+  ///
+  /// - OWNER: 모든 권한 활성화
+  /// - AREA_MANAGER: 매출/재고/직원 관리, 설정 제외
+  /// - STORE_MANAGER: 매출 조회, 재고 관리, 직원 조회
+  /// - STAFF: POS, 주문 생성/조회만
+  Future<void> _seedDefaultRolePermissions() async {
+    try {
+      // 현재 permissions 목록 조회
+      final perms = await customSelect(
+        'SELECT id, name FROM permissions',
+      ).get();
+
+      if (perms.isEmpty) {
+        debugPrint('[Seed] No permissions found, skipping role_permissions seed');
+        return;
+      }
+
+      // 첫 번째 직원 ID (updated_by 필드용)
+      final firstEmployee = await customSelect(
+        'SELECT id FROM employees ORDER BY id LIMIT 1',
+      ).getSingleOrNull();
+      final systemUserId = firstEmployee?.data['id'] as int? ?? 1;
+
+      // 역할별 허용 권한 목록 정의 (null = 모든 권한)
+      const Set<String>? ownerPermissions = null;
+      const areaManagerPermissions = {
+        'pos.open', 'pos.refund', 'pos.discount', 'pos.price.override', 'pos.cash.drawer.open',
+        'order.create', 'order.cancel', 'order.view',
+        'inventory.view', 'inventory.edit', 'inventory.adjust', 'inventory.writeoff',
+        'revenue.dashboard.view', 'revenue.daily.view', 'revenue.weekly.view',
+        'revenue.monthly.view', 'revenue.multistore.view', 'revenue.export',
+        'staff.view', 'staff.manage', 'staff.role.assign',
+      };
+      const storeManagerPermissions = {
+        'pos.open', 'pos.refund', 'pos.discount', 'pos.cash.drawer.open',
+        'order.create', 'order.cancel', 'order.view',
+        'inventory.view', 'inventory.edit', 'inventory.adjust',
+        'revenue.dashboard.view', 'revenue.daily.view', 'revenue.weekly.view',
+        'staff.view',
+      };
+      const staffPermissions = {
+        'pos.open',
+        'order.create', 'order.view',
+        'inventory.view',
+      };
+
+      final roles = <(String, Set<String>?)>[
+        ('OWNER', ownerPermissions),
+        ('AREA_MANAGER', areaManagerPermissions),
+        ('STORE_MANAGER', storeManagerPermissions),
+        ('STAFF', staffPermissions),
+      ];
+
+      int idx = 0;
+      for (final (role, allowedPerms) in roles) {
+        for (final perm in perms) {
+          final permName = perm.data['name'] as String;
+          final permId = perm.data['id'] as String;
+          // OWNER는 모두 활성화, 나머지는 허용 목록에 있는 것만
+          final isEnabled = allowedPerms == null || allowedPerms.contains(permName);
+          final rpId = 'rp_${role}_$permId';
+          await customStatement(
+            "INSERT OR IGNORE INTO role_permissions "
+            "(id, role, permission_id, is_enabled, updated_at, updated_by) "
+            "VALUES (?, ?, ?, ?, CAST(strftime('%s', 'now') AS INTEGER), ?)",
+            [rpId, role, permId, isEnabled ? 1 : 0, systemUserId],
+          );
+          idx++;
+        }
+      }
+
+      debugPrint('[Seed] Default role_permissions seeded: $idx entries for 4 roles');
+    } catch (e) {
+      debugPrint('[Seed] role_permissions seed failed: $e');
+    }
+  }
+
+  /// 첫 번째 직원(admin)에게 OWNER role을 부여 (user_roles에 없을 경우)
+  Future<void> _ensureAdminOwnerRole() async {
+    try {
+      // 첫 번째 직원 조회
+      final firstEmployee = await customSelect(
+        'SELECT id FROM employees ORDER BY id LIMIT 1',
+      ).getSingleOrNull();
+
+      if (firstEmployee == null) return;
+
+      final adminId = firstEmployee.data['id'] as int;
+
+      // 이미 user_roles에 있으면 스킵
+      final existing = await customSelect(
+        'SELECT id FROM user_roles WHERE user_id = ?',
+        variables: [Variable.withInt(adminId)],
+      ).getSingleOrNull();
+
+      if (existing != null) return;
+
+      // OWNER role 부여 (user_roles: id, user_id, role, scope, assigned_at, assigned_by)
+      await customStatement(
+        "INSERT OR IGNORE INTO user_roles (id, user_id, role, scope, assigned_at, assigned_by) "
+        "VALUES (?, ?, 'OWNER', 'ALL_STORES', CAST(strftime('%s', 'now') AS INTEGER), ?)",
+        ['ur_admin_owner', adminId, adminId],
+      );
+
+      debugPrint('[Seed] OWNER role assigned to admin (employee #$adminId)');
+    } catch (e) {
+      debugPrint('[Seed] Admin owner role seed failed: $e');
     }
   }
 }

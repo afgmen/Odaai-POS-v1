@@ -14,7 +14,7 @@ final pdfExportServiceProvider = Provider<PdfExportService>((ref) {
 
 /// PDF 리포트 생성 서비스
 class PdfExportService {
-  final currencyFormat = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
+  final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
   final dateFormat = DateFormat('yyyy-MM-dd');
   final timeFormat = DateFormat('HH:mm');
 
@@ -32,11 +32,11 @@ class PdfExportService {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // 제목
+              // Title
               pw.Header(
                 level: 0,
                 child: pw.Text(
-                  '일일 마감 리포트',
+                  'Daily Closing Report',
                   style: pw.TextStyle(
                     fontSize: 24,
                     fontWeight: pw.FontWeight.bold,
@@ -45,23 +45,23 @@ class PdfExportService {
               ),
               pw.SizedBox(height: 20),
 
-              // 마감 정보
+              // Closing info
               _buildInfoSection(closing, employee),
               pw.SizedBox(height: 20),
 
-              // 매출 요약
+              // Sales summary
               _buildSalesSummary(closing),
               pw.SizedBox(height: 20),
 
-              // 결제 수단별 매출
+              // Payment breakdown
               _buildPaymentBreakdown(closing),
               pw.SizedBox(height: 20),
 
-              // 시재 관리
+              // Cash reconciliation
               if (closing.actualCash != null)
                 _buildCashReconciliation(closing),
 
-              // 특이사항
+              // Notes
               if (closing.notes != null && closing.notes!.isNotEmpty) ...[
                 pw.SizedBox(height: 20),
                 _buildNotes(closing),
@@ -69,7 +69,7 @@ class PdfExportService {
 
               pw.Spacer(),
 
-              // 서명란
+              // Signature section
               _buildSignatureSection(employee),
             ],
           );
@@ -77,7 +77,7 @@ class PdfExportService {
       ),
     );
 
-    // 파일 저장
+    // Save file
     final directory = await getApplicationDocumentsDirectory();
     final fileName = 'closing_${dateFormat.format(closing.closingDate)}.pdf';
     final file = File('${directory.path}/$fileName');
@@ -86,7 +86,7 @@ class PdfExportService {
     return file;
   }
 
-  /// 정보 섹션
+  /// Info section
   pw.Widget _buildInfoSection(DailyClosing closing, Employee? employee) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(10),
@@ -97,64 +97,64 @@ class PdfExportService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          _buildInfoRow('마감 날짜', dateFormat.format(closing.closingDate)),
-          _buildInfoRow('마감 시각',
+          _buildInfoRow('Closing Date', dateFormat.format(closing.closingDate)),
+          _buildInfoRow('Closing Time',
               '${dateFormat.format(closing.closedAt)} ${timeFormat.format(closing.closedAt)}'),
-          _buildInfoRow('마감 담당', employee?.name ?? '알 수 없음'),
+          _buildInfoRow('Closed By', employee?.name ?? 'Unknown'),
         ],
       ),
     );
   }
 
-  /// 매출 요약
+  /// Sales summary
   pw.Widget _buildSalesSummary(DailyClosing closing) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          '매출 요약',
+          'Sales Summary',
           style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 10),
         pw.Table(
           border: pw.TableBorder.all(color: PdfColors.grey300),
           children: [
-            _buildTableRow('총 거래 건수', '${closing.totalTransactions}건'),
-            _buildTableRow('총 매출', currencyFormat.format(closing.totalSales)),
-            _buildTableRow('평균 거래 금액',
+            _buildTableRow('Total Transactions', '${closing.totalTransactions}'),
+            _buildTableRow('Total Sales', currencyFormat.format(closing.totalSales)),
+            _buildTableRow('Average Transaction',
                 currencyFormat.format(closing.averageTransaction)),
-            _buildTableRow('총 세금', currencyFormat.format(closing.totalTax)),
-            _buildTableRow('총 할인', currencyFormat.format(closing.totalDiscount)),
+            _buildTableRow('Total Tax', currencyFormat.format(closing.totalTax)),
+            _buildTableRow('Total Discount', currencyFormat.format(closing.totalDiscount)),
           ],
         ),
       ],
     );
   }
 
-  /// 결제 수단별 매출
+  /// Payment breakdown
   pw.Widget _buildPaymentBreakdown(DailyClosing closing) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          '결제 수단별 매출',
+          'Sales by Payment Method',
           style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 10),
         pw.Table(
           border: pw.TableBorder.all(color: PdfColors.grey300),
           children: [
-            _buildTableRow('현금', currencyFormat.format(closing.cashSales)),
-            _buildTableRow('카드', currencyFormat.format(closing.cardSales)),
-            _buildTableRow('QR 결제', currencyFormat.format(closing.qrSales)),
-            _buildTableRow('계좌이체', currencyFormat.format(closing.transferSales)),
+            _buildTableRow('Cash', currencyFormat.format(closing.cashSales)),
+            _buildTableRow('Card', currencyFormat.format(closing.cardSales)),
+            _buildTableRow('QR Payment', currencyFormat.format(closing.qrSales)),
+            _buildTableRow('Bank Transfer', currencyFormat.format(closing.transferSales)),
           ],
         ),
       ],
     );
   }
 
-  /// 시재 관리
+  /// Cash reconciliation
   pw.Widget _buildCashReconciliation(DailyClosing closing) {
     final isDifferenceAcceptable =
         (closing.cashDifference?.abs() ?? 0) <= ClosingConstants.acceptableCashDifference;
@@ -163,19 +163,19 @@ class PdfExportService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          '시재 관리',
+          'Cash Reconciliation',
           style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 10),
         pw.Table(
           border: pw.TableBorder.all(color: PdfColors.grey300),
           children: [
-            _buildTableRow('예상 현금',
+            _buildTableRow('Expected Cash',
                 currencyFormat.format(closing.expectedCash)),
-            _buildTableRow('실제 현금',
+            _buildTableRow('Actual Cash',
                 currencyFormat.format(closing.actualCash!)),
             _buildTableRow(
-              '차액',
+              'Difference',
               currencyFormat.format(closing.cashDifference!),
               valueColor: isDifferenceAcceptable
                   ? PdfColors.green
@@ -187,13 +187,13 @@ class PdfExportService {
     );
   }
 
-  /// 특이사항
+  /// Notes
   pw.Widget _buildNotes(DailyClosing closing) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          '특이사항',
+          'Notes',
           style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 10),
@@ -209,7 +209,7 @@ class PdfExportService {
     );
   }
 
-  /// 서명란
+  /// Signature section
   pw.Widget _buildSignatureSection(Employee? employee) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -217,24 +217,24 @@ class PdfExportService {
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text('마감 담당자:'),
+            pw.Text('Closed By:'),
             pw.SizedBox(height: 30),
-            pw.Text('서명: _________________'),
+            pw.Text('Signature: _________________'),
           ],
         ),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text('확인자:'),
+            pw.Text('Verified By:'),
             pw.SizedBox(height: 30),
-            pw.Text('서명: _________________'),
+            pw.Text('Signature: _________________'),
           ],
         ),
       ],
     );
   }
 
-  // 헬퍼 메서드
+  // Helper methods
   pw.Widget _buildInfoRow(String label, String value) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 2),

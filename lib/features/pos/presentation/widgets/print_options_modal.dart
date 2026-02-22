@@ -299,6 +299,8 @@ class _PrintOptionsModalState extends State<PrintOptionsModal> {
 
       final pdfBytes = await doc.save();
 
+      if (!mounted) return;
+
       await Printing.layoutPdf(
         onLayout: (_) => pdfBytes,
         name: AppLocalizations.of(context)!.receiptFileName(data.saleNumber),

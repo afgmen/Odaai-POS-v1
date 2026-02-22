@@ -1,6 +1,5 @@
 import '../../../../database/app_database.dart';
 import '../employee_role.dart';
-import '../permission_error.dart';
 
 /// Core permission validation service
 /// Handles permission checks with RBAC toggle and store scope validation
@@ -71,7 +70,6 @@ class PermissionService {
   /// Check if role has permission enabled in role_permissions table
   Future<bool> _checkRolePermission(String role, String permissionName) async {
     // Check cache first
-    final cacheKey = '$role:$permissionName';
     if (_permissionCache.containsKey(role)) {
       final cached = _permissionCache[role]![permissionName];
       if (cached != null) return cached;

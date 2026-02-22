@@ -1,10 +1,10 @@
 /// 주문 우선순위
 enum OrderPriority {
   /// 일반 주문
-  normal('NORMAL', '일반'),
+  normal('NORMAL', 'Normal'),
 
-  /// 긴급 주문 (VIP, 급한 손님 등)
-  urgent('URGENT', '긴급');
+  /// Urgent order (VIP, rush, etc.)
+  urgent('URGENT', 'Urgent');
 
   final String value;
   final String displayName;

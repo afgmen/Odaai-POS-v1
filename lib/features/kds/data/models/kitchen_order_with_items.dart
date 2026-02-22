@@ -23,7 +23,7 @@ class KitchenOrderWithItems {
     // 2개 이상인 경우
     final first = items.first;
     final remaining = items.length - 1;
-    return '${first.productName} x${first.quantity} 외 $remaining개';
+    return '${first.productName} x${first.quantity} +$remaining more';
   }
 
   /// 메뉴 전체 목록 문자열 (줄바꿈 구분)

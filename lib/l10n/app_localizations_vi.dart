@@ -361,9 +361,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get logoutConfirm => 'Bạn có chắc muốn đăng xuất?';
 
   @override
-  String get langKorean => '한국어';
-
-  @override
   String get langEnglish => 'English';
 
   @override
@@ -1835,6 +1832,54 @@ class AppLocalizationsVi extends AppLocalizations {
   String get kdsSpecialInstructions => 'Hướng dẫn đặc biệt';
 
   @override
+  String get kdsMenuSummaryTitle => 'Tổng hợp món';
+
+  @override
+  String get kdsMenuSummaryToggle => 'Bật/Tắt tổng hợp món';
+
+  @override
+  String get kdsMenuSummaryEmpty => 'Không có món đang hoạt động';
+
+  @override
+  String get kdsMenuSummaryTotalItems => 'Tổng số món';
+
+  @override
+  String get kdsMenuSummaryUniqueItems => 'loại món';
+
+  @override
+  String get kdsMenuSummaryScreenTitle => 'Tổng hợp món';
+
+  @override
+  String get kdsModeSelection => 'Chọn chế độ KDS';
+
+  @override
+  String get kdsModeOrderView => 'Xem theo đơn hàng';
+
+  @override
+  String get kdsModeOrderViewDesc =>
+      'Xem đơn hàng theo bàn, sắp xếp theo thời gian';
+
+  @override
+  String get kdsModeMenuSummary => 'Xem tổng hợp món';
+
+  @override
+  String get kdsModeMenuSummaryDesc =>
+      'Xem tất cả món cần chuẩn bị, nhóm theo món';
+
+  @override
+  String get kdsTotalItems => 'Tổng số món';
+
+  @override
+  String kdsUniqueMenus(int count) {
+    return '$count món';
+  }
+
+  @override
+  String kdsOrders(int count) {
+    return '$count đơn';
+  }
+
+  @override
   String get dailyClosing => 'Đóng quỹ hàng ngày';
 
   @override
@@ -2209,4 +2254,139 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get people => 'người';
+
+  @override
+  String get deliveryTitle => 'Đơn giao hàng';
+
+  @override
+  String get deliveryNewOrders => 'Mới';
+
+  @override
+  String get deliveryActiveOrders => 'Đang xử lý';
+
+  @override
+  String get deliveryFilterAll => 'Tất cả';
+
+  @override
+  String get deliveryFilterManual => 'Thủ công';
+
+  @override
+  String get deliveryAccept => 'Chấp nhận';
+
+  @override
+  String get deliveryReject => 'Từ chối';
+
+  @override
+  String get deliveryRejectReason => 'Lý do từ chối';
+
+  @override
+  String get deliveryStatusNew => 'Đơn mới';
+
+  @override
+  String get deliveryStatusAccepted => 'Đã nhận';
+
+  @override
+  String get deliveryStatusPreparing => 'Đang chuẩn bị';
+
+  @override
+  String get deliveryStatusReadyForPickup => 'Sẵn sàng lấy';
+
+  @override
+  String get deliveryStatusPickedUp => 'Đã lấy';
+
+  @override
+  String get deliveryStatusCompleted => 'Hoàn thành';
+
+  @override
+  String get deliveryStatusCancelled => 'Đã hủy';
+
+  @override
+  String get deliveryCustomer => 'Khách hàng';
+
+  @override
+  String get deliveryAddress => 'Địa chỉ giao';
+
+  @override
+  String get deliveryDriver => 'Tài xế';
+
+  @override
+  String get deliveryEstimatedPickup => 'Dự kiến lấy';
+
+  @override
+  String get deliveryTotalAmount => 'Tổng tiền';
+
+  @override
+  String get deliveryNoOrders => 'Không có đơn giao hàng';
+
+  @override
+  String get deliveryCreateManual => 'Tạo đơn thủ công';
+
+  @override
+  String get deliveryConnectionStatus => 'Kết nối máy chủ';
+
+  @override
+  String get deliveryConnected => 'Đã kết nối';
+
+  @override
+  String get deliveryDisconnected => 'Mất kết nối';
+
+  @override
+  String get menuSyncTitle => 'Đồng bộ menu lên nền tảng giao hàng';
+
+  @override
+  String get menuSyncButton => 'Đồng bộ ngay';
+
+  @override
+  String get menuSyncSuccess => 'Đồng bộ menu thành công';
+
+  @override
+  String get menuSyncFailed => 'Đồng bộ menu thất bại';
+
+  @override
+  String get menuSyncInProgress => 'Đang đồng bộ menu...';
+
+  @override
+  String get deliveryReport => 'Báo cáo giao hàng';
+
+  @override
+  String get deliveryRevenue => 'Doanh thu giao hàng';
+
+  @override
+  String get deliveryVsDineIn => 'Giao hàng vs Tại chỗ';
+
+  @override
+  String get deliveryManualOrder => 'Đơn thủ công';
+
+  @override
+  String get deliveryManualOrderCreate => 'Tạo đơn thủ công';
+
+  @override
+  String get deliveryCustomerName => 'Tên khách hàng';
+
+  @override
+  String get deliveryCustomerPhone => 'Số điện thoại';
+
+  @override
+  String get deliveryAddressInput => 'Địa chỉ giao hàng';
+
+  @override
+  String get deliverySelectItems => 'Chọn món';
+
+  @override
+  String get deliveryPlatformSettings => 'Nền tảng giao hàng';
+
+  @override
+  String get deliveryPlatformActive => 'Hoạt động';
+
+  @override
+  String get deliveryPlatformNotConfigured => 'Chưa cấu hình';
+
+  @override
+  String get deliveryTestConnection => 'Kiểm tra';
+
+  @override
+  String get deliveryPlatformInactive => 'Không hoạt động';
+
+  @override
+  String get deliveryLastSync => 'Đồng bộ lần cuối';
 }

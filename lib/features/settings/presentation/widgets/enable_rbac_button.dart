@@ -37,11 +37,22 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
       // 2. Set current user as OWNER
       await db.customStatement('''
         UPDATE employees
-        SET defaultRole = 'OWNER',
-            storeScope = 'ALL_STORES',
-            primaryStoreId = NULL
+        SET default_role = 'OWNER',
+            store_scope = 'ALL_STORES',
+            primary_store_id = NULL
         WHERE id = ?
       ''', [currentSession.employeeId]);
+
+      // 2.1 Also write to RBAC mapping table (user_roles)
+      // PermissionService.isOwner() checks user_roles, not employees.defaultRole
+      await db.customStatement(
+        'DELETE FROM user_roles WHERE user_id = ?',
+        [currentSession.employeeId],
+      );
+      await db.customStatement('''
+        INSERT INTO user_roles (id, user_id, role, scope, assigned_at, assigned_by)
+        VALUES (lower(hex(randomblob(16))), ?, 'OWNER', 'ALL_STORES', CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER), ?)
+      ''', [currentSession.employeeId, currentSession.employeeId]);
 
       if (!mounted) return;
 
@@ -95,7 +106,7 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.1),
+        color: AppTheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.primary, width: 2),
       ),

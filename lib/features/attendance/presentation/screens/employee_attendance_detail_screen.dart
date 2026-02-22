@@ -64,14 +64,14 @@ class _EmployeeAttendanceDetailScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.employee.name} 근태 현황'),
+        title: Text('${widget.employee.name} - Attendance'),
         centerTitle: true,
         actions: [
           TextButton.icon(
             onPressed: _showMonthPicker,
             icon: const Icon(Icons.calendar_month, color: Colors.white),
             label: Text(
-              '$_selectedYear년 $_selectedMonth월',
+              '$_selectedYear / $_selectedMonth',
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -79,9 +79,9 @@ class _EmployeeAttendanceDetailScreenState
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: '요약'),
-            Tab(text: '출근 기록'),
-            Tab(text: '휴가 현황'),
+            Tab(text: 'Summary'),
+            Tab(text: 'Attendance Log'),
+            Tab(text: 'Leave Status'),
           ],
         ),
       ),
@@ -109,12 +109,12 @@ class _EmployeeAttendanceDetailScreenState
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('오류: ${snapshot.error}'));
+          return Center(child: Text('Error: ${snapshot.error}'));
         }
 
         final report = snapshot.data;
         if (report == null) {
-          return const Center(child: Text('데이터를 불러올 수 없습니다.'));
+          return const Center(child: Text('Unable to load data.'));
         }
 
         return SingleChildScrollView(
@@ -175,7 +175,7 @@ class _EmployeeAttendanceDetailScreenState
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          widget.employee.isActive ? '재직중' : '퇴사',
+                          widget.employee.isActive ? 'Active' : 'Inactive',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -193,30 +193,30 @@ class _EmployeeAttendanceDetailScreenState
 
               // 이번 달 통계
               Card(
-                color: AppTheme.primary.withOpacity(0.05),
+                color: AppTheme.primary.withValues(alpha: 0.05),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '이번 달 통계 ($_selectedYear년 $_selectedMonth월)',
+                        'Monthly Stats ($_selectedYear / $_selectedMonth)',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const Divider(height: 24),
-                      _buildStatRow('출근일',
-                          '${report.actualWorkDays}일 / ${report.totalWorkDays}일'),
-                      _buildStatRow('총 근무', report.formattedTotalWorkTime),
+                      _buildStatRow('Work Days',
+                          '${report.actualWorkDays} / ${report.totalWorkDays} days'),
+                      _buildStatRow('Total Work', report.formattedTotalWorkTime),
                       _buildStatRow(
-                          '연장 근무', report.formattedOvertimeWorkTime),
-                      _buildStatRow('지각', '${report.lateDays}회',
+                          'Overtime', report.formattedOvertimeWorkTime),
+                      _buildStatRow('Late', '${report.lateDays}x',
                           isWarning: report.lateDays > 0),
-                      _buildStatRow('조퇴', '${report.earlyLeaveDays}회',
+                      _buildStatRow('Early Leave', '${report.earlyLeaveDays}x',
                           isWarning: report.earlyLeaveDays > 0),
-                      _buildStatRow('결근', '${report.absentDays}일',
+                      _buildStatRow('Absent', '${report.absentDays} days',
                           isWarning: report.absentDays > 0),
                     ],
                   ),
@@ -232,7 +232,7 @@ class _EmployeeAttendanceDetailScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        '상태별 분포',
+                        'Status Distribution',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -244,7 +244,7 @@ class _EmployeeAttendanceDetailScreenState
                           child: Padding(
                             padding: EdgeInsets.all(16),
                             child: Text(
-                              '데이터가 없습니다',
+                              'No data',
                               style: TextStyle(color: Colors.grey),
                             ),
                           ),
@@ -258,7 +258,7 @@ class _EmployeeAttendanceDetailScreenState
                               children: [
                                 Text(_getStatusText(entry.key)),
                                 Text(
-                                  '${entry.value}일',
+                                  '${entry.value} days',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -300,7 +300,7 @@ class _EmployeeAttendanceDetailScreenState
                 Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
-                  '출근 기록이 없습니다',
+                  'No attendance records',
                   style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                 ),
               ],
@@ -345,20 +345,20 @@ class _EmployeeAttendanceDetailScreenState
                 return const Card(
                   child: Padding(
                     padding: EdgeInsets.all(20),
-                    child: Text('휴가 정보를 불러올 수 없습니다.'),
+                    child: Text('Unable to load leave information.'),
                   ),
                 );
               }
 
               return Card(
-                color: AppTheme.primary.withOpacity(0.05),
+                color: AppTheme.primary.withValues(alpha: 0.05),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        '휴가 잔여 현황',
+                        'Leave Balance',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -366,19 +366,19 @@ class _EmployeeAttendanceDetailScreenState
                       ),
                       const Divider(height: 24),
                       _buildBalanceRow(
-                        '연차',
+                        'Annual Leave',
                         balance.annualRemaining,
                         balance.annualTotal,
                         balance.annualUsed,
                       ),
                       _buildBalanceRow(
-                        '병가',
+                        'Sick Leave',
                         balance.sickRemaining,
                         balance.sickTotal,
                         balance.sickUsed,
                       ),
                       _buildBalanceRow(
-                        '개인 사유',
+                        'Personal Leave',
                         balance.personalRemaining,
                         balance.personalTotal,
                         balance.personalUsed,
@@ -413,7 +413,7 @@ class _EmployeeAttendanceDetailScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        '휴가 신청 내역',
+                        'Leave History',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -425,7 +425,7 @@ class _EmployeeAttendanceDetailScreenState
                           child: Padding(
                             padding: EdgeInsets.all(16),
                             child: Text(
-                              '신청 내역이 없습니다',
+                              'No leave history',
                               style: TextStyle(color: Colors.grey),
                             ),
                           ),
@@ -480,7 +480,7 @@ class _EmployeeAttendanceDetailScreenState
             children: [
               Text(label, style: const TextStyle(fontSize: 16)),
               Text(
-                '${remaining.toStringAsFixed(1)}일 / ${total.toStringAsFixed(1)}일',
+                '${remaining.toStringAsFixed(1)} / ${total.toStringAsFixed(1)} days',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -497,7 +497,7 @@ class _EmployeeAttendanceDetailScreenState
           ),
           const SizedBox(height: 4),
           Text(
-            '사용: ${used.toStringAsFixed(1)}일',
+            'Used: ${used.toStringAsFixed(1)} days',
             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
           ),
         ],
@@ -520,7 +520,7 @@ class _EmployeeAttendanceDetailScreenState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  DateFormat('yyyy-MM-dd (E)', 'ko').format(log.workDate),
+                  DateFormat('dd/MM/yyyy (E)', 'vi').format(log.workDate),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -537,14 +537,14 @@ class _EmployeeAttendanceDetailScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('출근', style: TextStyle(color: Colors.grey[600])),
+                        Text('Check-in', style: TextStyle(color: Colors.grey[600])),
                         Text(
                           DateFormat('HH:mm').format(log.checkInTime),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         if (log.isLate)
                           Text(
-                            '지각',
+                            'Late',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.red[700],
@@ -558,7 +558,7 @@ class _EmployeeAttendanceDetailScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('퇴근',
+                          Text('Check-out',
                               style: TextStyle(color: Colors.grey[600])),
                           Text(
                             DateFormat('HH:mm').format(log.checkOutTime!),
@@ -566,7 +566,7 @@ class _EmployeeAttendanceDetailScreenState
                           ),
                           if (log.isEarlyLeave)
                             Text(
-                              '조퇴',
+                              'Early Leave',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.red[700],
@@ -580,7 +580,7 @@ class _EmployeeAttendanceDetailScreenState
               if (isCompleted && log.totalMinutes != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  '총 근무: ${(log.totalMinutes! ~/ 60)}시간 ${(log.totalMinutes! % 60)}분',
+                  'Total: ${(log.totalMinutes! ~/ 60)}h ${(log.totalMinutes! % 60)}m',
                   style: const TextStyle(color: AppTheme.primary),
                 ),
               ],
@@ -598,15 +598,15 @@ class _EmployeeAttendanceDetailScreenState
     switch (status) {
       case 'working':
         color = Colors.green;
-        text = '근무중';
+        text = 'Working';
         break;
       case 'completed':
         color = Colors.blue;
-        text = '완료';
+        text = 'Completed';
         break;
       case 'absent':
         color = Colors.red;
-        text = '결근';
+        text = 'Absent';
         break;
       default:
         color = Colors.grey;
@@ -616,7 +616,7 @@ class _EmployeeAttendanceDetailScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color),
       ),
@@ -656,7 +656,7 @@ class _EmployeeAttendanceDetailScreenState
             Text(
               '${DateFormat('yyyy-MM-dd').format(request.startDate)} ~ '
               '${DateFormat('yyyy-MM-dd').format(request.endDate)} '
-              '(${request.days.toStringAsFixed(1)}일)',
+              '(${request.days.toStringAsFixed(1)} days)',
               style: TextStyle(color: Colors.grey[600]),
             ),
             const SizedBox(height: 4),
@@ -670,11 +670,11 @@ class _EmployeeAttendanceDetailScreenState
   String _getRoleName(String role) {
     switch (role) {
       case 'admin':
-        return '관리자';
+        return 'Admin';
       case 'manager':
-        return '매니저';
+        return 'Manager';
       case 'cashier':
-        return '직원';
+        return 'Staff';
       default:
         return role;
     }
@@ -683,11 +683,11 @@ class _EmployeeAttendanceDetailScreenState
   String _getStatusText(String status) {
     switch (status) {
       case 'working':
-        return '근무중';
+        return 'Working';
       case 'completed':
-        return '완료';
+        return 'Completed';
       case 'absent':
-        return '결근';
+        return 'Absent';
       default:
         return status;
     }
@@ -696,11 +696,11 @@ class _EmployeeAttendanceDetailScreenState
   String _getLeaveTypeName(String type) {
     switch (type) {
       case 'annual':
-        return '연차';
+        return 'Annual Leave';
       case 'sick':
-        return '병가';
+        return 'Sick Leave';
       case 'personal':
-        return '개인 사유';
+        return 'Personal Leave';
       default:
         return type;
     }
@@ -737,21 +737,21 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
     final currentYear = DateTime.now().year;
 
     return AlertDialog(
-      title: const Text('기간 선택'),
+      title: const Text('Select Period'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DropdownButtonFormField<int>(
-            value: _selectedYear,
+            initialValue: _selectedYear,
             decoration: const InputDecoration(
-              labelText: '연도',
+              labelText: 'Year',
               border: OutlineInputBorder(),
             ),
             items: List.generate(5, (index) {
               final year = currentYear - index;
               return DropdownMenuItem(
                 value: year,
-                child: Text('$year년'),
+                child: Text('$year'),
               );
             }),
             onChanged: (value) {
@@ -762,16 +762,16 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<int>(
-            value: _selectedMonth,
+            initialValue: _selectedMonth,
             decoration: const InputDecoration(
-              labelText: '월',
+              labelText: 'Month',
               border: OutlineInputBorder(),
             ),
             items: List.generate(12, (index) {
               final month = index + 1;
               return DropdownMenuItem(
                 value: month,
-                child: Text('$month월'),
+                child: Text('$month'),
               );
             }),
             onChanged: (value) {
@@ -785,7 +785,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: () {
@@ -794,7 +794,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
               'month': _selectedMonth,
             });
           },
-          child: const Text('확인'),
+          child: const Text('OK'),
         ),
       ],
     );

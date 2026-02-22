@@ -17,7 +17,7 @@ class PaymentBreakdownWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final currencyFormat =
-        NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
+        NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
 
     final paymentMethods = [
       PaymentMethodData(

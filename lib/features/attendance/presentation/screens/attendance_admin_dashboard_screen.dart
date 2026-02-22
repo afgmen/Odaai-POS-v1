@@ -42,7 +42,7 @@ class _AttendanceAdminDashboardScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('근태 관리'),
+        title: const Text('Attendance Management'),
         centerTitle: true,
         actions: [
           IconButton(
@@ -55,7 +55,7 @@ class _AttendanceAdminDashboardScreenState
                 ),
               );
             },
-            tooltip: '휴가 승인',
+            tooltip: 'Leave Approval',
           ),
         ],
       ),
@@ -86,7 +86,7 @@ class _AttendanceAdminDashboardScreenState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                '조회 날짜',
+                                'Date',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey,
@@ -94,7 +94,7 @@ class _AttendanceAdminDashboardScreenState
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                DateFormat('yyyy년 MM월 dd일 (E)', 'ko')
+                                DateFormat('dd/MM/yyyy (E)', 'vi')
                                     .format(_selectedDate),
                                 style: const TextStyle(
                                   fontSize: 18,
@@ -154,7 +154,7 @@ class _AttendanceAdminDashboardScreenState
         final total = logs.length;
 
         return Card(
-          color: AppTheme.primary.withOpacity(0.05),
+          color: AppTheme.primary.withValues(alpha: 0.05),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -165,7 +165,7 @@ class _AttendanceAdminDashboardScreenState
                     const Icon(Icons.dashboard, color: AppTheme.primary),
                     const SizedBox(width: 8),
                     const Text(
-                      '오늘의 현황',
+                      "Today's Status",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -184,7 +184,7 @@ class _AttendanceAdminDashboardScreenState
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(
-                          '오늘',
+                          'Today',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -199,7 +199,7 @@ class _AttendanceAdminDashboardScreenState
                   children: [
                     Expanded(
                       child: _buildSummaryItem(
-                        '전체',
+                        'Total',
                         total.toString(),
                         Icons.people,
                         Colors.blue,
@@ -207,7 +207,7 @@ class _AttendanceAdminDashboardScreenState
                     ),
                     Expanded(
                       child: _buildSummaryItem(
-                        '근무중',
+                        'Working',
                         working.toString(),
                         Icons.work,
                         Colors.green,
@@ -215,7 +215,7 @@ class _AttendanceAdminDashboardScreenState
                     ),
                     Expanded(
                       child: _buildSummaryItem(
-                        '퇴근',
+                        'Checked Out',
                         completed.toString(),
                         Icons.check_circle,
                         Colors.grey,
@@ -228,7 +228,7 @@ class _AttendanceAdminDashboardScreenState
                   children: [
                     Expanded(
                       child: _buildSummaryItem(
-                        '지각',
+                        'Late',
                         late.toString(),
                         Icons.warning,
                         Colors.orange,
@@ -236,7 +236,7 @@ class _AttendanceAdminDashboardScreenState
                     ),
                     Expanded(
                       child: _buildSummaryItem(
-                        '결근',
+                        'Absent',
                         absent.toString(),
                         Icons.cancel,
                         Colors.red,
@@ -310,7 +310,7 @@ class _AttendanceAdminDashboardScreenState
                         color: Colors.orange[700]),
                     const SizedBox(width: 8),
                     const Text(
-                      '승인 대기',
+                      'Pending Approval',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -328,7 +328,7 @@ class _AttendanceAdminDashboardScreenState
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${requests.length}건',
+                          '${requests.length}',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -344,7 +344,7 @@ class _AttendanceAdminDashboardScreenState
                     child: Padding(
                       padding: EdgeInsets.all(16),
                       child: Text(
-                        '승인 대기 중인 휴가가 없습니다',
+                        'No pending leave requests',
                         style: TextStyle(color: Colors.grey),
                       ),
                     ),
@@ -362,7 +362,7 @@ class _AttendanceAdminDashboardScreenState
                         ),
                       );
                     },
-                    child: const Text('모두 보기'),
+                    child: const Text('View All'),
                   ),
               ],
             ),
@@ -378,7 +378,7 @@ class _AttendanceAdminDashboardScreenState
           .getEmployee(request.employeeId),
       builder: (context, snapshot) {
         final employee = snapshot.data;
-        final employeeName = employee?.name ?? '직원 ${request.employeeId}';
+        final employeeName = employee?.name ?? 'Employee ${request.employeeId}';
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -459,7 +459,7 @@ class _AttendanceAdminDashboardScreenState
                 const Icon(Icons.warning_amber, color: Colors.red),
                 const SizedBox(width: 8),
                 const Text(
-                  '주의 필요',
+                  'Attention Required',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -490,7 +490,7 @@ class _AttendanceAdminDashboardScreenState
                         child: Padding(
                           padding: EdgeInsets.all(16),
                           child: Text(
-                            '주의가 필요한 사항이 없습니다',
+                            'No attention required',
                             style: TextStyle(color: Colors.grey),
                           ),
                         ),
@@ -504,7 +504,7 @@ class _AttendanceAdminDashboardScreenState
                                 (log) => _buildWarningItem(
                                   dao,
                                   log.employeeId,
-                                  '오늘 지각',
+                                  'Late today',
                                   Icons.schedule,
                                 ),
                               ),
@@ -513,7 +513,7 @@ class _AttendanceAdminDashboardScreenState
                             _buildWarningItem(
                               dao,
                               i + 1,
-                              '이번 달 지각 ${lateCounts[i]}회',
+                              'Late this month: ${lateCounts[i]}x',
                               Icons.warning,
                             ),
                       ],
@@ -538,7 +538,7 @@ class _AttendanceAdminDashboardScreenState
       future: dao.attachedDatabase.employeesDao.getEmployee(employeeId),
       builder: (context, snapshot) {
         final employee = snapshot.data;
-        final employeeName = employee?.name ?? '직원 $employeeId';
+        final employeeName = employee?.name ?? 'Employee $employeeId';
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -595,7 +595,7 @@ class _AttendanceAdminDashboardScreenState
                 Icon(Icons.people, color: AppTheme.primary),
                 SizedBox(width: 8),
                 Text(
-                  '전체 직원 출근 현황',
+                  'All Employee Attendance',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -622,7 +622,7 @@ class _AttendanceAdminDashboardScreenState
                     child: Padding(
                       padding: EdgeInsets.all(16),
                       child: Text(
-                        '등록된 직원이 없습니다',
+                        'No employees registered',
                         style: TextStyle(color: Colors.grey),
                       ),
                     ),
@@ -665,22 +665,22 @@ class _AttendanceAdminDashboardScreenState
       case 'working':
         statusColor = Colors.green;
         statusIcon = Icons.work;
-        statusText = '근무중';
+        statusText = 'Working';
         break;
       case 'completed':
         statusColor = Colors.blue;
         statusIcon = Icons.check_circle;
-        statusText = '퇴근';
+        statusText = 'Checked Out';
         break;
       case 'absent':
         statusColor = Colors.red;
         statusIcon = Icons.cancel;
-        statusText = '결근';
+        statusText = 'Absent';
         break;
       default:
         statusColor = Colors.grey;
         statusIcon = Icons.pending;
-        statusText = '출근 전';
+        statusText = 'Not In';
     }
 
     return Padding(
@@ -705,7 +705,7 @@ class _AttendanceAdminDashboardScreenState
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: AppTheme.primary.withOpacity(0.1),
+                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                 child: Text(
                   employee.name[0],
                   style: const TextStyle(
@@ -728,8 +728,8 @@ class _AttendanceAdminDashboardScreenState
                     const SizedBox(height: 4),
                     if (log.status != 'not_checked_in')
                       Text(
-                        '출근: ${DateFormat('HH:mm').format(log.checkInTime)}'
-                        '${log.isLate ? ' (지각)' : ''}',
+                        'In: ${DateFormat('HH:mm').format(log.checkInTime)}'
+                        '${log.isLate ? ' (Late)' : ''}',
                         style: TextStyle(
                           fontSize: 12,
                           color: log.isLate ? Colors.red : Colors.grey,
@@ -744,7 +744,7 @@ class _AttendanceAdminDashboardScreenState
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: statusColor),
                 ),
@@ -776,17 +776,17 @@ class _AttendanceAdminDashboardScreenState
   String _getLeaveTypeName(String type) {
     switch (type) {
       case 'annual':
-        return '연차';
+        return 'Annual Leave';
       case 'sick':
-        return '병가';
+        return 'Sick Leave';
       case 'personal':
-        return '개인';
+        return 'Personal Leave';
       case 'maternity':
-        return '출산';
+        return 'Maternity Leave';
       case 'paternity':
-        return '육아';
+        return 'Paternity Leave';
       case 'unpaid':
-        return '무급';
+        return 'Unpaid Leave';
       default:
         return type;
     }

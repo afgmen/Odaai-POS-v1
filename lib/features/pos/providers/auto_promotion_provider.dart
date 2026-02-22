@@ -3,11 +3,10 @@ import 'package:drift/drift.dart';
 
 import '../../../database/app_database.dart';
 import '../../../providers/database_providers.dart';
-import '../../promotions/providers/promotions_provider.dart';
 import 'cart_provider.dart';
 
 /// 장바구니 상품별 적용 가능한 프로모션 맵
-/// Map<productId, List<Promotion>>
+/// `Map<productId, List<Promotion>>`
 final applicablePromotionsProvider = StreamProvider<Map<int, List<Promotion>>>((ref) async* {
   final cart = ref.watch(cartProvider);
   final db = ref.watch(databaseProvider);
@@ -72,7 +71,7 @@ final autoPromotionDiscountProvider = Provider<double>((ref) {
       return totalDiscount;
     },
     loading: () => 0.0,
-    error: (_, __) => 0.0,
+    error: (_, _) => 0.0,
   );
 });
 
@@ -155,6 +154,6 @@ final appliedPromotionsListProvider = Provider<List<AppliedPromotion>>((ref) {
       return applied;
     },
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });

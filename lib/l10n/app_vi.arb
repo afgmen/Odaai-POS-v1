@@ -122,7 +122,6 @@
   "logout": "Đăng xuất",
   "logoutConfirm": "Bạn có chắc muốn đăng xuất?",
 
-  "langKorean": "한국어",
   "langEnglish": "English",
   "langVietnamese": "Tiếng Việt",
 
@@ -642,6 +641,31 @@
   "kdsElapsedMinutes": "Đã trôi qua {minutes} phút",
   "kdsTableNumber": "Số bàn",
   "kdsSpecialInstructions": "Hướng dẫn đặc biệt",
+  "kdsMenuSummaryTitle": "Tổng hợp món",
+  "kdsMenuSummaryToggle": "Bật/Tắt tổng hợp món",
+  "kdsMenuSummaryEmpty": "Không có món đang hoạt động",
+  "kdsMenuSummaryTotalItems": "Tổng số món",
+  "kdsMenuSummaryUniqueItems": "loại món",
+
+  "kdsMenuSummaryScreenTitle": "Tổng hợp món",
+  "kdsModeSelection": "Chọn chế độ KDS",
+  "kdsModeOrderView": "Xem theo đơn hàng",
+  "kdsModeOrderViewDesc": "Xem đơn hàng theo bàn, sắp xếp theo thời gian",
+  "kdsModeMenuSummary": "Xem tổng hợp món",
+  "kdsModeMenuSummaryDesc": "Xem tất cả món cần chuẩn bị, nhóm theo món",
+  "kdsTotalItems": "Tổng số món",
+  "kdsUniqueMenus": "{count} món",
+  "@kdsUniqueMenus": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "kdsOrders": "{count} đơn",
+  "@kdsOrders": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
 
   "dailyClosing": "Đóng quỹ hàng ngày",
   "closingHistory": "Lịch sử đóng quỹ",
@@ -797,5 +821,52 @@
   "customerPhoneRequired": "Vui lòng nhập số liên hệ",
   "partySizeRequired": "Vui lòng nhập số người",
   "partySizeInvalid": "Số người phải ít nhất là 1",
-  "people": "người"
+  "people": "người",
+
+  "deliveryTitle": "Đơn giao hàng",
+  "deliveryNewOrders": "Mới",
+  "deliveryActiveOrders": "Đang xử lý",
+  "deliveryFilterAll": "Tất cả",
+  "deliveryFilterManual": "Thủ công",
+  "deliveryAccept": "Chấp nhận",
+  "deliveryReject": "Từ chối",
+  "deliveryRejectReason": "Lý do từ chối",
+  "deliveryStatusNew": "Đơn mới",
+  "deliveryStatusAccepted": "Đã nhận",
+  "deliveryStatusPreparing": "Đang chuẩn bị",
+  "deliveryStatusReadyForPickup": "Sẵn sàng lấy",
+  "deliveryStatusPickedUp": "Đã lấy",
+  "deliveryStatusCompleted": "Hoàn thành",
+  "deliveryStatusCancelled": "Đã hủy",
+  "deliveryCustomer": "Khách hàng",
+  "deliveryAddress": "Địa chỉ giao",
+  "deliveryDriver": "Tài xế",
+  "deliveryEstimatedPickup": "Dự kiến lấy",
+  "deliveryTotalAmount": "Tổng tiền",
+  "deliveryNoOrders": "Không có đơn giao hàng",
+  "deliveryCreateManual": "Tạo đơn thủ công",
+  "deliveryConnectionStatus": "Kết nối máy chủ",
+  "deliveryConnected": "Đã kết nối",
+  "deliveryDisconnected": "Mất kết nối",
+  "menuSyncTitle": "Đồng bộ menu lên nền tảng giao hàng",
+  "menuSyncButton": "Đồng bộ ngay",
+  "menuSyncSuccess": "Đồng bộ menu thành công",
+  "menuSyncFailed": "Đồng bộ menu thất bại",
+  "menuSyncInProgress": "Đang đồng bộ menu...",
+  "deliveryReport": "Báo cáo giao hàng",
+  "deliveryRevenue": "Doanh thu giao hàng",
+  "deliveryVsDineIn": "Giao hàng vs Tại chỗ",
+  "deliveryManualOrder": "Đơn thủ công",
+  "deliveryManualOrderCreate": "Tạo đơn thủ công",
+  "deliveryCustomerName": "Tên khách hàng",
+  "deliveryCustomerPhone": "Số điện thoại",
+  "deliveryAddressInput": "Địa chỉ giao hàng",
+  "deliverySelectItems": "Chọn món",
+
+  "deliveryPlatformSettings": "Nền tảng giao hàng",
+  "deliveryPlatformActive": "Hoạt động",
+  "deliveryPlatformNotConfigured": "Chưa cấu hình",
+  "deliveryTestConnection": "Kiểm tra",
+  "deliveryPlatformInactive": "Không hoạt động",
+  "deliveryLastSync": "Đồng bộ lần cuối"
 }

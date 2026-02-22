@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:drift/drift.dart';
 
 import '../../../database/app_database.dart';
 import '../../../database/daos/customers_dao.dart';

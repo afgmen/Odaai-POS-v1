@@ -19395,6 +19395,1185 @@ class StoreAssignmentsCompanion extends UpdateCompanion<StoreAssignment> {
   }
 }
 
+class $SystemSettingsTable extends SystemSettings
+    with TableInfo<$SystemSettingsTable, SystemSetting> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SystemSettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<String> value = GeneratedColumn<String>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [key, value, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'system_settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SystemSetting> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {key};
+  @override
+  SystemSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SystemSetting(
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}value'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SystemSettingsTable createAlias(String alias) {
+    return $SystemSettingsTable(attachedDatabase, alias);
+  }
+}
+
+class SystemSetting extends DataClass implements Insertable<SystemSetting> {
+  final String key;
+
+  /// Arbitrary string value (use JSON if you need structured data).
+  final String value;
+  final DateTime updatedAt;
+  const SystemSetting({
+    required this.key,
+    required this.value,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['key'] = Variable<String>(key);
+    map['value'] = Variable<String>(value);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SystemSettingsCompanion toCompanion(bool nullToAbsent) {
+    return SystemSettingsCompanion(
+      key: Value(key),
+      value: Value(value),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SystemSetting.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SystemSetting(
+      key: serializer.fromJson<String>(json['key']),
+      value: serializer.fromJson<String>(json['value']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'key': serializer.toJson<String>(key),
+      'value': serializer.toJson<String>(value),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SystemSetting copyWith({String? key, String? value, DateTime? updatedAt}) =>
+      SystemSetting(
+        key: key ?? this.key,
+        value: value ?? this.value,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  SystemSetting copyWithCompanion(SystemSettingsCompanion data) {
+    return SystemSetting(
+      key: data.key.present ? data.key.value : this.key,
+      value: data.value.present ? data.value.value : this.value,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SystemSetting(')
+          ..write('key: $key, ')
+          ..write('value: $value, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(key, value, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SystemSetting &&
+          other.key == this.key &&
+          other.value == this.value &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SystemSettingsCompanion extends UpdateCompanion<SystemSetting> {
+  final Value<String> key;
+  final Value<String> value;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SystemSettingsCompanion({
+    this.key = const Value.absent(),
+    this.value = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SystemSettingsCompanion.insert({
+    required String key,
+    required String value,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : key = Value(key),
+       value = Value(value);
+  static Insertable<SystemSetting> custom({
+    Expression<String>? key,
+    Expression<String>? value,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (key != null) 'key': key,
+      if (value != null) 'value': value,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SystemSettingsCompanion copyWith({
+    Value<String>? key,
+    Value<String>? value,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SystemSettingsCompanion(
+      key: key ?? this.key,
+      value: value ?? this.value,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<String>(value.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SystemSettingsCompanion(')
+          ..write('key: $key, ')
+          ..write('value: $value, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DeliveryOrdersTable extends DeliveryOrders
+    with TableInfo<$DeliveryOrdersTable, DeliveryOrder> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DeliveryOrdersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _platformOrderIdMeta = const VerificationMeta(
+    'platformOrderId',
+  );
+  @override
+  late final GeneratedColumn<String> platformOrderId = GeneratedColumn<String>(
+    'platform_order_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _platformMeta = const VerificationMeta(
+    'platform',
+  );
+  @override
+  late final GeneratedColumn<String> platform = GeneratedColumn<String>(
+    'platform',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('NEW'),
+  );
+  static const VerificationMeta _customerNameMeta = const VerificationMeta(
+    'customerName',
+  );
+  @override
+  late final GeneratedColumn<String> customerName = GeneratedColumn<String>(
+    'customer_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _customerPhoneMeta = const VerificationMeta(
+    'customerPhone',
+  );
+  @override
+  late final GeneratedColumn<String> customerPhone = GeneratedColumn<String>(
+    'customer_phone',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deliveryAddressMeta = const VerificationMeta(
+    'deliveryAddress',
+  );
+  @override
+  late final GeneratedColumn<String> deliveryAddress = GeneratedColumn<String>(
+    'delivery_address',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _itemsJsonMeta = const VerificationMeta(
+    'itemsJson',
+  );
+  @override
+  late final GeneratedColumn<String> itemsJson = GeneratedColumn<String>(
+    'items_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalAmountMeta = const VerificationMeta(
+    'totalAmount',
+  );
+  @override
+  late final GeneratedColumn<double> totalAmount = GeneratedColumn<double>(
+    'total_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _specialInstructionsMeta =
+      const VerificationMeta('specialInstructions');
+  @override
+  late final GeneratedColumn<String> specialInstructions =
+      GeneratedColumn<String>(
+        'special_instructions',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _estimatedPickupTimeMeta =
+      const VerificationMeta('estimatedPickupTime');
+  @override
+  late final GeneratedColumn<DateTime> estimatedPickupTime =
+      GeneratedColumn<DateTime>(
+        'estimated_pickup_time',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _driverInfoJsonMeta = const VerificationMeta(
+    'driverInfoJson',
+  );
+  @override
+  late final GeneratedColumn<String> driverInfoJson = GeneratedColumn<String>(
+    'driver_info_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _kitchenOrderIdMeta = const VerificationMeta(
+    'kitchenOrderId',
+  );
+  @override
+  late final GeneratedColumn<int> kitchenOrderId = GeneratedColumn<int>(
+    'kitchen_order_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES kitchen_orders (id)',
+    ),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    platformOrderId,
+    platform,
+    status,
+    customerName,
+    customerPhone,
+    deliveryAddress,
+    itemsJson,
+    totalAmount,
+    specialInstructions,
+    estimatedPickupTime,
+    driverInfoJson,
+    kitchenOrderId,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'delivery_orders';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DeliveryOrder> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('platform_order_id')) {
+      context.handle(
+        _platformOrderIdMeta,
+        platformOrderId.isAcceptableOrUnknown(
+          data['platform_order_id']!,
+          _platformOrderIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_platformOrderIdMeta);
+    }
+    if (data.containsKey('platform')) {
+      context.handle(
+        _platformMeta,
+        platform.isAcceptableOrUnknown(data['platform']!, _platformMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_platformMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('customer_name')) {
+      context.handle(
+        _customerNameMeta,
+        customerName.isAcceptableOrUnknown(
+          data['customer_name']!,
+          _customerNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_customerNameMeta);
+    }
+    if (data.containsKey('customer_phone')) {
+      context.handle(
+        _customerPhoneMeta,
+        customerPhone.isAcceptableOrUnknown(
+          data['customer_phone']!,
+          _customerPhoneMeta,
+        ),
+      );
+    }
+    if (data.containsKey('delivery_address')) {
+      context.handle(
+        _deliveryAddressMeta,
+        deliveryAddress.isAcceptableOrUnknown(
+          data['delivery_address']!,
+          _deliveryAddressMeta,
+        ),
+      );
+    }
+    if (data.containsKey('items_json')) {
+      context.handle(
+        _itemsJsonMeta,
+        itemsJson.isAcceptableOrUnknown(data['items_json']!, _itemsJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemsJsonMeta);
+    }
+    if (data.containsKey('total_amount')) {
+      context.handle(
+        _totalAmountMeta,
+        totalAmount.isAcceptableOrUnknown(
+          data['total_amount']!,
+          _totalAmountMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_totalAmountMeta);
+    }
+    if (data.containsKey('special_instructions')) {
+      context.handle(
+        _specialInstructionsMeta,
+        specialInstructions.isAcceptableOrUnknown(
+          data['special_instructions']!,
+          _specialInstructionsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('estimated_pickup_time')) {
+      context.handle(
+        _estimatedPickupTimeMeta,
+        estimatedPickupTime.isAcceptableOrUnknown(
+          data['estimated_pickup_time']!,
+          _estimatedPickupTimeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('driver_info_json')) {
+      context.handle(
+        _driverInfoJsonMeta,
+        driverInfoJson.isAcceptableOrUnknown(
+          data['driver_info_json']!,
+          _driverInfoJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('kitchen_order_id')) {
+      context.handle(
+        _kitchenOrderIdMeta,
+        kitchenOrderId.isAcceptableOrUnknown(
+          data['kitchen_order_id']!,
+          _kitchenOrderIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DeliveryOrder map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DeliveryOrder(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      platformOrderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}platform_order_id'],
+      )!,
+      platform: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}platform'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      customerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_name'],
+      )!,
+      customerPhone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_phone'],
+      ),
+      deliveryAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}delivery_address'],
+      ),
+      itemsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}items_json'],
+      )!,
+      totalAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_amount'],
+      )!,
+      specialInstructions: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}special_instructions'],
+      ),
+      estimatedPickupTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}estimated_pickup_time'],
+      ),
+      driverInfoJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}driver_info_json'],
+      ),
+      kitchenOrderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}kitchen_order_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DeliveryOrdersTable createAlias(String alias) {
+    return $DeliveryOrdersTable(attachedDatabase, alias);
+  }
+}
+
+class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
+  final int id;
+
+  /// Platform's own order identifier (e.g. GrabFood order ID).
+  final String platformOrderId;
+
+  /// Platform: 'grab' | 'shopeefood' | 'manual'
+  final String platform;
+
+  /// Status: 'NEW' | 'ACCEPTED' | 'PREPARING' | 'READY_FOR_PICKUP'
+  ///         | 'PICKED_UP' | 'COMPLETED' | 'CANCELLED'
+  final String status;
+  final String customerName;
+  final String? customerPhone;
+  final String? deliveryAddress;
+
+  /// JSON-encoded List<DeliveryOrderItem>
+  final String itemsJson;
+  final double totalAmount;
+  final String? specialInstructions;
+  final DateTime? estimatedPickupTime;
+
+  /// JSON-encoded DeliveryDriverInfo | null
+  final String? driverInfoJson;
+
+  /// Optional link to a KDS kitchen order created when this order is accepted.
+  final int? kitchenOrderId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const DeliveryOrder({
+    required this.id,
+    required this.platformOrderId,
+    required this.platform,
+    required this.status,
+    required this.customerName,
+    this.customerPhone,
+    this.deliveryAddress,
+    required this.itemsJson,
+    required this.totalAmount,
+    this.specialInstructions,
+    this.estimatedPickupTime,
+    this.driverInfoJson,
+    this.kitchenOrderId,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['platform_order_id'] = Variable<String>(platformOrderId);
+    map['platform'] = Variable<String>(platform);
+    map['status'] = Variable<String>(status);
+    map['customer_name'] = Variable<String>(customerName);
+    if (!nullToAbsent || customerPhone != null) {
+      map['customer_phone'] = Variable<String>(customerPhone);
+    }
+    if (!nullToAbsent || deliveryAddress != null) {
+      map['delivery_address'] = Variable<String>(deliveryAddress);
+    }
+    map['items_json'] = Variable<String>(itemsJson);
+    map['total_amount'] = Variable<double>(totalAmount);
+    if (!nullToAbsent || specialInstructions != null) {
+      map['special_instructions'] = Variable<String>(specialInstructions);
+    }
+    if (!nullToAbsent || estimatedPickupTime != null) {
+      map['estimated_pickup_time'] = Variable<DateTime>(estimatedPickupTime);
+    }
+    if (!nullToAbsent || driverInfoJson != null) {
+      map['driver_info_json'] = Variable<String>(driverInfoJson);
+    }
+    if (!nullToAbsent || kitchenOrderId != null) {
+      map['kitchen_order_id'] = Variable<int>(kitchenOrderId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  DeliveryOrdersCompanion toCompanion(bool nullToAbsent) {
+    return DeliveryOrdersCompanion(
+      id: Value(id),
+      platformOrderId: Value(platformOrderId),
+      platform: Value(platform),
+      status: Value(status),
+      customerName: Value(customerName),
+      customerPhone: customerPhone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerPhone),
+      deliveryAddress: deliveryAddress == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deliveryAddress),
+      itemsJson: Value(itemsJson),
+      totalAmount: Value(totalAmount),
+      specialInstructions: specialInstructions == null && nullToAbsent
+          ? const Value.absent()
+          : Value(specialInstructions),
+      estimatedPickupTime: estimatedPickupTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(estimatedPickupTime),
+      driverInfoJson: driverInfoJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(driverInfoJson),
+      kitchenOrderId: kitchenOrderId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(kitchenOrderId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DeliveryOrder.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DeliveryOrder(
+      id: serializer.fromJson<int>(json['id']),
+      platformOrderId: serializer.fromJson<String>(json['platformOrderId']),
+      platform: serializer.fromJson<String>(json['platform']),
+      status: serializer.fromJson<String>(json['status']),
+      customerName: serializer.fromJson<String>(json['customerName']),
+      customerPhone: serializer.fromJson<String?>(json['customerPhone']),
+      deliveryAddress: serializer.fromJson<String?>(json['deliveryAddress']),
+      itemsJson: serializer.fromJson<String>(json['itemsJson']),
+      totalAmount: serializer.fromJson<double>(json['totalAmount']),
+      specialInstructions: serializer.fromJson<String?>(
+        json['specialInstructions'],
+      ),
+      estimatedPickupTime: serializer.fromJson<DateTime?>(
+        json['estimatedPickupTime'],
+      ),
+      driverInfoJson: serializer.fromJson<String?>(json['driverInfoJson']),
+      kitchenOrderId: serializer.fromJson<int?>(json['kitchenOrderId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'platformOrderId': serializer.toJson<String>(platformOrderId),
+      'platform': serializer.toJson<String>(platform),
+      'status': serializer.toJson<String>(status),
+      'customerName': serializer.toJson<String>(customerName),
+      'customerPhone': serializer.toJson<String?>(customerPhone),
+      'deliveryAddress': serializer.toJson<String?>(deliveryAddress),
+      'itemsJson': serializer.toJson<String>(itemsJson),
+      'totalAmount': serializer.toJson<double>(totalAmount),
+      'specialInstructions': serializer.toJson<String?>(specialInstructions),
+      'estimatedPickupTime': serializer.toJson<DateTime?>(estimatedPickupTime),
+      'driverInfoJson': serializer.toJson<String?>(driverInfoJson),
+      'kitchenOrderId': serializer.toJson<int?>(kitchenOrderId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  DeliveryOrder copyWith({
+    int? id,
+    String? platformOrderId,
+    String? platform,
+    String? status,
+    String? customerName,
+    Value<String?> customerPhone = const Value.absent(),
+    Value<String?> deliveryAddress = const Value.absent(),
+    String? itemsJson,
+    double? totalAmount,
+    Value<String?> specialInstructions = const Value.absent(),
+    Value<DateTime?> estimatedPickupTime = const Value.absent(),
+    Value<String?> driverInfoJson = const Value.absent(),
+    Value<int?> kitchenOrderId = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => DeliveryOrder(
+    id: id ?? this.id,
+    platformOrderId: platformOrderId ?? this.platformOrderId,
+    platform: platform ?? this.platform,
+    status: status ?? this.status,
+    customerName: customerName ?? this.customerName,
+    customerPhone: customerPhone.present
+        ? customerPhone.value
+        : this.customerPhone,
+    deliveryAddress: deliveryAddress.present
+        ? deliveryAddress.value
+        : this.deliveryAddress,
+    itemsJson: itemsJson ?? this.itemsJson,
+    totalAmount: totalAmount ?? this.totalAmount,
+    specialInstructions: specialInstructions.present
+        ? specialInstructions.value
+        : this.specialInstructions,
+    estimatedPickupTime: estimatedPickupTime.present
+        ? estimatedPickupTime.value
+        : this.estimatedPickupTime,
+    driverInfoJson: driverInfoJson.present
+        ? driverInfoJson.value
+        : this.driverInfoJson,
+    kitchenOrderId: kitchenOrderId.present
+        ? kitchenOrderId.value
+        : this.kitchenOrderId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  DeliveryOrder copyWithCompanion(DeliveryOrdersCompanion data) {
+    return DeliveryOrder(
+      id: data.id.present ? data.id.value : this.id,
+      platformOrderId: data.platformOrderId.present
+          ? data.platformOrderId.value
+          : this.platformOrderId,
+      platform: data.platform.present ? data.platform.value : this.platform,
+      status: data.status.present ? data.status.value : this.status,
+      customerName: data.customerName.present
+          ? data.customerName.value
+          : this.customerName,
+      customerPhone: data.customerPhone.present
+          ? data.customerPhone.value
+          : this.customerPhone,
+      deliveryAddress: data.deliveryAddress.present
+          ? data.deliveryAddress.value
+          : this.deliveryAddress,
+      itemsJson: data.itemsJson.present ? data.itemsJson.value : this.itemsJson,
+      totalAmount: data.totalAmount.present
+          ? data.totalAmount.value
+          : this.totalAmount,
+      specialInstructions: data.specialInstructions.present
+          ? data.specialInstructions.value
+          : this.specialInstructions,
+      estimatedPickupTime: data.estimatedPickupTime.present
+          ? data.estimatedPickupTime.value
+          : this.estimatedPickupTime,
+      driverInfoJson: data.driverInfoJson.present
+          ? data.driverInfoJson.value
+          : this.driverInfoJson,
+      kitchenOrderId: data.kitchenOrderId.present
+          ? data.kitchenOrderId.value
+          : this.kitchenOrderId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DeliveryOrder(')
+          ..write('id: $id, ')
+          ..write('platformOrderId: $platformOrderId, ')
+          ..write('platform: $platform, ')
+          ..write('status: $status, ')
+          ..write('customerName: $customerName, ')
+          ..write('customerPhone: $customerPhone, ')
+          ..write('deliveryAddress: $deliveryAddress, ')
+          ..write('itemsJson: $itemsJson, ')
+          ..write('totalAmount: $totalAmount, ')
+          ..write('specialInstructions: $specialInstructions, ')
+          ..write('estimatedPickupTime: $estimatedPickupTime, ')
+          ..write('driverInfoJson: $driverInfoJson, ')
+          ..write('kitchenOrderId: $kitchenOrderId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    platformOrderId,
+    platform,
+    status,
+    customerName,
+    customerPhone,
+    deliveryAddress,
+    itemsJson,
+    totalAmount,
+    specialInstructions,
+    estimatedPickupTime,
+    driverInfoJson,
+    kitchenOrderId,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DeliveryOrder &&
+          other.id == this.id &&
+          other.platformOrderId == this.platformOrderId &&
+          other.platform == this.platform &&
+          other.status == this.status &&
+          other.customerName == this.customerName &&
+          other.customerPhone == this.customerPhone &&
+          other.deliveryAddress == this.deliveryAddress &&
+          other.itemsJson == this.itemsJson &&
+          other.totalAmount == this.totalAmount &&
+          other.specialInstructions == this.specialInstructions &&
+          other.estimatedPickupTime == this.estimatedPickupTime &&
+          other.driverInfoJson == this.driverInfoJson &&
+          other.kitchenOrderId == this.kitchenOrderId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DeliveryOrdersCompanion extends UpdateCompanion<DeliveryOrder> {
+  final Value<int> id;
+  final Value<String> platformOrderId;
+  final Value<String> platform;
+  final Value<String> status;
+  final Value<String> customerName;
+  final Value<String?> customerPhone;
+  final Value<String?> deliveryAddress;
+  final Value<String> itemsJson;
+  final Value<double> totalAmount;
+  final Value<String?> specialInstructions;
+  final Value<DateTime?> estimatedPickupTime;
+  final Value<String?> driverInfoJson;
+  final Value<int?> kitchenOrderId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const DeliveryOrdersCompanion({
+    this.id = const Value.absent(),
+    this.platformOrderId = const Value.absent(),
+    this.platform = const Value.absent(),
+    this.status = const Value.absent(),
+    this.customerName = const Value.absent(),
+    this.customerPhone = const Value.absent(),
+    this.deliveryAddress = const Value.absent(),
+    this.itemsJson = const Value.absent(),
+    this.totalAmount = const Value.absent(),
+    this.specialInstructions = const Value.absent(),
+    this.estimatedPickupTime = const Value.absent(),
+    this.driverInfoJson = const Value.absent(),
+    this.kitchenOrderId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  DeliveryOrdersCompanion.insert({
+    this.id = const Value.absent(),
+    required String platformOrderId,
+    required String platform,
+    this.status = const Value.absent(),
+    required String customerName,
+    this.customerPhone = const Value.absent(),
+    this.deliveryAddress = const Value.absent(),
+    required String itemsJson,
+    required double totalAmount,
+    this.specialInstructions = const Value.absent(),
+    this.estimatedPickupTime = const Value.absent(),
+    this.driverInfoJson = const Value.absent(),
+    this.kitchenOrderId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  }) : platformOrderId = Value(platformOrderId),
+       platform = Value(platform),
+       customerName = Value(customerName),
+       itemsJson = Value(itemsJson),
+       totalAmount = Value(totalAmount);
+  static Insertable<DeliveryOrder> custom({
+    Expression<int>? id,
+    Expression<String>? platformOrderId,
+    Expression<String>? platform,
+    Expression<String>? status,
+    Expression<String>? customerName,
+    Expression<String>? customerPhone,
+    Expression<String>? deliveryAddress,
+    Expression<String>? itemsJson,
+    Expression<double>? totalAmount,
+    Expression<String>? specialInstructions,
+    Expression<DateTime>? estimatedPickupTime,
+    Expression<String>? driverInfoJson,
+    Expression<int>? kitchenOrderId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (platformOrderId != null) 'platform_order_id': platformOrderId,
+      if (platform != null) 'platform': platform,
+      if (status != null) 'status': status,
+      if (customerName != null) 'customer_name': customerName,
+      if (customerPhone != null) 'customer_phone': customerPhone,
+      if (deliveryAddress != null) 'delivery_address': deliveryAddress,
+      if (itemsJson != null) 'items_json': itemsJson,
+      if (totalAmount != null) 'total_amount': totalAmount,
+      if (specialInstructions != null)
+        'special_instructions': specialInstructions,
+      if (estimatedPickupTime != null)
+        'estimated_pickup_time': estimatedPickupTime,
+      if (driverInfoJson != null) 'driver_info_json': driverInfoJson,
+      if (kitchenOrderId != null) 'kitchen_order_id': kitchenOrderId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  DeliveryOrdersCompanion copyWith({
+    Value<int>? id,
+    Value<String>? platformOrderId,
+    Value<String>? platform,
+    Value<String>? status,
+    Value<String>? customerName,
+    Value<String?>? customerPhone,
+    Value<String?>? deliveryAddress,
+    Value<String>? itemsJson,
+    Value<double>? totalAmount,
+    Value<String?>? specialInstructions,
+    Value<DateTime?>? estimatedPickupTime,
+    Value<String?>? driverInfoJson,
+    Value<int?>? kitchenOrderId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return DeliveryOrdersCompanion(
+      id: id ?? this.id,
+      platformOrderId: platformOrderId ?? this.platformOrderId,
+      platform: platform ?? this.platform,
+      status: status ?? this.status,
+      customerName: customerName ?? this.customerName,
+      customerPhone: customerPhone ?? this.customerPhone,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      itemsJson: itemsJson ?? this.itemsJson,
+      totalAmount: totalAmount ?? this.totalAmount,
+      specialInstructions: specialInstructions ?? this.specialInstructions,
+      estimatedPickupTime: estimatedPickupTime ?? this.estimatedPickupTime,
+      driverInfoJson: driverInfoJson ?? this.driverInfoJson,
+      kitchenOrderId: kitchenOrderId ?? this.kitchenOrderId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (platformOrderId.present) {
+      map['platform_order_id'] = Variable<String>(platformOrderId.value);
+    }
+    if (platform.present) {
+      map['platform'] = Variable<String>(platform.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (customerName.present) {
+      map['customer_name'] = Variable<String>(customerName.value);
+    }
+    if (customerPhone.present) {
+      map['customer_phone'] = Variable<String>(customerPhone.value);
+    }
+    if (deliveryAddress.present) {
+      map['delivery_address'] = Variable<String>(deliveryAddress.value);
+    }
+    if (itemsJson.present) {
+      map['items_json'] = Variable<String>(itemsJson.value);
+    }
+    if (totalAmount.present) {
+      map['total_amount'] = Variable<double>(totalAmount.value);
+    }
+    if (specialInstructions.present) {
+      map['special_instructions'] = Variable<String>(specialInstructions.value);
+    }
+    if (estimatedPickupTime.present) {
+      map['estimated_pickup_time'] = Variable<DateTime>(
+        estimatedPickupTime.value,
+      );
+    }
+    if (driverInfoJson.present) {
+      map['driver_info_json'] = Variable<String>(driverInfoJson.value);
+    }
+    if (kitchenOrderId.present) {
+      map['kitchen_order_id'] = Variable<int>(kitchenOrderId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DeliveryOrdersCompanion(')
+          ..write('id: $id, ')
+          ..write('platformOrderId: $platformOrderId, ')
+          ..write('platform: $platform, ')
+          ..write('status: $status, ')
+          ..write('customerName: $customerName, ')
+          ..write('customerPhone: $customerPhone, ')
+          ..write('deliveryAddress: $deliveryAddress, ')
+          ..write('itemsJson: $itemsJson, ')
+          ..write('totalAmount: $totalAmount, ')
+          ..write('specialInstructions: $specialInstructions, ')
+          ..write('estimatedPickupTime: $estimatedPickupTime, ')
+          ..write('driverInfoJson: $driverInfoJson, ')
+          ..write('kitchenOrderId: $kitchenOrderId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -19438,6 +20617,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $StoreAssignmentsTable storeAssignments = $StoreAssignmentsTable(
     this,
   );
+  late final $SystemSettingsTable systemSettings = $SystemSettingsTable(this);
+  late final $DeliveryOrdersTable deliveryOrders = $DeliveryOrdersTable(this);
   late final ProductsDao productsDao = ProductsDao(this as AppDatabase);
   late final SalesDao salesDao = SalesDao(this as AppDatabase);
   late final SyncDao syncDao = SyncDao(this as AppDatabase);
@@ -19467,6 +20648,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final UserRolesDao userRolesDao = UserRolesDao(this as AppDatabase);
   late final StoreAssignmentsDao storeAssignmentsDao = StoreAssignmentsDao(
+    this as AppDatabase,
+  );
+  late final DeliveryOrdersDao deliveryOrdersDao = DeliveryOrdersDao(
     this as AppDatabase,
   );
   @override
@@ -19503,6 +20687,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     rolePermissions,
     userRoles,
     storeAssignments,
+    systemSettings,
+    deliveryOrders,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -28641,6 +29827,27 @@ final class $$KitchenOrdersTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
+
+  static MultiTypedResultKey<$DeliveryOrdersTable, List<DeliveryOrder>>
+  _deliveryOrdersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.deliveryOrders,
+    aliasName: $_aliasNameGenerator(
+      db.kitchenOrders.id,
+      db.deliveryOrders.kitchenOrderId,
+    ),
+  );
+
+  $$DeliveryOrdersTableProcessedTableManager get deliveryOrdersRefs {
+    final manager = $$DeliveryOrdersTableTableManager(
+      $_db,
+      $_db.deliveryOrders,
+    ).filter((f) => f.kitchenOrderId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_deliveryOrdersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$KitchenOrdersTableFilterComposer
@@ -28728,6 +29935,31 @@ class $$KitchenOrdersTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> deliveryOrdersRefs(
+    Expression<bool> Function($$DeliveryOrdersTableFilterComposer f) f,
+  ) {
+    final $$DeliveryOrdersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.deliveryOrders,
+      getReferencedColumn: (t) => t.kitchenOrderId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DeliveryOrdersTableFilterComposer(
+            $db: $db,
+            $table: $db.deliveryOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -28889,6 +30121,31 @@ class $$KitchenOrdersTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> deliveryOrdersRefs<T extends Object>(
+    Expression<T> Function($$DeliveryOrdersTableAnnotationComposer a) f,
+  ) {
+    final $$DeliveryOrdersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.deliveryOrders,
+      getReferencedColumn: (t) => t.kitchenOrderId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DeliveryOrdersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.deliveryOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$KitchenOrdersTableTableManager
@@ -28904,7 +30161,7 @@ class $$KitchenOrdersTableTableManager
           $$KitchenOrdersTableUpdateCompanionBuilder,
           (KitchenOrder, $$KitchenOrdersTableReferences),
           KitchenOrder,
-          PrefetchHooks Function({bool saleId})
+          PrefetchHooks Function({bool saleId, bool deliveryOrdersRefs})
         > {
   $$KitchenOrdersTableTableManager(_$AppDatabase db, $KitchenOrdersTable table)
     : super(
@@ -28981,47 +30238,74 @@ class $$KitchenOrdersTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({saleId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (saleId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.saleId,
-                                referencedTable: $$KitchenOrdersTableReferences
-                                    ._saleIdTable(db),
-                                referencedColumn: $$KitchenOrdersTableReferences
-                                    ._saleIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+          prefetchHooksCallback:
+              ({saleId = false, deliveryOrdersRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (deliveryOrdersRefs) db.deliveryOrders,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (saleId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.saleId,
+                                    referencedTable:
+                                        $$KitchenOrdersTableReferences
+                                            ._saleIdTable(db),
+                                    referencedColumn:
+                                        $$KitchenOrdersTableReferences
+                                            ._saleIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (deliveryOrdersRefs)
+                        await $_getPrefetchedData<
+                          KitchenOrder,
+                          $KitchenOrdersTable,
+                          DeliveryOrder
+                        >(
+                          currentTable: table,
+                          referencedTable: $$KitchenOrdersTableReferences
+                              ._deliveryOrdersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$KitchenOrdersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).deliveryOrdersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.kitchenOrderId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -29038,7 +30322,7 @@ typedef $$KitchenOrdersTableProcessedTableManager =
       $$KitchenOrdersTableUpdateCompanionBuilder,
       (KitchenOrder, $$KitchenOrdersTableReferences),
       KitchenOrder,
-      PrefetchHooks Function({bool saleId})
+      PrefetchHooks Function({bool saleId, bool deliveryOrdersRefs})
     >;
 typedef $$RestaurantTablesTableCreateCompanionBuilder =
     RestaurantTablesCompanion Function({
@@ -31424,6 +32708,699 @@ typedef $$StoreAssignmentsTableProcessedTableManager =
       StoreAssignment,
       PrefetchHooks Function()
     >;
+typedef $$SystemSettingsTableCreateCompanionBuilder =
+    SystemSettingsCompanion Function({
+      required String key,
+      required String value,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SystemSettingsTableUpdateCompanionBuilder =
+    SystemSettingsCompanion Function({
+      Value<String> key,
+      Value<String> value,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$SystemSettingsTableFilterComposer
+    extends Composer<_$AppDatabase, $SystemSettingsTable> {
+  $$SystemSettingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SystemSettingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SystemSettingsTable> {
+  $$SystemSettingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SystemSettingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SystemSettingsTable> {
+  $$SystemSettingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SystemSettingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SystemSettingsTable,
+          SystemSetting,
+          $$SystemSettingsTableFilterComposer,
+          $$SystemSettingsTableOrderingComposer,
+          $$SystemSettingsTableAnnotationComposer,
+          $$SystemSettingsTableCreateCompanionBuilder,
+          $$SystemSettingsTableUpdateCompanionBuilder,
+          (
+            SystemSetting,
+            BaseReferences<_$AppDatabase, $SystemSettingsTable, SystemSetting>,
+          ),
+          SystemSetting,
+          PrefetchHooks Function()
+        > {
+  $$SystemSettingsTableTableManager(
+    _$AppDatabase db,
+    $SystemSettingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SystemSettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SystemSettingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SystemSettingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> key = const Value.absent(),
+                Value<String> value = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SystemSettingsCompanion(
+                key: key,
+                value: value,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String key,
+                required String value,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SystemSettingsCompanion.insert(
+                key: key,
+                value: value,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SystemSettingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SystemSettingsTable,
+      SystemSetting,
+      $$SystemSettingsTableFilterComposer,
+      $$SystemSettingsTableOrderingComposer,
+      $$SystemSettingsTableAnnotationComposer,
+      $$SystemSettingsTableCreateCompanionBuilder,
+      $$SystemSettingsTableUpdateCompanionBuilder,
+      (
+        SystemSetting,
+        BaseReferences<_$AppDatabase, $SystemSettingsTable, SystemSetting>,
+      ),
+      SystemSetting,
+      PrefetchHooks Function()
+    >;
+typedef $$DeliveryOrdersTableCreateCompanionBuilder =
+    DeliveryOrdersCompanion Function({
+      Value<int> id,
+      required String platformOrderId,
+      required String platform,
+      Value<String> status,
+      required String customerName,
+      Value<String?> customerPhone,
+      Value<String?> deliveryAddress,
+      required String itemsJson,
+      required double totalAmount,
+      Value<String?> specialInstructions,
+      Value<DateTime?> estimatedPickupTime,
+      Value<String?> driverInfoJson,
+      Value<int?> kitchenOrderId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+typedef $$DeliveryOrdersTableUpdateCompanionBuilder =
+    DeliveryOrdersCompanion Function({
+      Value<int> id,
+      Value<String> platformOrderId,
+      Value<String> platform,
+      Value<String> status,
+      Value<String> customerName,
+      Value<String?> customerPhone,
+      Value<String?> deliveryAddress,
+      Value<String> itemsJson,
+      Value<double> totalAmount,
+      Value<String?> specialInstructions,
+      Value<DateTime?> estimatedPickupTime,
+      Value<String?> driverInfoJson,
+      Value<int?> kitchenOrderId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+
+final class $$DeliveryOrdersTableReferences
+    extends BaseReferences<_$AppDatabase, $DeliveryOrdersTable, DeliveryOrder> {
+  $$DeliveryOrdersTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $KitchenOrdersTable _kitchenOrderIdTable(_$AppDatabase db) =>
+      db.kitchenOrders.createAlias(
+        $_aliasNameGenerator(
+          db.deliveryOrders.kitchenOrderId,
+          db.kitchenOrders.id,
+        ),
+      );
+
+  $$KitchenOrdersTableProcessedTableManager? get kitchenOrderId {
+    final $_column = $_itemColumn<int>('kitchen_order_id');
+    if ($_column == null) return null;
+    final manager = $$KitchenOrdersTableTableManager(
+      $_db,
+      $_db.kitchenOrders,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_kitchenOrderIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$DeliveryOrdersTableFilterComposer
+    extends Composer<_$AppDatabase, $DeliveryOrdersTable> {
+  $$DeliveryOrdersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get platformOrderId => $composableBuilder(
+    column: $table.platformOrderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get platform => $composableBuilder(
+    column: $table.platform,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerPhone => $composableBuilder(
+    column: $table.customerPhone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deliveryAddress => $composableBuilder(
+    column: $table.deliveryAddress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemsJson => $composableBuilder(
+    column: $table.itemsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get specialInstructions => $composableBuilder(
+    column: $table.specialInstructions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get estimatedPickupTime => $composableBuilder(
+    column: $table.estimatedPickupTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get driverInfoJson => $composableBuilder(
+    column: $table.driverInfoJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$KitchenOrdersTableFilterComposer get kitchenOrderId {
+    final $$KitchenOrdersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.kitchenOrderId,
+      referencedTable: $db.kitchenOrders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KitchenOrdersTableFilterComposer(
+            $db: $db,
+            $table: $db.kitchenOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DeliveryOrdersTableOrderingComposer
+    extends Composer<_$AppDatabase, $DeliveryOrdersTable> {
+  $$DeliveryOrdersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get platformOrderId => $composableBuilder(
+    column: $table.platformOrderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get platform => $composableBuilder(
+    column: $table.platform,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customerPhone => $composableBuilder(
+    column: $table.customerPhone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deliveryAddress => $composableBuilder(
+    column: $table.deliveryAddress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemsJson => $composableBuilder(
+    column: $table.itemsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get specialInstructions => $composableBuilder(
+    column: $table.specialInstructions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get estimatedPickupTime => $composableBuilder(
+    column: $table.estimatedPickupTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get driverInfoJson => $composableBuilder(
+    column: $table.driverInfoJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$KitchenOrdersTableOrderingComposer get kitchenOrderId {
+    final $$KitchenOrdersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.kitchenOrderId,
+      referencedTable: $db.kitchenOrders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KitchenOrdersTableOrderingComposer(
+            $db: $db,
+            $table: $db.kitchenOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DeliveryOrdersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DeliveryOrdersTable> {
+  $$DeliveryOrdersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get platformOrderId => $composableBuilder(
+    column: $table.platformOrderId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get platform =>
+      $composableBuilder(column: $table.platform, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customerPhone => $composableBuilder(
+    column: $table.customerPhone,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deliveryAddress => $composableBuilder(
+    column: $table.deliveryAddress,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemsJson =>
+      $composableBuilder(column: $table.itemsJson, builder: (column) => column);
+
+  GeneratedColumn<double> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get specialInstructions => $composableBuilder(
+    column: $table.specialInstructions,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get estimatedPickupTime => $composableBuilder(
+    column: $table.estimatedPickupTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get driverInfoJson => $composableBuilder(
+    column: $table.driverInfoJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$KitchenOrdersTableAnnotationComposer get kitchenOrderId {
+    final $$KitchenOrdersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.kitchenOrderId,
+      referencedTable: $db.kitchenOrders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KitchenOrdersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.kitchenOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DeliveryOrdersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DeliveryOrdersTable,
+          DeliveryOrder,
+          $$DeliveryOrdersTableFilterComposer,
+          $$DeliveryOrdersTableOrderingComposer,
+          $$DeliveryOrdersTableAnnotationComposer,
+          $$DeliveryOrdersTableCreateCompanionBuilder,
+          $$DeliveryOrdersTableUpdateCompanionBuilder,
+          (DeliveryOrder, $$DeliveryOrdersTableReferences),
+          DeliveryOrder,
+          PrefetchHooks Function({bool kitchenOrderId})
+        > {
+  $$DeliveryOrdersTableTableManager(
+    _$AppDatabase db,
+    $DeliveryOrdersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DeliveryOrdersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DeliveryOrdersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DeliveryOrdersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> platformOrderId = const Value.absent(),
+                Value<String> platform = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> customerName = const Value.absent(),
+                Value<String?> customerPhone = const Value.absent(),
+                Value<String?> deliveryAddress = const Value.absent(),
+                Value<String> itemsJson = const Value.absent(),
+                Value<double> totalAmount = const Value.absent(),
+                Value<String?> specialInstructions = const Value.absent(),
+                Value<DateTime?> estimatedPickupTime = const Value.absent(),
+                Value<String?> driverInfoJson = const Value.absent(),
+                Value<int?> kitchenOrderId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => DeliveryOrdersCompanion(
+                id: id,
+                platformOrderId: platformOrderId,
+                platform: platform,
+                status: status,
+                customerName: customerName,
+                customerPhone: customerPhone,
+                deliveryAddress: deliveryAddress,
+                itemsJson: itemsJson,
+                totalAmount: totalAmount,
+                specialInstructions: specialInstructions,
+                estimatedPickupTime: estimatedPickupTime,
+                driverInfoJson: driverInfoJson,
+                kitchenOrderId: kitchenOrderId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String platformOrderId,
+                required String platform,
+                Value<String> status = const Value.absent(),
+                required String customerName,
+                Value<String?> customerPhone = const Value.absent(),
+                Value<String?> deliveryAddress = const Value.absent(),
+                required String itemsJson,
+                required double totalAmount,
+                Value<String?> specialInstructions = const Value.absent(),
+                Value<DateTime?> estimatedPickupTime = const Value.absent(),
+                Value<String?> driverInfoJson = const Value.absent(),
+                Value<int?> kitchenOrderId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => DeliveryOrdersCompanion.insert(
+                id: id,
+                platformOrderId: platformOrderId,
+                platform: platform,
+                status: status,
+                customerName: customerName,
+                customerPhone: customerPhone,
+                deliveryAddress: deliveryAddress,
+                itemsJson: itemsJson,
+                totalAmount: totalAmount,
+                specialInstructions: specialInstructions,
+                estimatedPickupTime: estimatedPickupTime,
+                driverInfoJson: driverInfoJson,
+                kitchenOrderId: kitchenOrderId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$DeliveryOrdersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({kitchenOrderId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (kitchenOrderId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.kitchenOrderId,
+                                referencedTable: $$DeliveryOrdersTableReferences
+                                    ._kitchenOrderIdTable(db),
+                                referencedColumn:
+                                    $$DeliveryOrdersTableReferences
+                                        ._kitchenOrderIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$DeliveryOrdersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DeliveryOrdersTable,
+      DeliveryOrder,
+      $$DeliveryOrdersTableFilterComposer,
+      $$DeliveryOrdersTableOrderingComposer,
+      $$DeliveryOrdersTableAnnotationComposer,
+      $$DeliveryOrdersTableCreateCompanionBuilder,
+      $$DeliveryOrdersTableUpdateCompanionBuilder,
+      (DeliveryOrder, $$DeliveryOrdersTableReferences),
+      DeliveryOrder,
+      PrefetchHooks Function({bool kitchenOrderId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -31486,4 +33463,8 @@ class $AppDatabaseManager {
       $$UserRolesTableTableManager(_db, _db.userRoles);
   $$StoreAssignmentsTableTableManager get storeAssignments =>
       $$StoreAssignmentsTableTableManager(_db, _db.storeAssignments);
+  $$SystemSettingsTableTableManager get systemSettings =>
+      $$SystemSettingsTableTableManager(_db, _db.systemSettings);
+  $$DeliveryOrdersTableTableManager get deliveryOrders =>
+      $$DeliveryOrdersTableTableManager(_db, _db.deliveryOrders);
 }

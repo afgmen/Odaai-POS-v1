@@ -1,18 +1,20 @@
-/// 사용자 역할 정의
+// ignore_for_file: constant_identifier_names
+
+/// Legacy user role enum (pre-RBAC)
 enum UserRole {
-  /// 관리자 (전체 권한)
+  /// Manager (full access)
   MANAGER,
 
-  /// 직원 (제한된 권한)
+  /// Cashier (limited access)
   CASHIER,
 
-  /// 주방 (KDS 전용)
+  /// Kitchen display only
   KITCHEN,
 }
 
-/// UserRole Extension - 문자열 변환 및 유틸리티
+/// UserRole extension - string conversion and utilities
 extension UserRoleExtension on UserRole {
-  /// 역할을 문자열로 변환
+  /// Role as database string
   String get value {
     switch (this) {
       case UserRole.MANAGER:
@@ -24,19 +26,19 @@ extension UserRoleExtension on UserRole {
     }
   }
 
-  /// 역할의 한글 이름
+  /// Display name
   String get displayName {
     switch (this) {
       case UserRole.MANAGER:
-        return '관리자';
+        return 'Manager';
       case UserRole.CASHIER:
-        return '직원';
+        return 'Cashier';
       case UserRole.KITCHEN:
-        return '주방';
+        return 'Kitchen';
     }
   }
 
-  /// 문자열로부터 UserRole 생성
+  /// Create UserRole from string
   static UserRole fromString(String value) {
     switch (value.toUpperCase()) {
       case 'MANAGER':
@@ -46,7 +48,7 @@ extension UserRoleExtension on UserRole {
       case 'KITCHEN':
         return UserRole.KITCHEN;
       default:
-        return UserRole.CASHIER; // 기본값
+        return UserRole.CASHIER;
     }
   }
 }

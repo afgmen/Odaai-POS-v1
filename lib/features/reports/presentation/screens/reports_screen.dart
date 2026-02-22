@@ -14,6 +14,7 @@ import '../widgets/kpi_summary_card.dart';
 import '../widgets/payment_pie_chart.dart';
 import '../widgets/product_bar_chart.dart';
 import '../widgets/revenue_line_chart.dart';
+import '../../../delivery/presentation/widgets/delivery_report_section.dart';
 
 /// 매출 통계/리포트 화면
 class ReportsScreen extends ConsumerWidget {
@@ -44,7 +45,7 @@ class ReportsScreen extends ConsumerWidget {
         ),
         body: const Center(
           child: AccessDeniedCard(
-            message: '매출 보고서를 볼 권한이 없습니다',
+            message: 'No permission to view sales reports',
           ),
         ),
       ),
@@ -114,6 +115,10 @@ class _ReportsScreenContent extends ConsumerWidget {
             // ── 상품별 매출 (Bar chart) ──
             _buildProductChart(ref, l10n),
             const SizedBox(height: 24),
+
+            // ── 배달 리포트 ──
+            const DeliveryReportSection(),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -148,7 +153,7 @@ class _ReportsScreenContent extends ConsumerWidget {
               );
             },
             loading: () => _loadingCard(),
-            error: (_, __) => _errorCard(l10n),
+            error: (_, _) => _errorCard(l10n),
           ),
         ),
         SizedBox(
@@ -162,7 +167,7 @@ class _ReportsScreenContent extends ConsumerWidget {
               bgColor: const Color(0xFFE6FAF2),
             ),
             loading: () => _loadingCard(),
-            error: (_, __) => _errorCard(l10n),
+            error: (_, _) => _errorCard(l10n),
           ),
         ),
         SizedBox(
@@ -176,7 +181,7 @@ class _ReportsScreenContent extends ConsumerWidget {
               bgColor: const Color(0xFFFFF3E0),
             ),
             loading: () => _loadingCard(),
-            error: (_, __) => _errorCard(l10n),
+            error: (_, _) => _errorCard(l10n),
           ),
         ),
       ],
@@ -190,7 +195,7 @@ class _ReportsScreenContent extends ConsumerWidget {
     return asyncData.when(
       data: (data) => RevenueLineChart(data: data),
       loading: () => _loadingContainer(height: 260),
-      error: (_, __) => _errorContainer(height: 260, l10n: l10n),
+      error: (_, _) => _errorContainer(height: 260, l10n: l10n),
     );
   }
 
@@ -201,7 +206,7 @@ class _ReportsScreenContent extends ConsumerWidget {
     return asyncData.when(
       data: (data) => PaymentPieChart(data: data),
       loading: () => _loadingContainer(height: 200),
-      error: (_, __) => _errorContainer(height: 200, l10n: l10n),
+      error: (_, _) => _errorContainer(height: 200, l10n: l10n),
     );
   }
 
@@ -212,7 +217,7 @@ class _ReportsScreenContent extends ConsumerWidget {
     return asyncData.when(
       data: (data) => ProductBarChart(data: data),
       loading: () => _loadingContainer(height: 300),
-      error: (_, __) => _errorContainer(height: 300, l10n: l10n),
+      error: (_, _) => _errorContainer(height: 300, l10n: l10n),
     );
   }
 
@@ -362,10 +367,4 @@ class _ReportsScreenContent extends ConsumerWidget {
     );
   }
 
-  String _fmt(double price) {
-    return price.toInt().toString().replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]},',
-    );
-  }
 }

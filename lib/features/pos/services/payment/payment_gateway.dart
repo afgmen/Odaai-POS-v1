@@ -46,7 +46,7 @@ abstract class PaymentGateway {
 /// 실제 카드 단말기 연동 시 이 클래스를 확장/교체
 class CardPaymentGateway implements PaymentGateway {
   @override
-  String get name => '카드 단말기';
+  String get name => 'Card Terminal';
 
   @override
   Future<PaymentResult> processPayment({
@@ -82,7 +82,7 @@ class CardPaymentGateway implements PaymentGateway {
 /// QR 결제 게이트웨이
 class QrPaymentGateway implements PaymentGateway {
   @override
-  String get name => 'QR 결제';
+  String get name => 'QR Payment';
 
   @override
   Future<PaymentResult> processPayment({
@@ -116,7 +116,7 @@ class QrPaymentGateway implements PaymentGateway {
 /// 이체 결제 게이트웨이 (수동 확인 방식)
 class TransferPaymentGateway implements PaymentGateway {
   @override
-  String get name => '계좌이체';
+  String get name => 'Bank Transfer';
 
   @override
   Future<PaymentResult> processPayment({

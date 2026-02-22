@@ -1,19 +1,19 @@
 /// 주방 주문 상태
 enum OrderStatus {
   /// 대기 중 (신규 주문)
-  pending('PENDING', '대기'),
+  pending('PENDING', 'Pending'),
 
-  /// 조리 중
-  preparing('PREPARING', '조리중'),
+  /// In preparation
+  preparing('PREPARING', 'Preparing'),
 
-  /// 조리 완료 (픽업 대기)
-  ready('READY', '완료'),
+  /// Ready (awaiting pickup)
+  ready('READY', 'Ready'),
 
-  /// 서빙 완료
-  served('SERVED', '서빙완료'),
+  /// Served
+  served('SERVED', 'Served'),
 
-  /// 취소됨
-  cancelled('CANCELLED', '취소');
+  /// Cancelled
+  cancelled('CANCELLED', 'Cancelled');
 
   final String value;
   final String displayName;

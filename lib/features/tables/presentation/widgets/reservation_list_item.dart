@@ -56,7 +56,7 @@ class ReservationListItem extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: status.color.withOpacity(0.15),
+                      color: status.color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: status.color),
                     ),
@@ -84,7 +84,7 @@ class ReservationListItem extends StatelessWidget {
                   const SizedBox(width: 8),
                   _buildInfoChip(
                     Icons.people,
-                    '${reservation.partySize}명',
+                    '${reservation.partySize} pax',
                     Colors.green,
                   ),
                 ],
@@ -125,7 +125,7 @@ class ReservationListItem extends StatelessWidget {
                     Icon(Icons.table_restaurant, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
                     Text(
-                      '테이블 ${reservation.tableId}번',
+                      'Table ${reservation.tableId}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[700],
@@ -142,9 +142,9 @@ class ReservationListItem extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
+                    color: Colors.amber.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -188,7 +188,7 @@ class ReservationListItem extends StatelessWidget {
                     // 수정 버튼
                     _buildActionButton(
                       context,
-                      label: '수정',
+                      label: 'Edit',
                       icon: Icons.edit,
                       color: Colors.orange,
                       onPressed: onEdit,
@@ -198,7 +198,7 @@ class ReservationListItem extends StatelessWidget {
                     // 삭제 버튼
                     _buildActionButton(
                       context,
-                      label: '삭제',
+                      label: 'Delete',
                       icon: Icons.delete,
                       color: Colors.red,
                       onPressed: onDelete,
@@ -217,7 +217,7 @@ class ReservationListItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

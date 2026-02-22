@@ -63,7 +63,7 @@ class TableWidget extends StatelessWidget {
       width: 100,
       height: 100,
       decoration: BoxDecoration(
-        color: status.color.withOpacity(0.1),
+        color: status.color.withValues(alpha: 0.1),
         border: Border.all(
           color: status.color,
           width: isDragging ? 3 : 2,
@@ -72,7 +72,7 @@ class TableWidget extends StatelessWidget {
         boxShadow: isDragging
             ? [
                 BoxShadow(
-                  color: status.color.withOpacity(0.3),
+                  color: status.color.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 )
@@ -97,7 +97,7 @@ class TableWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: status.color.withOpacity(0.2),
+              color: status.color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -114,7 +114,7 @@ class TableWidget extends StatelessWidget {
           // 좌석 수
           if (table.seats > 0)
             Text(
-              '${table.seats}인석',
+              '${table.seats} seats',
               style: TextStyle(
                 fontSize: 9,
                 color: Colors.grey[600],
@@ -138,8 +138,8 @@ class TableWidget extends StatelessWidget {
   /// 경과 시간 포맷 (예: 25분)
   String _formatDuration(Duration duration) {
     if (duration.inHours > 0) {
-      return '${duration.inHours}시간 ${duration.inMinutes % 60}분';
+      return '${duration.inHours}h ${duration.inMinutes % 60}m';
     }
-    return '${duration.inMinutes}분';
+    return '${duration.inMinutes}m';
   }
 }

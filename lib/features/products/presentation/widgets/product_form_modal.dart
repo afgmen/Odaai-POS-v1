@@ -169,7 +169,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 controller: _priceCtrl,
                 hint: '10000',
                 isNumber: true,
-                prefixText: '₩',
+                prefixText: '₫',
                 onChanged: (_) => setState(() {}),
               ),
               _formField(
@@ -177,7 +177,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 controller: _costCtrl,
                 hint: '7000',
                 isNumber: true,
-                prefixText: '₩',
+                prefixText: '₫',
               ),
 
               // ─── 재고정보 섹션 ──────────────
@@ -514,7 +514,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     final l10n = AppLocalizations.of(context)!;
 
     if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
-      _showSnackBar('SKU를 먼저 입력해주세요', AppTheme.error);
+      _showSnackBar('Please enter SKU first', AppTheme.error);
       return;
     }
 
@@ -537,7 +537,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     final l10n = AppLocalizations.of(context)!;
 
     if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
-      _showSnackBar('SKU를 먼저 입력해주세요', AppTheme.error);
+      _showSnackBar('Please enter SKU first', AppTheme.error);
       return;
     }
 
@@ -603,12 +603,12 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
 
     // Validate product name
     if (_nameCtrl.text.trim().isEmpty) {
-      _showSnackBar('상품명을 먼저 입력해주세요', AppTheme.error);
+      _showSnackBar('Please enter product name first', AppTheme.error);
       return;
     }
 
     if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
-      _showSnackBar('SKU를 먼저 입력해주세요', AppTheme.error);
+      _showSnackBar('Please enter SKU first', AppTheme.error);
       return;
     }
 

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/permission.dart';
+import '../../domain/user_role.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/permission_provider.dart';
 import '../widgets/pin_pad_widget.dart';
 
-/// 관리자 승인 다이얼로그
+/// Manager override dialog — requires manager PIN to approve a restricted action
 class ManagerOverrideDialog extends ConsumerStatefulWidget {
   final Permission permission;
   final String actionDescription;
@@ -36,7 +37,7 @@ class _ManagerOverrideDialogState
         children: [
           Icon(Icons.warning_amber, color: Colors.orange.shade700),
           const SizedBox(width: 8),
-          const Text('관리자 권한 필요'),
+          const Text('Manager Approval Required'),
         ],
       ),
       content: SizedBox(
@@ -45,14 +46,12 @@ class _ManagerOverrideDialogState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 설명
             Text(
-              '${widget.actionDescription}은(는) 관리자 권한이 필요합니다.',
+              '${widget.actionDescription} requires manager approval.',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 16),
 
-            // 요청자 정보
             if (currentSession != null) ...[
               Container(
                 padding: const EdgeInsets.all(12),
@@ -64,7 +63,7 @@ class _ManagerOverrideDialogState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '요청자: ${currentSession.employeeName} (${currentSession.role.displayName})',
+                      'Requested by: ${currentSession.employeeName} (${currentSession.role.displayName})',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -72,7 +71,7 @@ class _ManagerOverrideDialogState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '작업: ${widget.actionDescription}',
+                      'Action: ${widget.actionDescription}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade700,
@@ -84,9 +83,8 @@ class _ManagerOverrideDialogState
               const SizedBox(height: 16),
             ],
 
-            // 관리자 PIN 입력
             const Text(
-              '관리자 PIN을 입력하세요',
+              'Enter manager PIN',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -94,7 +92,6 @@ class _ManagerOverrideDialogState
             ),
             const SizedBox(height: 12),
 
-            // PIN 패드 (소형)
             Center(
               child: Transform.scale(
                 scale: 0.8,
@@ -112,7 +109,6 @@ class _ManagerOverrideDialogState
               ),
             ),
 
-            // 에러 메시지
             if (_errorMessage != null) ...[
               const SizedBox(height: 12),
               Container(
@@ -146,7 +142,7 @@ class _ManagerOverrideDialogState
       actions: [
         TextButton(
           onPressed: _isVerifying ? null : () => Navigator.of(context).pop(false),
-          child: const Text('취소'),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed:
@@ -157,7 +153,7 @@ class _ManagerOverrideDialogState
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('승인'),
+              : const Text('Approve'),
         ),
       ],
     );
@@ -172,7 +168,6 @@ class _ManagerOverrideDialogState
     });
 
     try {
-      // 관리자 승인 요청
       final permissionChecker = ref.read(permissionProvider);
       final approved = await permissionChecker.requestManagerOverride(
         widget.permission,
@@ -183,18 +178,16 @@ class _ManagerOverrideDialogState
       if (!mounted) return;
 
       if (approved) {
-        // 승인 성공
         Navigator.of(context).pop(true);
       } else {
-        // 승인 실패
         setState(() {
-          _errorMessage = '관리자 PIN이 일치하지 않습니다.';
+          _errorMessage = 'Manager PIN does not match.';
           _managerPin = '';
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = '승인 처리 중 오류가 발생했습니다: $e';
+        _errorMessage = 'Approval failed: $e';
         _managerPin = '';
       });
     } finally {

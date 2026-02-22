@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../features/auth/providers/auth_provider.dart';
-import '../../data/attendance_dao.dart';
 import '../../domain/services/attendance_service.dart';
 
 /// 근태 기록 화면
@@ -19,7 +18,6 @@ class AttendanceHistoryScreen extends ConsumerStatefulWidget {
 
 class _AttendanceHistoryScreenState
     extends ConsumerState<AttendanceHistoryScreen> {
-  DateTime _selectedDate = DateTime.now();
   int _selectedYear = DateTime.now().year;
   int _selectedMonth = DateTime.now().month;
 
@@ -48,21 +46,21 @@ class _AttendanceHistoryScreenState
     if (employee == null) {
       return const Scaffold(
         body: Center(
-          child: Text('로그인이 필요합니다.'),
+          child: Text('Please log in.'),
         ),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('근태 기록'),
+        title: const Text('Attendance History'),
         centerTitle: true,
         actions: [
           TextButton.icon(
             onPressed: _showMonthPicker,
             icon: const Icon(Icons.calendar_month, color: Colors.white),
             label: Text(
-              '$_selectedYear년 $_selectedMonth월',
+              '$_selectedYear / $_selectedMonth',
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -81,7 +79,7 @@ class _AttendanceHistoryScreenState
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('오류가 발생했습니다: ${snapshot.error}'),
+              child: Text('An error occurred: ${snapshot.error}'),
             );
           }
 
@@ -99,7 +97,7 @@ class _AttendanceHistoryScreenState
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '근태 기록이 없습니다',
+                    'No attendance records',
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey[600],
@@ -135,15 +133,15 @@ class _AttendanceHistoryScreenState
     if (isAbsent) {
       statusColor = Colors.red;
       statusIcon = Icons.cancel;
-      statusText = '결근';
+      statusText = 'Absent';
     } else if (isWorking) {
       statusColor = Colors.orange;
       statusIcon = Icons.pending;
-      statusText = '근무 중';
+      statusText = 'Working';
     } else if (isCompleted) {
       statusColor = Colors.green;
       statusIcon = Icons.check_circle;
-      statusText = '완료';
+      statusText = 'Completed';
     } else {
       statusColor = Colors.grey;
       statusIcon = Icons.help_outline;
@@ -165,7 +163,7 @@ class _AttendanceHistoryScreenState
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    DateFormat('yyyy-MM-dd (E)', 'ko').format(log.workDate),
+                    DateFormat('dd/MM/yyyy (E)', 'vi').format(log.workDate),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -175,7 +173,7 @@ class _AttendanceHistoryScreenState
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: statusColor, width: 1),
                     ),
@@ -206,7 +204,7 @@ class _AttendanceHistoryScreenState
                   children: [
                     Expanded(
                       child: _buildTimeInfo(
-                        '출근',
+                        'Check-in',
                         DateFormat('HH:mm').format(log.checkInTime),
                         log.isLate,
                       ),
@@ -214,7 +212,7 @@ class _AttendanceHistoryScreenState
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildTimeInfo(
-                        '퇴근',
+                        'Check-out',
                         log.checkOutTime != null
                             ? DateFormat('HH:mm').format(log.checkOutTime!)
                             : '-',
@@ -293,7 +291,7 @@ class _AttendanceHistoryScreenState
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  label == '출근' ? '지각' : '조퇴',
+                  label == 'Check-in' ? 'Late' : 'Early',
                   style: TextStyle(
                     fontSize: 10,
                     color: Colors.red[700],
@@ -317,7 +315,7 @@ class _AttendanceHistoryScreenState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.05),
+        color: AppTheme.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -327,7 +325,7 @@ class _AttendanceHistoryScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '총 근무',
+                  'Total Work',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -335,7 +333,7 @@ class _AttendanceHistoryScreenState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${totalHours}시간 ${totalMinutes}분',
+                  '${totalHours}h ${totalMinutes}m',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -351,7 +349,7 @@ class _AttendanceHistoryScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '연장 근무',
+                    'Overtime',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -359,7 +357,7 @@ class _AttendanceHistoryScreenState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${overtimeHours}시간 ${overtimeMinutes}분',
+                    '${overtimeHours}h ${overtimeMinutes}m',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -379,52 +377,52 @@ class _AttendanceHistoryScreenState
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          DateFormat('yyyy-MM-dd (E)', 'ko').format(log.workDate),
+          DateFormat('dd/MM/yyyy (E)', 'vi').format(log.workDate),
         ),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDetailRow('상태', _getStatusText(log.status)),
+              _buildDetailRow('Status', _getStatusText(log.status)),
               _buildDetailRow(
-                '출근 시간',
+                'Check-in',
                 DateFormat('HH:mm:ss').format(log.checkInTime),
               ),
               if (log.checkOutTime != null)
                 _buildDetailRow(
-                  '퇴근 시간',
+                  'Check-out',
                   DateFormat('HH:mm:ss').format(log.checkOutTime!),
                 ),
               if (log.totalMinutes != null)
                 _buildDetailRow(
-                  '총 근무',
-                  '${(log.totalMinutes! ~/ 60)}시간 ${(log.totalMinutes! % 60)}분',
+                  'Total Work',
+                  '${(log.totalMinutes! ~/ 60)}h ${(log.totalMinutes! % 60)}m',
                 ),
               if (log.overtimeMinutes != null && log.overtimeMinutes! > 0)
                 _buildDetailRow(
-                  '연장 근무',
-                  '${(log.overtimeMinutes! ~/ 60)}시간 ${(log.overtimeMinutes! % 60)}분',
+                  'Overtime',
+                  '${(log.overtimeMinutes! ~/ 60)}h ${(log.overtimeMinutes! % 60)}m',
                 ),
               if (log.nightMinutes != null && log.nightMinutes! > 0)
                 _buildDetailRow(
-                  '야간 근무',
-                  '${(log.nightMinutes! ~/ 60)}시간 ${(log.nightMinutes! % 60)}분',
+                  'Night Work',
+                  '${(log.nightMinutes! ~/ 60)}h ${(log.nightMinutes! % 60)}m',
                 ),
-              if (log.isLate) _buildDetailRow('지각', '예', isWarning: true),
+              if (log.isLate) _buildDetailRow('Late', 'Yes', isWarning: true),
               if (log.isEarlyLeave)
-                _buildDetailRow('조퇴', '예', isWarning: true),
+                _buildDetailRow('Early Leave', 'Yes', isWarning: true),
               if (log.checkInNote != null && log.checkInNote!.isNotEmpty)
-                _buildDetailRow('메모', log.checkInNote!),
+                _buildDetailRow('Note', log.checkInNote!),
               if (log.location != null && log.location!.isNotEmpty)
-                _buildDetailRow('위치', log.location!),
+                _buildDetailRow('Location', log.location!),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
+            child: const Text('Close'),
           ),
         ],
       ),
@@ -465,15 +463,15 @@ class _AttendanceHistoryScreenState
   String _getStatusText(String status) {
     switch (status) {
       case 'working':
-        return '근무 중';
+        return 'Working';
       case 'completed':
-        return '완료';
+        return 'Completed';
       case 'absent':
-        return '결근';
+        return 'Absent';
       case 'late':
-        return '지각';
+        return 'Late';
       case 'early_leave':
-        return '조퇴';
+        return 'Early Leave';
       default:
         return status;
     }
@@ -510,22 +508,22 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
     final currentYear = DateTime.now().year;
 
     return AlertDialog(
-      title: const Text('기간 선택'),
+      title: const Text('Select Period'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // 연도 선택
           DropdownButtonFormField<int>(
-            value: _selectedYear,
+            initialValue: _selectedYear,
             decoration: const InputDecoration(
-              labelText: '연도',
+              labelText: 'Year',
               border: OutlineInputBorder(),
             ),
             items: List.generate(5, (index) {
               final year = currentYear - index;
               return DropdownMenuItem(
                 value: year,
-                child: Text('$year년'),
+                child: Text('$year'),
               );
             }),
             onChanged: (value) {
@@ -538,16 +536,16 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
 
           // 월 선택
           DropdownButtonFormField<int>(
-            value: _selectedMonth,
+            initialValue: _selectedMonth,
             decoration: const InputDecoration(
-              labelText: '월',
+              labelText: 'Month',
               border: OutlineInputBorder(),
             ),
             items: List.generate(12, (index) {
               final month = index + 1;
               return DropdownMenuItem(
                 value: month,
-                child: Text('$month월'),
+                child: Text('Month $month'),
               );
             }),
             onChanged: (value) {
@@ -561,7 +559,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: () {
@@ -570,7 +568,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
               'month': _selectedMonth,
             });
           },
-          child: const Text('확인'),
+          child: const Text('OK'),
         ),
       ],
     );

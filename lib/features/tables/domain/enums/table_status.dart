@@ -3,19 +3,19 @@ import 'package:flutter/material.dart';
 /// 테이블 상태
 enum TableStatus {
   /// 빈 테이블 (사용 가능)
-  available('AVAILABLE', '빈 테이블', Color(0xFF4CAF50)),
+  available('AVAILABLE', 'Available', Color(0xFF4CAF50)),
 
-  /// 예약됨 (예약이 배정된 테이블)
-  reserved('RESERVED', '예약됨', Color(0xFFFF9800)),
+  /// Reserved (reservation assigned)
+  reserved('RESERVED', 'Reserved', Color(0xFFFF9800)),
 
-  /// 착석 중 (고객이 식사 중)
-  occupied('OCCUPIED', '착석 중', Color(0xFFF44336)),
+  /// Occupied (guests dining)
+  occupied('OCCUPIED', 'Occupied', Color(0xFFF44336)),
 
-  /// 계산 완료 (식사 종료, 정리 대기)
-  checkout('CHECKOUT', '계산 완료', Color(0xFF9C27B0)),
+  /// Checked out (dining done, awaiting cleanup)
+  checkout('CHECKOUT', 'Checkout', Color(0xFF9C27B0)),
 
-  /// 정리 중 (테이블 청소/정리)
-  cleaning('CLEANING', '정리 중', Color(0xFF2196F3));
+  /// Cleaning (table being cleaned)
+  cleaning('CLEANING', 'Cleaning', Color(0xFF2196F3));
 
   final String value;
   final String label;

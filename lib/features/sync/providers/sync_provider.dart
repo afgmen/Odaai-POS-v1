@@ -98,7 +98,7 @@ class SyncStatusNotifier extends StateNotifier<SyncState> {
     if (!isOnline) {
       state = state.copyWith(
         status: SyncStatus.offline,
-        lastError: '오프라인 상태입니다',
+        lastError: 'Offline',
       );
       return;
     }

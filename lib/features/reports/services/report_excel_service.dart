@@ -23,44 +23,44 @@ class ReportExcelService {
   }) async {
     final excel = Excel.createExcel();
 
-    // ── 요약 시트 ──
-    final summarySheetName = labels['sheetSummary'] ?? '요약';
+    // ── Summary sheet ──
+    final summarySheetName = labels['sheetSummary'] ?? 'Summary';
     final summarySheet = excel[summarySheetName];
     summarySheet.appendRow([
-      TextCellValue(labels['title'] ?? 'Oda POS 매출 리포트'),
+      TextCellValue(labels['title'] ?? 'Oda POS Sales Report'),
     ]);
     summarySheet.appendRow([
-      TextCellValue(labels['periodText'] ?? '기간: ${DateFormat('yyyy-MM-dd').format(from)} ~ ${DateFormat('yyyy-MM-dd').format(to)}'),
+      TextCellValue(labels['periodText'] ?? 'Period: ${DateFormat('yyyy-MM-dd').format(from)} ~ ${DateFormat('yyyy-MM-dd').format(to)}'),
     ]);
     summarySheet.appendRow([TextCellValue('')]);
     summarySheet.appendRow([
-      TextCellValue(labels['item'] ?? '항목'),
-      TextCellValue(labels['value'] ?? '값'),
+      TextCellValue(labels['item'] ?? 'Item'),
+      TextCellValue(labels['value'] ?? 'Value'),
     ]);
     summarySheet.appendRow([
-      TextCellValue(labels['totalSales'] ?? '총 매출'),
+      TextCellValue(labels['totalSales'] ?? 'Total Sales'),
       DoubleCellValue(totalSales),
     ]);
     summarySheet.appendRow([
-      TextCellValue(labels['orderCount'] ?? '주문 수'),
+      TextCellValue(labels['orderCount'] ?? 'Order Count'),
       IntCellValue(orderCount),
     ]);
     summarySheet.appendRow([
-      TextCellValue(labels['avgOrder'] ?? '평균 주문금액'),
+      TextCellValue(labels['avgOrder'] ?? 'Avg Order Value'),
       DoubleCellValue(avgOrder),
     ]);
     summarySheet.appendRow([
-      TextCellValue(labels['growthRate'] ?? '성장률 (%)'),
+      TextCellValue(labels['growthRate'] ?? 'Growth Rate (%)'),
       DoubleCellValue(growth),
     ]);
 
-    // ── 일별 매출 시트 ──
-    final dailySheetName = labels['sheetDaily'] ?? '일별 매출';
+    // ── Daily sales sheet ──
+    final dailySheetName = labels['sheetDaily'] ?? 'Daily Sales';
     final dailySheet = excel[dailySheetName];
     dailySheet.appendRow([
-      TextCellValue(labels['date'] ?? '날짜'),
-      TextCellValue(labels['sales'] ?? '매출'),
-      TextCellValue(labels['orderCount'] ?? '주문 수'),
+      TextCellValue(labels['date'] ?? 'Date'),
+      TextCellValue(labels['sales'] ?? 'Sales'),
+      TextCellValue(labels['orderCount'] ?? 'Orders'),
     ]);
     for (final d in dailyData) {
       dailySheet.appendRow([
@@ -70,12 +70,12 @@ class ReportExcelService {
       ]);
     }
 
-    // ── 결제 방법별 시트 ──
-    final paymentSheetName = labels['sheetPayment'] ?? '결제 방법별';
+    // ── Payment method sheet ──
+    final paymentSheetName = labels['sheetPayment'] ?? 'By Payment';
     final paymentSheet = excel[paymentSheetName];
     paymentSheet.appendRow([
-      TextCellValue(labels['paymentMethod'] ?? '결제 방법'),
-      TextCellValue(labels['sales'] ?? '매출'),
+      TextCellValue(labels['paymentMethod'] ?? 'Payment Method'),
+      TextCellValue(labels['sales'] ?? 'Sales'),
     ]);
     for (final entry in paymentData.entries) {
       paymentSheet.appendRow([
@@ -84,14 +84,14 @@ class ReportExcelService {
       ]);
     }
 
-    // ── 상품별 매출 시트 ──
-    final productSheetName = labels['sheetProduct'] ?? '상품별 매출';
+    // ── Product sales sheet ──
+    final productSheetName = labels['sheetProduct'] ?? 'By Product';
     final productSheet = excel[productSheetName];
     productSheet.appendRow([
-      TextCellValue(labels['rank'] ?? '순위'),
-      TextCellValue(labels['productName'] ?? '상품명'),
-      TextCellValue(labels['quantitySold'] ?? '판매 수량'),
-      TextCellValue(labels['sales'] ?? '매출'),
+      TextCellValue(labels['rank'] ?? 'Rank'),
+      TextCellValue(labels['productName'] ?? 'Product Name'),
+      TextCellValue(labels['quantitySold'] ?? 'Qty Sold'),
+      TextCellValue(labels['sales'] ?? 'Sales'),
     ]);
     for (var i = 0; i < topProducts.length; i++) {
       final p = topProducts[i];
@@ -103,10 +103,10 @@ class ReportExcelService {
       ]);
     }
 
-    // 기본 Sheet1 삭제
+    // Delete default Sheet1
     excel.delete('Sheet1');
 
-    // 파일 저장
+    // Save file
     final dir = await getApplicationDocumentsDirectory();
     final fileName =
         'oda_pos_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
@@ -122,10 +122,10 @@ class ReportExcelService {
   }
 
   static String _paymentLabel(String method, Map<String, String> labels) => switch (method) {
-        'cash' => labels['cash'] ?? '현금',
-        'card' => labels['card'] ?? '카드',
+        'cash' => labels['cash'] ?? 'Cash',
+        'card' => labels['card'] ?? 'Card',
         'qr' => labels['qr'] ?? 'QR',
-        'transfer' => labels['transfer'] ?? '이체',
+        'transfer' => labels['transfer'] ?? 'Transfer',
         _ => method,
       };
 }

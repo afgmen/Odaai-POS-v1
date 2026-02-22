@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../features/auth/providers/auth_provider.dart';
-import '../../data/attendance_dao.dart';
 import '../../domain/services/attendance_service.dart';
 
 /// 휴가 승인 화면
@@ -18,7 +17,7 @@ class LeaveApprovalScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('휴가 승인 관리'),
+        title: const Text('Leave Approval'),
         centerTitle: true,
       ),
       body: FutureBuilder<List<LeaveRequest>>(
@@ -30,7 +29,7 @@ class LeaveApprovalScreen extends ConsumerWidget {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('오류가 발생했습니다: ${snapshot.error}'),
+              child: Text('An error occurred: ${snapshot.error}'),
             );
           }
 
@@ -48,7 +47,7 @@ class LeaveApprovalScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '승인 대기 중인 휴가가 없습니다',
+                    'No pending leave requests',
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey[600],
@@ -90,9 +89,9 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
     if (employee == null) return;
 
     final confirm = await _showConfirmDialog(
-      title: '휴가 승인',
-      content: '이 휴가 신청을 승인하시겠습니까?\n승인 시 휴가 잔여일이 차감됩니다.',
-      confirmText: '승인',
+      title: 'Approve Leave',
+      content: 'Approve this leave request?\nLeave balance will be deducted upon approval.',
+      confirmText: 'Approve',
       confirmColor: Colors.green,
     );
 
@@ -110,13 +109,13 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
       if (!mounted) return;
 
       if (success) {
-        _showSuccessSnackBar('휴가가 승인되었습니다');
+        _showSuccessSnackBar('Leave approved successfully');
       } else {
-        _showErrorSnackBar('휴가 승인에 실패했습니다');
+        _showErrorSnackBar('Failed to approve leave');
       }
     } catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar('오류가 발생했습니다: $e');
+      _showErrorSnackBar('An error occurred: $e');
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -133,18 +132,18 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('휴가 거절'),
+        title: const Text('Reject Leave'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('이 휴가 신청을 거절하시겠습니까?'),
+            const Text('Reject this leave request?'),
             const SizedBox(height: 16),
             TextField(
               controller: noteController,
               decoration: const InputDecoration(
-                labelText: '거절 사유 (선택)',
-                hintText: '거절 사유를 입력하세요',
+                labelText: 'Rejection reason (optional)',
+                hintText: 'Enter reason for rejection',
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -154,7 +153,7 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -162,7 +161,7 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('거절'),
+            child: const Text('Reject'),
           ),
         ],
       ),
@@ -185,13 +184,13 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
       if (!mounted) return;
 
       if (success) {
-        _showSuccessSnackBar('휴가가 거절되었습니다');
+        _showSuccessSnackBar('Leave rejected.');
       } else {
-        _showErrorSnackBar('휴가 거절에 실패했습니다');
+        _showErrorSnackBar('Failed to reject leave');
       }
     } catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar('오류가 발생했습니다: $e');
+      _showErrorSnackBar('An error occurred: $e');
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -213,7 +212,7 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -255,7 +254,7 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
           .getEmployee(widget.request.employeeId),
       builder: (context, employeeSnapshot) {
         final employee = employeeSnapshot.data;
-        final employeeName = employee?.name ?? '직원 ${widget.request.employeeId}';
+        final employeeName = employee?.name ?? 'Employee ${widget.request.employeeId}';
 
         return Card(
           margin: const EdgeInsets.only(bottom: 16),
@@ -316,7 +315,7 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
                           Icon(Icons.pending, size: 14, color: Colors.orange),
                           SizedBox(width: 4),
                           Text(
-                            '승인 대기',
+                            'Pending',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -338,12 +337,12 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '${DateFormat('yyyy-MM-dd (E)', 'ko').format(widget.request.startDate)} ~ '
-                        '${DateFormat('yyyy-MM-dd (E)', 'ko').format(widget.request.endDate)}',
+                        '${DateFormat('dd/MM/yyyy (E)', 'vi').format(widget.request.startDate)} ~ '
+                        '${DateFormat('dd/MM/yyyy (E)', 'vi').format(widget.request.endDate)}',
                       ),
                     ),
                     Text(
-                      '${widget.request.days.toStringAsFixed(1)}일',
+                      '${widget.request.days.toStringAsFixed(1)} days',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -387,7 +386,7 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
                     Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
                     Text(
-                      '신청일: ${DateFormat('yyyy-MM-dd HH:mm').format(widget.request.createdAt)}',
+                      'Submitted: ${DateFormat('yyyy-MM-dd HH:mm').format(widget.request.createdAt)}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -449,8 +448,8 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              '잔여 휴가: ${remaining.toStringAsFixed(1)}일 '
-                              '${hasEnough ? '' : '(부족!)'}',
+                              'Leave balance: ${remaining.toStringAsFixed(1)} days '
+                              '${hasEnough ? '' : '(insufficient!)'}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: hasEnough
@@ -477,7 +476,7 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
                             child: OutlinedButton.icon(
                               onPressed: _handleReject,
                               icon: const Icon(Icons.cancel),
-                              label: const Text('거절'),
+                              label: const Text('Reject'),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: Colors.red,
                                 side: const BorderSide(color: Colors.red),
@@ -491,7 +490,7 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
                             child: ElevatedButton.icon(
                               onPressed: _handleApprove,
                               icon: const Icon(Icons.check_circle),
-                              label: const Text('승인'),
+                              label: const Text('Approve'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
                                 foregroundColor: Colors.white,
@@ -513,17 +512,17 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
   String _getLeaveTypeName(String type) {
     switch (type) {
       case 'annual':
-        return '연차';
+        return 'Annual Leave';
       case 'sick':
-        return '병가';
+        return 'Sick Leave';
       case 'personal':
-        return '개인 사유';
+        return 'Personal Leave';
       case 'maternity':
-        return '출산 휴가';
+        return 'Maternity Leave';
       case 'paternity':
-        return '육아 휴가';
+        return 'Paternity Leave';
       case 'unpaid':
-        return '무급 휴가';
+        return 'Unpaid Leave';
       default:
         return type;
     }

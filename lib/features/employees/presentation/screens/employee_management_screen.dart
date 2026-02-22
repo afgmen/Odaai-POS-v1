@@ -5,8 +5,6 @@ import 'package:drift/drift.dart' hide Column;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/permission_gate_widget.dart';
 import '../../../../database/app_database.dart';
-import '../../../../database/daos/employees_dao.dart';
-import '../../../../providers/database_providers.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/domain/permission_modules.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -42,7 +40,7 @@ class EmployeeManagementScreen extends ConsumerWidget {
         ),
         body: const Center(
           child: AccessDeniedCard(
-            message: '직원 관리 권한이 없습니다',
+            message: 'No permission to manage employees',
           ),
         ),
       ),
@@ -126,7 +124,7 @@ class _EmployeeManagementContent extends ConsumerWidget {
                               margin: const EdgeInsets.only(bottom: 16),
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: AppTheme.primary.withOpacity(0.1),
+                                color: AppTheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: AppTheme.primary, width: 2),
                               ),
@@ -149,7 +147,7 @@ class _EmployeeManagementContent extends ConsumerWidget {
                             )
                           : const SizedBox.shrink(),
                       loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                     );
                   },
                 ),
@@ -254,7 +252,7 @@ class _EmployeeCard extends ConsumerWidget {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: roleColor.withOpacity(0.1),
+                color: roleColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -396,7 +394,7 @@ class _EmployeeCard extends ConsumerWidget {
               ? QuickSetOwnerButton(employee: employee)
               : const SizedBox.shrink(),
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
         ),
       ],
     ),

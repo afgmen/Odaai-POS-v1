@@ -398,6 +398,7 @@ class _DiscountRow extends ConsumerWidget {
     final allDiscount = ref.watch(cartAllDiscountProvider);
     final discountValue = ref.watch(discountValueProvider);
     final promoProductId = ref.watch(promotionProductIdProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
     final hasAny = discountValue > 0 || promoProductId != null;
 
     return Row(
@@ -446,7 +447,7 @@ class _DiscountRow extends ConsumerWidget {
         ),
         // 할인금액 표시
         Text(
-          hasAny ? '-\${priceFormatter.format(allDiscount)}' : '₩0',
+          hasAny ? '-${priceFormatter.format(allDiscount)}' : '₫0',
           style: TextStyle(
             fontSize: 14,
             fontWeight: hasAny ? FontWeight.w600 : FontWeight.w400,
@@ -498,6 +499,7 @@ class _CheckoutButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final total = ref.watch(cartTotalProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return SizedBox(
       height: 52,
@@ -511,7 +513,7 @@ class _CheckoutButton extends ConsumerWidget {
           elevation: 0,
         ),
         child: Text(
-          isEmpty ? l10n.addProductsPlease : '${l10n.checkout} ₩${_formatPrice(total)}',
+          isEmpty ? l10n.addProductsPlease : '${l10n.checkout} ${priceFormatter.format(total)}',
           style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
         ),
       ),
@@ -664,7 +666,7 @@ class _DiscountTabState extends ConsumerState<_DiscountTab> {
             children: [
               Expanded(child: _typeButton(DiscountType.percent, '%', type)),
               const SizedBox(width: 8),
-              Expanded(child: _typeButton(DiscountType.won, '원', type)),
+              Expanded(child: _typeButton(DiscountType.won, 'Amt', type)),
             ],
           ),
           const SizedBox(height: 14),
@@ -676,9 +678,9 @@ class _DiscountTabState extends ConsumerState<_DiscountTab> {
             keyboardType: const TextInputType.numberWithOptions(),
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              suffixText: type == DiscountType.percent ? '%' : '원',
+              suffixText: type == DiscountType.percent ? '%' : '',
               suffixStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.primary),
-              hintText: type == DiscountType.percent ? '예: 10' : '예: 5000',
+              hintText: type == DiscountType.percent ? 'e.g. 10' : 'e.g. 5000',
             ),
           ),
 
@@ -733,7 +735,7 @@ class _DiscountTabState extends ConsumerState<_DiscountTab> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(l10n.discount, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-                    Text('-\${priceFormatter.format(previewDiscount)}', style: const TextStyle(fontSize: 13, color: AppTheme.error)),
+                    Text('-${priceFormatter.format(previewDiscount)}', style: const TextStyle(fontSize: 13, color: AppTheme.error)),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -935,7 +937,7 @@ class _PromotionTab extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(l10n.promotion, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-                    Text('-\${priceFormatter.format(promoDiscount)}', style: const TextStyle(fontSize: 13, color: AppTheme.error)),
+                    Text('-${priceFormatter.format(promoDiscount)}', style: const TextStyle(fontSize: 13, color: AppTheme.error)),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -981,6 +983,7 @@ class _AutoPromotionsSection extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final appliedPromos = ref.watch(appliedPromotionsListProvider);
     final autoDiscount = ref.watch(autoPromotionDiscountProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     if (appliedPromos.isEmpty || autoDiscount <= 0) {
       return const SizedBox.shrink();
@@ -1014,7 +1017,7 @@ class _AutoPromotionsSection extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  '-\${priceFormatter.format(promo.discountAmount)}',
+                  '-${priceFormatter.format(promo.discountAmount)}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -1028,13 +1031,6 @@ class _AutoPromotionsSection extends ConsumerWidget {
       ],
     );
   }
-}
-
-String _formatPrice(double price) {
-  return price.toInt().toString().replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-    (match) => '${match[1]},',
-  );
 }
 
 /// 고객 선택 위젯
@@ -1181,7 +1177,7 @@ class _CustomerSelectorDialogState extends ConsumerState<_CustomerSelectorDialog
                       final customer = customers[index];
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: AppTheme.primary.withOpacity(0.1),
+                          backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                           child: Text(
                             customer.name[0].toUpperCase(),
                             style: const TextStyle(

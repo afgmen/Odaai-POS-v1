@@ -782,12 +782,6 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to logout?'**
   String get logoutConfirm;
 
-  /// No description provided for @langKorean.
-  ///
-  /// In en, this message translates to:
-  /// **'한국어'**
-  String get langKorean;
-
   /// No description provided for @langEnglish.
   ///
   /// In en, this message translates to:
@@ -3482,6 +3476,90 @@ abstract class AppLocalizations {
   /// **'Special Instructions'**
   String get kdsSpecialInstructions;
 
+  /// No description provided for @kdsMenuSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu Summary'**
+  String get kdsMenuSummaryTitle;
+
+  /// No description provided for @kdsMenuSummaryToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle Menu Summary'**
+  String get kdsMenuSummaryToggle;
+
+  /// No description provided for @kdsMenuSummaryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No active menu items'**
+  String get kdsMenuSummaryEmpty;
+
+  /// No description provided for @kdsMenuSummaryTotalItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Items'**
+  String get kdsMenuSummaryTotalItems;
+
+  /// No description provided for @kdsMenuSummaryUniqueItems.
+  ///
+  /// In en, this message translates to:
+  /// **'menu items'**
+  String get kdsMenuSummaryUniqueItems;
+
+  /// No description provided for @kdsMenuSummaryScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu Summary'**
+  String get kdsMenuSummaryScreenTitle;
+
+  /// No description provided for @kdsModeSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Select KDS Mode'**
+  String get kdsModeSelection;
+
+  /// No description provided for @kdsModeOrderView.
+  ///
+  /// In en, this message translates to:
+  /// **'Order View'**
+  String get kdsModeOrderView;
+
+  /// No description provided for @kdsModeOrderViewDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'View orders by table, sorted by time'**
+  String get kdsModeOrderViewDesc;
+
+  /// No description provided for @kdsModeMenuSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu Summary View'**
+  String get kdsModeMenuSummary;
+
+  /// No description provided for @kdsModeMenuSummaryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'View all items to prepare, grouped by menu'**
+  String get kdsModeMenuSummaryDesc;
+
+  /// No description provided for @kdsTotalItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Items'**
+  String get kdsTotalItems;
+
+  /// No description provided for @kdsUniqueMenus.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} menus'**
+  String kdsUniqueMenus(int count);
+
+  /// No description provided for @kdsOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} orders'**
+  String kdsOrders(int count);
+
   /// No description provided for @dailyClosing.
   ///
   /// In en, this message translates to:
@@ -4171,6 +4249,276 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'people'**
   String get people;
+
+  /// No description provided for @deliveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Orders'**
+  String get deliveryTitle;
+
+  /// No description provided for @deliveryNewOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get deliveryNewOrders;
+
+  /// No description provided for @deliveryActiveOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get deliveryActiveOrders;
+
+  /// No description provided for @deliveryFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get deliveryFilterAll;
+
+  /// No description provided for @deliveryFilterManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get deliveryFilterManual;
+
+  /// No description provided for @deliveryAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get deliveryAccept;
+
+  /// No description provided for @deliveryReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get deliveryReject;
+
+  /// No description provided for @deliveryRejectReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejection reason'**
+  String get deliveryRejectReason;
+
+  /// No description provided for @deliveryStatusNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New Order'**
+  String get deliveryStatusNew;
+
+  /// No description provided for @deliveryStatusAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get deliveryStatusAccepted;
+
+  /// No description provided for @deliveryStatusPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing'**
+  String get deliveryStatusPreparing;
+
+  /// No description provided for @deliveryStatusReadyForPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for Pickup'**
+  String get deliveryStatusReadyForPickup;
+
+  /// No description provided for @deliveryStatusPickedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Picked Up'**
+  String get deliveryStatusPickedUp;
+
+  /// No description provided for @deliveryStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get deliveryStatusCompleted;
+
+  /// No description provided for @deliveryStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get deliveryStatusCancelled;
+
+  /// No description provided for @deliveryCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get deliveryCustomer;
+
+  /// No description provided for @deliveryAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Address'**
+  String get deliveryAddress;
+
+  /// No description provided for @deliveryDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver'**
+  String get deliveryDriver;
+
+  /// No description provided for @deliveryEstimatedPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Est. Pickup'**
+  String get deliveryEstimatedPickup;
+
+  /// No description provided for @deliveryTotalAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get deliveryTotalAmount;
+
+  /// No description provided for @deliveryNoOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'No delivery orders'**
+  String get deliveryNoOrders;
+
+  /// No description provided for @deliveryCreateManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Manual Order'**
+  String get deliveryCreateManual;
+
+  /// No description provided for @deliveryConnectionStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Server Connection'**
+  String get deliveryConnectionStatus;
+
+  /// No description provided for @deliveryConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get deliveryConnected;
+
+  /// No description provided for @deliveryDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get deliveryDisconnected;
+
+  /// No description provided for @menuSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Menu to Delivery Platforms'**
+  String get menuSyncTitle;
+
+  /// No description provided for @menuSyncButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Now'**
+  String get menuSyncButton;
+
+  /// No description provided for @menuSyncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu synced successfully'**
+  String get menuSyncSuccess;
+
+  /// No description provided for @menuSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu sync failed'**
+  String get menuSyncFailed;
+
+  /// No description provided for @menuSyncInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing menu...'**
+  String get menuSyncInProgress;
+
+  /// No description provided for @deliveryReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Report'**
+  String get deliveryReport;
+
+  /// No description provided for @deliveryRevenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Revenue'**
+  String get deliveryRevenue;
+
+  /// No description provided for @deliveryVsDineIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery vs Dine-in'**
+  String get deliveryVsDineIn;
+
+  /// No description provided for @deliveryManualOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual Order'**
+  String get deliveryManualOrder;
+
+  /// No description provided for @deliveryManualOrderCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Manual Order'**
+  String get deliveryManualOrderCreate;
+
+  /// No description provided for @deliveryCustomerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer Name'**
+  String get deliveryCustomerName;
+
+  /// No description provided for @deliveryCustomerPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer Phone'**
+  String get deliveryCustomerPhone;
+
+  /// No description provided for @deliveryAddressInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Address'**
+  String get deliveryAddressInput;
+
+  /// No description provided for @deliverySelectItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Items'**
+  String get deliverySelectItems;
+
+  /// No description provided for @deliveryPlatformSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Platforms'**
+  String get deliveryPlatformSettings;
+
+  /// No description provided for @deliveryPlatformActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get deliveryPlatformActive;
+
+  /// No description provided for @deliveryPlatformNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Configured'**
+  String get deliveryPlatformNotConfigured;
+
+  /// No description provided for @deliveryTestConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test'**
+  String get deliveryTestConnection;
+
+  /// No description provided for @deliveryPlatformInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get deliveryPlatformInactive;
+
+  /// No description provided for @deliveryLastSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Sync'**
+  String get deliveryLastSync;
 }
 
 class _AppLocalizationsDelegate

@@ -166,7 +166,7 @@ class BatchProcessNotifier extends StateNotifier<BatchProcessState> {
       final products = await _productsDao.getProductsWithoutImage();
 
       if (products.isEmpty) {
-        state = const BatchProcessState.error('이미지 없는 상품이 없습니다');
+        state = const BatchProcessState.error('No products without images');
         return;
       }
 

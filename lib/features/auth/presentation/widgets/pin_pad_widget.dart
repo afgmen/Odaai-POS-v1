@@ -180,7 +180,7 @@ class PinPadWidget extends StatelessWidget {
           shape: BoxShape.circle,
           color: color ?? Colors.grey.shade100,
           border: Border.all(
-            color: color != null ? color : Colors.grey.shade300,
+            color: color ?? Colors.grey.shade300,
           ),
         ),
         child: Center(

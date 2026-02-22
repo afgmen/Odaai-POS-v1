@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/user_role.dart';
 import '../../providers/auth_provider.dart';
 import '../../domain/session.dart';
 
@@ -23,10 +24,10 @@ class SessionBadge extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: _getRoleColor(session).withOpacity(0.1),
+        color: _getRoleColor(session).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _getRoleColor(session).withOpacity(0.3),
+          color: _getRoleColor(session).withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -57,7 +58,7 @@ class SessionBadge extends ConsumerWidget {
                 session.role.displayName,
                 style: TextStyle(
                   fontSize: 10,
-                  color: _getRoleColor(session).withOpacity(0.7),
+                  color: _getRoleColor(session).withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -69,7 +70,7 @@ class SessionBadge extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.logout, size: 16),
               onPressed: onLogout,
-              tooltip: '로그아웃',
+              tooltip: 'Logout',
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),

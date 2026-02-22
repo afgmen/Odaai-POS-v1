@@ -156,15 +156,51 @@ class ProductCard extends ConsumerWidget {
   }
 }
 
-/// 상품 이미지 위젯
-class _ProductImage extends StatelessWidget {
+/// 상품 이미지 위젯 — initState에서 1회만 이미지 로딩 (FutureBuilder 매 빌드 재호출 방지)
+class _ProductImage extends StatefulWidget {
   final String? imageUrl;
 
   const _ProductImage({required this.imageUrl});
 
   @override
+  State<_ProductImage> createState() => _ProductImageState();
+}
+
+class _ProductImageState extends State<_ProductImage> {
+  Future<File?>? _imageFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.imageUrl != null) {
+      _imageFuture = _getImageFile(widget.imageUrl!);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_ProductImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.imageUrl != widget.imageUrl) {
+      _imageFuture = widget.imageUrl != null ? _getImageFile(widget.imageUrl!) : null;
+    }
+  }
+
+  Future<File?> _getImageFile(String imageUrl) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/$imageUrl');
+      if (await file.exists()) {
+        return file;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (imageUrl == null) {
+    if (widget.imageUrl == null || _imageFuture == null) {
       return const Icon(
         Icons.shopping_bag_outlined,
         size: 40,
@@ -173,7 +209,7 @@ class _ProductImage extends StatelessWidget {
     }
 
     return FutureBuilder<File?>(
-      future: _getImageFile(imageUrl!),
+      future: _imageFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -214,18 +250,5 @@ class _ProductImage extends StatelessWidget {
         );
       },
     );
-  }
-
-  Future<File?> _getImageFile(String imageUrl) async {
-    try {
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/$imageUrl');
-      if (await file.exists()) {
-        return file;
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
   }
 }

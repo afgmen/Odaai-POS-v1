@@ -164,7 +164,7 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
               keyboardType: const TextInputType.numberWithOptions(),
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                suffixText: '개',
+                suffixText: 'pcs',
                 suffixStyle: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                 hintText: l10n.enterQuantity,
               ),

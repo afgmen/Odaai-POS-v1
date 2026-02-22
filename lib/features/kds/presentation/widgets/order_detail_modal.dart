@@ -60,7 +60,7 @@ class OrderDetailModal extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      order.tableNumber ?? '포장 #${order.id}',
+                      order.tableNumber ?? 'Takeaway #${order.id}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -86,20 +86,20 @@ class OrderDetailModal extends ConsumerWidget {
                     children: [
                       // 주문 정보
                       _buildInfoRow(
-                        '주문 시간',
+                        'Order Time',
                         DateFormat('yyyy-MM-dd HH:mm').format(order.createdAt),
                       ),
-                      _buildInfoRow('상태', status.displayName),
-                      _buildInfoRow('우선순위', priority.displayName),
+                      _buildInfoRow('Status', status.displayName),
+                      _buildInfoRow('Priority', priority.displayName),
                       if (order.specialInstructions != null &&
                           order.specialInstructions!.isNotEmpty)
-                        _buildInfoRow('특별 요청', order.specialInstructions!),
+                        _buildInfoRow('Special Request', order.specialInstructions!),
 
                       const Divider(height: 32),
 
                       // 타임라인
                       const Text(
-                        '처리 내역',
+                        'Timeline',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -137,7 +137,7 @@ class OrderDetailModal extends ConsumerWidget {
                           onPressed: () async {
                             final confirm = await _showConfirmDialog(
                               context,
-                              '주문을 취소하시겠습니까?',
+                              'Cancel this order?',
                             );
                             if (confirm == true) {
                               await service.cancelOrder(orderId);
@@ -149,7 +149,7 @@ class OrderDetailModal extends ConsumerWidget {
                             }
                           },
                           icon: const Icon(Icons.cancel),
-                          label: const Text('취소'),
+                          label: const Text('Cancel Order'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
                             foregroundColor: Colors.white,
@@ -217,35 +217,35 @@ class OrderDetailModal extends ConsumerWidget {
     return Column(
       children: [
         _buildTimelineItem(
-          '주문 접수',
+          'Order Received',
           order.createdAt,
           true,
           Colors.orange,
         ),
         if (order.startedAt != null)
           _buildTimelineItem(
-            '조리 시작',
+            'Preparing Started',
             order.startedAt!,
             true,
             Colors.blue,
           ),
         if (order.readyAt != null)
           _buildTimelineItem(
-            '조리 완료',
+            'Ready',
             order.readyAt!,
             true,
             Colors.green,
           ),
         if (order.servedAt != null)
           _buildTimelineItem(
-            '서빙 완료',
+            'Served',
             order.servedAt!,
             true,
             Colors.grey,
           ),
         if (order.cancelledAt != null)
           _buildTimelineItem(
-            '취소됨',
+            'Cancelled',
             order.cancelledAt!,
             true,
             Colors.red,
@@ -309,7 +309,7 @@ class OrderDetailModal extends ConsumerWidget {
             await service.startPreparing(order.id);
           },
           icon: const Icon(Icons.play_arrow),
-          label: const Text('조리 시작'),
+          label: const Text('Start Preparing'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue,
             foregroundColor: Colors.white,
@@ -323,7 +323,7 @@ class OrderDetailModal extends ConsumerWidget {
             await service.markAsReady(order.id);
           },
           icon: const Icon(Icons.check),
-          label: const Text('조리 완료'),
+          label: const Text('Mark Ready'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
             foregroundColor: Colors.white,
@@ -340,7 +340,7 @@ class OrderDetailModal extends ConsumerWidget {
             }
           },
           icon: const Icon(Icons.done_all),
-          label: const Text('서빙 완료'),
+          label: const Text('Mark Served'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.purple,
             foregroundColor: Colors.white,
@@ -359,7 +359,7 @@ class OrderDetailModal extends ConsumerWidget {
             foregroundColor: Colors.white,
             padding: const EdgeInsets.all(16),
           ),
-          child: const Text('닫기'),
+          child: const Text('Close'),
         );
     }
   }
@@ -368,16 +368,16 @@ class OrderDetailModal extends ConsumerWidget {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('확인'),
+        title: const Text('Confirm'),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('아니오'),
+            child: const Text('No'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('예'),
+            child: const Text('Yes'),
           ),
         ],
       ),

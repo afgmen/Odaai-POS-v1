@@ -117,13 +117,13 @@ class MonthlyAttendanceReport {
   String get formattedTotalWorkTime {
     final hours = totalWorkMinutes ~/ 60;
     final minutes = totalWorkMinutes % 60;
-    return '$hours시간 $minutes분';
+    return '${hours}h ${minutes}m';
   }
 
   String get formattedOvertimeWorkTime {
     final hours = overtimeMinutes ~/ 60;
     final minutes = overtimeMinutes % 60;
-    return '$hours시간 $minutes분';
+    return '${hours}h ${minutes}m';
   }
 }
 
@@ -154,24 +154,24 @@ class AttendanceService {
       if (alreadyCheckedIn) {
         return CheckInResult(
           success: false,
-          message: '이미 출근 처리되었습니다.',
+          message: 'Already checked in.',
         );
       }
 
-      // 2. 오늘의 스케줄 조회
+      // 2. Load today's schedule
       final schedule = await _dao.getScheduleForDate(employeeId, today);
 
       if (schedule == null) {
         return CheckInResult(
           success: false,
-          message: '오늘의 근무 스케줄이 없습니다.',
+          message: 'No work schedule for today.',
         );
       }
 
       if (schedule.shiftType == 'off') {
         return CheckInResult(
           success: false,
-          message: '오늘은 휴무일입니다.',
+          message: 'Today is a day off.',
         );
       }
 
@@ -198,13 +198,13 @@ class AttendanceService {
         success: true,
         logId: logId,
         isLate: isLate,
-        message: isLate ? '지각 처리되었습니다.' : '출근 처리되었습니다.',
+        message: isLate ? 'Checked in late.' : 'Checked in successfully.',
         checkInTime: checkInTime,
       );
     } catch (e) {
       return CheckInResult(
         success: false,
-        message: '출근 처리 중 오류가 발생했습니다: $e',
+        message: 'Check-in error: $e',
       );
     }
   }
@@ -221,11 +221,11 @@ class AttendanceService {
       if (activeLog == null) {
         return CheckOutResult(
           success: false,
-          message: '출근 기록이 없습니다.',
+          message: 'No active check-in found.',
         );
       }
 
-      // 2. 오늘의 스케줄 조회
+      // 2. Load today's schedule
       final schedule = await _dao.getScheduleForDate(
         employeeId,
         activeLog.workDate,
@@ -234,7 +234,7 @@ class AttendanceService {
       if (schedule == null) {
         return CheckOutResult(
           success: false,
-          message: '근무 스케줄을 찾을 수 없습니다.',
+          message: 'Work schedule not found.',
         );
       }
 
@@ -278,7 +278,7 @@ class AttendanceService {
       if (!success) {
         return CheckOutResult(
           success: false,
-          message: '퇴근 처리에 실패했습니다.',
+          message: 'Check-out failed.',
         );
       }
 
@@ -287,13 +287,13 @@ class AttendanceService {
         isEarlyLeave: isEarlyLeave,
         totalMinutes: workTime.totalMinutes,
         overtimeMinutes: workTime.overtimeMinutes,
-        message: isEarlyLeave ? '조퇴 처리되었습니다.' : '퇴근 처리되었습니다.',
+        message: isEarlyLeave ? 'Checked out early.' : 'Checked out successfully.',
         checkOutTime: checkOutTime,
       );
     } catch (e) {
       return CheckOutResult(
         success: false,
-        message: '퇴근 처리 중 오류가 발생했습니다: $e',
+        message: 'Check-out error: $e',
       );
     }
   }
@@ -396,20 +396,20 @@ class AttendanceService {
       if (balance == null) {
         return LeaveRequestResult(
           success: false,
-          errorMessage: '휴가 잔여 정보를 찾을 수 없습니다.',
+          errorMessage: 'Leave balance information not found.',
         );
       }
 
-      // 3. 잔여일 검증
+      // 3. Validate remaining days
       final remaining = _getRemaining(balance, leaveType);
       if (remaining < days) {
         return LeaveRequestResult(
           success: false,
-          errorMessage: '휴가 잔여일이 부족합니다. (신청: $days일, 잔여: $remaining일)',
+          errorMessage: 'Insufficient leave balance. (Requested: $days days, Remaining: $remaining days)',
         );
       }
 
-      // 4. 중복 신청 방지
+      // 4. Check for overlapping leaves
       final hasOverlap = await _dao.hasOverlappingApprovedLeave(
         employeeId: employeeId,
         startDate: startDate,
@@ -419,7 +419,7 @@ class AttendanceService {
       if (hasOverlap) {
         return LeaveRequestResult(
           success: false,
-          errorMessage: '이미 승인된 휴가와 기간이 겹칩니다.',
+          errorMessage: 'Overlaps with an already approved leave.',
         );
       }
 
@@ -444,7 +444,7 @@ class AttendanceService {
     } catch (e) {
       return LeaveRequestResult(
         success: false,
-        errorMessage: '휴가 신청 중 오류가 발생했습니다: $e',
+        errorMessage: 'Leave request error: $e',
       );
     }
   }
@@ -526,7 +526,7 @@ class AttendanceService {
                 workDate: current,
                 checkInTime: current,
                 status: 'absent',
-                checkInNote: Value('휴가: ${request.leaveType}'),
+                checkInNote: Value('Leave: ${request.leaveType}'),
               ),
             );
           }

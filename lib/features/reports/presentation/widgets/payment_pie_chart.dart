@@ -32,7 +32,7 @@ class PaymentPieChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '결제 방법별 매출',
+            'Sales by Payment Method',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -106,7 +106,7 @@ class PaymentPieChart extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '₩${_fmt(e.value)}',
+                            '₫${_fmt(e.value)}',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -147,10 +147,10 @@ class PaymentPieChart extends StatelessWidget {
       };
 
   String _paymentLabel(String method) => switch (method) {
-        'cash' => '현금',
-        'card' => '카드',
+        'cash' => 'Cash',
+        'card' => 'Card',
         'qr' => 'QR',
-        'transfer' => '이체',
+        'transfer' => 'Transfer',
         _ => method,
       };
 

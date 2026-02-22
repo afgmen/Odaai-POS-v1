@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../database/app_database.dart';
 import '../../data/reservations_providers.dart';
-import '../../domain/enums/reservation_status.dart';
 
 /// KDS 통합: 예약 정보 배지
 /// 주방 디스플레이에서 예약 정보를 표시하는 위젯
@@ -40,12 +39,10 @@ class ReservationInfoBadge extends ConsumerWidget {
   }
 
   Widget _buildCompactBadge(Reservation reservation) {
-    final status = ReservationStatus.fromString(reservation.status);
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.purple.withOpacity(0.15),
+        color: Colors.purple.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(color: Colors.purple, width: 1),
       ),
@@ -68,12 +65,10 @@ class ReservationInfoBadge extends ConsumerWidget {
   }
 
   Widget _buildFullBadge(Reservation reservation) {
-    final status = ReservationStatus.fromString(reservation.status);
-
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.purple.withOpacity(0.1),
+        color: Colors.purple.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.purple, width: 1.5),
       ),
@@ -85,7 +80,7 @@ class ReservationInfoBadge extends ConsumerWidget {
               Icon(Icons.event_note, size: 16, color: Colors.purple),
               const SizedBox(width: 6),
               const Text(
-                '예약 주문',
+                'Reservation Order',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -97,19 +92,19 @@ class ReservationInfoBadge extends ConsumerWidget {
           const SizedBox(height: 6),
           _buildInfoRow(
             Icons.person,
-            '고객',
+            'Customer',
             reservation.customerName,
           ),
           const SizedBox(height: 4),
           _buildInfoRow(
             Icons.people,
-            '인원',
-            '${reservation.partySize}명',
+            'Party',
+            '${reservation.partySize} pax',
           ),
           const SizedBox(height: 4),
           _buildInfoRow(
             Icons.access_time,
-            '예약시간',
+            'Time',
             reservation.reservationTime,
           ),
           if (reservation.specialRequests != null &&
@@ -118,7 +113,7 @@ class ReservationInfoBadge extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.2),
+                color: Colors.amber.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
@@ -235,13 +230,13 @@ class ReservationOrderHelper {
     final diff = reservationDateTime.difference(now).inMinutes;
 
     if (diff <= 0) {
-      return '⚠️ $customerName님 예약 시간 도과! ($partySize명)';
+      return '⚠️ $customerName reservation overdue! ($partySize pax)';
     } else if (diff <= 15) {
-      return '🔥 $customerName님 예약 $diff분 전! ($partySize명)';
+      return '🔥 $customerName reservation in ${diff}m! ($partySize pax)';
     } else if (diff <= 30) {
-      return '⏰ $customerName님 예약 $diff분 전 ($partySize명)';
+      return '⏰ $customerName reservation in ${diff}m ($partySize pax)';
     } else {
-      return '📋 $customerName님 예약 주문 ($reservationTime, $partySize명)';
+      return '📋 $customerName reservation order ($reservationTime, $partySize pax)';
     }
   }
 }

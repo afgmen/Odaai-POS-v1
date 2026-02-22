@@ -36,7 +36,7 @@ class PointCardWidget extends ConsumerWidget {
             end: Alignment.bottomRight,
             colors: [
               AppTheme.primary,
-              AppTheme.primary.withOpacity(0.7),
+              AppTheme.primary.withValues(alpha: 0.7),
             ],
           ),
         ),
@@ -68,7 +68,7 @@ class PointCardWidget extends ConsumerWidget {
                       valueColor: AlwaysStoppedAnimation(Colors.white),
                     ),
                   ),
-                  error: (_, __) => const Icon(Icons.error, color: Colors.white),
+                  error: (_, _) => const Icon(Icons.error, color: Colors.white),
                 ),
               ],
             ),
@@ -83,9 +83,9 @@ class PointCardWidget extends ConsumerWidget {
                 const Icon(Icons.stars, color: Colors.amberAccent, size: 28),
                 const SizedBox(width: 8),
                 Text(
-                  '보유 포인트',
+                  'Points Balance',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                   ),
                 ),
@@ -110,16 +110,16 @@ class PointCardWidget extends ConsumerWidget {
                 Expanded(
                   child: _buildStatItem(
                     icon: Icons.shopping_bag_outlined,
-                    label: '누적 구매액',
-                    value: '${currencyFormat.format(customer.totalSpent)}원',
+                    label: 'Total Spent',
+                    value: currencyFormat.format(customer.totalSpent),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildStatItem(
                     icon: Icons.receipt_long,
-                    label: '구매 횟수',
-                    value: '${customer.purchaseCount}회',
+                    label: 'Purchases',
+                    value: '${customer.purchaseCount}x',
                   ),
                 ),
               ],
@@ -134,7 +134,7 @@ class PointCardWidget extends ConsumerWidget {
                   return Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -142,9 +142,9 @@ class PointCardWidget extends ConsumerWidget {
                         const Icon(Icons.emoji_events, color: Colors.amberAccent, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          '최고 등급 달성! 🎉',
+                          'Top tier reached! 🎉',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.95),
+                            color: Colors.white.withValues(alpha: 0.95),
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -157,7 +157,7 @@ class PointCardWidget extends ConsumerWidget {
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -168,9 +168,9 @@ class PointCardWidget extends ConsumerWidget {
                           const Icon(Icons.trending_up, color: Colors.greenAccent, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            '다음 등급까지',
+                            'Until next tier',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 12,
                             ),
                           ),
@@ -178,7 +178,7 @@ class PointCardWidget extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${currencyFormat.format(amountToNext)}원',
+                        currencyFormat.format(amountToNext),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -190,7 +190,7 @@ class PointCardWidget extends ConsumerWidget {
                 );
               },
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
             ),
 
             const SizedBox(height: 16),
@@ -203,7 +203,7 @@ class PointCardWidget extends ConsumerWidget {
                     child: OutlinedButton.icon(
                       onPressed: onViewHistory,
                       icon: const Icon(Icons.history, size: 18),
-                      label: const Text('포인트 이력'),
+                      label: const Text('Point History'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(color: Colors.white70),
@@ -218,7 +218,7 @@ class PointCardWidget extends ConsumerWidget {
                     child: OutlinedButton.icon(
                       onPressed: onAdjustPoints,
                       icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('포인트 조정'),
+                      label: const Text('Adjust Points'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(color: Colors.white70),
@@ -242,7 +242,7 @@ class PointCardWidget extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -310,7 +310,7 @@ class PointCardWidget extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -321,7 +321,7 @@ class PointCardWidget extends ConsumerWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 11,
             ),
           ),

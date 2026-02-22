@@ -1,11 +1,14 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
+import '../tables/role_permissions.dart';
+import '../tables/permissions.dart';
 
 part 'role_permissions_dao.g.dart';
 
 @DriftAccessor(tables: [RolePermissions, Permissions])
-class RolePermissionsDao extends DatabaseAccessor<AppDatabase> with _$RolePermissionsDaoMixin {
-  RolePermissionsDao(AppDatabase db) : super(db);
+class RolePermissionsDao extends DatabaseAccessor<AppDatabase>
+    with _$RolePermissionsDaoMixin {
+  RolePermissionsDao(super.db);
 
   /// Get all permissions for a specific role
   Future<List<RolePermission>> getRolePermissions(String role) {
@@ -14,16 +17,17 @@ class RolePermissionsDao extends DatabaseAccessor<AppDatabase> with _$RolePermis
 
   /// Get enabled permissions for a specific role
   Future<List<RolePermission>> getEnabledRolePermissions(String role) {
-    return (select(rolePermissions)
-      ..where((rp) => rp.role.equals(role) & rp.isEnabled.equals(true)))
-      .get();
+    return (select(
+      rolePermissions,
+    )..where((rp) => rp.role.equals(role) & rp.isEnabled.equals(true))).get();
   }
 
   /// Get specific role permission
   Future<RolePermission?> getRolePermission(String role, String permissionId) {
-    return (select(rolePermissions)
-      ..where((rp) => rp.role.equals(role) & rp.permissionId.equals(permissionId)))
-      .getSingleOrNull();
+    return (select(rolePermissions)..where(
+          (rp) => rp.role.equals(role) & rp.permissionId.equals(permissionId),
+        ))
+        .getSingleOrNull();
   }
 
   /// Update role permission
@@ -37,7 +41,9 @@ class RolePermissionsDao extends DatabaseAccessor<AppDatabase> with _$RolePermis
   }
 
   /// Batch insert role permissions
-  Future<void> insertRolePermissions(List<RolePermissionsCompanion> permissionsList) {
+  Future<void> insertRolePermissions(
+    List<RolePermissionsCompanion> permissionsList,
+  ) {
     return batch((batch) {
       batch.insertAll(rolePermissions, permissionsList);
     });
@@ -45,7 +51,9 @@ class RolePermissionsDao extends DatabaseAccessor<AppDatabase> with _$RolePermis
 
   /// Check if role has specific permission enabled
   Future<bool> hasPermission(String role, String permissionName) async {
-    final permission = await db.permissionsDao.getPermissionByName(permissionName);
+    final permission = await db.permissionsDao.getPermissionByName(
+      permissionName,
+    );
     if (permission == null) return false;
 
     final rolePermission = await getRolePermission(role, permission.id);

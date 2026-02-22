@@ -117,7 +117,7 @@ class _PointUseModalState extends State<PointUseModal> {
                   const Icon(Icons.stars, color: AppTheme.primary, size: 28),
                   const SizedBox(width: 12),
                   const Text(
-                    '포인트 사용',
+                    'Redeem Points',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -148,7 +148,7 @@ class _PointUseModalState extends State<PointUseModal> {
                           ),
                         ),
                         Text(
-                          '${widget.customer.membershipTier.toUpperCase()}',
+                          widget.customer.membershipTier.toUpperCase(),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -161,7 +161,7 @@ class _PointUseModalState extends State<PointUseModal> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('보유 포인트'),
+                        const Text('Points Balance'),
                         Text(
                           '${currencyFormat.format(widget.customer.points)}P',
                           style: const TextStyle(
@@ -188,11 +188,11 @@ class _PointUseModalState extends State<PointUseModal> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      '결제 금액',
+                      'Sale Amount',
                       style: TextStyle(fontSize: 16),
                     ),
                     Text(
-                      '${currencyFormat.format(widget.saleAmount)}원',
+                      currencyFormat.format(widget.saleAmount),
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -220,7 +220,7 @@ class _PointUseModalState extends State<PointUseModal> {
                           Icon(Icons.info_outline, size: 16, color: Colors.orange[800]),
                           const SizedBox(width: 8),
                           Text(
-                            '사용 제한',
+                            'Redemption Limits',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -231,9 +231,9 @@ class _PointUseModalState extends State<PointUseModal> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '• 최소 ${currencyFormat.format(_minPoints)}P 이상\n'
-                        '• 최대 ${currencyFormat.format(_maxAllowedPoints)}P까지\n'
-                        '• ${currencyFormat.format(_pointUnit)}P 단위로 사용',
+                        '• Min ${currencyFormat.format(_minPoints)}P\n'
+                        '• Max ${currencyFormat.format(_maxAllowedPoints)}P\n'
+                        '• In multiples of ${currencyFormat.format(_pointUnit)}P',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.orange[900],
@@ -253,18 +253,18 @@ class _PointUseModalState extends State<PointUseModal> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: InputDecoration(
-                        labelText: '사용 포인트',
+                        labelText: 'Points to Redeem',
                         suffixText: 'P',
                         border: const OutlineInputBorder(),
                         errorText: _errorMessage,
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return '포인트를 입력하세요';
+                          return 'Please enter points';
                         }
                         final points = int.tryParse(value);
                         if (points == null || points <= 0) {
-                          return '올바른 포인트를 입력하세요';
+                          return 'Please enter valid points';
                         }
                         return null;
                       },
@@ -284,7 +284,7 @@ class _PointUseModalState extends State<PointUseModal> {
                         vertical: 16,
                       ),
                     ),
-                    child: const Text('최대 사용'),
+                    child: const Text('Max'),
                   ),
                 ],
               ),
@@ -299,7 +299,7 @@ class _PointUseModalState extends State<PointUseModal> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text('취소'),
+                      child: const Text('Cancel'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -309,7 +309,7 @@ class _PointUseModalState extends State<PointUseModal> {
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text('사용'),
+                      child: const Text('Redeem'),
                     ),
                   ),
                 ],

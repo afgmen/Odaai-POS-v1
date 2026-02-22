@@ -175,12 +175,12 @@ class _PromotionCard extends StatelessWidget {
         color: AppTheme.cardWhite,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: promotion.isActive ? AppTheme.primary.withOpacity(0.3) : AppTheme.divider,
+          color: promotion.isActive ? AppTheme.primary.withValues(alpha: 0.3) : AppTheme.divider,
           width: promotion.isActive ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -196,8 +196,8 @@ class _PromotionCard extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: promotion.isActive
-                    ? AppTheme.primary.withOpacity(0.1)
-                    : AppTheme.textDisabled.withOpacity(0.1),
+                    ? AppTheme.primary.withValues(alpha: 0.1)
+                    : AppTheme.textDisabled.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -349,7 +349,7 @@ class _PromotionCard extends StatelessWidget {
       case 'percentOff':
         return '${value.toInt()}% OFF';
       case 'amountOff':
-        return '₩${value.toInt().toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')} OFF';
+        return '₫${value.toInt().toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')} OFF';
       default:
         return value.toString();
     }

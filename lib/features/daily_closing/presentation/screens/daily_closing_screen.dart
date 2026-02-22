@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../../../core/widgets/permission_gate_widget.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/domain/permission_modules.dart';
+import '../../../../database/app_database.dart';
+import '../../data/daily_closing_dao.dart';
 import '../../providers/daily_closing_provider.dart';
 import '../../domain/services/closing_service.dart';
 import '../../domain/services/pdf_export_service.dart';
@@ -161,7 +163,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
         ),
         body: const Center(
           child: AccessDeniedCard(
-            message: '일일 매출을 볼 권한이 없습니다',
+            message: 'No permission to view daily sales',
           ),
         ),
       ),
@@ -251,7 +253,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
                 return const SizedBox.shrink();
               },
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
             ),
 
             aggregationAsync.when(
@@ -341,7 +343,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
     );
   }
 
-  Widget _buildCashManagement(aggregation) {
+  Widget _buildCashManagement(SalesAggregation aggregation) {
     final l10n = AppLocalizations.of(context)!;
     return Card(
       key: DailyClosingTutorialKeys.cashReconciliation,
@@ -367,7 +369,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
             const SizedBox(height: 8),
             _buildInfoRow(
               l10n.expectedCash,
-              NumberFormat.currency(locale: 'ko_KR', symbol: '₩')
+              NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
                   .format(aggregation.cashSales),
               isBold: true,
             ),
@@ -375,7 +377,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
               const SizedBox(height: 8),
               _buildInfoRow(
                 l10n.actualCash,
-                NumberFormat.currency(locale: 'ko_KR', symbol: '₩')
+                NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
                     .format(actualCash!),
                 isBold: true,
               ),
@@ -412,7 +414,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
           style: const TextStyle(fontSize: 14),
         ),
         Text(
-          NumberFormat.currency(locale: 'ko_KR', symbol: '₩')
+          NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
               .format(difference),
           style: TextStyle(
             fontSize: 16,
@@ -461,7 +463,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
     );
   }
 
-  Widget _buildActionButtons(closing) {
+  Widget _buildActionButtons(DailyClosing? closing) {
     final l10n = AppLocalizations.of(context)!;
     final canClose = closing == null;
 
@@ -474,9 +476,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
             onPressed: canClose
                 ? null
                 : () async {
-                    if (closing != null) {
-                      await _generatePdf(closing.id);
-                    }
+                    await _generatePdf(closing.id);
                   },
           ),
         ),

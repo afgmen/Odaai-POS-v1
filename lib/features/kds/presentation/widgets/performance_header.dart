@@ -47,7 +47,7 @@ class PerformanceHeader extends ConsumerWidget {
         height: 24,
         child: CircularProgressIndicator(strokeWidth: 2),
       ),
-      error: (_, __) => const Icon(Icons.error, color: Colors.red),
+      error: (_, _) => const Icon(Icons.error, color: Colors.red),
     );
   }
 
@@ -60,7 +60,7 @@ class PerformanceHeader extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

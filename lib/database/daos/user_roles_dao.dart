@@ -1,15 +1,19 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
+import '../tables/user_roles.dart';
 
 part 'user_roles_dao.g.dart';
 
 @DriftAccessor(tables: [UserRoles])
-class UserRolesDao extends DatabaseAccessor<AppDatabase> with _$UserRolesDaoMixin {
-  UserRolesDao(AppDatabase db) : super(db);
+class UserRolesDao extends DatabaseAccessor<AppDatabase>
+    with _$UserRolesDaoMixin {
+  UserRolesDao(super.db);
 
   /// Get user's role
   Future<UserRole?> getUserRole(int userId) {
-    return (select(userRoles)..where((r) => r.userId.equals(userId))).getSingleOrNull();
+    return (select(
+      userRoles,
+    )..where((r) => r.userId.equals(userId))).getSingleOrNull();
   }
 
   /// Get all users with a specific role

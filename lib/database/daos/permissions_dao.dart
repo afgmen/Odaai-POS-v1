@@ -1,15 +1,19 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
+import '../tables/permissions.dart';
 
 part 'permissions_dao.g.dart';
 
 @DriftAccessor(tables: [Permissions])
-class PermissionsDao extends DatabaseAccessor<AppDatabase> with _$PermissionsDaoMixin {
-  PermissionsDao(AppDatabase db) : super(db);
+class PermissionsDao extends DatabaseAccessor<AppDatabase>
+    with _$PermissionsDaoMixin {
+  PermissionsDao(super.db);
 
   /// Get permission by name
   Future<Permission?> getPermissionByName(String name) {
-    return (select(permissions)..where((p) => p.name.equals(name))).getSingleOrNull();
+    return (select(
+      permissions,
+    )..where((p) => p.name.equals(name))).getSingleOrNull();
   }
 
   /// Get all permissions
@@ -24,7 +28,9 @@ class PermissionsDao extends DatabaseAccessor<AppDatabase> with _$PermissionsDao
 
   /// Get sensitive permissions only
   Future<List<Permission>> getSensitivePermissions() {
-    return (select(permissions)..where((p) => p.isSensitive.equals(true))).get();
+    return (select(
+      permissions,
+    )..where((p) => p.isSensitive.equals(true))).get();
   }
 
   /// Insert new permission

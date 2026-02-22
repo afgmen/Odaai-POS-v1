@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 /// Four fixed roles for RBAC system (cannot be deleted or added)
 enum EmployeeRole {
   OWNER,         // All permissions, ALL_STORES scope
@@ -19,19 +21,8 @@ enum EmployeeRole {
     }
   }
 
-  /// Korean display name
-  String get displayNameKo {
-    switch (this) {
-      case EmployeeRole.OWNER:
-        return '사업주';
-      case EmployeeRole.AREA_MANAGER:
-        return '지역 관리자';
-      case EmployeeRole.STORE_MANAGER:
-        return '매장 관리자';
-      case EmployeeRole.STAFF:
-        return '직원';
-    }
-  }
+  /// Display name alias (kept for backward compatibility)
+  String get displayNameKo => displayName;
 
   /// Description for UI
   String get description {
@@ -47,19 +38,8 @@ enum EmployeeRole {
     }
   }
 
-  /// Korean description
-  String get descriptionKo {
-    switch (this) {
-      case EmployeeRole.OWNER:
-        return '전체 시스템 접근 - 모든 매장';
-      case EmployeeRole.AREA_MANAGER:
-        return '할당된 여러 매장 관리';
-      case EmployeeRole.STORE_MANAGER:
-        return '단일 매장 관리';
-      case EmployeeRole.STAFF:
-        return '기본 POS 작업';
-    }
-  }
+  /// Description alias (kept for backward compatibility)
+  String get descriptionKo => description;
 
   /// Default store scope for this role
   StoreScope get defaultScope {
@@ -118,16 +98,8 @@ enum StoreScope {
     }
   }
 
-  String get displayNameKo {
-    switch (this) {
-      case StoreScope.ALL_STORES:
-        return '모든 매장';
-      case StoreScope.ASSIGNED_STORES:
-        return '할당된 매장';
-      case StoreScope.OWN_STORE:
-        return '소속 매장';
-    }
-  }
+  /// Display name alias (kept for backward compatibility)
+  String get displayNameKo => displayName;
 
   /// Convert from string
   static StoreScope fromString(String value) {

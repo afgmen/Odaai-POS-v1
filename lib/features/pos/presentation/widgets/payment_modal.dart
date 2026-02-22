@@ -120,16 +120,16 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             // 금액 요약
             if (allDiscount > 0) ...[
               Text(
-                '${l10n.subtotal}: ₩${_formatPrice(subtotal)}',
+                '${l10n.subtotal}: ${priceFormatter.format(subtotal)}',
                 style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
               ),
               Text(
-                '${l10n.discount}: -₩${_formatPrice(allDiscount)}',
+                '${l10n.discount}: -${priceFormatter.format(allDiscount)}',
                 style: const TextStyle(fontSize: 13, color: AppTheme.error),
               ),
             ],
             Text(
-              '${l10n.paymentAmount}: ₩${_formatPrice(total)}',
+              '${l10n.paymentAmount}: ${priceFormatter.format(total)}',
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
             ),
             // 포인트 사용 정보
@@ -151,7 +151,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${selectedCustomer.name} - 포인트 사용',
+                            '${selectedCustomer.name} - Points Redeemed',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -159,7 +159,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                             ),
                           ),
                           Text(
-                            '-${_formatPrice(pointsToUse.toDouble())}P',
+                            '-${priceFormatter.format(pointsToUse.toDouble())}P',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -174,7 +174,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               ),
               const SizedBox(height: 8),
               Text(
-                '최종 결제 금액: ₩${_formatPrice(finalTotal)}',
+                'Total: ${priceFormatter.format(finalTotal)}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -310,7 +310,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                       child: OutlinedButton(
                         onPressed: () {
                           setState(() => _cashInput = amount.toDouble());
-                          _cashController.text = _formatPrice(amount.toDouble());
+                          _cashController.text = priceFormatter.format(amount.toDouble());
                         },
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -318,7 +318,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                           side: const BorderSide(color: AppTheme.divider),
                           foregroundColor: AppTheme.textPrimary,
                         ),
-                        child: Text('₩${_formatPrice(amount.toDouble())}', style: const TextStyle(fontSize: 13)),
+                        child: Text(priceFormatter.format(amount.toDouble()), style: const TextStyle(fontSize: 13)),
                       ),
                     ),
                   );
@@ -359,7 +359,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                       ),
                     ),
                     Text(
-                      '₩${_formatPrice(change.abs())}',
+                      priceFormatter.format(change.abs()),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -413,12 +413,15 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         throw Exception(l10n.noEmployeeLoggedIn);
       }
 
-      // ── 매출 번호 생성 (SO-YYYYMMDD-NNNNN) ──
+      // ── 매출 번호 생성 (SO-YYYYMMDD-XXXXX) ──
+      // millisecondsSinceEpoch % 100000 은 100초 내 충돌 위험이 있으므로
+      // microsecond + 랜덤 조합으로 충돌 방지
       final now = DateTime.now();
       final dateStr = '${now.year}'
           '${now.month.toString().padLeft(2, '0')}'
           '${now.day.toString().padLeft(2, '0')}';
-      final seqStr = (now.millisecondsSinceEpoch % 100000).toString().padLeft(5, '0');
+      final microSeq = now.microsecondsSinceEpoch % 1000000;
+      final seqStr = microSeq.toString().padLeft(6, '0');
       final saleNumber = 'SO-$dateStr-$seqStr';
 
       // ── 포인트 사용 처리 ──────────────────────
@@ -603,9 +606,3 @@ class _PaymentErrorDialog extends StatelessWidget {
   }
 }
 
-String _formatPrice(double price) {
-  return price.toInt().toString().replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-    (match) => '${match[1]},',
-  );
-}

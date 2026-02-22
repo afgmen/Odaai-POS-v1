@@ -15,7 +15,7 @@ import '../widgets/cart_panel.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/payment_modal.dart';
 import '../widgets/product_card.dart';
-import '../../../kds/presentation/screens/kds_screen.dart';
+import '../../../kds/presentation/screens/kds_mode_selection_screen.dart';
 
 /// POS 메인 화면
 class PosMainScreen extends ConsumerWidget {
@@ -197,7 +197,7 @@ class _PosAppBarState extends State<_PosAppBar> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const KdsScreen(),
+                        builder: (context) => const KdsModeSelectionScreen(),
                       ),
                     );
                   },
@@ -205,7 +205,7 @@ class _PosAppBarState extends State<_PosAppBar> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.1),
+                      color: AppTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: AppTheme.primary),
                     ),
@@ -580,9 +580,9 @@ class _KdsStatsBadges extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

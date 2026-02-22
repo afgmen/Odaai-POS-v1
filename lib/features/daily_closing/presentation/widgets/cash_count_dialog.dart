@@ -92,7 +92,7 @@ class _CashCountDialogState extends State<CashCountDialog> {
               ],
               decoration: InputDecoration(
                 hintText: l10n.actualCashHint,
-                suffixText: '원',
+                suffixText: '',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.attach_money),
               ),

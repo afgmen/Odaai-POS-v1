@@ -37,7 +37,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           reservationCountAsync.when(
             data: (counts) => _buildStatistics(context, counts),
             loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
           const SizedBox(width: 8),
 
@@ -107,7 +107,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color, width: 1),
       ),
@@ -150,7 +150,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -178,7 +178,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
         },
         calendarStyle: CalendarStyle(
           todayDecoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.3),
+            color: Colors.blue.withValues(alpha: 0.3),
             shape: BoxShape.circle,
           ),
           selectedDecoration: const BoxDecoration(
@@ -240,7 +240,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -309,7 +309,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.15) : Colors.transparent,
+          color: isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
           border: Border.all(
             color: isSelected ? color : Colors.grey[300]!,
             width: isSelected ? 2 : 1,

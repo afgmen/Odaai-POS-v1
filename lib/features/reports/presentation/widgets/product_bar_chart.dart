@@ -33,7 +33,7 @@ class ProductBarChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '상품별 매출 TOP 10',
+            'Top 10 Products by Sales',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -52,7 +52,7 @@ class ProductBarChart extends StatelessWidget {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final item = data[group.x];
                       return BarTooltipItem(
-                        '${item.productName}\n₩${_fmt(item.totalSales)} (${item.totalQuantity}개)',
+                        '${item.productName}\n₫${_fmt(item.totalSales)} (${item.totalQuantity})',
                         const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -135,7 +135,7 @@ class ProductBarChart extends StatelessWidget {
                   );
                 }),
               ),
-              swapAnimationDuration: const Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 300),
             ),
           ),
         ],

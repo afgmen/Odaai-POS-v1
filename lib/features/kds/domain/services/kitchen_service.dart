@@ -1,7 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import '../../data/kitchen_orders_repository.dart';
-import '../../../../database/app_database.dart';
 import '../enums/order_status.dart';
 
 /// KDS 비즈니스 로직 서비스
@@ -196,6 +195,6 @@ class KitchenPerformance {
   String get averagePrepTimeFormatted {
     final minutes = averagePrepTimeMinutes.floor();
     final seconds = ((averagePrepTimeMinutes - minutes) * 60).round();
-    return '${minutes}분 ${seconds}초';
+    return '${minutes}m ${seconds}s';
   }
 }

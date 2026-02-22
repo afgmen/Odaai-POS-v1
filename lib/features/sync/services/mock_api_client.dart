@@ -26,7 +26,7 @@ class MockApiClient {
         'syncedAt': DateTime.now().toIso8601String(),
       });
     }
-    return ApiResponse.error(message: '서버 연결 실패. 나중에 다시 시도합니다.');
+    return ApiResponse.error(message: 'Server connection failed. Please try again later.');
   }
 
   /// 상품 데이터 동기화 (업로드)
@@ -38,7 +38,7 @@ class MockApiClient {
         'syncedAt': DateTime.now().toIso8601String(),
       });
     }
-    return ApiResponse.error(message: '상품 동기화 실패');
+    return ApiResponse.error(message: 'Product sync failed');
   }
 
   /// 직원 데이터 동기화 (업로드)
@@ -50,7 +50,7 @@ class MockApiClient {
         'syncedAt': DateTime.now().toIso8601String(),
       });
     }
-    return ApiResponse.error(message: '직원 동기화 실패');
+    return ApiResponse.error(message: 'Employee sync failed');
   }
 
   /// 서버 상태 확인 (ping)
@@ -70,7 +70,7 @@ class MockApiClient {
         'lastSync': DateTime.now().toIso8601String(),
       });
     }
-    return ApiResponse.error(message: '업데이트 가져오기 실패');
+    return ApiResponse.error(message: 'Failed to fetch updates');
   }
 
   // ── 내부 유틸리티 ──────────────────────

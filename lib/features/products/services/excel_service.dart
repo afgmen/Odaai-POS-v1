@@ -12,14 +12,14 @@ import '../../../database/daos/products_dao.dart';
 // Excel 열 정의 (순서 중요)
 // ─────────────────────────────────────────────
 const List<String> _defaultExcelHeaders = [
-  'SKU',        // 0
-  '상품명',      // 1
-  '바코드',      // 2
-  '카테고리',    // 3
-  '판매가',      // 4
-  '원가',        // 5
-  '재고',        // 6
-  '최소재고',    // 7
+  'SKU',          // 0
+  'Product Name', // 1
+  'Barcode',      // 2
+  'Category',     // 3
+  'Price',        // 4
+  'Cost',         // 5
+  'Stock',        // 6
+  'Min Stock',    // 7
 ];
 
 /// 엑셀 업로드 결과 모델
@@ -52,7 +52,7 @@ class ExcelService {
     try {
       final excel = Excel.createExcel();
 
-      final sheetName = labels['sheetName'] ?? '상품목록';
+      final sheetName = labels['sheetName'] ?? 'Products';
       // 기본 시트 이름 변경
       final defaultName = excel.tables.keys.first;
       excel.rename(defaultName, sheetName);
@@ -137,7 +137,7 @@ class ExcelService {
       final fileName = 'oda_products_${_dateTag()}.xlsx';
 
       final savedPath = await FilePicker.platform.saveFile(
-        dialogTitle: labels['dialogSaveTitle'] ?? '엑셀 파일 저장',
+        dialogTitle: labels['dialogSaveTitle'] ?? 'Save Excel File',
         fileName: fileName,
         type: FileType.custom,
         allowedExtensions: ['xlsx'],
@@ -150,7 +150,7 @@ class ExcelService {
 
       return savedPath;
     } catch (e, stack) {
-      debugPrint('[ExcelService] downloadProducts 오류: $e\n$stack');
+      debugPrint('[ExcelService] downloadProducts error: $e\n$stack');
       return null;
     }
   }
@@ -168,7 +168,7 @@ class ExcelService {
     final pickerResult = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['xlsx'],
-      dialogTitle: labels['dialogSelectTitle'] ?? '엑셀 파일 선택',
+      dialogTitle: labels['dialogSelectTitle'] ?? 'Select Excel File',
     );
     if (pickerResult == null || pickerResult.files.isEmpty) return null;
 
@@ -211,7 +211,7 @@ class ExcelService {
 
         final name = _readStr(rowData, 1);
         if (name == null || name.trim().isEmpty) {
-          errors.add(labels['rowNameEmpty']?.replaceAll('{row}', '${row + 1}') ?? '행 ${row + 1}: 상품명이 비어있습니다');
+          errors.add(labels['rowNameEmpty']?.replaceAll('{row}', '${row + 1}') ?? 'Row ${row + 1}: Product name is empty');
           continue;
         }
 
@@ -224,15 +224,15 @@ class ExcelService {
 
         // ── 유효성 검사 ───────────────────
         if (price < 0) {
-          errors.add(labels['rowPriceError']?.replaceAll('{row}', '${row + 1}') ?? '행 ${row + 1}: 판매가는 0 이상이어야 합니다');
+          errors.add(labels['rowPriceError']?.replaceAll('{row}', '${row + 1}') ?? 'Row ${row + 1}: Price must be 0 or greater');
           continue;
         }
         if (cost < 0) {
-          errors.add(labels['rowCostError']?.replaceAll('{row}', '${row + 1}') ?? '행 ${row + 1}: 원가는 0 이상이어야 합니다');
+          errors.add(labels['rowCostError']?.replaceAll('{row}', '${row + 1}') ?? 'Row ${row + 1}: Cost must be 0 or greater');
           continue;
         }
         if (stock < 0) {
-          errors.add(labels['rowStockError']?.replaceAll('{row}', '${row + 1}') ?? '행 ${row + 1}: 재고는 0 이상이어야 합니다');
+          errors.add(labels['rowStockError']?.replaceAll('{row}', '${row + 1}') ?? 'Row ${row + 1}: Stock must be 0 or greater');
           continue;
         }
 
@@ -270,7 +270,7 @@ class ExcelService {
           inserted++;
         }
       } catch (e) {
-        errors.add(labels['rowError']?.replaceAll('{row}', '${row + 1}').replaceAll('{error}', e.toString()) ?? '행 ${row + 1}: ${e.toString()}');
+        errors.add(labels['rowError']?.replaceAll('{row}', '${row + 1}').replaceAll('{error}', e.toString()) ?? 'Row ${row + 1}: ${e.toString()}');
       }
     }
 

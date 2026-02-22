@@ -1,9 +1,9 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/models/currency.dart';
 import '../core/services/price_formatter.dart';
-import 'database_providers.dart';
 
 /// 현재 통화 Provider
 final currencyProvider = StateNotifierProvider<CurrencyNotifier, AppCurrency>((ref) {
@@ -20,17 +20,17 @@ class CurrencyNotifier extends StateNotifier<AppCurrency> {
   Future<void> _loadSavedCurrency() async {
     final prefs = await SharedPreferences.getInstance();
     final currencyCode = prefs.getString('currency_code') ?? 'VND';
-    print('🔍 [CurrencyProvider] Loading currency: $currencyCode');
+    debugPrint('🔍 [CurrencyProvider] Loading currency: $currencyCode');
     state = AppCurrency.fromCode(currencyCode);
-    print('✅ [CurrencyProvider] Loaded currency: ${state.code} ${state.symbol}');
+    debugPrint('✅ [CurrencyProvider] Loaded currency: ${state.code} ${state.symbol}');
   }
 
   Future<void> setCurrency(AppCurrency currency) async {
-    print('💰 [CurrencyProvider] Setting currency to: ${currency.code} ${currency.symbol}');
+    debugPrint('💰 [CurrencyProvider] Setting currency to: ${currency.code} ${currency.symbol}');
     state = currency;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('currency_code', currency.code);
-    print('✅ [CurrencyProvider] Currency saved to SharedPreferences');
+    debugPrint('✅ [CurrencyProvider] Currency saved to SharedPreferences');
 
     // DB에도 저장 (AppSettings 테이블 추가 후 활성화)
     // final db = ref.read(databaseProvider);

@@ -4,8 +4,6 @@ import 'package:drift/drift.dart' hide Column;
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
-import '../../../../database/daos/employees_dao.dart';
-import '../../../../providers/database_providers.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../auth/utils/pin_hasher.dart';
@@ -125,7 +123,7 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
 
                 // 역할
                 DropdownButtonFormField<String>(
-                  value: _selectedRole,
+                  initialValue: _selectedRole,
                   decoration: InputDecoration(
                     labelText: l10n.roleLabel,
                     prefixIcon: const Icon(Icons.work_outline),

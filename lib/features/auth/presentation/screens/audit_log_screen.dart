@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../database/tables/permission_logs.dart';
+import '../../../../database/app_database.dart';
 import '../../providers/audit_logging_provider.dart';
 import '../../providers/permission_provider.dart';
 
-/// 감사 로그 조회 화면 (관리자 전용)
+/// Audit log screen (manager only)
 class AuditLogScreen extends ConsumerStatefulWidget {
   const AuditLogScreen({super.key});
 
@@ -31,27 +31,26 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen>
 
   @override
   Widget build(BuildContext context) {
-    // 관리자 권한 확인
     final isManager = ref.watch(isManagerProvider);
 
     if (!isManager) {
       return Scaffold(
-        appBar: AppBar(title: const Text('감사 로그')),
+        appBar: AppBar(title: const Text('Audit Log')),
         body: const Center(
-          child: Text('관리자 권한이 필요합니다.'),
+          child: Text('Manager access required.'),
         ),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('감사 로그'),
+        title: const Text('Audit Log'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: '최근 활동'),
-            Tab(text: '오늘 로그인'),
-            Tab(text: '권한 거부'),
+            Tab(text: 'Recent Activity'),
+            Tab(text: 'Today\'s Logins'),
+            Tab(text: 'Permission Denied'),
           ],
         ),
       ),
@@ -72,7 +71,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen>
     return recentActivityAsync.when(
       data: (logs) => _buildLogList(logs),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('로드 실패: $error')),
+      error: (error, stack) => Center(child: Text('Failed to load: $error')),
     );
   }
 
@@ -82,7 +81,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen>
     return todayLoginsAsync.when(
       data: (logs) => _buildLogList(logs),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('로드 실패: $error')),
+      error: (error, stack) => Center(child: Text('Failed to load: $error')),
     );
   }
 
@@ -92,14 +91,14 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen>
     return deniedLogsAsync.when(
       data: (logs) => _buildLogList(logs),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('로드 실패: $error')),
+      error: (error, stack) => Center(child: Text('Failed to load: $error')),
     );
   }
 
   Widget _buildLogList(List<PermissionLog> logs) {
     if (logs.isEmpty) {
       return const Center(
-        child: Text('로그가 없습니다.'),
+        child: Text('No logs found.'),
       );
     }
 
@@ -126,11 +125,11 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            Text('직원 ID: ${log.employeeId}'),
+            Text('Employee ID: ${log.employeeId}'),
             if (log.actionTarget != null)
-              Text('대상: ${log.actionTarget}'),
+              Text('Target: ${log.actionTarget}'),
             if (log.approvedByEmployeeId != null)
-              Text('승인자: ${log.approvedByEmployeeId}'),
+              Text('Approved by: ${log.approvedByEmployeeId}'),
             Text(
               DateFormat('yyyy-MM-dd HH:mm:ss').format(log.createdAt),
               style: TextStyle(
@@ -186,7 +185,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen>
     }
 
     return CircleAvatar(
-      backgroundColor: color.withOpacity(0.1),
+      backgroundColor: color.withValues(alpha: 0.1),
       child: Icon(icon, color: color, size: 20),
     );
   }
@@ -194,19 +193,19 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen>
   String _getActionTypeDisplay(String actionType) {
     switch (actionType) {
       case 'LOGIN':
-        return '로그인';
+        return 'Login';
       case 'LOGOUT':
-        return '로그아웃';
+        return 'Logout';
       case 'REFUND':
-        return '환불';
+        return 'Refund';
       case 'DISCOUNT':
-        return '할인';
+        return 'Discount';
       case 'OVERRIDE_REQUEST':
-        return '관리자 승인 요청';
+        return 'Manager Override Request';
       case 'OVERRIDE_GRANTED':
-        return '관리자 승인 완료';
+        return 'Manager Override Approved';
       case 'PERMISSION_DENIED':
-        return '권한 거부';
+        return 'Permission Denied';
       default:
         return actionType;
     }

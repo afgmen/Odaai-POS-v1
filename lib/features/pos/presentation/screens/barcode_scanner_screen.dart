@@ -125,7 +125,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
               backgroundColor: Colors.transparent,
               foregroundColor: Colors.white,
               title: const Text(
-                '바코드 스캔',
+                'Barcode Scan',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               leading: IconButton(
@@ -142,7 +142,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
             right: 0,
             child: Center(
               child: Text(
-                _isDetected ? '바코드 감지됨!' : '바코드를 프레임 안에 놓아주세요',
+                _isDetected ? 'Barcode detected!' : 'Place barcode in the frame',
                 style: TextStyle(
                   color: _isDetected ? AppTheme.success : Colors.white,
                   fontSize: 16,

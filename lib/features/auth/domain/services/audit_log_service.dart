@@ -1,4 +1,7 @@
+// ignore_for_file: constant_identifier_names
+
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:uuid/uuid.dart';
 import '../../../../database/app_database.dart';
 
@@ -54,17 +57,27 @@ class AuditLogService {
           Variable.withString(eventType),
           Variable.withInt(actorId),
           Variable.withString(actorName),
-          targetRole != null ? Variable.withString(targetRole) : const Variable.withNull(),
-          permission != null ? Variable.withString(permission) : const Variable.withNull(),
-          oldValue != null ? Variable.withString(oldValue) : const Variable.withNull(),
-          newValue != null ? Variable.withString(newValue) : const Variable.withNull(),
+          targetRole != null
+              ? Variable.withString(targetRole)
+              : const Variable<String>(null),
+          permission != null
+              ? Variable.withString(permission)
+              : const Variable<String>(null),
+          oldValue != null
+              ? Variable.withString(oldValue)
+              : const Variable<String>(null),
+          newValue != null
+              ? Variable.withString(newValue)
+              : const Variable<String>(null),
           Variable.withDateTime(DateTime.now()),
-          ipAddress != null ? Variable.withString(ipAddress) : const Variable.withNull(),
+          ipAddress != null
+              ? Variable.withString(ipAddress)
+              : const Variable<String>(null),
         ],
       );
     } catch (e) {
       // Log insertion failed - this shouldn't break the main operation
-      print('Audit log insertion failed: $e');
+      debugPrint('Audit log insertion failed: $e');
     }
   }
 
@@ -122,10 +135,7 @@ class AuditLogService {
     variables.add(Variable.withInt(limit));
     variables.add(Variable.withInt(offset));
 
-    final result = await _db.customSelect(
-      query,
-      variables: variables,
-    ).get();
+    final result = await _db.customSelect(query, variables: variables).get();
 
     return result.map((row) => _mapToAuditLog(row)).toList();
   }
@@ -198,15 +208,14 @@ class AuditLogService {
       variables.add(Variable.withDateTime(endDate));
     }
 
-    final result = await _db.customSelect(query, variables: variables).getSingle();
+    final result = await _db
+        .customSelect(query, variables: variables)
+        .getSingle();
     return result.data['count'] as int;
   }
 
   /// Export audit logs to CSV format (as string)
-  Future<String> exportToCSV({
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
+  Future<String> exportToCSV({DateTime? startDate, DateTime? endDate}) async {
     final logs = await getAuditLogs(
       startDate: startDate,
       endDate: endDate,
@@ -215,19 +224,23 @@ class AuditLogService {
 
     final buffer = StringBuffer();
     // CSV header
-    buffer.writeln('Timestamp,Event Type,Actor,Target Role,Permission,Old Value,New Value');
+    buffer.writeln(
+      'Timestamp,Event Type,Actor,Target Role,Permission,Old Value,New Value',
+    );
 
     // CSV rows
     for (final log in logs) {
-      buffer.writeln([
-        log.timestamp.toIso8601String(),
-        log.eventType,
-        _escapeCsv(log.actorName),
-        log.targetRole ?? '',
-        log.permission ?? '',
-        log.oldValue ?? '',
-        log.newValue ?? '',
-      ].join(','));
+      buffer.writeln(
+        [
+          log.timestamp.toIso8601String(),
+          log.eventType,
+          _escapeCsv(log.actorName),
+          log.targetRole ?? '',
+          log.permission ?? '',
+          log.oldValue ?? '',
+          log.newValue ?? '',
+        ].join(','),
+      );
     }
 
     return buffer.toString();

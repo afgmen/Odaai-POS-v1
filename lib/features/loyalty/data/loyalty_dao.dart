@@ -130,7 +130,7 @@ class LoyaltyDao extends DatabaseAccessor<AppDatabase> with _$LoyaltyDaoMixin {
           customerId: customerId,
           amount: amount,
           transactionType: 'adjust',
-          description: '관리자 조정: $reason',
+          description: 'Admin adjustment: $reason',
           balanceAfter: newBalance,
           employeeId: Value(employeeId),
         ),

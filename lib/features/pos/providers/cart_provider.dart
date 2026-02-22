@@ -86,8 +86,8 @@ final cartItemCountProvider = Provider<int>((ref) {
 
 /// 프로모션 타입
 enum PromotionType {
-  buy1get1('B1G1', '1개 사면 1개 무료'),
-  buy2get1('B2G1', '2개 사면 1개 무료');
+  buy1get1('B1G1', 'Buy 1 Get 1 Free'),
+  buy2get1('B2G1', 'Buy 2 Get 1 Free');
 
   final String label;
   final String description;

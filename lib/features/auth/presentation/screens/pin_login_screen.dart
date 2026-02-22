@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../database/app_database.dart';
-import '../../../../database/daos/employees_dao.dart';
-import '../../../../providers/database_providers.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../domain/auth_error.dart';

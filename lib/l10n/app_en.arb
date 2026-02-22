@@ -122,7 +122,6 @@
   "logout": "Logout",
   "logoutConfirm": "Are you sure you want to logout?",
 
-  "langKorean": "한국어",
   "langEnglish": "English",
   "langVietnamese": "Tiếng Việt",
 
@@ -647,6 +646,31 @@
   "kdsElapsedMinutes": "{minutes} min elapsed",
   "kdsTableNumber": "Table Number",
   "kdsSpecialInstructions": "Special Instructions",
+  "kdsMenuSummaryTitle": "Menu Summary",
+  "kdsMenuSummaryToggle": "Toggle Menu Summary",
+  "kdsMenuSummaryEmpty": "No active menu items",
+  "kdsMenuSummaryTotalItems": "Total Items",
+  "kdsMenuSummaryUniqueItems": "menu items",
+
+  "kdsMenuSummaryScreenTitle": "Menu Summary",
+  "kdsModeSelection": "Select KDS Mode",
+  "kdsModeOrderView": "Order View",
+  "kdsModeOrderViewDesc": "View orders by table, sorted by time",
+  "kdsModeMenuSummary": "Menu Summary View",
+  "kdsModeMenuSummaryDesc": "View all items to prepare, grouped by menu",
+  "kdsTotalItems": "Total Items",
+  "kdsUniqueMenus": "{count} menus",
+  "@kdsUniqueMenus": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "kdsOrders": "{count} orders",
+  "@kdsOrders": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
 
   "dailyClosing": "Daily Closing",
   "closingHistory": "Closing History",
@@ -830,5 +854,52 @@
   "customerPhoneRequired": "Please enter contact number",
   "partySizeRequired": "Please enter party size",
   "partySizeInvalid": "Party size must be at least 1",
-  "people": "people"
+  "people": "people",
+
+  "deliveryTitle": "Delivery Orders",
+  "deliveryNewOrders": "New",
+  "deliveryActiveOrders": "Active",
+  "deliveryFilterAll": "All",
+  "deliveryFilterManual": "Manual",
+  "deliveryAccept": "Accept",
+  "deliveryReject": "Reject",
+  "deliveryRejectReason": "Rejection reason",
+  "deliveryStatusNew": "New Order",
+  "deliveryStatusAccepted": "Accepted",
+  "deliveryStatusPreparing": "Preparing",
+  "deliveryStatusReadyForPickup": "Ready for Pickup",
+  "deliveryStatusPickedUp": "Picked Up",
+  "deliveryStatusCompleted": "Completed",
+  "deliveryStatusCancelled": "Cancelled",
+  "deliveryCustomer": "Customer",
+  "deliveryAddress": "Delivery Address",
+  "deliveryDriver": "Driver",
+  "deliveryEstimatedPickup": "Est. Pickup",
+  "deliveryTotalAmount": "Total",
+  "deliveryNoOrders": "No delivery orders",
+  "deliveryCreateManual": "Create Manual Order",
+  "deliveryConnectionStatus": "Server Connection",
+  "deliveryConnected": "Connected",
+  "deliveryDisconnected": "Disconnected",
+  "menuSyncTitle": "Sync Menu to Delivery Platforms",
+  "menuSyncButton": "Sync Now",
+  "menuSyncSuccess": "Menu synced successfully",
+  "menuSyncFailed": "Menu sync failed",
+  "menuSyncInProgress": "Syncing menu...",
+  "deliveryReport": "Delivery Report",
+  "deliveryRevenue": "Delivery Revenue",
+  "deliveryVsDineIn": "Delivery vs Dine-in",
+  "deliveryManualOrder": "Manual Order",
+  "deliveryManualOrderCreate": "Create Manual Order",
+  "deliveryCustomerName": "Customer Name",
+  "deliveryCustomerPhone": "Customer Phone",
+  "deliveryAddressInput": "Delivery Address",
+  "deliverySelectItems": "Select Items",
+
+  "deliveryPlatformSettings": "Delivery Platforms",
+  "deliveryPlatformActive": "Active",
+  "deliveryPlatformNotConfigured": "Not Configured",
+  "deliveryTestConnection": "Test",
+  "deliveryPlatformInactive": "Inactive",
+  "deliveryLastSync": "Last Sync"
 }

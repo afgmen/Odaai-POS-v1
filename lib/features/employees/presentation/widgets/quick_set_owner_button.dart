@@ -80,6 +80,16 @@ class _QuickSetOwnerButtonState extends ConsumerState<QuickSetOwnerButton> {
         WHERE id = ?
       ''', [widget.employee.id]);
 
+      // 2.1 Also update RBAC mapping table (user_roles)
+      await db.customStatement(
+        'DELETE FROM user_roles WHERE user_id = ?',
+        [widget.employee.id],
+      );
+      await db.customStatement('''
+        INSERT INTO user_roles (id, user_id, role, scope, assigned_at, assigned_by)
+        VALUES (lower(hex(randomblob(16))), ?, 'OWNER', 'ALL_STORES', CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER), ?)
+      ''', [widget.employee.id, widget.employee.id]);
+
       if (!mounted) return;
 
       // 3. Show success and restart prompt

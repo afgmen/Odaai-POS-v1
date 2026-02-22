@@ -36,7 +36,7 @@ class PermissionGateWidget extends ConsumerWidget {
     return hasPermission.when(
       data: (allowed) => allowed ? child : (fallback ?? const SizedBox.shrink()),
       loading: () => fallback ?? const SizedBox.shrink(),
-      error: (_, __) => fallback ?? const SizedBox.shrink(),
+      error: (_, _) => fallback ?? const SizedBox.shrink(),
     );
   }
 }
@@ -65,7 +65,7 @@ class AccessDeniedCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              message ?? '접근 권한이 없습니다',
+              message ?? 'Access denied',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -75,7 +75,7 @@ class AccessDeniedCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '이 기능을 사용하려면 관리자에게 문의하세요',
+              'Please contact an administrator to use this feature',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[500],
@@ -122,7 +122,7 @@ class PermissionGuard extends ConsumerWidget {
     return hasPermission.when(
       data: (allowed) => allowed ? child : const SizedBox.shrink(),
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -170,7 +170,7 @@ class PermissionButton extends ConsumerWidget {
         style: style,
         child: child,
       ),
-      error: (_, __) => ElevatedButton(
+      error: (_, _) => ElevatedButton(
         onPressed: null,
         style: style,
         child: child,
@@ -205,7 +205,7 @@ class OwnerOnly extends ConsumerWidget {
     return isOwner.when(
       data: (allowed) => allowed ? child : (fallback ?? const SizedBox.shrink()),
       loading: () => fallback ?? const SizedBox.shrink(),
-      error: (_, __) => fallback ?? const SizedBox.shrink(),
+      error: (_, _) => fallback ?? const SizedBox.shrink(),
     );
   }
 }

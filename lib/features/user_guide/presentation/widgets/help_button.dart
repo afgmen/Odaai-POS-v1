@@ -46,7 +46,7 @@ class HelpButton extends ConsumerWidget {
         _buildButton(context, effectiveTooltip, () {
           // Trigger the tutorial when button is pressed
           final tutorialState = tutorialKey.currentState;
-          if (tutorialState != null && tutorialState is dynamic) {
+          if (tutorialState != null) {
             (tutorialState as dynamic).showTutorial();
           }
         }),

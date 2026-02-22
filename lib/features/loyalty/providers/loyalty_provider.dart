@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../database/app_database.dart';
 import '../../../providers/database_providers.dart';
-import '../data/loyalty_dao.dart';
 import '../domain/services/loyalty_service.dart';
 
 /// 고객 포인트 이력 (실시간)

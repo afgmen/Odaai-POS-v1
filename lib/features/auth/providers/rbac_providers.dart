@@ -3,12 +3,8 @@ import '../domain/services/permission_service.dart';
 import '../domain/services/role_permission_service.dart';
 import '../domain/services/audit_log_service.dart';
 import '../../../database/app_database.dart';
+import '../../../providers/database_providers.dart';
 import 'auth_provider.dart';
-
-/// Database Provider (assuming it exists in your project)
-final databaseProvider = Provider<AppDatabase>((ref) {
-  return AppDatabase();
-});
 
 /// PermissionService Provider
 final permissionServiceProvider = Provider<PermissionService>((ref) {

@@ -364,9 +364,9 @@ class _LowStockCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _InfoChip(label: l10n.currentStockLabel, value: '${product.stock}개'),
-              _InfoChip(label: l10n.minStockLabel, value: '${product.minStock}개'),
-              _InfoChip(label: l10n.needReplenish, value: '${product.minStock - product.stock}개',
+              _InfoChip(label: l10n.currentStockLabel, value: '${product.stock}'),
+              _InfoChip(label: l10n.minStockLabel, value: '${product.minStock}'),
+              _InfoChip(label: l10n.needReplenish, value: '${product.minStock - product.stock}',
                   valueColor: statusColor),
             ],
           ),

@@ -4,10 +4,17 @@ part of 'store_assignments_dao.dart';
 
 // ignore_for_file: type=lint
 mixin _$StoreAssignmentsDaoMixin on DatabaseAccessor<AppDatabase> {
+  $StoreAssignmentsTable get storeAssignments =>
+      attachedDatabase.storeAssignments;
   StoreAssignmentsDaoManager get managers => StoreAssignmentsDaoManager(this);
 }
 
 class StoreAssignmentsDaoManager {
   final _$StoreAssignmentsDaoMixin _db;
   StoreAssignmentsDaoManager(this._db);
+  $$StoreAssignmentsTableTableManager get storeAssignments =>
+      $$StoreAssignmentsTableTableManager(
+        _db.attachedDatabase,
+        _db.storeAssignments,
+      );
 }

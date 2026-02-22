@@ -41,8 +41,8 @@ class DailyClosingDao extends DatabaseAccessor<AppDatabase>
         Variable.withString('CARD'),
         Variable.withString('QR'),
         Variable.withString('TRANSFER'),
-        Variable.withInt(startOfDay.millisecondsSinceEpoch),
-        Variable.withInt(endOfDay.millisecondsSinceEpoch),
+        Variable.withInt(startOfDay.millisecondsSinceEpoch ~/ 1000),
+        Variable.withInt(endOfDay.millisecondsSinceEpoch ~/ 1000),
       ],
     ).getSingleOrNull();
 
@@ -69,17 +69,17 @@ class DailyClosingDao extends DatabaseAccessor<AppDatabase>
     final results = await customSelect(
       '''
       SELECT
-        DATE(sale_date / 1000, 'unixepoch', 'localtime') as sale_date,
+        DATE(sale_date, 'unixepoch', 'localtime') as sale_date,
         COUNT(*) as total_transactions,
         SUM(total) as total_sales
       FROM sales
       WHERE sale_date >= ? AND sale_date < ?
-      GROUP BY DATE(sale_date / 1000, 'unixepoch', 'localtime')
+      GROUP BY DATE(sale_date, 'unixepoch', 'localtime')
       ORDER BY sale_date DESC
       ''',
       variables: [
-        Variable.withInt(startDate.millisecondsSinceEpoch),
-        Variable.withInt(endDate.millisecondsSinceEpoch),
+        Variable.withInt(startDate.millisecondsSinceEpoch ~/ 1000),
+        Variable.withInt(endDate.millisecondsSinceEpoch ~/ 1000),
       ],
     ).get();
 
@@ -195,8 +195,8 @@ class DailyClosingDao extends DatabaseAccessor<AppDatabase>
       WHERE closing_date >= ? AND closing_date < ?
       ''',
       variables: [
-        Variable.withInt(startDate.millisecondsSinceEpoch),
-        Variable.withInt(endDate.millisecondsSinceEpoch),
+        Variable.withInt(startDate.millisecondsSinceEpoch ~/ 1000),
+        Variable.withInt(endDate.millisecondsSinceEpoch ~/ 1000),
       ],
     ).getSingleOrNull();
 

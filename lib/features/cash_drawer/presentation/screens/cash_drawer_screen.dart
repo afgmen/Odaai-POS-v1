@@ -20,7 +20,6 @@ class CashDrawerScreen extends ConsumerWidget {
     final balanceAsync = ref.watch(currentDrawerBalanceProvider);
     final isOpenedAsync = ref.watch(isTodayOpenedProvider);
     final priceFormatter = ref.watch(priceFormatterProvider);
-    final currencyFormat = NumberFormat('#,###');
     final timeFormat = DateFormat('HH:mm');
 
     return Scaffold(
@@ -57,7 +56,7 @@ class CashDrawerScreen extends ConsumerWidget {
                               style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
                             ),
                             loading: () => const Text('...', style: TextStyle(fontSize: 28)),
-                            error: (_, __) => Text(priceFormatter.format(0), style: const TextStyle(fontSize: 28)),
+                            error: (_, _) => Text(priceFormatter.format(0), style: const TextStyle(fontSize: 28)),
                           ),
                         ],
                       ),
@@ -79,7 +78,7 @@ class CashDrawerScreen extends ConsumerWidget {
                         ),
                       ),
                       loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                     ),
                   ],
                 ),
@@ -310,7 +309,6 @@ class CashDrawerScreen extends ConsumerWidget {
     final dao = ref.read(cashDrawerDaoProvider);
     final currentBalance = await dao.getCurrentDrawerBalance();
     final priceFormatter = ref.read(priceFormatterProvider);
-    final currencyFormat = NumberFormat('#,###');
     final countCtrl = TextEditingController();
 
     if (!context.mounted) return;

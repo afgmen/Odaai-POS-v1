@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/daily_closing_dao.dart';
 import '../../providers/daily_closing_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
-import '../../../../providers/database_providers.dart';
 import '../constants/closing_constants.dart';
 
 /// ClosingService Provider
@@ -26,7 +25,7 @@ class ClosingService {
     if (hasClosing) {
       return ClosingValidationResult(
         canClose: false,
-        reason: '이미 마감된 날짜입니다.',
+        reason: 'This date has already been closed.',
       );
     }
 
@@ -35,7 +34,7 @@ class ClosingService {
     if (date.isAfter(DateTime(now.year, now.month, now.day))) {
       return ClosingValidationResult(
         canClose: false,
-        reason: '미래 날짜는 마감할 수 없습니다.',
+        reason: 'Cannot close a future date.',
       );
     }
 
@@ -44,7 +43,7 @@ class ClosingService {
     if (aggregation == null || aggregation.totalTransactions == 0) {
       return ClosingValidationResult(
         canClose: false,
-        reason: '해당 날짜에 판매 내역이 없습니다.',
+        reason: 'No sales found for this date.',
       );
     }
 
@@ -66,7 +65,7 @@ class ClosingService {
       if (!validation.canClose) {
         return ClosingResult(
           success: false,
-          message: validation.reason ?? '마감할 수 없습니다.',
+          message: validation.reason ?? 'Cannot perform closing.',
         );
       }
 
@@ -75,7 +74,7 @@ class ClosingService {
       if (currentSession == null) {
         return ClosingResult(
           success: false,
-          message: '로그인이 필요합니다.',
+          message: 'Login required.',
         );
       }
 
@@ -91,13 +90,13 @@ class ClosingService {
       return ClosingResult(
         success: true,
         closingId: closingId,
-        message: '마감이 완료되었습니다.',
+        message: 'Closing completed successfully.',
       );
     } catch (e) {
       // TODO: Log error for debugging: $e
       return ClosingResult(
         success: false,
-        message: '마감 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        message: 'An error occurred during closing. Please try again.',
       );
     }
   }

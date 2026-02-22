@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/providers/rbac_providers.dart';
+import 'role_permissions_screen.dart';
 
 /// Security & Access Control Settings Screen
 /// Allows Owner to enable/disable RBAC system
@@ -14,7 +15,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('보안 및 접근 제어'),
+        title: const Text('Security & Access Control'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
@@ -28,7 +29,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
                   Icon(Icons.lock, size: 64, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
-                    '접근 권한 없음: 사업주 전용',
+                    'Access denied: Owner only',
                     style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
                 ],
@@ -49,7 +50,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            '역할 기반 접근 제어 (RBAC)',
+                            'Role-Based Access Control (RBAC)',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -68,8 +69,8 @@ class SecuritySettingsScreen extends ConsumerWidget {
                                     SnackBar(
                                       content: Text(
                                         value
-                                            ? 'RBAC가 활성화되었습니다'
-                                            : 'RBAC가 비활성화되었습니다',
+                                            ? 'RBAC enabled'
+                                            : 'RBAC disabled',
                                       ),
                                       backgroundColor: value
                                           ? Colors.green
@@ -80,7 +81,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
                               },
                             ),
                             loading: () => const CircularProgressIndicator(),
-                            error: (_, __) => const Icon(Icons.error),
+                            error: (_, _) => const Icon(Icons.error),
                           ),
                         ],
                       ),
@@ -88,25 +89,25 @@ class SecuritySettingsScreen extends ConsumerWidget {
                       rbacSetting.when(
                         data: (enabled) => Text(
                           enabled
-                              ? 'RBAC가 활성화됨. 직원은 역할에 따라 기능에 접근합니다.'
-                              : 'RBAC가 비활성화됨. 모든 직원이 모든 기능에 접근할 수 있습니다.',
+                              ? 'RBAC is enabled. Access depends on each user\'s role.'
+                              : 'RBAC is disabled. All users have full access.',
                           style: TextStyle(
                             color: enabled ? Colors.green : Colors.orange,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         loading: () => const SizedBox(),
-                        error: (_, __) => const SizedBox(),
+                        error: (_, _) => const SizedBox(),
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        '활성화 시:',
+                        'When enabled:',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      _buildBulletPoint('직원은 재무 보고서를 볼 수 없습니다'),
-                      _buildBulletPoint('관리자만 설정에 접근할 수 있습니다'),
-                      _buildBulletPoint('지역 관리자는 여러 매장을 관리할 수 있습니다'),
+                      _buildBulletPoint('Staff cannot view revenue reports'),
+                      _buildBulletPoint('Only admins can access settings'),
+                      _buildBulletPoint('Area managers can manage multiple stores'),
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -122,7 +123,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
                             const SizedBox(width: 12),
                             const Expanded(
                               child: Text(
-                                '변경 사항은 즉시 적용됩니다',
+                                'Changes take effect immediately',
                                 style: TextStyle(fontWeight: FontWeight.w500),
                               ),
                             ),
@@ -143,14 +144,15 @@ class SecuritySettingsScreen extends ConsumerWidget {
                     child: ListTile(
                       leading: const Icon(Icons.admin_panel_settings,
                           color: Colors.blue),
-                      title: const Text('역할 권한 관리'),
-                      subtitle: const Text('각 역할의 권한 커스터마이징'),
+                      title: const Text('Manage role permissions'),
+                      subtitle: const Text('Customize permissions per role'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
-                        // TODO: Navigate to Roles & Permissions screen
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('역할 권한 관리 화면 (개발 중)'),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const RolePermissionsScreen(),
                           ),
                         );
                       },
@@ -158,7 +160,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
                   );
                 },
                 loading: () => const SizedBox(),
-                error: (_, __) => const SizedBox(),
+                error: (_, _) => const SizedBox(),
               ),
               const SizedBox(height: 16),
               // Role descriptions card
@@ -169,7 +171,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        '역할 설명',
+                        'Role overview',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -177,29 +179,29 @@ class SecuritySettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 16),
                       _buildRoleDescription(
-                        '사업주 (OWNER)',
-                        '전체 시스템 접근 - 모든 매장',
+                        'Owner (OWNER)',
+                        'Full system access - all stores',
                         Icons.star,
                         Colors.amber,
                       ),
                       const Divider(),
                       _buildRoleDescription(
-                        '지역 관리자 (AREA MANAGER)',
-                        '할당된 여러 매장 관리',
+                        'Area Manager (AREA_MANAGER)',
+                        'Manage multiple assigned stores',
                         Icons.business,
                         Colors.blue,
                       ),
                       const Divider(),
                       _buildRoleDescription(
-                        '매장 관리자 (STORE MANAGER)',
-                        '단일 매장 관리',
+                        'Store Manager (STORE_MANAGER)',
+                        'Manage a single store',
                         Icons.store,
                         Colors.green,
                       ),
                       const Divider(),
                       _buildRoleDescription(
-                        '직원 (STAFF)',
-                        '기본 POS 작업',
+                        'Staff (STAFF)',
+                        'Basic POS operations',
                         Icons.person,
                         Colors.grey,
                       ),
@@ -212,7 +214,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
-          child: Text('오류: $error'),
+          child: Text('Error: $error'),
         ),
       ),
     );

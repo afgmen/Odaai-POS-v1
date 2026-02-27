@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../database/app_database.dart';
 import '../../../providers/database_providers.dart';
 import 'tables_dao.dart';
+import '../../../database/daos/sales_dao.dart';
 
 // ============================================================
 // DAO Provider
@@ -107,4 +108,15 @@ final availableTableCountProvider = FutureProvider<int>((ref) {
 final occupiedTableCountProvider = FutureProvider<int>((ref) {
   final dao = ref.watch(tablesDaoProvider);
   return dao.getOccupiedTableCount();
+});
+
+// ============================================================
+// Phase 3: Open Tab Providers
+// ============================================================
+
+/// 특정 테이블의 Open Tab (활성 Sale) 스트림
+final watchOpenTabByTableProvider =
+    StreamProvider.family<Sale?, int>((ref, tableId) {
+  final db = ref.watch(databaseProvider);
+  return db.salesDao.watchOpenTabByTableId(tableId);
 });

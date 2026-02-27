@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../pos/data/models/order_type.dart';
+import '../../../pos/presentation/screens/pos_main_screen.dart';
 
 /// NewOrderModal — 빈 테이블 탭 시 주문 유형 선택
 /// Phase 2: 매장식사 / 포장 / 전화배달 / 플랫폼배달
@@ -55,11 +56,15 @@ class NewOrderModal extends ConsumerWidget {
                 orderType: type,
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: PosMainScreen으로 이동 (tableId, orderType 전달)
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          '${type.displayNameEn} order for Table ${table.tableNumber}'),
+                  // Phase 3: PosMainScreen으로 이동 (tableId, orderType 전달)
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PosMainScreen(
+                        tableId: table.id,
+                        tableNumber: table.tableNumber,
+                        orderType: type,
+                      ),
                     ),
                   );
                 },

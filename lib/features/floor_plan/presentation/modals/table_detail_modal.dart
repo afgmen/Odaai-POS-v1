@@ -5,6 +5,9 @@ import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../tables/domain/enums/table_status.dart';
 import '../../../tables/data/tables_providers.dart';
+import '../../../pos/presentation/screens/pos_main_screen.dart';
+import '../../../pos/presentation/screens/bill_request_screen.dart';
+import '../../../pos/data/models/order_type.dart';
 
 /// TableDetailModal — 사용 중인 테이블의 상세 정보 + 액션 버튼
 /// Phase 2: [추가주문] [청구서요청] [테이블이동] [주문취소]
@@ -136,11 +139,17 @@ class TableDetailModal extends ConsumerWidget {
                 color: Colors.blue,
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: PosMainScreen으로 이동 (existingSaleId)
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content:
-                            Text('Add order for Table ${table.tableNumber}')),
+                  // Phase 3: PosMainScreen으로 이동 (추가 주문)
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PosMainScreen(
+                        tableId: table.id,
+                        tableNumber: table.tableNumber,
+                        orderType: OrderType.dineIn,
+                        existingSaleId: table.currentSaleId,
+                      ),
+                    ),
                   );
                 },
               ),
@@ -150,13 +159,26 @@ class TableDetailModal extends ConsumerWidget {
                 color: Colors.purple,
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: BillRequestScreen 연결
-                  _updateTableStatus(ref, table.id, 'CHECKOUT');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            'Bill requested for Table ${table.tableNumber}')),
-                  );
+                  if (table.currentSaleId != null) {
+                    // Phase 3: BillRequestScreen으로 이동
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BillRequestScreen(
+                          saleId: table.currentSaleId!,
+                          tableId: table.id,
+                          tableNumber: table.tableNumber,
+                        ),
+                      ),
+                    );
+                  } else {
+                    _updateTableStatus(ref, table.id, 'CHECKOUT');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Bill requested for Table ${table.tableNumber}')),
+                    );
+                  }
                 },
               ),
               _ActionButton(

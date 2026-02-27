@@ -16,10 +16,26 @@ import '../widgets/category_filter.dart';
 import '../widgets/payment_modal.dart';
 import '../widgets/product_card.dart';
 import '../../../kds/presentation/screens/kds_mode_selection_screen.dart';
+import '../../data/models/order_type.dart';
 
 /// POS 메인 화면
+/// Phase 3: tableId, orderType, existingSaleId 파라미터 추가
 class PosMainScreen extends ConsumerWidget {
-  const PosMainScreen({super.key});
+  /// Floor Plan에서 전달되는 테이블 정보
+  final int? tableId;
+  final String? tableNumber;
+  /// 주문 유형 (dineIn, takeaway, phoneDelivery, platformDelivery)
+  final OrderType? orderType;
+  /// 기존 Sale ID (추가 주문 시)
+  final int? existingSaleId;
+
+  const PosMainScreen({
+    super.key,
+    this.tableId,
+    this.tableNumber,
+    this.orderType,
+    this.existingSaleId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,7 +50,16 @@ class PosMainScreen extends ConsumerWidget {
         onScanPressed: () => _showBarcodeScanModal(context, ref),
         onBarcodeSsubmit: (barcode) => _handleBarcodeSubmit(context, ref, barcode),
       ),
-      body: LayoutBuilder(
+      body: Column(
+        children: [
+          // Phase 3: 컨텍스트 배너 (주문 유형 + 테이블 정보)
+          if (orderType != null || tableNumber != null)
+            _OrderContextBanner(
+              orderType: orderType,
+              tableNumber: tableNumber,
+              existingSaleId: existingSaleId,
+            ),
+          Expanded(child: LayoutBuilder(
         builder: (context, constraints) {
           final deviceType = ResponsiveHelper.getDeviceType(constraints.maxWidth);
           final isWide = deviceType != DeviceType.mobile;
@@ -96,6 +121,85 @@ class PosMainScreen extends ConsumerWidget {
             );
           }
         },
+      )),
+        ],
+      ),
+    );
+  }
+}
+
+/// Phase 3: 주문 컨텍스트 배너 (주문 유형 + 테이블 정보)
+class _OrderContextBanner extends StatelessWidget {
+  final OrderType? orderType;
+  final String? tableNumber;
+  final int? existingSaleId;
+
+  const _OrderContextBanner({this.orderType, this.tableNumber, this.existingSaleId});
+
+  @override
+  Widget build(BuildContext context) {
+    final type = orderType ?? OrderType.dineIn;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: type.color.withValues(alpha: 0.12),
+      child: Row(
+        children: [
+          Icon(type.icon, color: type.color, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            type.displayNameEn,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: type.color,
+            ),
+          ),
+          if (tableNumber != null) ...[
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: type.color.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Table $tableNumber',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: type.color,
+                ),
+              ),
+            ),
+          ],
+          if (existingSaleId != null) ...[
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Round +',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.orange,
+                ),
+              ),
+            ),
+          ],
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: () => Navigator.pop(context),
+            tooltip: 'Back to Floor Plan',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
       ),
     );
   }

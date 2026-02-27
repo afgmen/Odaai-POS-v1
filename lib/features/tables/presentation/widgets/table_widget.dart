@@ -137,7 +137,7 @@ class TableWidget extends StatelessWidget {
             ),
 
           // 착석 시간 (OCCUPIED 상태일 때)
-          if (status == TableStatus.occupied && table.occupiedAt != null)
+          if (table.occupiedAt != null && status != TableStatus.available && status != TableStatus.cleaning)
             Text(
               _formatDuration(DateTime.now().difference(table.occupiedAt!)),
               style: TextStyle(

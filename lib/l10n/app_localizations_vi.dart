@@ -908,7 +908,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clearTable => 'Dọn bàn (xong)';
 
   @override
-  String get moveTable => 'Chuyển bàn';
+  String get moveTable => 'Di chuyển bàn';
 
   @override
   String get reserveToUse => 'Đặt → Sử dụng';
@@ -2443,4 +2443,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rectangle => 'Chữ nhật';
+
+  @override
+  String get selectOrderType => 'Chọn loại đơn hàng';
+
+  @override
+  String get addOrder => 'Thêm đơn hàng';
+
+  @override
+  String get requestBill => 'Yêu cầu hóa đơn';
+
+  @override
+  String get cancelOrder => 'Hủy đơn hàng';
+
+  @override
+  String get preparing => 'Đang chuẩn bị';
 }

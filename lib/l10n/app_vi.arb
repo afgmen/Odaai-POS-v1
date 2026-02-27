@@ -888,5 +888,14 @@
   "barCounter": "Quầy bar",
   "round": "Tròn",
   "square": "Vuông",
-  "rectangle": "Chữ nhật"
+  "rectangle": "Chữ nhật",
+
+  "newOrder": "Đơn hàng mới",
+  "selectOrderType": "Chọn loại đơn hàng",
+  "addOrder": "Thêm đơn hàng",
+  "requestBill": "Yêu cầu hóa đơn",
+  "moveTable": "Di chuyển bàn",
+  "cancelOrder": "Hủy đơn hàng",
+  "close": "Đóng",
+  "preparing": "Đang chuẩn bị"
 }

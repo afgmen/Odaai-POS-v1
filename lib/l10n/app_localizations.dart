@@ -4627,6 +4627,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rectangle'**
   String get rectangle;
+
+  /// No description provided for @selectOrderType.
+  ///
+  /// In en, this message translates to:
+  /// **'Select order type'**
+  String get selectOrderType;
+
+  /// No description provided for @addOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Order'**
+  String get addOrder;
+
+  /// No description provided for @requestBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Bill'**
+  String get requestBill;
+
+  /// No description provided for @cancelOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Order'**
+  String get cancelOrder;
+
+  /// No description provided for @preparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing'**
+  String get preparing;
 }
 
 class _AppLocalizationsDelegate

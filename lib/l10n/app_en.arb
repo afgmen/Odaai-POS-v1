@@ -921,5 +921,14 @@
   "barCounter": "Bar Counter",
   "round": "Round",
   "square": "Square",
-  "rectangle": "Rectangle"
+  "rectangle": "Rectangle",
+
+  "newOrder": "New Order",
+  "selectOrderType": "Select order type",
+  "addOrder": "Add Order",
+  "requestBill": "Request Bill",
+  "moveTable": "Move Table",
+  "cancelOrder": "Cancel Order",
+  "close": "Close",
+  "preparing": "Preparing"
 }

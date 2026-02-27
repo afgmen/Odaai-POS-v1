@@ -19,6 +19,7 @@ import 'reports/presentation/screens/reports_screen.dart';
 import 'settings/presentation/screens/settings_screen.dart';
 import 'sync/presentation/widgets/sync_status_indicator.dart';
 import 'tables/presentation/screens/table_management_screen.dart';
+import 'floor_plan/presentation/screens/floor_plan_screen.dart';
 import 'delivery/presentation/screens/delivery_queue_screen.dart';
 import 'delivery/domain/services/kds_delivery_bridge_provider.dart';
 
@@ -55,6 +56,14 @@ class _AppRootScreenState extends ConsumerState<AppRootScreen> {
 
   /// 전체 탭 목록 (permission이 null이면 항상 표시)
   static const _allTabs = <_TabEntry>[
+    // Phase 2: Floor Plan을 첫 번째 탭으로 설정
+    _TabEntry(
+      screen: FloorPlanScreen(),
+      icon: Icons.map_outlined,
+      selectedIcon: Icons.map,
+      label: _labelFloorPlan,
+      requiredPermission: 'pos.open',
+    ),
     _TabEntry(
       screen: PosMainScreen(),
       icon: Icons.point_of_sale_outlined,
@@ -165,6 +174,7 @@ class _AppRootScreenState extends ConsumerState<AppRootScreen> {
   ];
 
   // Static label helpers (tear-offs)
+  static String _labelFloorPlan(AppLocalizations? l10n) => l10n?.floorPlan ?? 'Floor Plan';
   static String _labelPos(AppLocalizations? l10n) => l10n?.navPos ?? 'POS';
   static String _labelProducts(AppLocalizations? l10n) => l10n?.navProducts ?? 'Products';
   static String _labelSales(AppLocalizations? l10n) => l10n?.navSales ?? 'Sales';

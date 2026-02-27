@@ -2436,4 +2436,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rectangle => 'Rectangle';
+
+  @override
+  String get selectOrderType => 'Select order type';
+
+  @override
+  String get addOrder => 'Add Order';
+
+  @override
+  String get requestBill => 'Request Bill';
+
+  @override
+  String get cancelOrder => 'Cancel Order';
+
+  @override
+  String get preparing => 'Preparing';
 }

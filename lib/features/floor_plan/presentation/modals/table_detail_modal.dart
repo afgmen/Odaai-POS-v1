@@ -1,0 +1,315 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../database/app_database.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../tables/domain/enums/table_status.dart';
+import '../../../tables/data/tables_providers.dart';
+
+/// TableDetailModal — 사용 중인 테이블의 상세 정보 + 액션 버튼
+/// Phase 2: [추가주문] [청구서요청] [테이블이동] [주문취소]
+class TableDetailModal extends ConsumerWidget {
+  final RestaurantTable table;
+
+  const TableDetailModal({super.key, required this.table});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final status = TableStatus.fromString(table.status);
+    final duration = table.occupiedAt != null
+        ? DateTime.now().difference(table.occupiedAt!)
+        : Duration.zero;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 헤더
+          Row(
+            children: [
+              // 테이블 번호 + 상태 뱃지
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: status.color.withValues(alpha: 0.15),
+                  border: Border.all(color: status.color, width: 2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    table.tableNumber,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: status.color,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Table ${table.tableNumber}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: status.color.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            status.label,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: status.color,
+                            ),
+                          ),
+                        ),
+                        if (table.occupiedAt != null) ...[
+                          const SizedBox(width: 8),
+                          Icon(Icons.access_time,
+                              size: 14, color: Colors.grey[600]),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatDuration(duration),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const Divider(height: 32),
+
+          // 테이블 정보
+          _InfoRow(label: l10n.seatsCount, value: '${table.seats}'),
+          _InfoRow(label: 'Shape', value: table.shape),
+          if (table.currentSaleId != null)
+            _InfoRow(label: 'Sale ID', value: '#${table.currentSaleId}'),
+
+          const SizedBox(height: 24),
+
+          // 액션 버튼 그리드
+          Text(
+            'Actions',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          GridView.count(
+            shrinkWrap: true,
+            crossAxisCount: 2,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 3.0,
+            children: [
+              _ActionButton(
+                icon: Icons.add_shopping_cart,
+                label: 'Add Order',
+                color: Colors.blue,
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: PosMainScreen으로 이동 (existingSaleId)
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content:
+                            Text('Add order for Table ${table.tableNumber}')),
+                  );
+                },
+              ),
+              _ActionButton(
+                icon: Icons.receipt_long,
+                label: 'Request Bill',
+                color: Colors.purple,
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: BillRequestScreen 연결
+                  _updateTableStatus(ref, table.id, 'CHECKOUT');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'Bill requested for Table ${table.tableNumber}')),
+                  );
+                },
+              ),
+              _ActionButton(
+                icon: Icons.swap_horiz,
+                label: l10n.moveTable,
+                color: Colors.orange,
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: 테이블 이동 다이얼로그
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Table move — coming soon')),
+                  );
+                },
+              ),
+              _ActionButton(
+                icon: Icons.cancel_outlined,
+                label: 'Cancel Order',
+                color: Colors.red,
+                onTap: () => _confirmCancelOrder(context, ref),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // 닫기
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.close),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updateTableStatus(
+      WidgetRef ref, int tableId, String status) async {
+    final dao = ref.read(tablesDaoProvider);
+    await dao.updateTableStatus(tableId: tableId, status: status);
+  }
+
+  void _confirmCancelOrder(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Order'),
+        content:
+            Text('Cancel order for Table ${table.tableNumber}? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('No'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+              await _updateTableStatus(ref, table.id, 'AVAILABLE');
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(
+                          'Order cancelled for Table ${table.tableNumber}')),
+                );
+              }
+            },
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDuration(Duration d) {
+    if (d.inHours > 0) return '${d.inHours}h ${d.inMinutes % 60}m';
+    return '${d.inMinutes}m';
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InfoRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+          Text(value,
+              style:
+                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

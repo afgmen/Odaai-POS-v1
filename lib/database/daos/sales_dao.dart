@@ -97,6 +97,18 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
         .watch();
   }
 
+  /// Watch open tab for a specific table (Phase 1: Open Tab support)
+  /// Returns the active open-tab Sale for the given tableId, or null.
+  Stream<Sale?> watchOpenTabByTableId(int tableId) {
+    return (select(sales)
+          ..where((s) =>
+              s.tableId.equals(tableId) &
+              s.isOpenTab.equals(true) &
+              s.status.equals('open'))
+          ..limit(1))
+        .watchSingleOrNull();
+  }
+
   // ==================== UPDATE ====================
 
   Future<int> updateSaleStatus(int saleId, String status) {

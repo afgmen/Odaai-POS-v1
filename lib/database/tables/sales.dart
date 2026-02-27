@@ -15,6 +15,26 @@ class Sales extends Table {
   IntColumn get employeeId => integer().nullable()();
   IntColumn get customerId => integer().nullable()();
   TextColumn get status => text().withDefault(const Constant('completed'))();
+
+  // ── Phase 1: POS UX 개편 컬럼 ──
+  /// 주문 유형: dineIn | takeaway | phoneDelivery | platformDelivery
+  TextColumn get orderType => text().withDefault(const Constant('dineIn'))();
+
+  /// 연결된 테이블 ID (매장 식사 시)
+  IntColumn get tableId => integer().nullable()();
+
+  /// 고객명 (배달/포장 시)
+  TextColumn get customerName => text().nullable()();
+
+  /// 배달 주소 (배달 주문 시)
+  TextColumn get deliveryAddress => text().nullable()();
+
+  /// 배달 연락처 (배달 주문 시)
+  TextColumn get deliveryPhone => text().nullable()();
+
+  /// Open Tab 여부 (매장 식사: 추가 주문 가능 상태)
+  BoolColumn get isOpenTab => boolean().withDefault(const Constant(false))();
+
   BoolColumn get needsSync => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

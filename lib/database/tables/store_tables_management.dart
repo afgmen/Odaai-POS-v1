@@ -20,7 +20,8 @@ class RestaurantTables extends Table {
   /// Y 좌표 (드래그앤드롭 레이아웃용, 기본값: 0)
   RealColumn get positionY => real().withDefault(const Constant(0))();
 
-  /// 테이블 상태 (AVAILABLE, RESERVED, OCCUPIED, CHECKOUT, CLEANING)
+  /// 테이블 상태 (AVAILABLE, RESERVED, OCCUPIED, ORDERING, SERVED, CHECKOUT, CLEANING)
+  /// Phase 1 추가: ORDERING (주문 중, yellow), SERVED (서빙 완료, blue)
   /// 기본값: AVAILABLE (빈 테이블)
   TextColumn get status => text().withDefault(const Constant('AVAILABLE'))();
 

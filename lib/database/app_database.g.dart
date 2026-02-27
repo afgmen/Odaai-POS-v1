@@ -1574,6 +1574,77 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
     requiredDuringInsert: false,
     defaultValue: const Constant('completed'),
   );
+  static const VerificationMeta _orderTypeMeta = const VerificationMeta(
+    'orderType',
+  );
+  @override
+  late final GeneratedColumn<String> orderType = GeneratedColumn<String>(
+    'order_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('dineIn'),
+  );
+  static const VerificationMeta _tableIdMeta = const VerificationMeta(
+    'tableId',
+  );
+  @override
+  late final GeneratedColumn<int> tableId = GeneratedColumn<int>(
+    'table_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customerNameMeta = const VerificationMeta(
+    'customerName',
+  );
+  @override
+  late final GeneratedColumn<String> customerName = GeneratedColumn<String>(
+    'customer_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deliveryAddressMeta = const VerificationMeta(
+    'deliveryAddress',
+  );
+  @override
+  late final GeneratedColumn<String> deliveryAddress = GeneratedColumn<String>(
+    'delivery_address',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deliveryPhoneMeta = const VerificationMeta(
+    'deliveryPhone',
+  );
+  @override
+  late final GeneratedColumn<String> deliveryPhone = GeneratedColumn<String>(
+    'delivery_phone',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isOpenTabMeta = const VerificationMeta(
+    'isOpenTab',
+  );
+  @override
+  late final GeneratedColumn<bool> isOpenTab = GeneratedColumn<bool>(
+    'is_open_tab',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_open_tab" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _needsSyncMeta = const VerificationMeta(
     'needsSync',
   );
@@ -1615,6 +1686,12 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
     employeeId,
     customerId,
     status,
+    orderType,
+    tableId,
+    customerName,
+    deliveryAddress,
+    deliveryPhone,
+    isOpenTab,
     needsSync,
     createdAt,
   ];
@@ -1709,6 +1786,51 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
         status.isAcceptableOrUnknown(data['status']!, _statusMeta),
       );
     }
+    if (data.containsKey('order_type')) {
+      context.handle(
+        _orderTypeMeta,
+        orderType.isAcceptableOrUnknown(data['order_type']!, _orderTypeMeta),
+      );
+    }
+    if (data.containsKey('table_id')) {
+      context.handle(
+        _tableIdMeta,
+        tableId.isAcceptableOrUnknown(data['table_id']!, _tableIdMeta),
+      );
+    }
+    if (data.containsKey('customer_name')) {
+      context.handle(
+        _customerNameMeta,
+        customerName.isAcceptableOrUnknown(
+          data['customer_name']!,
+          _customerNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('delivery_address')) {
+      context.handle(
+        _deliveryAddressMeta,
+        deliveryAddress.isAcceptableOrUnknown(
+          data['delivery_address']!,
+          _deliveryAddressMeta,
+        ),
+      );
+    }
+    if (data.containsKey('delivery_phone')) {
+      context.handle(
+        _deliveryPhoneMeta,
+        deliveryPhone.isAcceptableOrUnknown(
+          data['delivery_phone']!,
+          _deliveryPhoneMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_open_tab')) {
+      context.handle(
+        _isOpenTabMeta,
+        isOpenTab.isAcceptableOrUnknown(data['is_open_tab']!, _isOpenTabMeta),
+      );
+    }
     if (data.containsKey('needs_sync')) {
       context.handle(
         _needsSyncMeta,
@@ -1778,6 +1900,30 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
         DriftSqlType.string,
         data['${effectivePrefix}status'],
       )!,
+      orderType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}order_type'],
+      )!,
+      tableId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}table_id'],
+      ),
+      customerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_name'],
+      ),
+      deliveryAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}delivery_address'],
+      ),
+      deliveryPhone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}delivery_phone'],
+      ),
+      isOpenTab: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_open_tab'],
+      )!,
       needsSync: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}needs_sync'],
@@ -1808,6 +1954,24 @@ class Sale extends DataClass implements Insertable<Sale> {
   final int? employeeId;
   final int? customerId;
   final String status;
+
+  /// 주문 유형: dineIn | takeaway | phoneDelivery | platformDelivery
+  final String orderType;
+
+  /// 연결된 테이블 ID (매장 식사 시)
+  final int? tableId;
+
+  /// 고객명 (배달/포장 시)
+  final String? customerName;
+
+  /// 배달 주소 (배달 주문 시)
+  final String? deliveryAddress;
+
+  /// 배달 연락처 (배달 주문 시)
+  final String? deliveryPhone;
+
+  /// Open Tab 여부 (매장 식사: 추가 주문 가능 상태)
+  final bool isOpenTab;
   final bool needsSync;
   final DateTime createdAt;
   const Sale({
@@ -1823,6 +1987,12 @@ class Sale extends DataClass implements Insertable<Sale> {
     this.employeeId,
     this.customerId,
     required this.status,
+    required this.orderType,
+    this.tableId,
+    this.customerName,
+    this.deliveryAddress,
+    this.deliveryPhone,
+    required this.isOpenTab,
     required this.needsSync,
     required this.createdAt,
   });
@@ -1847,6 +2017,20 @@ class Sale extends DataClass implements Insertable<Sale> {
       map['customer_id'] = Variable<int>(customerId);
     }
     map['status'] = Variable<String>(status);
+    map['order_type'] = Variable<String>(orderType);
+    if (!nullToAbsent || tableId != null) {
+      map['table_id'] = Variable<int>(tableId);
+    }
+    if (!nullToAbsent || customerName != null) {
+      map['customer_name'] = Variable<String>(customerName);
+    }
+    if (!nullToAbsent || deliveryAddress != null) {
+      map['delivery_address'] = Variable<String>(deliveryAddress);
+    }
+    if (!nullToAbsent || deliveryPhone != null) {
+      map['delivery_phone'] = Variable<String>(deliveryPhone);
+    }
+    map['is_open_tab'] = Variable<bool>(isOpenTab);
     map['needs_sync'] = Variable<bool>(needsSync);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -1872,6 +2056,20 @@ class Sale extends DataClass implements Insertable<Sale> {
           ? const Value.absent()
           : Value(customerId),
       status: Value(status),
+      orderType: Value(orderType),
+      tableId: tableId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tableId),
+      customerName: customerName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerName),
+      deliveryAddress: deliveryAddress == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deliveryAddress),
+      deliveryPhone: deliveryPhone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deliveryPhone),
+      isOpenTab: Value(isOpenTab),
       needsSync: Value(needsSync),
       createdAt: Value(createdAt),
     );
@@ -1895,6 +2093,12 @@ class Sale extends DataClass implements Insertable<Sale> {
       employeeId: serializer.fromJson<int?>(json['employeeId']),
       customerId: serializer.fromJson<int?>(json['customerId']),
       status: serializer.fromJson<String>(json['status']),
+      orderType: serializer.fromJson<String>(json['orderType']),
+      tableId: serializer.fromJson<int?>(json['tableId']),
+      customerName: serializer.fromJson<String?>(json['customerName']),
+      deliveryAddress: serializer.fromJson<String?>(json['deliveryAddress']),
+      deliveryPhone: serializer.fromJson<String?>(json['deliveryPhone']),
+      isOpenTab: serializer.fromJson<bool>(json['isOpenTab']),
       needsSync: serializer.fromJson<bool>(json['needsSync']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -1915,6 +2119,12 @@ class Sale extends DataClass implements Insertable<Sale> {
       'employeeId': serializer.toJson<int?>(employeeId),
       'customerId': serializer.toJson<int?>(customerId),
       'status': serializer.toJson<String>(status),
+      'orderType': serializer.toJson<String>(orderType),
+      'tableId': serializer.toJson<int?>(tableId),
+      'customerName': serializer.toJson<String?>(customerName),
+      'deliveryAddress': serializer.toJson<String?>(deliveryAddress),
+      'deliveryPhone': serializer.toJson<String?>(deliveryPhone),
+      'isOpenTab': serializer.toJson<bool>(isOpenTab),
       'needsSync': serializer.toJson<bool>(needsSync),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -1933,6 +2143,12 @@ class Sale extends DataClass implements Insertable<Sale> {
     Value<int?> employeeId = const Value.absent(),
     Value<int?> customerId = const Value.absent(),
     String? status,
+    String? orderType,
+    Value<int?> tableId = const Value.absent(),
+    Value<String?> customerName = const Value.absent(),
+    Value<String?> deliveryAddress = const Value.absent(),
+    Value<String?> deliveryPhone = const Value.absent(),
+    bool? isOpenTab,
     bool? needsSync,
     DateTime? createdAt,
   }) => Sale(
@@ -1950,6 +2166,16 @@ class Sale extends DataClass implements Insertable<Sale> {
     employeeId: employeeId.present ? employeeId.value : this.employeeId,
     customerId: customerId.present ? customerId.value : this.customerId,
     status: status ?? this.status,
+    orderType: orderType ?? this.orderType,
+    tableId: tableId.present ? tableId.value : this.tableId,
+    customerName: customerName.present ? customerName.value : this.customerName,
+    deliveryAddress: deliveryAddress.present
+        ? deliveryAddress.value
+        : this.deliveryAddress,
+    deliveryPhone: deliveryPhone.present
+        ? deliveryPhone.value
+        : this.deliveryPhone,
+    isOpenTab: isOpenTab ?? this.isOpenTab,
     needsSync: needsSync ?? this.needsSync,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -1977,6 +2203,18 @@ class Sale extends DataClass implements Insertable<Sale> {
           ? data.customerId.value
           : this.customerId,
       status: data.status.present ? data.status.value : this.status,
+      orderType: data.orderType.present ? data.orderType.value : this.orderType,
+      tableId: data.tableId.present ? data.tableId.value : this.tableId,
+      customerName: data.customerName.present
+          ? data.customerName.value
+          : this.customerName,
+      deliveryAddress: data.deliveryAddress.present
+          ? data.deliveryAddress.value
+          : this.deliveryAddress,
+      deliveryPhone: data.deliveryPhone.present
+          ? data.deliveryPhone.value
+          : this.deliveryPhone,
+      isOpenTab: data.isOpenTab.present ? data.isOpenTab.value : this.isOpenTab,
       needsSync: data.needsSync.present ? data.needsSync.value : this.needsSync,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -1997,6 +2235,12 @@ class Sale extends DataClass implements Insertable<Sale> {
           ..write('employeeId: $employeeId, ')
           ..write('customerId: $customerId, ')
           ..write('status: $status, ')
+          ..write('orderType: $orderType, ')
+          ..write('tableId: $tableId, ')
+          ..write('customerName: $customerName, ')
+          ..write('deliveryAddress: $deliveryAddress, ')
+          ..write('deliveryPhone: $deliveryPhone, ')
+          ..write('isOpenTab: $isOpenTab, ')
           ..write('needsSync: $needsSync, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -2017,6 +2261,12 @@ class Sale extends DataClass implements Insertable<Sale> {
     employeeId,
     customerId,
     status,
+    orderType,
+    tableId,
+    customerName,
+    deliveryAddress,
+    deliveryPhone,
+    isOpenTab,
     needsSync,
     createdAt,
   );
@@ -2036,6 +2286,12 @@ class Sale extends DataClass implements Insertable<Sale> {
           other.employeeId == this.employeeId &&
           other.customerId == this.customerId &&
           other.status == this.status &&
+          other.orderType == this.orderType &&
+          other.tableId == this.tableId &&
+          other.customerName == this.customerName &&
+          other.deliveryAddress == this.deliveryAddress &&
+          other.deliveryPhone == this.deliveryPhone &&
+          other.isOpenTab == this.isOpenTab &&
           other.needsSync == this.needsSync &&
           other.createdAt == this.createdAt);
 }
@@ -2053,6 +2309,12 @@ class SalesCompanion extends UpdateCompanion<Sale> {
   final Value<int?> employeeId;
   final Value<int?> customerId;
   final Value<String> status;
+  final Value<String> orderType;
+  final Value<int?> tableId;
+  final Value<String?> customerName;
+  final Value<String?> deliveryAddress;
+  final Value<String?> deliveryPhone;
+  final Value<bool> isOpenTab;
   final Value<bool> needsSync;
   final Value<DateTime> createdAt;
   const SalesCompanion({
@@ -2068,6 +2330,12 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     this.employeeId = const Value.absent(),
     this.customerId = const Value.absent(),
     this.status = const Value.absent(),
+    this.orderType = const Value.absent(),
+    this.tableId = const Value.absent(),
+    this.customerName = const Value.absent(),
+    this.deliveryAddress = const Value.absent(),
+    this.deliveryPhone = const Value.absent(),
+    this.isOpenTab = const Value.absent(),
     this.needsSync = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
@@ -2084,6 +2352,12 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     this.employeeId = const Value.absent(),
     this.customerId = const Value.absent(),
     this.status = const Value.absent(),
+    this.orderType = const Value.absent(),
+    this.tableId = const Value.absent(),
+    this.customerName = const Value.absent(),
+    this.deliveryAddress = const Value.absent(),
+    this.deliveryPhone = const Value.absent(),
+    this.isOpenTab = const Value.absent(),
     this.needsSync = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : saleNumber = Value(saleNumber),
@@ -2101,6 +2375,12 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     Expression<int>? employeeId,
     Expression<int>? customerId,
     Expression<String>? status,
+    Expression<String>? orderType,
+    Expression<int>? tableId,
+    Expression<String>? customerName,
+    Expression<String>? deliveryAddress,
+    Expression<String>? deliveryPhone,
+    Expression<bool>? isOpenTab,
     Expression<bool>? needsSync,
     Expression<DateTime>? createdAt,
   }) {
@@ -2117,6 +2397,12 @@ class SalesCompanion extends UpdateCompanion<Sale> {
       if (employeeId != null) 'employee_id': employeeId,
       if (customerId != null) 'customer_id': customerId,
       if (status != null) 'status': status,
+      if (orderType != null) 'order_type': orderType,
+      if (tableId != null) 'table_id': tableId,
+      if (customerName != null) 'customer_name': customerName,
+      if (deliveryAddress != null) 'delivery_address': deliveryAddress,
+      if (deliveryPhone != null) 'delivery_phone': deliveryPhone,
+      if (isOpenTab != null) 'is_open_tab': isOpenTab,
       if (needsSync != null) 'needs_sync': needsSync,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -2135,6 +2421,12 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     Value<int?>? employeeId,
     Value<int?>? customerId,
     Value<String>? status,
+    Value<String>? orderType,
+    Value<int?>? tableId,
+    Value<String?>? customerName,
+    Value<String?>? deliveryAddress,
+    Value<String?>? deliveryPhone,
+    Value<bool>? isOpenTab,
     Value<bool>? needsSync,
     Value<DateTime>? createdAt,
   }) {
@@ -2151,6 +2443,12 @@ class SalesCompanion extends UpdateCompanion<Sale> {
       employeeId: employeeId ?? this.employeeId,
       customerId: customerId ?? this.customerId,
       status: status ?? this.status,
+      orderType: orderType ?? this.orderType,
+      tableId: tableId ?? this.tableId,
+      customerName: customerName ?? this.customerName,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      deliveryPhone: deliveryPhone ?? this.deliveryPhone,
+      isOpenTab: isOpenTab ?? this.isOpenTab,
       needsSync: needsSync ?? this.needsSync,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -2195,6 +2493,24 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     if (status.present) {
       map['status'] = Variable<String>(status.value);
     }
+    if (orderType.present) {
+      map['order_type'] = Variable<String>(orderType.value);
+    }
+    if (tableId.present) {
+      map['table_id'] = Variable<int>(tableId.value);
+    }
+    if (customerName.present) {
+      map['customer_name'] = Variable<String>(customerName.value);
+    }
+    if (deliveryAddress.present) {
+      map['delivery_address'] = Variable<String>(deliveryAddress.value);
+    }
+    if (deliveryPhone.present) {
+      map['delivery_phone'] = Variable<String>(deliveryPhone.value);
+    }
+    if (isOpenTab.present) {
+      map['is_open_tab'] = Variable<bool>(isOpenTab.value);
+    }
     if (needsSync.present) {
       map['needs_sync'] = Variable<bool>(needsSync.value);
     }
@@ -2219,6 +2535,12 @@ class SalesCompanion extends UpdateCompanion<Sale> {
           ..write('employeeId: $employeeId, ')
           ..write('customerId: $customerId, ')
           ..write('status: $status, ')
+          ..write('orderType: $orderType, ')
+          ..write('tableId: $tableId, ')
+          ..write('customerName: $customerName, ')
+          ..write('deliveryAddress: $deliveryAddress, ')
+          ..write('deliveryPhone: $deliveryPhone, ')
+          ..write('isOpenTab: $isOpenTab, ')
           ..write('needsSync: $needsSync, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -15107,7 +15429,8 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
   /// Y 좌표 (드래그앤드롭 레이아웃용, 기본값: 0)
   final double positionY;
 
-  /// 테이블 상태 (AVAILABLE, RESERVED, OCCUPIED, CHECKOUT, CLEANING)
+  /// 테이블 상태 (AVAILABLE, RESERVED, OCCUPIED, ORDERING, SERVED, CHECKOUT, CLEANING)
+  /// Phase 1 추가: ORDERING (주문 중, yellow), SERVED (서빙 완료, blue)
   /// 기본값: AVAILABLE (빈 테이블)
   final String status;
 
@@ -20082,7 +20405,7 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
   final String? customerPhone;
   final String? deliveryAddress;
 
-  /// JSON-encoded List<DeliveryOrderItem>
+  /// JSON-encoded `List<DeliveryOrderItem>`
   final String itemsJson;
   final double totalAmount;
   final String? specialInstructions;
@@ -21873,6 +22196,12 @@ typedef $$SalesTableCreateCompanionBuilder =
       Value<int?> employeeId,
       Value<int?> customerId,
       Value<String> status,
+      Value<String> orderType,
+      Value<int?> tableId,
+      Value<String?> customerName,
+      Value<String?> deliveryAddress,
+      Value<String?> deliveryPhone,
+      Value<bool> isOpenTab,
       Value<bool> needsSync,
       Value<DateTime> createdAt,
     });
@@ -21890,6 +22219,12 @@ typedef $$SalesTableUpdateCompanionBuilder =
       Value<int?> employeeId,
       Value<int?> customerId,
       Value<String> status,
+      Value<String> orderType,
+      Value<int?> tableId,
+      Value<String?> customerName,
+      Value<String?> deliveryAddress,
+      Value<String?> deliveryPhone,
+      Value<bool> isOpenTab,
       Value<bool> needsSync,
       Value<DateTime> createdAt,
     });
@@ -22024,6 +22359,36 @@ class $$SalesTableFilterComposer extends Composer<_$AppDatabase, $SalesTable> {
 
   ColumnFilters<String> get status => $composableBuilder(
     column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get orderType => $composableBuilder(
+    column: $table.orderType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tableId => $composableBuilder(
+    column: $table.tableId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deliveryAddress => $composableBuilder(
+    column: $table.deliveryAddress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deliveryPhone => $composableBuilder(
+    column: $table.deliveryPhone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isOpenTab => $composableBuilder(
+    column: $table.isOpenTab,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -22182,6 +22547,36 @@ class $$SalesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get orderType => $composableBuilder(
+    column: $table.orderType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get tableId => $composableBuilder(
+    column: $table.tableId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deliveryAddress => $composableBuilder(
+    column: $table.deliveryAddress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deliveryPhone => $composableBuilder(
+    column: $table.deliveryPhone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isOpenTab => $composableBuilder(
+    column: $table.isOpenTab,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get needsSync => $composableBuilder(
     column: $table.needsSync,
     builder: (column) => ColumnOrderings(column),
@@ -22247,6 +22642,30 @@ class $$SalesTableAnnotationComposer
 
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get orderType =>
+      $composableBuilder(column: $table.orderType, builder: (column) => column);
+
+  GeneratedColumn<int> get tableId =>
+      $composableBuilder(column: $table.tableId, builder: (column) => column);
+
+  GeneratedColumn<String> get customerName => $composableBuilder(
+    column: $table.customerName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deliveryAddress => $composableBuilder(
+    column: $table.deliveryAddress,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deliveryPhone => $composableBuilder(
+    column: $table.deliveryPhone,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isOpenTab =>
+      $composableBuilder(column: $table.isOpenTab, builder: (column) => column);
 
   GeneratedColumn<bool> get needsSync =>
       $composableBuilder(column: $table.needsSync, builder: (column) => column);
@@ -22375,6 +22794,12 @@ class $$SalesTableTableManager
                 Value<int?> employeeId = const Value.absent(),
                 Value<int?> customerId = const Value.absent(),
                 Value<String> status = const Value.absent(),
+                Value<String> orderType = const Value.absent(),
+                Value<int?> tableId = const Value.absent(),
+                Value<String?> customerName = const Value.absent(),
+                Value<String?> deliveryAddress = const Value.absent(),
+                Value<String?> deliveryPhone = const Value.absent(),
+                Value<bool> isOpenTab = const Value.absent(),
                 Value<bool> needsSync = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => SalesCompanion(
@@ -22390,6 +22815,12 @@ class $$SalesTableTableManager
                 employeeId: employeeId,
                 customerId: customerId,
                 status: status,
+                orderType: orderType,
+                tableId: tableId,
+                customerName: customerName,
+                deliveryAddress: deliveryAddress,
+                deliveryPhone: deliveryPhone,
+                isOpenTab: isOpenTab,
                 needsSync: needsSync,
                 createdAt: createdAt,
               ),
@@ -22407,6 +22838,12 @@ class $$SalesTableTableManager
                 Value<int?> employeeId = const Value.absent(),
                 Value<int?> customerId = const Value.absent(),
                 Value<String> status = const Value.absent(),
+                Value<String> orderType = const Value.absent(),
+                Value<int?> tableId = const Value.absent(),
+                Value<String?> customerName = const Value.absent(),
+                Value<String?> deliveryAddress = const Value.absent(),
+                Value<String?> deliveryPhone = const Value.absent(),
+                Value<bool> isOpenTab = const Value.absent(),
                 Value<bool> needsSync = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => SalesCompanion.insert(
@@ -22422,6 +22859,12 @@ class $$SalesTableTableManager
                 employeeId: employeeId,
                 customerId: customerId,
                 status: status,
+                orderType: orderType,
+                tableId: tableId,
+                customerName: customerName,
+                deliveryAddress: deliveryAddress,
+                deliveryPhone: deliveryPhone,
+                isOpenTab: isOpenTab,
                 needsSync: needsSync,
                 createdAt: createdAt,
               ),

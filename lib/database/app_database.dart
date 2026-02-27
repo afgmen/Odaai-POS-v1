@@ -113,7 +113,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration {
@@ -231,6 +231,21 @@ class AppDatabase extends _$AppDatabase {
         if (from < 16) {
           // v15 → v16: Delivery orders table for GrabFood / ShopeeFood / manual orders
           await _safeCreateTable(m, deliveryOrders, 'delivery_orders');
+        }
+        if (from < 17) {
+          // v16 → v17: POS UX Phase 1 — OrderType + Sales extension + Table status
+          await _safeAddColumn('sales', 'order_type', "TEXT NOT NULL DEFAULT 'dineIn'");
+          await _safeAddColumn('sales', 'table_id', 'INTEGER NULL');
+          await _safeAddColumn('sales', 'customer_name', 'TEXT NULL');
+          await _safeAddColumn('sales', 'delivery_address', 'TEXT NULL');
+          await _safeAddColumn('sales', 'delivery_phone', 'TEXT NULL');
+          await _safeAddColumn('sales', 'is_open_tab', 'INTEGER NOT NULL DEFAULT 0');
+
+          // Index for open tab lookup by table
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_sales_open_tab '
+            'ON sales(table_id, is_open_tab) WHERE is_open_tab = 1'
+          );
         }
       },
       beforeOpen: (details) async {

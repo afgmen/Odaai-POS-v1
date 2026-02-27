@@ -930,5 +930,14 @@
   "moveTable": "Move Table",
   "cancelOrder": "Cancel Order",
   "close": "Close",
-  "preparing": "Preparing"
+  "preparing": "Preparing",
+
+  "phoneDelivery": "Phone Delivery",
+  "deliveryPhone": "Phone Number",
+  "customerName": "Customer Name",
+  "deliveryAddress": "Delivery Address",
+  "estimatedTime": "Estimated Time",
+  "paymentMethod": "Payment Method",
+  "note": "Note",
+  "startOrder": "Start Order"
 }

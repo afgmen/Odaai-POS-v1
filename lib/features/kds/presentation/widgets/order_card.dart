@@ -71,6 +71,29 @@ class OrderCard extends StatelessWidget {
                     ),
                   ),
 
+                  // Phase 4: 주문 유형 뱃지
+                  if (order.specialInstructions != null &&
+                      order.specialInstructions!.startsWith('orderType:'))
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: Colors.blue.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        order.specialInstructions!
+                            .replaceFirst('orderType:', ''),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+
                   // 긴급 아이콘
                   if (priority.isUrgent)
                     const Icon(

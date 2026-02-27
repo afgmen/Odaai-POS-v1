@@ -897,5 +897,14 @@
   "moveTable": "Di chuyển bàn",
   "cancelOrder": "Hủy đơn hàng",
   "close": "Đóng",
-  "preparing": "Đang chuẩn bị"
+  "preparing": "Đang chuẩn bị",
+
+  "phoneDelivery": "Giao hàng qua điện thoại",
+  "deliveryPhone": "Số điện thoại",
+  "customerName": "Tên khách hàng",
+  "deliveryAddress": "Địa chỉ giao hàng",
+  "estimatedTime": "Thời gian ước tính",
+  "paymentMethod": "Phương thức thanh toán",
+  "note": "Ghi chú",
+  "startOrder": "Bắt đầu đơn hàng"
 }

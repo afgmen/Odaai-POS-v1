@@ -868,5 +868,25 @@
   "deliveryPlatformNotConfigured": "Chưa cấu hình",
   "deliveryTestConnection": "Kiểm tra",
   "deliveryPlatformInactive": "Không hoạt động",
-  "deliveryLastSync": "Đồng bộ lần cuối"
+  "deliveryLastSync": "Đồng bộ lần cuối",
+
+  "floorPlan": "Sơ đồ mặt bằng",
+  "floorPlanDesigner": "Thiết kế mặt bằng",
+  "addZone": "Thêm khu vực",
+  "addElement": "Thêm vật thể",
+  "zoneName": "Tên khu vực",
+  "elementType": "Loại vật thể",
+  "zoneColor": "Màu khu vực",
+  "tableShape": "Hình dạng bàn",
+  "preview": "Xem trước",
+  "saveLayout": "Lưu",
+  "entrance": "Lối vào",
+  "counter": "Quầy thu ngân",
+  "restroom": "Nhà vệ sinh",
+  "window": "Cửa sổ",
+  "wall": "Tường",
+  "barCounter": "Quầy bar",
+  "round": "Tròn",
+  "square": "Vuông",
+  "rectangle": "Chữ nhật"
 }

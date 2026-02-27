@@ -2389,4 +2389,58 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get deliveryLastSync => 'Đồng bộ lần cuối';
+
+  @override
+  String get floorPlan => 'Sơ đồ mặt bằng';
+
+  @override
+  String get floorPlanDesigner => 'Thiết kế mặt bằng';
+
+  @override
+  String get addZone => 'Thêm khu vực';
+
+  @override
+  String get addElement => 'Thêm vật thể';
+
+  @override
+  String get zoneName => 'Tên khu vực';
+
+  @override
+  String get elementType => 'Loại vật thể';
+
+  @override
+  String get zoneColor => 'Màu khu vực';
+
+  @override
+  String get tableShape => 'Hình dạng bàn';
+
+  @override
+  String get saveLayout => 'Lưu';
+
+  @override
+  String get entrance => 'Lối vào';
+
+  @override
+  String get counter => 'Quầy thu ngân';
+
+  @override
+  String get restroom => 'Nhà vệ sinh';
+
+  @override
+  String get window => 'Cửa sổ';
+
+  @override
+  String get wall => 'Tường';
+
+  @override
+  String get barCounter => 'Quầy bar';
+
+  @override
+  String get round => 'Tròn';
+
+  @override
+  String get square => 'Vuông';
+
+  @override
+  String get rectangle => 'Chữ nhật';
 }

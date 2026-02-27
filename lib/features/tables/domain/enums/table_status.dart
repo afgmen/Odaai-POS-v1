@@ -11,6 +11,12 @@ enum TableStatus {
   /// Occupied (guests dining)
   occupied('OCCUPIED', 'Occupied', Color(0xFFF44336)),
 
+  /// Ordering (주문 중 — Phase 0)
+  ordering('ORDERING', 'Ordering', Color(0xFFFFC107)),
+
+  /// Served (서빙 완료 — Phase 0)
+  served('SERVED', 'Served', Color(0xFF2196F3)),
+
   /// Checked out (dining done, awaiting cleanup)
   checkout('CHECKOUT', 'Checkout', Color(0xFF9C27B0)),
 
@@ -43,8 +49,16 @@ enum TableStatus {
         return next == TableStatus.occupied || next == TableStatus.available;
 
       case TableStatus.occupied:
-        // 착석 중 → 계산 완료
-        return next == TableStatus.checkout;
+        // 착석 중 → 주문 중 또는 계산 완료
+        return next == TableStatus.ordering || next == TableStatus.checkout;
+
+      case TableStatus.ordering:
+        // 주문 중 → 서빙 완료
+        return next == TableStatus.served;
+
+      case TableStatus.served:
+        // 서빙 완료 → 계산 완료 또는 주문 추가
+        return next == TableStatus.checkout || next == TableStatus.ordering;
 
       case TableStatus.checkout:
         // 계산 완료 → 정리 중
@@ -93,6 +107,10 @@ enum TableStatus {
         return Icons.event;
       case TableStatus.occupied:
         return Icons.people;
+      case TableStatus.ordering:
+        return Icons.menu_book;
+      case TableStatus.served:
+        return Icons.room_service;
       case TableStatus.checkout:
         return Icons.payment;
       case TableStatus.cleaning:

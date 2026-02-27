@@ -24,7 +24,12 @@ import '../features/tables/data/reservations_dao.dart';
 import '../features/auth/data/permission_logs_dao.dart';
 import '../features/daily_closing/data/daily_closing_dao.dart';
 import '../features/delivery/data/delivery_orders_dao.dart';
+import '../features/floor_plan/data/floor_zone_dao.dart';
+import '../features/floor_plan/data/floor_element_dao.dart';
 import 'tables/delivery_orders.dart';
+import 'tables/floor_zones.dart';
+import 'tables/floor_elements.dart';
+import 'tables/floor_plan_config.dart';
 import 'tables/employees.dart';
 import 'tables/products.dart';
 import 'tables/promotions.dart';
@@ -85,6 +90,9 @@ part 'app_database.g.dart';
     StoreAssignments,
     SystemSettings,
     DeliveryOrders,
+    FloorZones,
+    FloorElements,
+    FloorPlanConfig,
   ],
   daos: [
     ProductsDao,
@@ -105,6 +113,8 @@ part 'app_database.g.dart';
     UserRolesDao,
     StoreAssignmentsDao,
     DeliveryOrdersDao,
+    FloorZoneDao,
+    FloorElementDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -113,7 +123,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration {
@@ -246,6 +256,14 @@ class AppDatabase extends _$AppDatabase {
             'CREATE INDEX IF NOT EXISTS idx_sales_open_tab '
             'ON sales(table_id, is_open_tab) WHERE is_open_tab = 1'
           );
+        }
+        if (from < 18) {
+          // v17 → v18: Phase 0 — Floor Plan Designer
+          await _safeCreateTable(m, floorZones, 'floor_zones');
+          await _safeCreateTable(m, floorElements, 'floor_elements');
+          await _safeCreateTable(m, floorPlanConfig, 'floor_plan_config');
+          await _safeAddColumn('restaurant_tables', 'shape', "TEXT NOT NULL DEFAULT 'square'");
+          await _safeAddColumn('restaurant_tables', 'zone_id', 'INTEGER NULL');
         }
       },
       beforeOpen: (details) async {

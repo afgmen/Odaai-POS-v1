@@ -15196,6 +15196,25 @@ class $RestaurantTablesTable extends RestaurantTables
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _shapeMeta = const VerificationMeta('shape');
+  @override
+  late final GeneratedColumn<String> shape = GeneratedColumn<String>(
+    'shape',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('square'),
+  );
+  static const VerificationMeta _zoneIdMeta = const VerificationMeta('zoneId');
+  @override
+  late final GeneratedColumn<int> zoneId = GeneratedColumn<int>(
+    'zone_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isActiveMeta = const VerificationMeta(
     'isActive',
   );
@@ -15246,6 +15265,8 @@ class $RestaurantTablesTable extends RestaurantTables
     currentSaleId,
     occupiedAt,
     reservationId,
+    shape,
+    zoneId,
     isActive,
     createdAt,
     updatedAt,
@@ -15324,6 +15345,18 @@ class $RestaurantTablesTable extends RestaurantTables
         ),
       );
     }
+    if (data.containsKey('shape')) {
+      context.handle(
+        _shapeMeta,
+        shape.isAcceptableOrUnknown(data['shape']!, _shapeMeta),
+      );
+    }
+    if (data.containsKey('zone_id')) {
+      context.handle(
+        _zoneIdMeta,
+        zoneId.isAcceptableOrUnknown(data['zone_id']!, _zoneIdMeta),
+      );
+    }
     if (data.containsKey('is_active')) {
       context.handle(
         _isActiveMeta,
@@ -15391,6 +15424,14 @@ class $RestaurantTablesTable extends RestaurantTables
         DriftSqlType.int,
         data['${effectivePrefix}reservation_id'],
       ),
+      shape: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shape'],
+      )!,
+      zoneId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}zone_id'],
+      ),
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
@@ -15445,6 +15486,14 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
   /// 테이블에 예약이 배정된 경우
   final int? reservationId;
 
+  /// 테이블 모양: round | square | rectangle
+  /// Phase 0 추가
+  final String shape;
+
+  /// 연결된 구역 ID (FK to floor_zones)
+  /// Phase 0 추가
+  final int? zoneId;
+
   /// 활성 상태 (소프트 삭제용)
   /// true = 활성, false = 삭제됨
   final bool isActive;
@@ -15464,6 +15513,8 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
     this.currentSaleId,
     this.occupiedAt,
     this.reservationId,
+    required this.shape,
+    this.zoneId,
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
@@ -15485,6 +15536,10 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
     }
     if (!nullToAbsent || reservationId != null) {
       map['reservation_id'] = Variable<int>(reservationId);
+    }
+    map['shape'] = Variable<String>(shape);
+    if (!nullToAbsent || zoneId != null) {
+      map['zone_id'] = Variable<int>(zoneId);
     }
     map['is_active'] = Variable<bool>(isActive);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -15509,6 +15564,10 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
       reservationId: reservationId == null && nullToAbsent
           ? const Value.absent()
           : Value(reservationId),
+      shape: Value(shape),
+      zoneId: zoneId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(zoneId),
       isActive: Value(isActive),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -15530,6 +15589,8 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
       currentSaleId: serializer.fromJson<int?>(json['currentSaleId']),
       occupiedAt: serializer.fromJson<DateTime?>(json['occupiedAt']),
       reservationId: serializer.fromJson<int?>(json['reservationId']),
+      shape: serializer.fromJson<String>(json['shape']),
+      zoneId: serializer.fromJson<int?>(json['zoneId']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -15548,6 +15609,8 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
       'currentSaleId': serializer.toJson<int?>(currentSaleId),
       'occupiedAt': serializer.toJson<DateTime?>(occupiedAt),
       'reservationId': serializer.toJson<int?>(reservationId),
+      'shape': serializer.toJson<String>(shape),
+      'zoneId': serializer.toJson<int?>(zoneId),
       'isActive': serializer.toJson<bool>(isActive),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -15564,6 +15627,8 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
     Value<int?> currentSaleId = const Value.absent(),
     Value<DateTime?> occupiedAt = const Value.absent(),
     Value<int?> reservationId = const Value.absent(),
+    String? shape,
+    Value<int?> zoneId = const Value.absent(),
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -15581,6 +15646,8 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
     reservationId: reservationId.present
         ? reservationId.value
         : this.reservationId,
+    shape: shape ?? this.shape,
+    zoneId: zoneId.present ? zoneId.value : this.zoneId,
     isActive: isActive ?? this.isActive,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -15604,6 +15671,8 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
       reservationId: data.reservationId.present
           ? data.reservationId.value
           : this.reservationId,
+      shape: data.shape.present ? data.shape.value : this.shape,
+      zoneId: data.zoneId.present ? data.zoneId.value : this.zoneId,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -15622,6 +15691,8 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
           ..write('currentSaleId: $currentSaleId, ')
           ..write('occupiedAt: $occupiedAt, ')
           ..write('reservationId: $reservationId, ')
+          ..write('shape: $shape, ')
+          ..write('zoneId: $zoneId, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -15640,6 +15711,8 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
     currentSaleId,
     occupiedAt,
     reservationId,
+    shape,
+    zoneId,
     isActive,
     createdAt,
     updatedAt,
@@ -15657,6 +15730,8 @@ class RestaurantTable extends DataClass implements Insertable<RestaurantTable> {
           other.currentSaleId == this.currentSaleId &&
           other.occupiedAt == this.occupiedAt &&
           other.reservationId == this.reservationId &&
+          other.shape == this.shape &&
+          other.zoneId == this.zoneId &&
           other.isActive == this.isActive &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -15672,6 +15747,8 @@ class RestaurantTablesCompanion extends UpdateCompanion<RestaurantTable> {
   final Value<int?> currentSaleId;
   final Value<DateTime?> occupiedAt;
   final Value<int?> reservationId;
+  final Value<String> shape;
+  final Value<int?> zoneId;
   final Value<bool> isActive;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -15685,6 +15762,8 @@ class RestaurantTablesCompanion extends UpdateCompanion<RestaurantTable> {
     this.currentSaleId = const Value.absent(),
     this.occupiedAt = const Value.absent(),
     this.reservationId = const Value.absent(),
+    this.shape = const Value.absent(),
+    this.zoneId = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -15699,6 +15778,8 @@ class RestaurantTablesCompanion extends UpdateCompanion<RestaurantTable> {
     this.currentSaleId = const Value.absent(),
     this.occupiedAt = const Value.absent(),
     this.reservationId = const Value.absent(),
+    this.shape = const Value.absent(),
+    this.zoneId = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -15713,6 +15794,8 @@ class RestaurantTablesCompanion extends UpdateCompanion<RestaurantTable> {
     Expression<int>? currentSaleId,
     Expression<DateTime>? occupiedAt,
     Expression<int>? reservationId,
+    Expression<String>? shape,
+    Expression<int>? zoneId,
     Expression<bool>? isActive,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -15727,6 +15810,8 @@ class RestaurantTablesCompanion extends UpdateCompanion<RestaurantTable> {
       if (currentSaleId != null) 'current_sale_id': currentSaleId,
       if (occupiedAt != null) 'occupied_at': occupiedAt,
       if (reservationId != null) 'reservation_id': reservationId,
+      if (shape != null) 'shape': shape,
+      if (zoneId != null) 'zone_id': zoneId,
       if (isActive != null) 'is_active': isActive,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -15743,6 +15828,8 @@ class RestaurantTablesCompanion extends UpdateCompanion<RestaurantTable> {
     Value<int?>? currentSaleId,
     Value<DateTime?>? occupiedAt,
     Value<int?>? reservationId,
+    Value<String>? shape,
+    Value<int?>? zoneId,
     Value<bool>? isActive,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -15757,6 +15844,8 @@ class RestaurantTablesCompanion extends UpdateCompanion<RestaurantTable> {
       currentSaleId: currentSaleId ?? this.currentSaleId,
       occupiedAt: occupiedAt ?? this.occupiedAt,
       reservationId: reservationId ?? this.reservationId,
+      shape: shape ?? this.shape,
+      zoneId: zoneId ?? this.zoneId,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -15793,6 +15882,12 @@ class RestaurantTablesCompanion extends UpdateCompanion<RestaurantTable> {
     if (reservationId.present) {
       map['reservation_id'] = Variable<int>(reservationId.value);
     }
+    if (shape.present) {
+      map['shape'] = Variable<String>(shape.value);
+    }
+    if (zoneId.present) {
+      map['zone_id'] = Variable<int>(zoneId.value);
+    }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
@@ -15817,6 +15912,8 @@ class RestaurantTablesCompanion extends UpdateCompanion<RestaurantTable> {
           ..write('currentSaleId: $currentSaleId, ')
           ..write('occupiedAt: $occupiedAt, ')
           ..write('reservationId: $reservationId, ')
+          ..write('shape: $shape, ')
+          ..write('zoneId: $zoneId, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -20897,6 +20994,1381 @@ class DeliveryOrdersCompanion extends UpdateCompanion<DeliveryOrder> {
   }
 }
 
+class $FloorZonesTable extends FloorZones
+    with TableInfo<$FloorZonesTable, FloorZone> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FloorZonesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 50,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _colorHexMeta = const VerificationMeta(
+    'colorHex',
+  );
+  @override
+  late final GeneratedColumn<String> colorHex = GeneratedColumn<String>(
+    'color_hex',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('#E3F2FD'),
+  );
+  static const VerificationMeta _posXMeta = const VerificationMeta('posX');
+  @override
+  late final GeneratedColumn<double> posX = GeneratedColumn<double>(
+    'pos_x',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _posYMeta = const VerificationMeta('posY');
+  @override
+  late final GeneratedColumn<double> posY = GeneratedColumn<double>(
+    'pos_y',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _widthMeta = const VerificationMeta('width');
+  @override
+  late final GeneratedColumn<double> width = GeneratedColumn<double>(
+    'width',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(200),
+  );
+  static const VerificationMeta _heightMeta = const VerificationMeta('height');
+  @override
+  late final GeneratedColumn<double> height = GeneratedColumn<double>(
+    'height',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(150),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    colorHex,
+    posX,
+    posY,
+    width,
+    height,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'floor_zones';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FloorZone> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('color_hex')) {
+      context.handle(
+        _colorHexMeta,
+        colorHex.isAcceptableOrUnknown(data['color_hex']!, _colorHexMeta),
+      );
+    }
+    if (data.containsKey('pos_x')) {
+      context.handle(
+        _posXMeta,
+        posX.isAcceptableOrUnknown(data['pos_x']!, _posXMeta),
+      );
+    }
+    if (data.containsKey('pos_y')) {
+      context.handle(
+        _posYMeta,
+        posY.isAcceptableOrUnknown(data['pos_y']!, _posYMeta),
+      );
+    }
+    if (data.containsKey('width')) {
+      context.handle(
+        _widthMeta,
+        width.isAcceptableOrUnknown(data['width']!, _widthMeta),
+      );
+    }
+    if (data.containsKey('height')) {
+      context.handle(
+        _heightMeta,
+        height.isAcceptableOrUnknown(data['height']!, _heightMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FloorZone map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FloorZone(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      colorHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color_hex'],
+      )!,
+      posX: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}pos_x'],
+      )!,
+      posY: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}pos_y'],
+      )!,
+      width: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}width'],
+      )!,
+      height: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}height'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FloorZonesTable createAlias(String alias) {
+    return $FloorZonesTable(attachedDatabase, alias);
+  }
+}
+
+class FloorZone extends DataClass implements Insertable<FloorZone> {
+  final int id;
+  final String name;
+  final String colorHex;
+  final double posX;
+  final double posY;
+  final double width;
+  final double height;
+  final DateTime createdAt;
+  const FloorZone({
+    required this.id,
+    required this.name,
+    required this.colorHex,
+    required this.posX,
+    required this.posY,
+    required this.width,
+    required this.height,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['color_hex'] = Variable<String>(colorHex);
+    map['pos_x'] = Variable<double>(posX);
+    map['pos_y'] = Variable<double>(posY);
+    map['width'] = Variable<double>(width);
+    map['height'] = Variable<double>(height);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  FloorZonesCompanion toCompanion(bool nullToAbsent) {
+    return FloorZonesCompanion(
+      id: Value(id),
+      name: Value(name),
+      colorHex: Value(colorHex),
+      posX: Value(posX),
+      posY: Value(posY),
+      width: Value(width),
+      height: Value(height),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory FloorZone.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FloorZone(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      colorHex: serializer.fromJson<String>(json['colorHex']),
+      posX: serializer.fromJson<double>(json['posX']),
+      posY: serializer.fromJson<double>(json['posY']),
+      width: serializer.fromJson<double>(json['width']),
+      height: serializer.fromJson<double>(json['height']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'colorHex': serializer.toJson<String>(colorHex),
+      'posX': serializer.toJson<double>(posX),
+      'posY': serializer.toJson<double>(posY),
+      'width': serializer.toJson<double>(width),
+      'height': serializer.toJson<double>(height),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  FloorZone copyWith({
+    int? id,
+    String? name,
+    String? colorHex,
+    double? posX,
+    double? posY,
+    double? width,
+    double? height,
+    DateTime? createdAt,
+  }) => FloorZone(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    colorHex: colorHex ?? this.colorHex,
+    posX: posX ?? this.posX,
+    posY: posY ?? this.posY,
+    width: width ?? this.width,
+    height: height ?? this.height,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  FloorZone copyWithCompanion(FloorZonesCompanion data) {
+    return FloorZone(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      colorHex: data.colorHex.present ? data.colorHex.value : this.colorHex,
+      posX: data.posX.present ? data.posX.value : this.posX,
+      posY: data.posY.present ? data.posY.value : this.posY,
+      width: data.width.present ? data.width.value : this.width,
+      height: data.height.present ? data.height.value : this.height,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FloorZone(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('colorHex: $colorHex, ')
+          ..write('posX: $posX, ')
+          ..write('posY: $posY, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, colorHex, posX, posY, width, height, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FloorZone &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.colorHex == this.colorHex &&
+          other.posX == this.posX &&
+          other.posY == this.posY &&
+          other.width == this.width &&
+          other.height == this.height &&
+          other.createdAt == this.createdAt);
+}
+
+class FloorZonesCompanion extends UpdateCompanion<FloorZone> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> colorHex;
+  final Value<double> posX;
+  final Value<double> posY;
+  final Value<double> width;
+  final Value<double> height;
+  final Value<DateTime> createdAt;
+  const FloorZonesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.colorHex = const Value.absent(),
+    this.posX = const Value.absent(),
+    this.posY = const Value.absent(),
+    this.width = const Value.absent(),
+    this.height = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  FloorZonesCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.colorHex = const Value.absent(),
+    this.posX = const Value.absent(),
+    this.posY = const Value.absent(),
+    this.width = const Value.absent(),
+    this.height = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : name = Value(name);
+  static Insertable<FloorZone> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? colorHex,
+    Expression<double>? posX,
+    Expression<double>? posY,
+    Expression<double>? width,
+    Expression<double>? height,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (colorHex != null) 'color_hex': colorHex,
+      if (posX != null) 'pos_x': posX,
+      if (posY != null) 'pos_y': posY,
+      if (width != null) 'width': width,
+      if (height != null) 'height': height,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  FloorZonesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String>? colorHex,
+    Value<double>? posX,
+    Value<double>? posY,
+    Value<double>? width,
+    Value<double>? height,
+    Value<DateTime>? createdAt,
+  }) {
+    return FloorZonesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      colorHex: colorHex ?? this.colorHex,
+      posX: posX ?? this.posX,
+      posY: posY ?? this.posY,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (colorHex.present) {
+      map['color_hex'] = Variable<String>(colorHex.value);
+    }
+    if (posX.present) {
+      map['pos_x'] = Variable<double>(posX.value);
+    }
+    if (posY.present) {
+      map['pos_y'] = Variable<double>(posY.value);
+    }
+    if (width.present) {
+      map['width'] = Variable<double>(width.value);
+    }
+    if (height.present) {
+      map['height'] = Variable<double>(height.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FloorZonesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('colorHex: $colorHex, ')
+          ..write('posX: $posX, ')
+          ..write('posY: $posY, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FloorElementsTable extends FloorElements
+    with TableInfo<$FloorElementsTable, FloorElement> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FloorElementsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _elementTypeMeta = const VerificationMeta(
+    'elementType',
+  );
+  @override
+  late final GeneratedColumn<String> elementType = GeneratedColumn<String>(
+    'element_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _posXMeta = const VerificationMeta('posX');
+  @override
+  late final GeneratedColumn<double> posX = GeneratedColumn<double>(
+    'pos_x',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _posYMeta = const VerificationMeta('posY');
+  @override
+  late final GeneratedColumn<double> posY = GeneratedColumn<double>(
+    'pos_y',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _widthMeta = const VerificationMeta('width');
+  @override
+  late final GeneratedColumn<double> width = GeneratedColumn<double>(
+    'width',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(60),
+  );
+  static const VerificationMeta _heightMeta = const VerificationMeta('height');
+  @override
+  late final GeneratedColumn<double> height = GeneratedColumn<double>(
+    'height',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(60),
+  );
+  static const VerificationMeta _rotationMeta = const VerificationMeta(
+    'rotation',
+  );
+  @override
+  late final GeneratedColumn<double> rotation = GeneratedColumn<double>(
+    'rotation',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    elementType,
+    label,
+    posX,
+    posY,
+    width,
+    height,
+    rotation,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'floor_elements';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FloorElement> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('element_type')) {
+      context.handle(
+        _elementTypeMeta,
+        elementType.isAcceptableOrUnknown(
+          data['element_type']!,
+          _elementTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_elementTypeMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    }
+    if (data.containsKey('pos_x')) {
+      context.handle(
+        _posXMeta,
+        posX.isAcceptableOrUnknown(data['pos_x']!, _posXMeta),
+      );
+    }
+    if (data.containsKey('pos_y')) {
+      context.handle(
+        _posYMeta,
+        posY.isAcceptableOrUnknown(data['pos_y']!, _posYMeta),
+      );
+    }
+    if (data.containsKey('width')) {
+      context.handle(
+        _widthMeta,
+        width.isAcceptableOrUnknown(data['width']!, _widthMeta),
+      );
+    }
+    if (data.containsKey('height')) {
+      context.handle(
+        _heightMeta,
+        height.isAcceptableOrUnknown(data['height']!, _heightMeta),
+      );
+    }
+    if (data.containsKey('rotation')) {
+      context.handle(
+        _rotationMeta,
+        rotation.isAcceptableOrUnknown(data['rotation']!, _rotationMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FloorElement map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FloorElement(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      elementType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}element_type'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      ),
+      posX: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}pos_x'],
+      )!,
+      posY: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}pos_y'],
+      )!,
+      width: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}width'],
+      )!,
+      height: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}height'],
+      )!,
+      rotation: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rotation'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FloorElementsTable createAlias(String alias) {
+    return $FloorElementsTable(attachedDatabase, alias);
+  }
+}
+
+class FloorElement extends DataClass implements Insertable<FloorElement> {
+  final int id;
+  final String elementType;
+  final String? label;
+  final double posX;
+  final double posY;
+  final double width;
+  final double height;
+  final double rotation;
+  final DateTime createdAt;
+  const FloorElement({
+    required this.id,
+    required this.elementType,
+    this.label,
+    required this.posX,
+    required this.posY,
+    required this.width,
+    required this.height,
+    required this.rotation,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['element_type'] = Variable<String>(elementType);
+    if (!nullToAbsent || label != null) {
+      map['label'] = Variable<String>(label);
+    }
+    map['pos_x'] = Variable<double>(posX);
+    map['pos_y'] = Variable<double>(posY);
+    map['width'] = Variable<double>(width);
+    map['height'] = Variable<double>(height);
+    map['rotation'] = Variable<double>(rotation);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  FloorElementsCompanion toCompanion(bool nullToAbsent) {
+    return FloorElementsCompanion(
+      id: Value(id),
+      elementType: Value(elementType),
+      label: label == null && nullToAbsent
+          ? const Value.absent()
+          : Value(label),
+      posX: Value(posX),
+      posY: Value(posY),
+      width: Value(width),
+      height: Value(height),
+      rotation: Value(rotation),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory FloorElement.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FloorElement(
+      id: serializer.fromJson<int>(json['id']),
+      elementType: serializer.fromJson<String>(json['elementType']),
+      label: serializer.fromJson<String?>(json['label']),
+      posX: serializer.fromJson<double>(json['posX']),
+      posY: serializer.fromJson<double>(json['posY']),
+      width: serializer.fromJson<double>(json['width']),
+      height: serializer.fromJson<double>(json['height']),
+      rotation: serializer.fromJson<double>(json['rotation']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'elementType': serializer.toJson<String>(elementType),
+      'label': serializer.toJson<String?>(label),
+      'posX': serializer.toJson<double>(posX),
+      'posY': serializer.toJson<double>(posY),
+      'width': serializer.toJson<double>(width),
+      'height': serializer.toJson<double>(height),
+      'rotation': serializer.toJson<double>(rotation),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  FloorElement copyWith({
+    int? id,
+    String? elementType,
+    Value<String?> label = const Value.absent(),
+    double? posX,
+    double? posY,
+    double? width,
+    double? height,
+    double? rotation,
+    DateTime? createdAt,
+  }) => FloorElement(
+    id: id ?? this.id,
+    elementType: elementType ?? this.elementType,
+    label: label.present ? label.value : this.label,
+    posX: posX ?? this.posX,
+    posY: posY ?? this.posY,
+    width: width ?? this.width,
+    height: height ?? this.height,
+    rotation: rotation ?? this.rotation,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  FloorElement copyWithCompanion(FloorElementsCompanion data) {
+    return FloorElement(
+      id: data.id.present ? data.id.value : this.id,
+      elementType: data.elementType.present
+          ? data.elementType.value
+          : this.elementType,
+      label: data.label.present ? data.label.value : this.label,
+      posX: data.posX.present ? data.posX.value : this.posX,
+      posY: data.posY.present ? data.posY.value : this.posY,
+      width: data.width.present ? data.width.value : this.width,
+      height: data.height.present ? data.height.value : this.height,
+      rotation: data.rotation.present ? data.rotation.value : this.rotation,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FloorElement(')
+          ..write('id: $id, ')
+          ..write('elementType: $elementType, ')
+          ..write('label: $label, ')
+          ..write('posX: $posX, ')
+          ..write('posY: $posY, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('rotation: $rotation, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    elementType,
+    label,
+    posX,
+    posY,
+    width,
+    height,
+    rotation,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FloorElement &&
+          other.id == this.id &&
+          other.elementType == this.elementType &&
+          other.label == this.label &&
+          other.posX == this.posX &&
+          other.posY == this.posY &&
+          other.width == this.width &&
+          other.height == this.height &&
+          other.rotation == this.rotation &&
+          other.createdAt == this.createdAt);
+}
+
+class FloorElementsCompanion extends UpdateCompanion<FloorElement> {
+  final Value<int> id;
+  final Value<String> elementType;
+  final Value<String?> label;
+  final Value<double> posX;
+  final Value<double> posY;
+  final Value<double> width;
+  final Value<double> height;
+  final Value<double> rotation;
+  final Value<DateTime> createdAt;
+  const FloorElementsCompanion({
+    this.id = const Value.absent(),
+    this.elementType = const Value.absent(),
+    this.label = const Value.absent(),
+    this.posX = const Value.absent(),
+    this.posY = const Value.absent(),
+    this.width = const Value.absent(),
+    this.height = const Value.absent(),
+    this.rotation = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  FloorElementsCompanion.insert({
+    this.id = const Value.absent(),
+    required String elementType,
+    this.label = const Value.absent(),
+    this.posX = const Value.absent(),
+    this.posY = const Value.absent(),
+    this.width = const Value.absent(),
+    this.height = const Value.absent(),
+    this.rotation = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : elementType = Value(elementType);
+  static Insertable<FloorElement> custom({
+    Expression<int>? id,
+    Expression<String>? elementType,
+    Expression<String>? label,
+    Expression<double>? posX,
+    Expression<double>? posY,
+    Expression<double>? width,
+    Expression<double>? height,
+    Expression<double>? rotation,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (elementType != null) 'element_type': elementType,
+      if (label != null) 'label': label,
+      if (posX != null) 'pos_x': posX,
+      if (posY != null) 'pos_y': posY,
+      if (width != null) 'width': width,
+      if (height != null) 'height': height,
+      if (rotation != null) 'rotation': rotation,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  FloorElementsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? elementType,
+    Value<String?>? label,
+    Value<double>? posX,
+    Value<double>? posY,
+    Value<double>? width,
+    Value<double>? height,
+    Value<double>? rotation,
+    Value<DateTime>? createdAt,
+  }) {
+    return FloorElementsCompanion(
+      id: id ?? this.id,
+      elementType: elementType ?? this.elementType,
+      label: label ?? this.label,
+      posX: posX ?? this.posX,
+      posY: posY ?? this.posY,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      rotation: rotation ?? this.rotation,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (elementType.present) {
+      map['element_type'] = Variable<String>(elementType.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (posX.present) {
+      map['pos_x'] = Variable<double>(posX.value);
+    }
+    if (posY.present) {
+      map['pos_y'] = Variable<double>(posY.value);
+    }
+    if (width.present) {
+      map['width'] = Variable<double>(width.value);
+    }
+    if (height.present) {
+      map['height'] = Variable<double>(height.value);
+    }
+    if (rotation.present) {
+      map['rotation'] = Variable<double>(rotation.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FloorElementsCompanion(')
+          ..write('id: $id, ')
+          ..write('elementType: $elementType, ')
+          ..write('label: $label, ')
+          ..write('posX: $posX, ')
+          ..write('posY: $posY, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('rotation: $rotation, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FloorPlanConfigTable extends FloorPlanConfig
+    with TableInfo<$FloorPlanConfigTable, FloorPlanConfigData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FloorPlanConfigTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _canvasWidthMeta = const VerificationMeta(
+    'canvasWidth',
+  );
+  @override
+  late final GeneratedColumn<double> canvasWidth = GeneratedColumn<double>(
+    'canvas_width',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1000),
+  );
+  static const VerificationMeta _canvasHeightMeta = const VerificationMeta(
+    'canvasHeight',
+  );
+  @override
+  late final GeneratedColumn<double> canvasHeight = GeneratedColumn<double>(
+    'canvas_height',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(700),
+  );
+  static const VerificationMeta _backgroundColorHexMeta =
+      const VerificationMeta('backgroundColorHex');
+  @override
+  late final GeneratedColumn<String> backgroundColorHex =
+      GeneratedColumn<String>(
+        'background_color_hex',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('#F5F5F5'),
+      );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    canvasWidth,
+    canvasHeight,
+    backgroundColorHex,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'floor_plan_config';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FloorPlanConfigData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('canvas_width')) {
+      context.handle(
+        _canvasWidthMeta,
+        canvasWidth.isAcceptableOrUnknown(
+          data['canvas_width']!,
+          _canvasWidthMeta,
+        ),
+      );
+    }
+    if (data.containsKey('canvas_height')) {
+      context.handle(
+        _canvasHeightMeta,
+        canvasHeight.isAcceptableOrUnknown(
+          data['canvas_height']!,
+          _canvasHeightMeta,
+        ),
+      );
+    }
+    if (data.containsKey('background_color_hex')) {
+      context.handle(
+        _backgroundColorHexMeta,
+        backgroundColorHex.isAcceptableOrUnknown(
+          data['background_color_hex']!,
+          _backgroundColorHexMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FloorPlanConfigData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FloorPlanConfigData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      canvasWidth: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}canvas_width'],
+      )!,
+      canvasHeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}canvas_height'],
+      )!,
+      backgroundColorHex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}background_color_hex'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FloorPlanConfigTable createAlias(String alias) {
+    return $FloorPlanConfigTable(attachedDatabase, alias);
+  }
+}
+
+class FloorPlanConfigData extends DataClass
+    implements Insertable<FloorPlanConfigData> {
+  final int id;
+  final double canvasWidth;
+  final double canvasHeight;
+  final String backgroundColorHex;
+  final DateTime updatedAt;
+  const FloorPlanConfigData({
+    required this.id,
+    required this.canvasWidth,
+    required this.canvasHeight,
+    required this.backgroundColorHex,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['canvas_width'] = Variable<double>(canvasWidth);
+    map['canvas_height'] = Variable<double>(canvasHeight);
+    map['background_color_hex'] = Variable<String>(backgroundColorHex);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  FloorPlanConfigCompanion toCompanion(bool nullToAbsent) {
+    return FloorPlanConfigCompanion(
+      id: Value(id),
+      canvasWidth: Value(canvasWidth),
+      canvasHeight: Value(canvasHeight),
+      backgroundColorHex: Value(backgroundColorHex),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory FloorPlanConfigData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FloorPlanConfigData(
+      id: serializer.fromJson<int>(json['id']),
+      canvasWidth: serializer.fromJson<double>(json['canvasWidth']),
+      canvasHeight: serializer.fromJson<double>(json['canvasHeight']),
+      backgroundColorHex: serializer.fromJson<String>(
+        json['backgroundColorHex'],
+      ),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'canvasWidth': serializer.toJson<double>(canvasWidth),
+      'canvasHeight': serializer.toJson<double>(canvasHeight),
+      'backgroundColorHex': serializer.toJson<String>(backgroundColorHex),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  FloorPlanConfigData copyWith({
+    int? id,
+    double? canvasWidth,
+    double? canvasHeight,
+    String? backgroundColorHex,
+    DateTime? updatedAt,
+  }) => FloorPlanConfigData(
+    id: id ?? this.id,
+    canvasWidth: canvasWidth ?? this.canvasWidth,
+    canvasHeight: canvasHeight ?? this.canvasHeight,
+    backgroundColorHex: backgroundColorHex ?? this.backgroundColorHex,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  FloorPlanConfigData copyWithCompanion(FloorPlanConfigCompanion data) {
+    return FloorPlanConfigData(
+      id: data.id.present ? data.id.value : this.id,
+      canvasWidth: data.canvasWidth.present
+          ? data.canvasWidth.value
+          : this.canvasWidth,
+      canvasHeight: data.canvasHeight.present
+          ? data.canvasHeight.value
+          : this.canvasHeight,
+      backgroundColorHex: data.backgroundColorHex.present
+          ? data.backgroundColorHex.value
+          : this.backgroundColorHex,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FloorPlanConfigData(')
+          ..write('id: $id, ')
+          ..write('canvasWidth: $canvasWidth, ')
+          ..write('canvasHeight: $canvasHeight, ')
+          ..write('backgroundColorHex: $backgroundColorHex, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, canvasWidth, canvasHeight, backgroundColorHex, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FloorPlanConfigData &&
+          other.id == this.id &&
+          other.canvasWidth == this.canvasWidth &&
+          other.canvasHeight == this.canvasHeight &&
+          other.backgroundColorHex == this.backgroundColorHex &&
+          other.updatedAt == this.updatedAt);
+}
+
+class FloorPlanConfigCompanion extends UpdateCompanion<FloorPlanConfigData> {
+  final Value<int> id;
+  final Value<double> canvasWidth;
+  final Value<double> canvasHeight;
+  final Value<String> backgroundColorHex;
+  final Value<DateTime> updatedAt;
+  const FloorPlanConfigCompanion({
+    this.id = const Value.absent(),
+    this.canvasWidth = const Value.absent(),
+    this.canvasHeight = const Value.absent(),
+    this.backgroundColorHex = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  FloorPlanConfigCompanion.insert({
+    this.id = const Value.absent(),
+    this.canvasWidth = const Value.absent(),
+    this.canvasHeight = const Value.absent(),
+    this.backgroundColorHex = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  static Insertable<FloorPlanConfigData> custom({
+    Expression<int>? id,
+    Expression<double>? canvasWidth,
+    Expression<double>? canvasHeight,
+    Expression<String>? backgroundColorHex,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (canvasWidth != null) 'canvas_width': canvasWidth,
+      if (canvasHeight != null) 'canvas_height': canvasHeight,
+      if (backgroundColorHex != null)
+        'background_color_hex': backgroundColorHex,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  FloorPlanConfigCompanion copyWith({
+    Value<int>? id,
+    Value<double>? canvasWidth,
+    Value<double>? canvasHeight,
+    Value<String>? backgroundColorHex,
+    Value<DateTime>? updatedAt,
+  }) {
+    return FloorPlanConfigCompanion(
+      id: id ?? this.id,
+      canvasWidth: canvasWidth ?? this.canvasWidth,
+      canvasHeight: canvasHeight ?? this.canvasHeight,
+      backgroundColorHex: backgroundColorHex ?? this.backgroundColorHex,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (canvasWidth.present) {
+      map['canvas_width'] = Variable<double>(canvasWidth.value);
+    }
+    if (canvasHeight.present) {
+      map['canvas_height'] = Variable<double>(canvasHeight.value);
+    }
+    if (backgroundColorHex.present) {
+      map['background_color_hex'] = Variable<String>(backgroundColorHex.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FloorPlanConfigCompanion(')
+          ..write('id: $id, ')
+          ..write('canvasWidth: $canvasWidth, ')
+          ..write('canvasHeight: $canvasHeight, ')
+          ..write('backgroundColorHex: $backgroundColorHex, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -20942,6 +22414,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $SystemSettingsTable systemSettings = $SystemSettingsTable(this);
   late final $DeliveryOrdersTable deliveryOrders = $DeliveryOrdersTable(this);
+  late final $FloorZonesTable floorZones = $FloorZonesTable(this);
+  late final $FloorElementsTable floorElements = $FloorElementsTable(this);
+  late final $FloorPlanConfigTable floorPlanConfig = $FloorPlanConfigTable(
+    this,
+  );
   late final ProductsDao productsDao = ProductsDao(this as AppDatabase);
   late final SalesDao salesDao = SalesDao(this as AppDatabase);
   late final SyncDao syncDao = SyncDao(this as AppDatabase);
@@ -20974,6 +22451,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this as AppDatabase,
   );
   late final DeliveryOrdersDao deliveryOrdersDao = DeliveryOrdersDao(
+    this as AppDatabase,
+  );
+  late final FloorZoneDao floorZoneDao = FloorZoneDao(this as AppDatabase);
+  late final FloorElementDao floorElementDao = FloorElementDao(
     this as AppDatabase,
   );
   @override
@@ -21012,6 +22493,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     storeAssignments,
     systemSettings,
     deliveryOrders,
+    floorZones,
+    floorElements,
+    floorPlanConfig,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -30778,6 +32262,8 @@ typedef $$RestaurantTablesTableCreateCompanionBuilder =
       Value<int?> currentSaleId,
       Value<DateTime?> occupiedAt,
       Value<int?> reservationId,
+      Value<String> shape,
+      Value<int?> zoneId,
       Value<bool> isActive,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -30793,6 +32279,8 @@ typedef $$RestaurantTablesTableUpdateCompanionBuilder =
       Value<int?> currentSaleId,
       Value<DateTime?> occupiedAt,
       Value<int?> reservationId,
+      Value<String> shape,
+      Value<int?> zoneId,
       Value<bool> isActive,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -30849,6 +32337,16 @@ class $$RestaurantTablesTableFilterComposer
 
   ColumnFilters<int> get reservationId => $composableBuilder(
     column: $table.reservationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shape => $composableBuilder(
+    column: $table.shape,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get zoneId => $composableBuilder(
+    column: $table.zoneId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -30922,6 +32420,16 @@ class $$RestaurantTablesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get shape => $composableBuilder(
+    column: $table.shape,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get zoneId => $composableBuilder(
+    column: $table.zoneId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isActive => $composableBuilder(
     column: $table.isActive,
     builder: (column) => ColumnOrderings(column),
@@ -30982,6 +32490,12 @@ class $$RestaurantTablesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get shape =>
+      $composableBuilder(column: $table.shape, builder: (column) => column);
+
+  GeneratedColumn<int> get zoneId =>
+      $composableBuilder(column: $table.zoneId, builder: (column) => column);
+
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
 
@@ -31038,6 +32552,8 @@ class $$RestaurantTablesTableTableManager
                 Value<int?> currentSaleId = const Value.absent(),
                 Value<DateTime?> occupiedAt = const Value.absent(),
                 Value<int?> reservationId = const Value.absent(),
+                Value<String> shape = const Value.absent(),
+                Value<int?> zoneId = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -31051,6 +32567,8 @@ class $$RestaurantTablesTableTableManager
                 currentSaleId: currentSaleId,
                 occupiedAt: occupiedAt,
                 reservationId: reservationId,
+                shape: shape,
+                zoneId: zoneId,
                 isActive: isActive,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -31066,6 +32584,8 @@ class $$RestaurantTablesTableTableManager
                 Value<int?> currentSaleId = const Value.absent(),
                 Value<DateTime?> occupiedAt = const Value.absent(),
                 Value<int?> reservationId = const Value.absent(),
+                Value<String> shape = const Value.absent(),
+                Value<int?> zoneId = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -31079,6 +32599,8 @@ class $$RestaurantTablesTableTableManager
                 currentSaleId: currentSaleId,
                 occupiedAt: occupiedAt,
                 reservationId: reservationId,
+                shape: shape,
+                zoneId: zoneId,
                 isActive: isActive,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -33844,6 +35366,736 @@ typedef $$DeliveryOrdersTableProcessedTableManager =
       DeliveryOrder,
       PrefetchHooks Function({bool kitchenOrderId})
     >;
+typedef $$FloorZonesTableCreateCompanionBuilder =
+    FloorZonesCompanion Function({
+      Value<int> id,
+      required String name,
+      Value<String> colorHex,
+      Value<double> posX,
+      Value<double> posY,
+      Value<double> width,
+      Value<double> height,
+      Value<DateTime> createdAt,
+    });
+typedef $$FloorZonesTableUpdateCompanionBuilder =
+    FloorZonesCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> colorHex,
+      Value<double> posX,
+      Value<double> posY,
+      Value<double> width,
+      Value<double> height,
+      Value<DateTime> createdAt,
+    });
+
+class $$FloorZonesTableFilterComposer
+    extends Composer<_$AppDatabase, $FloorZonesTable> {
+  $$FloorZonesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get colorHex => $composableBuilder(
+    column: $table.colorHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get posX => $composableBuilder(
+    column: $table.posX,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get posY => $composableBuilder(
+    column: $table.posY,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get width => $composableBuilder(
+    column: $table.width,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FloorZonesTableOrderingComposer
+    extends Composer<_$AppDatabase, $FloorZonesTable> {
+  $$FloorZonesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get colorHex => $composableBuilder(
+    column: $table.colorHex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get posX => $composableBuilder(
+    column: $table.posX,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get posY => $composableBuilder(
+    column: $table.posY,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get width => $composableBuilder(
+    column: $table.width,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FloorZonesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FloorZonesTable> {
+  $$FloorZonesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get colorHex =>
+      $composableBuilder(column: $table.colorHex, builder: (column) => column);
+
+  GeneratedColumn<double> get posX =>
+      $composableBuilder(column: $table.posX, builder: (column) => column);
+
+  GeneratedColumn<double> get posY =>
+      $composableBuilder(column: $table.posY, builder: (column) => column);
+
+  GeneratedColumn<double> get width =>
+      $composableBuilder(column: $table.width, builder: (column) => column);
+
+  GeneratedColumn<double> get height =>
+      $composableBuilder(column: $table.height, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$FloorZonesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FloorZonesTable,
+          FloorZone,
+          $$FloorZonesTableFilterComposer,
+          $$FloorZonesTableOrderingComposer,
+          $$FloorZonesTableAnnotationComposer,
+          $$FloorZonesTableCreateCompanionBuilder,
+          $$FloorZonesTableUpdateCompanionBuilder,
+          (
+            FloorZone,
+            BaseReferences<_$AppDatabase, $FloorZonesTable, FloorZone>,
+          ),
+          FloorZone,
+          PrefetchHooks Function()
+        > {
+  $$FloorZonesTableTableManager(_$AppDatabase db, $FloorZonesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FloorZonesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FloorZonesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FloorZonesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> colorHex = const Value.absent(),
+                Value<double> posX = const Value.absent(),
+                Value<double> posY = const Value.absent(),
+                Value<double> width = const Value.absent(),
+                Value<double> height = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => FloorZonesCompanion(
+                id: id,
+                name: name,
+                colorHex: colorHex,
+                posX: posX,
+                posY: posY,
+                width: width,
+                height: height,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                Value<String> colorHex = const Value.absent(),
+                Value<double> posX = const Value.absent(),
+                Value<double> posY = const Value.absent(),
+                Value<double> width = const Value.absent(),
+                Value<double> height = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => FloorZonesCompanion.insert(
+                id: id,
+                name: name,
+                colorHex: colorHex,
+                posX: posX,
+                posY: posY,
+                width: width,
+                height: height,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FloorZonesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FloorZonesTable,
+      FloorZone,
+      $$FloorZonesTableFilterComposer,
+      $$FloorZonesTableOrderingComposer,
+      $$FloorZonesTableAnnotationComposer,
+      $$FloorZonesTableCreateCompanionBuilder,
+      $$FloorZonesTableUpdateCompanionBuilder,
+      (FloorZone, BaseReferences<_$AppDatabase, $FloorZonesTable, FloorZone>),
+      FloorZone,
+      PrefetchHooks Function()
+    >;
+typedef $$FloorElementsTableCreateCompanionBuilder =
+    FloorElementsCompanion Function({
+      Value<int> id,
+      required String elementType,
+      Value<String?> label,
+      Value<double> posX,
+      Value<double> posY,
+      Value<double> width,
+      Value<double> height,
+      Value<double> rotation,
+      Value<DateTime> createdAt,
+    });
+typedef $$FloorElementsTableUpdateCompanionBuilder =
+    FloorElementsCompanion Function({
+      Value<int> id,
+      Value<String> elementType,
+      Value<String?> label,
+      Value<double> posX,
+      Value<double> posY,
+      Value<double> width,
+      Value<double> height,
+      Value<double> rotation,
+      Value<DateTime> createdAt,
+    });
+
+class $$FloorElementsTableFilterComposer
+    extends Composer<_$AppDatabase, $FloorElementsTable> {
+  $$FloorElementsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get elementType => $composableBuilder(
+    column: $table.elementType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get posX => $composableBuilder(
+    column: $table.posX,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get posY => $composableBuilder(
+    column: $table.posY,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get width => $composableBuilder(
+    column: $table.width,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get rotation => $composableBuilder(
+    column: $table.rotation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FloorElementsTableOrderingComposer
+    extends Composer<_$AppDatabase, $FloorElementsTable> {
+  $$FloorElementsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get elementType => $composableBuilder(
+    column: $table.elementType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get posX => $composableBuilder(
+    column: $table.posX,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get posY => $composableBuilder(
+    column: $table.posY,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get width => $composableBuilder(
+    column: $table.width,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get height => $composableBuilder(
+    column: $table.height,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get rotation => $composableBuilder(
+    column: $table.rotation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FloorElementsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FloorElementsTable> {
+  $$FloorElementsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get elementType => $composableBuilder(
+    column: $table.elementType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<double> get posX =>
+      $composableBuilder(column: $table.posX, builder: (column) => column);
+
+  GeneratedColumn<double> get posY =>
+      $composableBuilder(column: $table.posY, builder: (column) => column);
+
+  GeneratedColumn<double> get width =>
+      $composableBuilder(column: $table.width, builder: (column) => column);
+
+  GeneratedColumn<double> get height =>
+      $composableBuilder(column: $table.height, builder: (column) => column);
+
+  GeneratedColumn<double> get rotation =>
+      $composableBuilder(column: $table.rotation, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$FloorElementsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FloorElementsTable,
+          FloorElement,
+          $$FloorElementsTableFilterComposer,
+          $$FloorElementsTableOrderingComposer,
+          $$FloorElementsTableAnnotationComposer,
+          $$FloorElementsTableCreateCompanionBuilder,
+          $$FloorElementsTableUpdateCompanionBuilder,
+          (
+            FloorElement,
+            BaseReferences<_$AppDatabase, $FloorElementsTable, FloorElement>,
+          ),
+          FloorElement,
+          PrefetchHooks Function()
+        > {
+  $$FloorElementsTableTableManager(_$AppDatabase db, $FloorElementsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FloorElementsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FloorElementsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FloorElementsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> elementType = const Value.absent(),
+                Value<String?> label = const Value.absent(),
+                Value<double> posX = const Value.absent(),
+                Value<double> posY = const Value.absent(),
+                Value<double> width = const Value.absent(),
+                Value<double> height = const Value.absent(),
+                Value<double> rotation = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => FloorElementsCompanion(
+                id: id,
+                elementType: elementType,
+                label: label,
+                posX: posX,
+                posY: posY,
+                width: width,
+                height: height,
+                rotation: rotation,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String elementType,
+                Value<String?> label = const Value.absent(),
+                Value<double> posX = const Value.absent(),
+                Value<double> posY = const Value.absent(),
+                Value<double> width = const Value.absent(),
+                Value<double> height = const Value.absent(),
+                Value<double> rotation = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => FloorElementsCompanion.insert(
+                id: id,
+                elementType: elementType,
+                label: label,
+                posX: posX,
+                posY: posY,
+                width: width,
+                height: height,
+                rotation: rotation,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FloorElementsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FloorElementsTable,
+      FloorElement,
+      $$FloorElementsTableFilterComposer,
+      $$FloorElementsTableOrderingComposer,
+      $$FloorElementsTableAnnotationComposer,
+      $$FloorElementsTableCreateCompanionBuilder,
+      $$FloorElementsTableUpdateCompanionBuilder,
+      (
+        FloorElement,
+        BaseReferences<_$AppDatabase, $FloorElementsTable, FloorElement>,
+      ),
+      FloorElement,
+      PrefetchHooks Function()
+    >;
+typedef $$FloorPlanConfigTableCreateCompanionBuilder =
+    FloorPlanConfigCompanion Function({
+      Value<int> id,
+      Value<double> canvasWidth,
+      Value<double> canvasHeight,
+      Value<String> backgroundColorHex,
+      Value<DateTime> updatedAt,
+    });
+typedef $$FloorPlanConfigTableUpdateCompanionBuilder =
+    FloorPlanConfigCompanion Function({
+      Value<int> id,
+      Value<double> canvasWidth,
+      Value<double> canvasHeight,
+      Value<String> backgroundColorHex,
+      Value<DateTime> updatedAt,
+    });
+
+class $$FloorPlanConfigTableFilterComposer
+    extends Composer<_$AppDatabase, $FloorPlanConfigTable> {
+  $$FloorPlanConfigTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get canvasWidth => $composableBuilder(
+    column: $table.canvasWidth,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get canvasHeight => $composableBuilder(
+    column: $table.canvasHeight,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get backgroundColorHex => $composableBuilder(
+    column: $table.backgroundColorHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FloorPlanConfigTableOrderingComposer
+    extends Composer<_$AppDatabase, $FloorPlanConfigTable> {
+  $$FloorPlanConfigTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get canvasWidth => $composableBuilder(
+    column: $table.canvasWidth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get canvasHeight => $composableBuilder(
+    column: $table.canvasHeight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get backgroundColorHex => $composableBuilder(
+    column: $table.backgroundColorHex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FloorPlanConfigTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FloorPlanConfigTable> {
+  $$FloorPlanConfigTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get canvasWidth => $composableBuilder(
+    column: $table.canvasWidth,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get canvasHeight => $composableBuilder(
+    column: $table.canvasHeight,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get backgroundColorHex => $composableBuilder(
+    column: $table.backgroundColorHex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$FloorPlanConfigTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FloorPlanConfigTable,
+          FloorPlanConfigData,
+          $$FloorPlanConfigTableFilterComposer,
+          $$FloorPlanConfigTableOrderingComposer,
+          $$FloorPlanConfigTableAnnotationComposer,
+          $$FloorPlanConfigTableCreateCompanionBuilder,
+          $$FloorPlanConfigTableUpdateCompanionBuilder,
+          (
+            FloorPlanConfigData,
+            BaseReferences<
+              _$AppDatabase,
+              $FloorPlanConfigTable,
+              FloorPlanConfigData
+            >,
+          ),
+          FloorPlanConfigData,
+          PrefetchHooks Function()
+        > {
+  $$FloorPlanConfigTableTableManager(
+    _$AppDatabase db,
+    $FloorPlanConfigTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FloorPlanConfigTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FloorPlanConfigTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FloorPlanConfigTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<double> canvasWidth = const Value.absent(),
+                Value<double> canvasHeight = const Value.absent(),
+                Value<String> backgroundColorHex = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => FloorPlanConfigCompanion(
+                id: id,
+                canvasWidth: canvasWidth,
+                canvasHeight: canvasHeight,
+                backgroundColorHex: backgroundColorHex,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<double> canvasWidth = const Value.absent(),
+                Value<double> canvasHeight = const Value.absent(),
+                Value<String> backgroundColorHex = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => FloorPlanConfigCompanion.insert(
+                id: id,
+                canvasWidth: canvasWidth,
+                canvasHeight: canvasHeight,
+                backgroundColorHex: backgroundColorHex,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FloorPlanConfigTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FloorPlanConfigTable,
+      FloorPlanConfigData,
+      $$FloorPlanConfigTableFilterComposer,
+      $$FloorPlanConfigTableOrderingComposer,
+      $$FloorPlanConfigTableAnnotationComposer,
+      $$FloorPlanConfigTableCreateCompanionBuilder,
+      $$FloorPlanConfigTableUpdateCompanionBuilder,
+      (
+        FloorPlanConfigData,
+        BaseReferences<
+          _$AppDatabase,
+          $FloorPlanConfigTable,
+          FloorPlanConfigData
+        >,
+      ),
+      FloorPlanConfigData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -33910,4 +36162,10 @@ class $AppDatabaseManager {
       $$SystemSettingsTableTableManager(_db, _db.systemSettings);
   $$DeliveryOrdersTableTableManager get deliveryOrders =>
       $$DeliveryOrdersTableTableManager(_db, _db.deliveryOrders);
+  $$FloorZonesTableTableManager get floorZones =>
+      $$FloorZonesTableTableManager(_db, _db.floorZones);
+  $$FloorElementsTableTableManager get floorElements =>
+      $$FloorElementsTableTableManager(_db, _db.floorElements);
+  $$FloorPlanConfigTableTableManager get floorPlanConfig =>
+      $$FloorPlanConfigTableTableManager(_db, _db.floorPlanConfig);
 }

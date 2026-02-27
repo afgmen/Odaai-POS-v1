@@ -58,17 +58,32 @@ class TableWidget extends StatelessWidget {
     );
   }
 
+  /// 테이블 모양에 따른 크기와 BorderRadius 계산
+  ({double w, double h, BorderRadius radius}) _shapeMetrics() {
+    final shape = table.shape;
+    switch (shape) {
+      case 'round':
+        return (w: 100.0, h: 100.0, radius: BorderRadius.circular(50));
+      case 'rectangle':
+        return (w: 160.0, h: 100.0, radius: BorderRadius.circular(12));
+      case 'square':
+      default:
+        return (w: 100.0, h: 100.0, radius: BorderRadius.circular(12));
+    }
+  }
+
   Widget _buildTableCard(TableStatus status, {bool isDragging = false}) {
+    final metrics = _shapeMetrics();
     return Container(
-      width: 100,
-      height: 100,
+      width: metrics.w,
+      height: metrics.h,
       decoration: BoxDecoration(
         color: status.color.withValues(alpha: 0.1),
         border: Border.all(
           color: status.color,
           width: isDragging ? 3 : 2,
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: metrics.radius,
         boxShadow: isDragging
             ? [
                 BoxShadow(

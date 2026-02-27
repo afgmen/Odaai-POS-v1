@@ -901,5 +901,25 @@
   "deliveryPlatformNotConfigured": "Not Configured",
   "deliveryTestConnection": "Test",
   "deliveryPlatformInactive": "Inactive",
-  "deliveryLastSync": "Last Sync"
+  "deliveryLastSync": "Last Sync",
+
+  "floorPlan": "Floor Plan",
+  "floorPlanDesigner": "Floor Plan Designer",
+  "addZone": "Add Zone",
+  "addElement": "Add Element",
+  "zoneName": "Zone Name",
+  "elementType": "Element Type",
+  "zoneColor": "Zone Color",
+  "tableShape": "Table Shape",
+  "preview": "Preview",
+  "saveLayout": "Save",
+  "entrance": "Entrance",
+  "counter": "Counter",
+  "restroom": "Restroom",
+  "window": "Window",
+  "wall": "Wall",
+  "barCounter": "Bar Counter",
+  "round": "Round",
+  "square": "Square",
+  "rectangle": "Rectangle"
 }

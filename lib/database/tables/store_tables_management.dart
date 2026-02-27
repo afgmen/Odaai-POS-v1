@@ -36,6 +36,14 @@ class RestaurantTables extends Table {
   /// 테이블에 예약이 배정된 경우
   IntColumn get reservationId => integer().nullable()();
 
+  /// 테이블 모양: round | square | rectangle
+  /// Phase 0 추가
+  TextColumn get shape => text().withDefault(const Constant('square'))();
+
+  /// 연결된 구역 ID (FK to floor_zones)
+  /// Phase 0 추가
+  IntColumn get zoneId => integer().nullable()();
+
   /// 활성 상태 (소프트 삭제용)
   /// true = 활성, false = 삭제됨
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();

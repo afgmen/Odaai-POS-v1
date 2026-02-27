@@ -2382,4 +2382,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deliveryLastSync => 'Last Sync';
+
+  @override
+  String get floorPlan => 'Floor Plan';
+
+  @override
+  String get floorPlanDesigner => 'Floor Plan Designer';
+
+  @override
+  String get addZone => 'Add Zone';
+
+  @override
+  String get addElement => 'Add Element';
+
+  @override
+  String get zoneName => 'Zone Name';
+
+  @override
+  String get elementType => 'Element Type';
+
+  @override
+  String get zoneColor => 'Zone Color';
+
+  @override
+  String get tableShape => 'Table Shape';
+
+  @override
+  String get saveLayout => 'Save';
+
+  @override
+  String get entrance => 'Entrance';
+
+  @override
+  String get counter => 'Counter';
+
+  @override
+  String get restroom => 'Restroom';
+
+  @override
+  String get window => 'Window';
+
+  @override
+  String get wall => 'Wall';
+
+  @override
+  String get barCounter => 'Bar Counter';
+
+  @override
+  String get round => 'Round';
+
+  @override
+  String get square => 'Square';
+
+  @override
+  String get rectangle => 'Rectangle';
 }

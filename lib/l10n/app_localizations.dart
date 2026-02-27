@@ -4519,6 +4519,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last Sync'**
   String get deliveryLastSync;
+
+  /// No description provided for @floorPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Floor Plan'**
+  String get floorPlan;
+
+  /// No description provided for @floorPlanDesigner.
+  ///
+  /// In en, this message translates to:
+  /// **'Floor Plan Designer'**
+  String get floorPlanDesigner;
+
+  /// No description provided for @addZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Zone'**
+  String get addZone;
+
+  /// No description provided for @addElement.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Element'**
+  String get addElement;
+
+  /// No description provided for @zoneName.
+  ///
+  /// In en, this message translates to:
+  /// **'Zone Name'**
+  String get zoneName;
+
+  /// No description provided for @elementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Element Type'**
+  String get elementType;
+
+  /// No description provided for @zoneColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Zone Color'**
+  String get zoneColor;
+
+  /// No description provided for @tableShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Table Shape'**
+  String get tableShape;
+
+  /// No description provided for @saveLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveLayout;
+
+  /// No description provided for @entrance.
+  ///
+  /// In en, this message translates to:
+  /// **'Entrance'**
+  String get entrance;
+
+  /// No description provided for @counter.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter'**
+  String get counter;
+
+  /// No description provided for @restroom.
+  ///
+  /// In en, this message translates to:
+  /// **'Restroom'**
+  String get restroom;
+
+  /// No description provided for @window.
+  ///
+  /// In en, this message translates to:
+  /// **'Window'**
+  String get window;
+
+  /// No description provided for @wall.
+  ///
+  /// In en, this message translates to:
+  /// **'Wall'**
+  String get wall;
+
+  /// No description provided for @barCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar Counter'**
+  String get barCounter;
+
+  /// No description provided for @round.
+  ///
+  /// In en, this message translates to:
+  /// **'Round'**
+  String get round;
+
+  /// No description provided for @square.
+  ///
+  /// In en, this message translates to:
+  /// **'Square'**
+  String get square;
+
+  /// No description provided for @rectangle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get rectangle;
 }
 
 class _AppLocalizationsDelegate

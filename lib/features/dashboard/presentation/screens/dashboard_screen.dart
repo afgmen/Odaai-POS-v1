@@ -656,9 +656,9 @@ class _TopSellingSection extends ConsumerWidget {
 // ── 유틸리티 ──────────────────────────────────────
 
 Color _paymentColor(String method) => switch (method) {
-      'cash' => const Color(0xFF03B26C),     // 초록
+      'cash' => AppTheme.success,     // 초록
       'card' => const Color(0xFF3182F6),     // 파란색
-      'qr' => const Color(0xFFFFA726),       // 주황
+      'qr' => AppTheme.warning,       // 주황
       'transfer' => const Color(0xFF7B1FA2), // 보라
       _ => const Color(0xFF6B7280),
     };

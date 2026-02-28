@@ -5,6 +5,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/currency_provider.dart';
+import '../../data/models/order_type.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/auto_promotion_provider.dart';
 import '../../../customers/providers/customers_provider.dart';
@@ -18,10 +19,18 @@ class CartPanel extends ConsumerWidget {
   /// false: 모바일에서 하단 패널로 표시
   final bool isSidePanel;
 
+  /// 주문 유형 (dineIn + tableId → 주방전송 모드)
+  final OrderType? orderType;
+
+  /// 테이블 ID (dineIn 시)
+  final int? tableId;
+
   const CartPanel({
     super.key,
     required this.onCheckout,
     this.isSidePanel = false,
+    this.orderType,
+    this.tableId,
   });
 
   @override
@@ -204,7 +213,11 @@ class CartPanel extends ConsumerWidget {
           const SizedBox(height: 8),
           const _TotalRow(),
           const SizedBox(height: 12),
-          _CheckoutButton(isEmpty: isEmpty, onCheckout: onCheckout),
+          _CheckoutButton(
+            isEmpty: isEmpty,
+            onCheckout: onCheckout,
+            isDineInWithTable: orderType == OrderType.dineIn && tableId != null,
+          ),
         ],
       ),
     );
@@ -492,8 +505,13 @@ class _TotalRow extends ConsumerWidget {
 class _CheckoutButton extends ConsumerWidget {
   final bool isEmpty;
   final VoidCallback onCheckout;
+  final bool isDineInWithTable;
 
-  const _CheckoutButton({required this.isEmpty, required this.onCheckout});
+  const _CheckoutButton({
+    required this.isEmpty,
+    required this.onCheckout,
+    this.isDineInWithTable = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -501,20 +519,37 @@ class _CheckoutButton extends ConsumerWidget {
     final total = ref.watch(cartTotalProvider);
     final priceFormatter = ref.watch(priceFormatterProvider);
 
+    final btnColor = isDineInWithTable ? Colors.blue : AppTheme.success;
+    final btnLabel = isEmpty
+        ? l10n.addProductsPlease
+        : isDineInWithTable
+            ? '주방전송'
+            : '${l10n.checkout} ${priceFormatter.format(total)}';
+    final btnIcon = isDineInWithTable ? Icons.restaurant_menu : null;
+
     return SizedBox(
       height: 52,
       child: ElevatedButton(
         onPressed: isEmpty ? null : onCheckout,
         style: ElevatedButton.styleFrom(
-          backgroundColor: isEmpty ? AppTheme.textDisabled : AppTheme.success,
+          backgroundColor: isEmpty ? AppTheme.textDisabled : btnColor,
           disabledBackgroundColor: AppTheme.textDisabled,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 0,
         ),
-        child: Text(
-          isEmpty ? l10n.addProductsPlease : '${l10n.checkout} ${priceFormatter.format(total)}',
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (btnIcon != null) ...[
+              Icon(btnIcon, size: 20),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              btnLabel,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            ),
+          ],
         ),
       ),
     );

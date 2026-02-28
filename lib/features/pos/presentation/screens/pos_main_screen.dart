@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,9 +6,11 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/responsive/responsive_helper.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
+
 import '../../../../providers/database_providers.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../auth/presentation/screens/pin_login_screen.dart';
+import '../../../tables/data/tables_providers.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/category_provider.dart';
 import '../widgets/barcode_input_modal.dart';
@@ -36,6 +39,8 @@ class PosMainScreen extends ConsumerWidget {
     this.orderType,
     this.existingSaleId,
   });
+
+  bool get _isDineInWithTable => orderType == OrderType.dineIn && tableId != null;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -88,8 +93,12 @@ class PosMainScreen extends ConsumerWidget {
                 SizedBox(
                   width: ResponsiveHelper.getCartPanelWidth(deviceType),
                   child: CartPanel(
-                    onCheckout: () => _showPaymentModal(context),
+                    onCheckout: _isDineInWithTable
+                        ? () => _handleSendToKitchen(context, ref)
+                        : () => _showPaymentModal(context),
                     isSidePanel: true,
+                    orderType: orderType,
+                    tableId: tableId,
                   ),
                 ),
               ],
@@ -114,8 +123,12 @@ class PosMainScreen extends ConsumerWidget {
                   ),
                 ),
                 CartPanel(
-                  onCheckout: () => _showPaymentModal(context),
+                  onCheckout: _isDineInWithTable
+                      ? () => _handleSendToKitchen(context, ref)
+                      : () => _showPaymentModal(context),
                   isSidePanel: false,
+                  orderType: orderType,
+                  tableId: tableId,
                 ),
               ],
             );
@@ -466,6 +479,106 @@ class _ProductGrid extends ConsumerWidget {
 // ────────────────────────────────────────────────────────
 // 모달 & 바코드 핸들러 함수들
 // ────────────────────────────────────────────────────────
+
+/// 주방전송 핸들러 (dineIn + tableId)
+/// Sale 생성 → KitchenOrder 자동 생성 → 테이블 상태 업데이트 → FloorPlan 이동
+Future<void> _handleSendToKitchen(BuildContext context, WidgetRef ref) async {
+  final cart = ref.read(cartProvider);
+  if (cart.isEmpty) return;
+
+  final navigator = Navigator.of(context);
+  final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+  // PosMainScreen의 tableId/tableNumber 접근 (context에서 widget 찾기)
+  final posScreen = context.findAncestorWidgetOfExactType<PosMainScreen>();
+  if (posScreen == null) return;
+
+  final tableId = posScreen.tableId;
+  final tableNumber = posScreen.tableNumber;
+  if (tableId == null) return;
+
+  try {
+    final salesDao = ref.read(salesDaoProvider);
+    final tablesDao = ref.read(tablesDaoProvider);
+
+    final subtotal = ref.read(cartSubtotalProvider);
+    final discount = ref.read(cartAllDiscountProvider);
+    final total = ref.read(cartTotalProvider);
+    final employeeId = ref.read(currentEmployeeProvider)?.id;
+
+    // Sale 생성 (isOpenTab=true, status='open')
+    final sale = await salesDao.createSale(
+      sale: SalesCompanion.insert(
+        saleNumber: 'S${DateTime.now().millisecondsSinceEpoch}',
+        paymentMethod: 'pending',
+        subtotal: Value(subtotal),
+        discount: Value(discount),
+        total: Value(total),
+        orderType: Value(OrderType.dineIn.dbValue),
+        tableId: Value(tableId),
+        isOpenTab: const Value(true),
+        status: const Value('open'),
+        employeeId: Value(employeeId),
+      ),
+      items: cart
+          .map((item) => SaleItemsCompanion.insert(
+                saleId: 0, // overridden by createSale
+                productId: item.product.id,
+                productName: item.product.name,
+                sku: item.product.sku,
+                unitPrice: item.product.price,
+                quantity: item.quantity,
+                total: item.subtotal,
+              ))
+          .toList(),
+      tableNumber: tableNumber,
+      createKitchenOrder: true,
+    );
+
+    // 테이블 상태 → ORDERING
+    await tablesDao.updateTableStatus(
+      tableId: tableId,
+      status: 'ORDERING',
+      currentSaleId: sale.id,
+      occupiedAt: DateTime.now(),
+    );
+
+    // 장바구니 초기화
+    ref.read(cartProvider.notifier).clear();
+    ref.read(discountValueProvider.notifier).state = 0;
+    ref.read(promotionProductIdProvider.notifier).state = null;
+
+    // FloorPlanScreen으로 복귀 (push된 PosMainScreen에서 pop)
+    navigator.pop();
+
+    scaffoldMessenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Table $tableNumber 주방전송 완료'),
+          backgroundColor: Colors.blue,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+  } catch (e) {
+    if (context.mounted) {
+      scaffoldMessenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('주방전송 실패: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+    }
+  }
+}
 
 /// 결제 모달 표시
 void _showPaymentModal(BuildContext context) {

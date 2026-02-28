@@ -2451,4 +2451,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get preparing => 'Preparing';
+
+  @override
+  String get phoneDelivery => 'Phone Delivery';
+
+  @override
+  String get deliveryPhone => 'Phone Number';
+
+  @override
+  String get estimatedTime => 'Estimated Time';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get startOrder => 'Start Order';
 }

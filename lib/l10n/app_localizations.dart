@@ -4657,6 +4657,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preparing'**
   String get preparing;
+
+  /// No description provided for @phoneDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Delivery'**
+  String get phoneDelivery;
+
+  /// No description provided for @deliveryPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get deliveryPhone;
+
+  /// No description provided for @estimatedTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated Time'**
+  String get estimatedTime;
+
+  /// No description provided for @note.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get note;
+
+  /// No description provided for @startOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Order'**
+  String get startOrder;
 }
 
 class _AppLocalizationsDelegate

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../features/auth/providers/auth_provider.dart';
+import '../../../settings/providers/store_settings_provider.dart';
 import '../../domain/services/attendance_service.dart';
 
 /// 체크인/체크아웃 화면
@@ -20,11 +22,84 @@ class _AttendanceCheckScreenState
     extends ConsumerState<AttendanceCheckScreen> {
   final _noteController = TextEditingController();
   bool _isProcessing = false;
+  String _currentLocation = '';
+  double? _latitude;
+  bool _locationLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLocation();
+  }
 
   @override
   void dispose() {
     _noteController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchLocation() async {
+    setState(() => _locationLoading = true);
+
+    try {
+      final settings = ref.read(storeSettingsProvider);
+      final storeName =
+          settings[StoreSettingsKeys.storeName] as String? ?? 'Oda POS';
+
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() {
+          _currentLocation = storeName;
+          _locationLoading = false;
+        });
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() {
+            _currentLocation = storeName;
+            _locationLoading = false;
+          });
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        setState(() {
+          _currentLocation = storeName;
+          _locationLoading = false;
+        });
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium,
+        timeLimit: const Duration(seconds: 10),
+      );
+
+      if (mounted) {
+        setState(() {
+          _latitude = position.latitude;
+          _currentLocation =
+              '$storeName (${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)})';
+          _locationLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Location error: $e');
+      if (mounted) {
+        final settings = ref.read(storeSettingsProvider);
+        final storeName =
+            settings[StoreSettingsKeys.storeName] as String? ?? 'Oda POS';
+        setState(() {
+          _currentLocation = storeName;
+          _locationLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _handleCheckIn() async {
@@ -43,7 +118,7 @@ class _AttendanceCheckScreenState
         note: _noteController.text.trim().isEmpty
             ? null
             : _noteController.text.trim(),
-        location: 'Main Office', // TODO: GPS integration
+        location: _currentLocation.isNotEmpty ? _currentLocation : 'Unknown',
       );
 
       if (!mounted) return;
@@ -180,6 +255,52 @@ class _AttendanceCheckScreenState
           children: [
             // 직원 정보 카드
             _buildEmployeeCard(employee),
+            const SizedBox(height: 12),
+
+            // 위치 정보
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      color: _latitude != null ? Colors.green : Colors.orange,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _locationLoading
+                          ? const Row(
+                              children: [
+                                SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2)),
+                                SizedBox(width: 8),
+                                Text('Getting location...',
+                                    style: TextStyle(fontSize: 13)),
+                              ],
+                            )
+                          : Text(
+                              _currentLocation,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                    ),
+                    if (!_locationLoading)
+                      IconButton(
+                        icon: const Icon(Icons.refresh, size: 18),
+                        onPressed: _fetchLocation,
+                        tooltip: 'Refresh location',
+                      ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
 
             // 현재 시간

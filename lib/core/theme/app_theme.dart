@@ -12,13 +12,13 @@ class AppTheme {
   static const Color error = Color(0xFFE53935);          // 빨강
   static const Color warning = OdaColors.orange500;       // #E58435
   static const Color info = OdaColors.blue400;            // #2196F3
-  static const Color background = Color(0xFFF5F5F7);     // 배경 라이트 그레이
+  static const Color background = OdaColors.neutral05;    // #F9FAFC (Oda Phase 2)
   static const Color cardWhite = Color(0xFFFFFFFF);      // 카드 흰색
   static const Color divider = OdaColors.neutral80;       // #B9B9C3
-  static const Color textPrimary = Color(0xFF1A1A1A);    // 본문 텍스트
-  static const Color textSecondary = Color(0xFF6B7280);  // 세컨더리 텍스트
-  static const Color textDisabled = Color(0xFFAEB5BC);   // 비활성 텍스트
-  static const Color iconColor = Color(0xFF6B7280);      // 아이콘
+  static const Color textPrimary = OdaColors.neutral400;  // #615F6D (Oda Phase 2)
+  static const Color textSecondary = OdaColors.neutral200; // #8A8797 (Oda Phase 2)
+  static const Color textDisabled = OdaColors.neutral100;  // #9F9DAA (Oda Phase 2)
+  static const Color iconColor = OdaColors.neutral200;    // 아이콘 (Oda Phase 2)
 
   // ─── Light Theme ────────────────────────────────
   static ThemeData get lightTheme {
@@ -158,7 +158,7 @@ class AppTheme {
         bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: textPrimary, height: 20/14),
         labelLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: textPrimary, height: 20/15),
         labelMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary, height: 20/14),
-        labelSmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textPrimary, height: 16/12),
+        labelSmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: OdaColors.neutral500, height: 16/12) // 12px: slightly darker for readability,
       ),
     );
   }

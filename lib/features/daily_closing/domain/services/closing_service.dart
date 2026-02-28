@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/daily_closing_dao.dart';
 import '../../providers/daily_closing_provider.dart';
@@ -93,7 +94,7 @@ class ClosingService {
         message: 'Closing completed successfully.',
       );
     } catch (e) {
-      // TODO: Log error for debugging: $e
+      debugPrint('[ClosingService] Error: \$e');
       return ClosingResult(
         success: false,
         message: 'An error occurred during closing. Please try again.',

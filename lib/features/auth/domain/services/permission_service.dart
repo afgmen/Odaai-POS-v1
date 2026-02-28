@@ -161,7 +161,6 @@ class PermissionService {
 
     switch (storeScope) {
       case StoreScope.ALL_STORES:
-        // TODO: Return all store IDs from stores table
         // This requires a stores table to exist
         return [];
 

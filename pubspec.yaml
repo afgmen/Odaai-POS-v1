@@ -51,6 +51,9 @@ dependencies:
   excel: ^4.0.2
   file_picker: ^6.1.9
 
+  # 위치
+  geolocator: ^12.0.0
+
   # 유틸리티
   uuid: ^4.4.0
   logger: ^2.3.0

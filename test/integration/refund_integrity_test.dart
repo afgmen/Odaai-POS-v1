@@ -2,7 +2,6 @@ import 'package:drift/drift.dart' show Value, Variable;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oda_pos/database/app_database.dart';
-import 'package:oda_pos/database/daos/sales_dao.dart';
 
 // ---------------------------------------------------------------------------
 // Section B: Refund integrity integration tests.

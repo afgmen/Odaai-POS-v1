@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../database/app_database.dart';
 import '../../../providers/database_providers.dart';
 import 'tables_dao.dart';
-import '../../../database/daos/sales_dao.dart';
 
 // ============================================================
 // DAO Provider

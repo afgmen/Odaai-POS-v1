@@ -181,7 +181,7 @@ void main() {
     // Simulates PermissionService.hasPermission() without a real DB.
     // Mirrors the core logic: OWNER → always true, others → check DB.
 
-    bool _simulateHasPermission({
+    bool simulateHasPermission({
       required String role,
       required bool rbacEnabled,
       required bool roleHasPermission,
@@ -193,7 +193,7 @@ void main() {
 
     test('RBAC disabled → any role has all permissions', () {
       expect(
-        _simulateHasPermission(
+        simulateHasPermission(
           role: 'STAFF',
           rbacEnabled: false,
           roleHasPermission: false,
@@ -204,7 +204,7 @@ void main() {
 
     test('RBAC enabled + OWNER → always true', () {
       expect(
-        _simulateHasPermission(
+        simulateHasPermission(
           role: 'OWNER',
           rbacEnabled: true,
           roleHasPermission: false, // irrelevant for OWNER
@@ -215,7 +215,7 @@ void main() {
 
     test('RBAC enabled + STAFF + permission granted → true', () {
       expect(
-        _simulateHasPermission(
+        simulateHasPermission(
           role: 'STAFF',
           rbacEnabled: true,
           roleHasPermission: true,
@@ -226,7 +226,7 @@ void main() {
 
     test('RBAC enabled + STAFF + permission NOT granted → false', () {
       expect(
-        _simulateHasPermission(
+        simulateHasPermission(
           role: 'STAFF',
           rbacEnabled: true,
           roleHasPermission: false,
@@ -237,7 +237,7 @@ void main() {
 
     test('RBAC enabled + STORE_MANAGER without REPORT_VIEW → false', () {
       expect(
-        _simulateHasPermission(
+        simulateHasPermission(
           role: 'STORE_MANAGER',
           rbacEnabled: true,
           roleHasPermission: false, // REPORT_VIEW not granted

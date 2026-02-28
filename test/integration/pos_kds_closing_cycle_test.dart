@@ -2,8 +2,6 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oda_pos/database/app_database.dart';
-import 'package:oda_pos/database/daos/sales_dao.dart';
-import 'package:oda_pos/features/daily_closing/data/daily_closing_dao.dart';
 
 // ---------------------------------------------------------------------------
 // Section A: POS → KDS → Daily Closing full cycle integration tests.

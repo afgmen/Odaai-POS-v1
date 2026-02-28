@@ -243,7 +243,7 @@ void main() {
       // Simulates applicablePromotionsProvider filtering: promoProductId == null
       // means applies to all; otherwise only to matching product.
       const targetProductId = 5;
-      const promoProductId = 5; // matches
+      final int? promoProductId = 5; // matches
 
       final applies = promoProductId == null || promoProductId == targetProductId;
       expect(applies, isTrue);
@@ -251,7 +251,7 @@ void main() {
 
     test('promotion with different productId does not apply', () {
       const targetProductId = 5;
-      const promoProductId = 7; // different product
+      final int? promoProductId = 7; // different product
 
       final applies = promoProductId == null || promoProductId == targetProductId;
       expect(applies, isFalse);

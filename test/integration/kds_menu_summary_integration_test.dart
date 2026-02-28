@@ -2,7 +2,6 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oda_pos/database/app_database.dart';
-import 'package:oda_pos/database/daos/sales_dao.dart';
 import 'package:oda_pos/features/kds/data/models/kitchen_order_with_items.dart';
 import 'package:oda_pos/features/kds/data/models/menu_item_summary.dart';
 
@@ -194,7 +193,7 @@ void main() {
       await _insertProduct(db, id: 1, name: 'Latte', price: 6000);
 
       final r1 = await _createSaleWithKds(db, productId: 1, productName: 'Latte', unitPrice: 6000, quantity: 2);
-      final r2 = await _createSaleWithKds(db, productId: 1, productName: 'Latte', unitPrice: 6000, quantity: 1);
+      final _ = await _createSaleWithKds(db, productId: 1, productName: 'Latte', unitPrice: 6000, quantity: 1);
 
       // Before: both PENDING
       final before = _buildSummary(await db.kitchenOrdersDao.getActiveOrdersWithItems());
@@ -235,7 +234,7 @@ void main() {
       await _insertProduct(db, id: 1, name: 'Juice', price: 7000);
 
       final r1 = await _createSaleWithKds(db, productId: 1, productName: 'Juice', unitPrice: 7000, quantity: 2);
-      final r2 = await _createSaleWithKds(db, productId: 1, productName: 'Juice', unitPrice: 7000, quantity: 1);
+      final _ = await _createSaleWithKds(db, productId: 1, productName: 'Juice', unitPrice: 7000, quantity: 1);
 
       // Before cancel: total = 3
       final before = _buildSummary(await db.kitchenOrdersDao.getActiveOrdersWithItems());

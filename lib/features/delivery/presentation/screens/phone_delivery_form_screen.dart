@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../customers/providers/customers_provider.dart';
 import '../../../pos/data/models/order_type.dart';
 import '../../../pos/presentation/screens/pos_main_screen.dart';
 
@@ -23,6 +25,8 @@ class _PhoneDeliveryFormScreenState
   final _noteController = TextEditingController();
   String _paymentMethod = 'cod'; // cod | prepaid
   int _estimatedMinutes = 30;
+  Customer? _matchedCustomer;
+  bool _isLookingUp = false;
 
   @override
   void dispose() {
@@ -57,10 +61,19 @@ class _PhoneDeliveryFormScreenState
               decoration: InputDecoration(
                 hintText: '0912 345 678',
                 prefixIcon: const Icon(Icons.phone),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: _lookupCustomer,
-                ),
+                suffixIcon: _isLookingUp
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child:
+                                CircularProgressIndicator(strokeWidth: 2)),
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.search),
+                        onPressed: _lookupCustomer,
+                      ),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
@@ -68,6 +81,58 @@ class _PhoneDeliveryFormScreenState
                 if (value.length >= 10) _lookupCustomer();
               },
             ),
+            if (_matchedCustomer != null)
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(10),
+                  border:
+                      Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle,
+                        color: Colors.green, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _matchedCustomer!.name,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 14),
+                          ),
+                          if (_matchedCustomer!.phone?.isNotEmpty ?? false)
+                            Text(
+                              _matchedCustomer!.phone!,
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey[600]),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (_matchedCustomer!.points > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${_matchedCustomer!.points} pts',
+                          style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.orange),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 16),
 
             // 고객명
@@ -179,9 +244,56 @@ class _PhoneDeliveryFormScreenState
     );
   }
 
-  void _lookupCustomer() {
-    // TODO: 고객 DB에서 전화번호로 조회
-    // 자동완성: nameController, addressController
+  Future<void> _lookupCustomer() async {
+    final phone = _phoneController.text.trim();
+    if (phone.length < 9) return;
+
+    setState(() => _isLookingUp = true);
+
+    try {
+      final dao = ref.read(customersDaoProvider);
+
+      // Try exact match first
+      Customer? customer = await dao.getCustomerByPhone(phone);
+
+      // If no exact match, try search
+      if (customer == null) {
+        final results = await dao.searchCustomers(phone);
+        if (results.isNotEmpty) {
+          customer = results.first;
+        }
+      }
+
+      if (customer != null && mounted) {
+        setState(() {
+          _matchedCustomer = customer;
+          _nameController.text = customer!.name;
+          if (customer.note != null &&
+              customer.note!.isNotEmpty &&
+              _addressController.text.isEmpty) {
+            _addressController.text = customer.note!;
+          }
+        });
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text('Customer found: ${customer.name}'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+      }
+    } catch (e) {
+      debugPrint('Customer lookup failed: $e');
+    } finally {
+      if (mounted) setState(() => _isLookingUp = false);
+    }
   }
 
   void _startOrder() {

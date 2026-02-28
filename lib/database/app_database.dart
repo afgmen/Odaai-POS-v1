@@ -123,7 +123,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration {
@@ -268,6 +268,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 19) {
           // v18 → v19: Round number for SaleItems
           await _safeAddColumn('sale_items', 'round_number', 'INTEGER NOT NULL DEFAULT 1');
+        }
+        if (from < 20) {
+          // v19 → v20: KDS orderType normalization
+          await _safeAddColumn('kitchen_orders', 'order_type', "TEXT NOT NULL DEFAULT 'dineIn'");
         }
       },
       beforeOpen: (details) async {

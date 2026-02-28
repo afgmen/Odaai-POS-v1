@@ -29,6 +29,7 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
     String? tableNumber,
     String? specialInstructions,
     String priority = 'NORMAL',
+    String orderType = 'dineIn',
   }) async {
     return await into(kitchenOrders).insert(
       KitchenOrdersCompanion.insert(
@@ -36,6 +37,7 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
         tableNumber: Value(tableNumber),
         specialInstructions: Value(specialInstructions),
         priority: Value(priority),
+        orderType: Value(orderType),
       ),
     );
   }

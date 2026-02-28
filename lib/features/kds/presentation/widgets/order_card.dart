@@ -71,28 +71,8 @@ class OrderCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Phase 4: 주문 유형 뱃지
-                  if (order.specialInstructions != null &&
-                      order.specialInstructions!.startsWith('orderType:'))
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: Colors.blue.withValues(alpha: 0.3)),
-                      ),
-                      child: Text(
-                        order.specialInstructions!
-                            .replaceFirst('orderType:', ''),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ),
+                  // Order type badge (normalized column)
+                  _OrderTypeBadge(orderType: order.orderType),
 
                   // 긴급 아이콘
                   if (priority.isUrgent)
@@ -300,5 +280,38 @@ class OrderCard extends StatelessWidget {
       case OrderStatus.cancelled:
         return Icons.cancel;
     }
+  }
+}
+
+class _OrderTypeBadge extends StatelessWidget {
+  final String orderType;
+  const _OrderTypeBadge({required this.orderType});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (orderType) {
+      'dineIn' => ('Dine In', Colors.green),
+      'takeaway' => ('Takeaway', Colors.orange),
+      'phoneDelivery' => ('Phone Delivery', Colors.blue),
+      'platformDelivery' => ('Platform', Colors.purple),
+      _ => ('Dine In', Colors.green),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
   }
 }

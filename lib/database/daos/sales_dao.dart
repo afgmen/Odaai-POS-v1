@@ -45,11 +45,13 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
       // KDS 주문 자동 생성 (restaurant/cafe용)
       if (createKitchenOrder) {
         try {
+          final insertedSale = await (select(sales)..where((s) => s.id.equals(saleId))).getSingle();
           final kitchenOrdersDao = db.kitchenOrdersDao;
           await kitchenOrdersDao.createOrderFromSale(
             saleId: saleId,
             tableNumber: tableNumber,
             specialInstructions: specialInstructions,
+            orderType: insertedSale.orderType,
           );
         } catch (e) {
           // KDS 기능이 없는 경우 무시
@@ -196,10 +198,12 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
       // Create kitchen order for new round
       if (createKitchenOrder) {
         try {
+          final sale = await (select(sales)..where((s) => s.id.equals(saleId))).getSingle();
           await db.kitchenOrdersDao.createOrderFromSale(
             saleId: saleId,
             tableNumber: tableNumber,
             specialInstructions: 'Round $roundNumber',
+            orderType: sale.orderType,
           );
         } catch (e) {
           debugPrint('Kitchen order creation skipped: $e');

@@ -72,6 +72,7 @@ KitchenOrder _order(int id, String status) => KitchenOrder(
       saleId: id,
       status: status,
       priority: 'NORMAL',
+      orderType: 'dineIn',
       createdAt: DateTime(2024),
       updatedAt: DateTime(2024),
     );

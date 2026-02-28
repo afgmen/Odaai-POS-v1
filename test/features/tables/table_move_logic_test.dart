@@ -72,7 +72,6 @@ void main() {
 
   group('Table move: sale association', () {
     test('sale.tableId should update to target table', () {
-      const sourceSaleId = 42;
       const targetTableId = 7;
       // The move updates Sale.tableId = targetTable.id
       final updatedTableId = targetTableId;

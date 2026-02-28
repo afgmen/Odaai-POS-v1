@@ -13,6 +13,7 @@ import 'security_settings_screen.dart';
 import '../widgets/enable_rbac_button.dart';
 import '../widgets/delivery_server_settings.dart';
 import '../../../delivery/presentation/screens/delivery_platform_settings_screen.dart';
+import '../../providers/store_settings_provider.dart';
 
 /// 설정 화면 — 언어, 통화, 매장 정보, 앱 정보 등
 class SettingsScreen extends ConsumerWidget {
@@ -24,6 +25,7 @@ class SettingsScreen extends ConsumerWidget {
     final currentLang = ref.watch(currentLanguageProvider);
     final currentCurrency = ref.watch(currencyProvider);
     final rbacEnabled = ref.watch(rbacSettingProvider);
+    final storeSettings = ref.watch(storeSettingsProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -85,33 +87,43 @@ class SettingsScreen extends ConsumerWidget {
               _InfoTile(
                 icon: Icons.storefront,
                 label: l10n.storeName,
-                value: 'Oda POS',
+                value: storeSettings[StoreSettingsKeys.storeName] as String,
                 onTap: () => _showEditDialog(
                   context,
+                  ref,
                   title: l10n.storeName,
-                  currentValue: 'Oda POS',
+                  currentValue: storeSettings[StoreSettingsKeys.storeName] as String,
+                  settingsKey: StoreSettingsKeys.storeName,
                 ),
               ),
               const Divider(height: 1),
               _InfoTile(
                 icon: Icons.phone,
                 label: l10n.storePhone,
-                value: '-',
+                value: (storeSettings[StoreSettingsKeys.storePhone] as String).isNotEmpty
+                    ? storeSettings[StoreSettingsKeys.storePhone] as String
+                    : '-',
                 onTap: () => _showEditDialog(
                   context,
+                  ref,
                   title: l10n.storePhone,
-                  currentValue: '',
+                  currentValue: storeSettings[StoreSettingsKeys.storePhone] as String,
+                  settingsKey: StoreSettingsKeys.storePhone,
                 ),
               ),
               const Divider(height: 1),
               _InfoTile(
                 icon: Icons.location_on,
                 label: l10n.storeAddress,
-                value: '-',
+                value: (storeSettings[StoreSettingsKeys.storeAddress] as String).isNotEmpty
+                    ? storeSettings[StoreSettingsKeys.storeAddress] as String
+                    : '-',
                 onTap: () => _showEditDialog(
                   context,
+                  ref,
                   title: l10n.storeAddress,
-                  currentValue: '',
+                  currentValue: storeSettings[StoreSettingsKeys.storeAddress] as String,
+                  settingsKey: StoreSettingsKeys.storeAddress,
                 ),
               ),
             ],
@@ -130,20 +142,29 @@ class SettingsScreen extends ConsumerWidget {
               _InfoTile(
                 icon: Icons.message,
                 label: l10n.footerMessage,
-                value: l10n.footerDefault,
+                value: (storeSettings[StoreSettingsKeys.receiptFooter] as String).isNotEmpty
+                    ? storeSettings[StoreSettingsKeys.receiptFooter] as String
+                    : l10n.footerDefault,
                 onTap: () => _showEditDialog(
                   context,
+                  ref,
                   title: l10n.footerMessage,
-                  currentValue: l10n.footerDefault,
+                  currentValue: (storeSettings[StoreSettingsKeys.receiptFooter] as String).isNotEmpty
+                      ? storeSettings[StoreSettingsKeys.receiptFooter] as String
+                      : l10n.footerDefault,
+                  settingsKey: StoreSettingsKeys.receiptFooter,
                 ),
               ),
               const Divider(height: 1),
               _SwitchTile(
                 icon: Icons.qr_code,
                 label: l10n.showQrCode,
-                value: false,
+                value: storeSettings[StoreSettingsKeys.showQrCode] as bool,
                 onChanged: (val) {
-                  // TODO: SharedPreferences에 저장
+                  ref.read(storeSettingsProvider.notifier).setBool(
+                    StoreSettingsKeys.showQrCode,
+                    val,
+                  );
                 },
               ),
             ],
@@ -276,7 +297,13 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context, {required String title, required String currentValue}) {
+  void _showEditDialog(
+    BuildContext context,
+    WidgetRef ref, {
+    required String title,
+    required String currentValue,
+    required String settingsKey,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: currentValue);
     showDialog(
@@ -297,8 +324,21 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              // TODO: SharedPreferences에 저장
+              ref.read(storeSettingsProvider.notifier).setString(
+                settingsKey,
+                controller.text,
+              );
               Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$title saved'),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: const EdgeInsets.all(16),
+                ),
+              );
             },
             child: Text(l10n.save),
           ),

@@ -7,6 +7,7 @@ import '../../../customers/presentation/screens/customer_management_screen.dart'
 import '../../../customers/providers/customers_provider.dart';
 import '../../domain/services/loyalty_service.dart';
 import '../../providers/loyalty_provider.dart';
+import '../../../auth/providers/auth_provider.dart';
 
 /// 로열티 프로그램 대시보드 화면
 class LoyaltyDashboardScreen extends ConsumerWidget {
@@ -468,8 +469,8 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
     if (confirmed == true && context.mounted) {
       try {
         final loyaltyService = ref.read(loyaltyServiceProvider);
-        // TODO: employeeId는 현재 로그인된 직원 ID로 교체 필요
-        await loyaltyService.grantBirthdayBonus(customer.id, 1);
+        final employee = ref.read(currentEmployeeProvider);
+        await loyaltyService.grantBirthdayBonus(customer.id, employee?.id ?? 1);
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

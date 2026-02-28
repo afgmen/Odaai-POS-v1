@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
+import '../../../customers/presentation/screens/customer_management_screen.dart';
+import '../../../customers/providers/customers_provider.dart';
 import '../../domain/services/loyalty_service.dart';
 import '../../providers/loyalty_provider.dart';
 
@@ -486,23 +488,66 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
   }
 
   void _searchCustomer(BuildContext context, WidgetRef ref) {
-    // TODO: 고객 검색 화면으로 이동
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Customer search (coming soon)')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CustomerManagementScreen()),
     );
   }
 
   void _adjustPoints(BuildContext context, WidgetRef ref) {
-    // TODO: 포인트 조정 다이얼로그 표시
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Point adjustment (coming soon)')),
+    showDialog(
+      context: context,
+      builder: (ctx) => _PointAdjustmentDialog(ref: ref),
     );
   }
 
   void _manageTiers(BuildContext context, WidgetRef ref) {
-    // TODO: 등급 관리 화면으로 이동
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Tier management (coming soon)')),
+    final tiersAsync = ref.watch(allTiersProvider);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Tier Management'),
+        content: SizedBox(
+          width: 400,
+          child: tiersAsync.when(
+            data: (tiers) {
+              if (tiers.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Text('No tiers configured'),
+                );
+              }
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: tiers.map((tier) {
+                    return Card(
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: _getTierColor(tier.tierCode),
+                          child: const Icon(Icons.military_tech, color: Colors.white, size: 20),
+                        ),
+                        title: Text(_getTierName(tier.tierCode)),
+                        subtitle: Text('Min Spent: ${tier.minSpent} — Earn Rate: ${(tier.pointRate * 100).toStringAsFixed(1)}%'),
+                        trailing: Text(tier.tierCode, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => Text('Error: $err'),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -540,8 +585,10 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              // TODO: 설정 편집 기능
               Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Settings editor available in admin panel')),
+              );
             },
             child: const Text('Edit'),
           ),
@@ -561,5 +608,214 @@ class LoyaltyDashboardScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+class _PointAdjustmentDialog extends StatefulWidget {
+  final WidgetRef ref;
+  const _PointAdjustmentDialog({required this.ref});
+
+  @override
+  State<_PointAdjustmentDialog> createState() => _PointAdjustmentDialogState();
+}
+
+class _PointAdjustmentDialogState extends State<_PointAdjustmentDialog> {
+  final _searchController = TextEditingController();
+  final _pointsController = TextEditingController();
+  final _reasonController = TextEditingController();
+  Customer? _selectedCustomer;
+  List<Customer> _searchResults = [];
+  bool _isAdding = true;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _pointsController.dispose();
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _search(String query) async {
+    if (query.length < 2) {
+      setState(() => _searchResults = []);
+      return;
+    }
+    final dao = widget.ref.read(customersDaoProvider);
+    final results = await dao.searchCustomers(query);
+    if (mounted) setState(() => _searchResults = results);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Adjust Points'),
+      content: SizedBox(
+        width: 400,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search customer by name or phone',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onChanged: _search,
+              ),
+
+              if (_searchResults.isNotEmpty && _selectedCustomer == null)
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 150),
+                  margin: const EdgeInsets.only(top: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _searchResults.length,
+                    itemBuilder: (_, i) {
+                      final c = _searchResults[i];
+                      return ListTile(
+                        dense: true,
+                        title: Text(c.name),
+                        subtitle: Text(c.phone ?? ''),
+                        trailing: Text('${c.points}P', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        onTap: () => setState(() {
+                          _selectedCustomer = c;
+                          _searchController.text = c.name;
+                          _searchResults = [];
+                        }),
+                      );
+                    },
+                  ),
+                ),
+
+              if (_selectedCustomer != null)
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text('${_selectedCustomer!.name} — ${_selectedCustomer!.points}P')),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () => setState(() {
+                          _selectedCustomer = null;
+                          _searchController.clear();
+                        }),
+                      ),
+                    ],
+                  ),
+                ),
+
+              const SizedBox(height: 16),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Text('Add'),
+                      selected: _isAdding,
+                      selectedColor: Colors.green.withValues(alpha: 0.2),
+                      onSelected: (_) => setState(() => _isAdding = true),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Text('Deduct'),
+                      selected: !_isAdding,
+                      selectedColor: Colors.red.withValues(alpha: 0.2),
+                      onSelected: (_) => setState(() => _isAdding = false),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              TextField(
+                controller: _pointsController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Points',
+                  prefixIcon: Icon(_isAdding ? Icons.add : Icons.remove),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              TextField(
+                controller: _reasonController,
+                decoration: InputDecoration(
+                  labelText: 'Reason',
+                  hintText: 'e.g. Manual adjustment, Promotion',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _selectedCustomer == null || _pointsController.text.isEmpty
+              ? null
+              : () => _submit(context),
+          child: const Text('Confirm'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submit(BuildContext context) async {
+    final points = int.tryParse(_pointsController.text);
+    if (points == null || points <= 0 || _selectedCustomer == null) return;
+
+    try {
+      final dao = widget.ref.read(customersDaoProvider);
+      if (_isAdding) {
+        await dao.addPoints(_selectedCustomer!.id, points);
+      } else {
+        final success = await dao.usePoints(_selectedCustomer!.id, points);
+        if (!success && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Insufficient points'), backgroundColor: Colors.red),
+          );
+          return;
+        }
+      }
+
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isAdding
+                ? 'Added $points points to ${_selectedCustomer!.name}'
+                : 'Deducted $points points from ${_selectedCustomer!.name}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 }

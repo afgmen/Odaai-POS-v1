@@ -158,8 +158,8 @@ class ProductBarChart extends StatelessWidget {
   Color _barColor(int index) {
     final colors = [
       const Color(0xFF3182F6),
-      const Color(0xFF03B26C),
-      const Color(0xFFFFA726),
+      AppTheme.success,
+      AppTheme.warning,
       const Color(0xFF7B1FA2),
       const Color(0xFFE53935),
       const Color(0xFF00ACC1),

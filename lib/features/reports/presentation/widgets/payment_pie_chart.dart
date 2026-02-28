@@ -139,9 +139,9 @@ class PaymentPieChart extends StatelessWidget {
   }
 
   Color _paymentColor(String method) => switch (method) {
-        'cash' => const Color(0xFF03B26C),
+        'cash' => AppTheme.success,
         'card' => const Color(0xFF3182F6),
-        'qr' => const Color(0xFFFFA726),
+        'qr' => AppTheme.warning,
         'transfer' => const Color(0xFF7B1FA2),
         _ => const Color(0xFF6B7280),
       };

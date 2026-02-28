@@ -61,24 +61,25 @@ class AppTheme {
         ),
       ),
 
-      // ─── Card ─────────────────────────────────
+      // ─── Card (Phase 3-A: radius 10px, subtle shadow) ────
       cardTheme: CardThemeData(
         color: cardWhite,
-        elevation: 0,
+        elevation: 1,
+        shadowColor: Colors.black.withValues(alpha: 0.06),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           side: BorderSide(color: divider, width: 1),
         ),
       ),
 
-      // ─── ElevatedButton ───────────────────────
+      // ─── ElevatedButton (Phase 3-A: radius 8px) ──────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
           ),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
           textStyle: const TextStyle(
@@ -88,13 +89,13 @@ class AppTheme {
         ),
       ),
 
-      // ─── OutlinedButton ───────────────────────
+      // ─── OutlinedButton (Phase 3-A: radius 8px) ──────
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primary,
           side: const BorderSide(color: primary, width: 1.5),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
           ),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
           textStyle: const TextStyle(
@@ -111,28 +112,79 @@ class AppTheme {
         ),
       ),
 
-      // ─── TextField ────────────────────────────
+      // ─── TextField (Phase 3-A: radius 8px) ────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: background,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: divider),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: divider),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: error, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         hintStyle: const TextStyle(color: textDisabled, fontSize: 14),
+      ),
+
+      // ─── SnackBar (Phase 3-A: floating, rounded) ────
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6),
+        ),
+        actionTextColor: OdaColors.green500,
+      ),
+
+      // ─── Dialog (Phase 3-A: rounded, styled) ─────
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        elevation: 24,
+        titleTextStyle: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: OdaColors.neutral500,
+        ),
+        contentTextStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+          color: OdaColors.neutral300,
+        ),
+      ),
+
+      // ─── TabBar (Phase 3-A: underline indicator) ──
+      tabBarTheme: TabBarThemeData(
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: const UnderlineTabIndicator(
+          borderSide: BorderSide(color: primary, width: 2),
+        ),
+        labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+        labelColor: primary,
+        unselectedLabelColor: textSecondary,
+      ),
+
+      // ─── DataTable (Phase 3-A: compact rows) ─────
+      dataTableTheme: const DataTableThemeData(
+        dataRowMinHeight: 40,
+        dataRowMaxHeight: 40,
+        horizontalMargin: 12,
+        columnSpacing: 16,
+        headingTextStyle: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: OdaColors.neutral400,
+        ),
       ),
 
       // ─── Divider ──────────────────────────────

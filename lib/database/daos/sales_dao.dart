@@ -45,11 +45,13 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
       // KDS 주문 자동 생성 (restaurant/cafe용)
       if (createKitchenOrder) {
         try {
+          final insertedSale = await (select(sales)..where((s) => s.id.equals(saleId))).getSingle();
           final kitchenOrdersDao = db.kitchenOrdersDao;
           await kitchenOrdersDao.createOrderFromSale(
             saleId: saleId,
             tableNumber: tableNumber,
             specialInstructions: specialInstructions,
+            orderType: insertedSale.orderType,
           );
         } catch (e) {
           // KDS 기능이 없는 경우 무시
@@ -135,6 +137,77 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
           employeeId: employeeId,
           saleId: saleId,
         );
+      }
+    });
+  }
+
+  // ==================== ROUND NUMBER ====================
+
+  /// Get next round number for an existing sale (for additional orders)
+  Future<int> getNextRoundNumber(int saleId) async {
+    final query = selectOnly(saleItems)
+      ..addColumns([saleItems.roundNumber.max()])
+      ..where(saleItems.saleId.equals(saleId));
+    final result = await query.getSingle();
+    final maxRound = result.read(saleItems.roundNumber.max()) ?? 0;
+    return maxRound + 1;
+  }
+
+  /// Add items to an existing open-tab sale (additional round)
+  Future<void> addItemsToSale({
+    required int saleId,
+    required List<SaleItemsCompanion> items,
+    required int roundNumber,
+    String? tableNumber,
+    bool createKitchenOrder = true,
+  }) async {
+    await transaction(() async {
+      // Insert new items with round number
+      await batch((batch) {
+        batch.insertAll(
+          saleItems,
+          items.map((item) => item.copyWith(
+            saleId: Value(saleId),
+            roundNumber: Value(roundNumber),
+          )),
+        );
+      });
+
+      // Deduct stock
+      final productsDao = ProductsDao(db);
+      for (final item in items) {
+        await productsDao.updateStock(
+          productId: item.productId.value,
+          quantity: -item.quantity.value,
+          type: 'out',
+          reason: 'sale',
+          saleId: saleId,
+        );
+      }
+
+      // Update sale totals
+      final allItems = await getSaleItems(saleId);
+      final newSubtotal = allItems.fold<double>(0, (sum, i) => sum + i.total);
+      await (update(sales)..where((s) => s.id.equals(saleId)))
+          .write(SalesCompanion(
+        subtotal: Value(newSubtotal),
+        total: Value(newSubtotal),
+        needsSync: const Value(true),
+      ));
+
+      // Create kitchen order for new round
+      if (createKitchenOrder) {
+        try {
+          final sale = await (select(sales)..where((s) => s.id.equals(saleId))).getSingle();
+          await db.kitchenOrdersDao.createOrderFromSale(
+            saleId: saleId,
+            tableNumber: tableNumber,
+            specialInstructions: 'Round $roundNumber',
+            orderType: sale.orderType,
+          );
+        } catch (e) {
+          debugPrint('Kitchen order creation skipped: $e');
+        }
       }
     });
   }

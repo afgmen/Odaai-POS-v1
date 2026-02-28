@@ -72,6 +72,7 @@ KitchenOrder _order(int id, String status) => KitchenOrder(
       saleId: id,
       status: status,
       priority: 'NORMAL',
+      orderType: 'dineIn',
       createdAt: DateTime(2024),
       updatedAt: DateTime(2024),
     );
@@ -85,6 +86,7 @@ SaleItem _item(String name, int qty) => SaleItem(
       unitPrice: 1.0,
       quantity: qty,
       total: qty.toDouble(),
+      roundNumber: 1,
     );
 
 KitchenOrderWithItems _orderWithItems(

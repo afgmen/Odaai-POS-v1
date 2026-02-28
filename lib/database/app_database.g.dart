@@ -2644,6 +2644,18 @@ class $SaleItemsTable extends SaleItems
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _roundNumberMeta = const VerificationMeta(
+    'roundNumber',
+  );
+  @override
+  late final GeneratedColumn<int> roundNumber = GeneratedColumn<int>(
+    'round_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2654,6 +2666,7 @@ class $SaleItemsTable extends SaleItems
     unitPrice,
     quantity,
     total,
+    roundNumber,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2729,6 +2742,15 @@ class $SaleItemsTable extends SaleItems
     } else if (isInserting) {
       context.missing(_totalMeta);
     }
+    if (data.containsKey('round_number')) {
+      context.handle(
+        _roundNumberMeta,
+        roundNumber.isAcceptableOrUnknown(
+          data['round_number']!,
+          _roundNumberMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2770,6 +2792,10 @@ class $SaleItemsTable extends SaleItems
         DriftSqlType.double,
         data['${effectivePrefix}total'],
       )!,
+      roundNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}round_number'],
+      )!,
     );
   }
 
@@ -2788,6 +2814,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
   final double unitPrice;
   final int quantity;
   final double total;
+  final int roundNumber;
   const SaleItem({
     required this.id,
     required this.saleId,
@@ -2797,6 +2824,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
     required this.unitPrice,
     required this.quantity,
     required this.total,
+    required this.roundNumber,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2809,6 +2837,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
     map['unit_price'] = Variable<double>(unitPrice);
     map['quantity'] = Variable<int>(quantity);
     map['total'] = Variable<double>(total);
+    map['round_number'] = Variable<int>(roundNumber);
     return map;
   }
 
@@ -2822,6 +2851,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
       unitPrice: Value(unitPrice),
       quantity: Value(quantity),
       total: Value(total),
+      roundNumber: Value(roundNumber),
     );
   }
 
@@ -2839,6 +2869,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
       unitPrice: serializer.fromJson<double>(json['unitPrice']),
       quantity: serializer.fromJson<int>(json['quantity']),
       total: serializer.fromJson<double>(json['total']),
+      roundNumber: serializer.fromJson<int>(json['roundNumber']),
     );
   }
   @override
@@ -2853,6 +2884,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
       'unitPrice': serializer.toJson<double>(unitPrice),
       'quantity': serializer.toJson<int>(quantity),
       'total': serializer.toJson<double>(total),
+      'roundNumber': serializer.toJson<int>(roundNumber),
     };
   }
 
@@ -2865,6 +2897,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
     double? unitPrice,
     int? quantity,
     double? total,
+    int? roundNumber,
   }) => SaleItem(
     id: id ?? this.id,
     saleId: saleId ?? this.saleId,
@@ -2874,6 +2907,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
     unitPrice: unitPrice ?? this.unitPrice,
     quantity: quantity ?? this.quantity,
     total: total ?? this.total,
+    roundNumber: roundNumber ?? this.roundNumber,
   );
   SaleItem copyWithCompanion(SaleItemsCompanion data) {
     return SaleItem(
@@ -2887,6 +2921,9 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
       unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
       total: data.total.present ? data.total.value : this.total,
+      roundNumber: data.roundNumber.present
+          ? data.roundNumber.value
+          : this.roundNumber,
     );
   }
 
@@ -2900,7 +2937,8 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
           ..write('sku: $sku, ')
           ..write('unitPrice: $unitPrice, ')
           ..write('quantity: $quantity, ')
-          ..write('total: $total')
+          ..write('total: $total, ')
+          ..write('roundNumber: $roundNumber')
           ..write(')'))
         .toString();
   }
@@ -2915,6 +2953,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
     unitPrice,
     quantity,
     total,
+    roundNumber,
   );
   @override
   bool operator ==(Object other) =>
@@ -2927,7 +2966,8 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
           other.sku == this.sku &&
           other.unitPrice == this.unitPrice &&
           other.quantity == this.quantity &&
-          other.total == this.total);
+          other.total == this.total &&
+          other.roundNumber == this.roundNumber);
 }
 
 class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
@@ -2939,6 +2979,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
   final Value<double> unitPrice;
   final Value<int> quantity;
   final Value<double> total;
+  final Value<int> roundNumber;
   const SaleItemsCompanion({
     this.id = const Value.absent(),
     this.saleId = const Value.absent(),
@@ -2948,6 +2989,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
     this.unitPrice = const Value.absent(),
     this.quantity = const Value.absent(),
     this.total = const Value.absent(),
+    this.roundNumber = const Value.absent(),
   });
   SaleItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -2958,6 +3000,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
     required double unitPrice,
     required int quantity,
     required double total,
+    this.roundNumber = const Value.absent(),
   }) : saleId = Value(saleId),
        productId = Value(productId),
        productName = Value(productName),
@@ -2974,6 +3017,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
     Expression<double>? unitPrice,
     Expression<int>? quantity,
     Expression<double>? total,
+    Expression<int>? roundNumber,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2984,6 +3028,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
       if (unitPrice != null) 'unit_price': unitPrice,
       if (quantity != null) 'quantity': quantity,
       if (total != null) 'total': total,
+      if (roundNumber != null) 'round_number': roundNumber,
     });
   }
 
@@ -2996,6 +3041,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
     Value<double>? unitPrice,
     Value<int>? quantity,
     Value<double>? total,
+    Value<int>? roundNumber,
   }) {
     return SaleItemsCompanion(
       id: id ?? this.id,
@@ -3006,6 +3052,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
       unitPrice: unitPrice ?? this.unitPrice,
       quantity: quantity ?? this.quantity,
       total: total ?? this.total,
+      roundNumber: roundNumber ?? this.roundNumber,
     );
   }
 
@@ -3036,6 +3083,9 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
     if (total.present) {
       map['total'] = Variable<double>(total.value);
     }
+    if (roundNumber.present) {
+      map['round_number'] = Variable<int>(roundNumber.value);
+    }
     return map;
   }
 
@@ -3049,7 +3099,8 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
           ..write('sku: $sku, ')
           ..write('unitPrice: $unitPrice, ')
           ..write('quantity: $quantity, ')
-          ..write('total: $total')
+          ..write('total: $total, ')
+          ..write('roundNumber: $roundNumber')
           ..write(')'))
         .toString();
   }
@@ -14426,6 +14477,18 @@ class $KitchenOrdersTable extends KitchenOrders
     requiredDuringInsert: false,
     defaultValue: const Constant('NORMAL'),
   );
+  static const VerificationMeta _orderTypeMeta = const VerificationMeta(
+    'orderType',
+  );
+  @override
+  late final GeneratedColumn<String> orderType = GeneratedColumn<String>(
+    'order_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('dineIn'),
+  );
   static const VerificationMeta _specialInstructionsMeta =
       const VerificationMeta('specialInstructions');
   @override
@@ -14522,6 +14585,7 @@ class $KitchenOrdersTable extends KitchenOrders
     saleId,
     status,
     priority,
+    orderType,
     specialInstructions,
     tableNumber,
     startedAt,
@@ -14564,6 +14628,12 @@ class $KitchenOrdersTable extends KitchenOrders
       context.handle(
         _priorityMeta,
         priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('order_type')) {
+      context.handle(
+        _orderTypeMeta,
+        orderType.isAcceptableOrUnknown(data['order_type']!, _orderTypeMeta),
       );
     }
     if (data.containsKey('special_instructions')) {
@@ -14648,6 +14718,10 @@ class $KitchenOrdersTable extends KitchenOrders
         DriftSqlType.string,
         data['${effectivePrefix}priority'],
       )!,
+      orderType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}order_type'],
+      )!,
       specialInstructions: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}special_instructions'],
@@ -14694,6 +14768,9 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
   final int saleId;
   final String status;
   final String priority;
+
+  /// Order type: dineIn | takeaway | phoneDelivery | platformDelivery
+  final String orderType;
   final String? specialInstructions;
   final String? tableNumber;
   final DateTime? startedAt;
@@ -14707,6 +14784,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     required this.saleId,
     required this.status,
     required this.priority,
+    required this.orderType,
     this.specialInstructions,
     this.tableNumber,
     this.startedAt,
@@ -14723,6 +14801,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     map['sale_id'] = Variable<int>(saleId);
     map['status'] = Variable<String>(status);
     map['priority'] = Variable<String>(priority);
+    map['order_type'] = Variable<String>(orderType);
     if (!nullToAbsent || specialInstructions != null) {
       map['special_instructions'] = Variable<String>(specialInstructions);
     }
@@ -14752,6 +14831,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
       saleId: Value(saleId),
       status: Value(status),
       priority: Value(priority),
+      orderType: Value(orderType),
       specialInstructions: specialInstructions == null && nullToAbsent
           ? const Value.absent()
           : Value(specialInstructions),
@@ -14785,6 +14865,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
       saleId: serializer.fromJson<int>(json['saleId']),
       status: serializer.fromJson<String>(json['status']),
       priority: serializer.fromJson<String>(json['priority']),
+      orderType: serializer.fromJson<String>(json['orderType']),
       specialInstructions: serializer.fromJson<String?>(
         json['specialInstructions'],
       ),
@@ -14805,6 +14886,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
       'saleId': serializer.toJson<int>(saleId),
       'status': serializer.toJson<String>(status),
       'priority': serializer.toJson<String>(priority),
+      'orderType': serializer.toJson<String>(orderType),
       'specialInstructions': serializer.toJson<String?>(specialInstructions),
       'tableNumber': serializer.toJson<String?>(tableNumber),
       'startedAt': serializer.toJson<DateTime?>(startedAt),
@@ -14821,6 +14903,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     int? saleId,
     String? status,
     String? priority,
+    String? orderType,
     Value<String?> specialInstructions = const Value.absent(),
     Value<String?> tableNumber = const Value.absent(),
     Value<DateTime?> startedAt = const Value.absent(),
@@ -14834,6 +14917,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     saleId: saleId ?? this.saleId,
     status: status ?? this.status,
     priority: priority ?? this.priority,
+    orderType: orderType ?? this.orderType,
     specialInstructions: specialInstructions.present
         ? specialInstructions.value
         : this.specialInstructions,
@@ -14851,6 +14935,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
       saleId: data.saleId.present ? data.saleId.value : this.saleId,
       status: data.status.present ? data.status.value : this.status,
       priority: data.priority.present ? data.priority.value : this.priority,
+      orderType: data.orderType.present ? data.orderType.value : this.orderType,
       specialInstructions: data.specialInstructions.present
           ? data.specialInstructions.value
           : this.specialInstructions,
@@ -14875,6 +14960,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
           ..write('saleId: $saleId, ')
           ..write('status: $status, ')
           ..write('priority: $priority, ')
+          ..write('orderType: $orderType, ')
           ..write('specialInstructions: $specialInstructions, ')
           ..write('tableNumber: $tableNumber, ')
           ..write('startedAt: $startedAt, ')
@@ -14893,6 +14979,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     saleId,
     status,
     priority,
+    orderType,
     specialInstructions,
     tableNumber,
     startedAt,
@@ -14910,6 +14997,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
           other.saleId == this.saleId &&
           other.status == this.status &&
           other.priority == this.priority &&
+          other.orderType == this.orderType &&
           other.specialInstructions == this.specialInstructions &&
           other.tableNumber == this.tableNumber &&
           other.startedAt == this.startedAt &&
@@ -14925,6 +15013,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
   final Value<int> saleId;
   final Value<String> status;
   final Value<String> priority;
+  final Value<String> orderType;
   final Value<String?> specialInstructions;
   final Value<String?> tableNumber;
   final Value<DateTime?> startedAt;
@@ -14938,6 +15027,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     this.saleId = const Value.absent(),
     this.status = const Value.absent(),
     this.priority = const Value.absent(),
+    this.orderType = const Value.absent(),
     this.specialInstructions = const Value.absent(),
     this.tableNumber = const Value.absent(),
     this.startedAt = const Value.absent(),
@@ -14952,6 +15042,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     required int saleId,
     this.status = const Value.absent(),
     this.priority = const Value.absent(),
+    this.orderType = const Value.absent(),
     this.specialInstructions = const Value.absent(),
     this.tableNumber = const Value.absent(),
     this.startedAt = const Value.absent(),
@@ -14966,6 +15057,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     Expression<int>? saleId,
     Expression<String>? status,
     Expression<String>? priority,
+    Expression<String>? orderType,
     Expression<String>? specialInstructions,
     Expression<String>? tableNumber,
     Expression<DateTime>? startedAt,
@@ -14980,6 +15072,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
       if (saleId != null) 'sale_id': saleId,
       if (status != null) 'status': status,
       if (priority != null) 'priority': priority,
+      if (orderType != null) 'order_type': orderType,
       if (specialInstructions != null)
         'special_instructions': specialInstructions,
       if (tableNumber != null) 'table_number': tableNumber,
@@ -14997,6 +15090,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     Value<int>? saleId,
     Value<String>? status,
     Value<String>? priority,
+    Value<String>? orderType,
     Value<String?>? specialInstructions,
     Value<String?>? tableNumber,
     Value<DateTime?>? startedAt,
@@ -15011,6 +15105,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
       saleId: saleId ?? this.saleId,
       status: status ?? this.status,
       priority: priority ?? this.priority,
+      orderType: orderType ?? this.orderType,
       specialInstructions: specialInstructions ?? this.specialInstructions,
       tableNumber: tableNumber ?? this.tableNumber,
       startedAt: startedAt ?? this.startedAt,
@@ -15036,6 +15131,9 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     }
     if (priority.present) {
       map['priority'] = Variable<String>(priority.value);
+    }
+    if (orderType.present) {
+      map['order_type'] = Variable<String>(orderType.value);
     }
     if (specialInstructions.present) {
       map['special_instructions'] = Variable<String>(specialInstructions.value);
@@ -15071,6 +15169,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
           ..write('saleId: $saleId, ')
           ..write('status: $status, ')
           ..write('priority: $priority, ')
+          ..write('orderType: $orderType, ')
           ..write('specialInstructions: $specialInstructions, ')
           ..write('tableNumber: $tableNumber, ')
           ..write('startedAt: $startedAt, ')
@@ -24469,6 +24568,7 @@ typedef $$SaleItemsTableCreateCompanionBuilder =
       required double unitPrice,
       required int quantity,
       required double total,
+      Value<int> roundNumber,
     });
 typedef $$SaleItemsTableUpdateCompanionBuilder =
     SaleItemsCompanion Function({
@@ -24480,6 +24580,7 @@ typedef $$SaleItemsTableUpdateCompanionBuilder =
       Value<double> unitPrice,
       Value<int> quantity,
       Value<double> total,
+      Value<int> roundNumber,
     });
 
 final class $$SaleItemsTableReferences
@@ -24560,6 +24661,11 @@ class $$SaleItemsTableFilterComposer
 
   ColumnFilters<double> get total => $composableBuilder(
     column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get roundNumber => $composableBuilder(
+    column: $table.roundNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -24649,6 +24755,11 @@ class $$SaleItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get roundNumber => $composableBuilder(
+    column: $table.roundNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$SalesTableOrderingComposer get saleId {
     final $$SalesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -24724,6 +24835,11 @@ class $$SaleItemsTableAnnotationComposer
 
   GeneratedColumn<double> get total =>
       $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<int> get roundNumber => $composableBuilder(
+    column: $table.roundNumber,
+    builder: (column) => column,
+  );
 
   $$SalesTableAnnotationComposer get saleId {
     final $$SalesTableAnnotationComposer composer = $composerBuilder(
@@ -24808,6 +24924,7 @@ class $$SaleItemsTableTableManager
                 Value<double> unitPrice = const Value.absent(),
                 Value<int> quantity = const Value.absent(),
                 Value<double> total = const Value.absent(),
+                Value<int> roundNumber = const Value.absent(),
               }) => SaleItemsCompanion(
                 id: id,
                 saleId: saleId,
@@ -24817,6 +24934,7 @@ class $$SaleItemsTableTableManager
                 unitPrice: unitPrice,
                 quantity: quantity,
                 total: total,
+                roundNumber: roundNumber,
               ),
           createCompanionCallback:
               ({
@@ -24828,6 +24946,7 @@ class $$SaleItemsTableTableManager
                 required double unitPrice,
                 required int quantity,
                 required double total,
+                Value<int> roundNumber = const Value.absent(),
               }) => SaleItemsCompanion.insert(
                 id: id,
                 saleId: saleId,
@@ -24837,6 +24956,7 @@ class $$SaleItemsTableTableManager
                 unitPrice: unitPrice,
                 quantity: quantity,
                 total: total,
+                roundNumber: roundNumber,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -31704,6 +31824,7 @@ typedef $$KitchenOrdersTableCreateCompanionBuilder =
       required int saleId,
       Value<String> status,
       Value<String> priority,
+      Value<String> orderType,
       Value<String?> specialInstructions,
       Value<String?> tableNumber,
       Value<DateTime?> startedAt,
@@ -31719,6 +31840,7 @@ typedef $$KitchenOrdersTableUpdateCompanionBuilder =
       Value<int> saleId,
       Value<String> status,
       Value<String> priority,
+      Value<String> orderType,
       Value<String?> specialInstructions,
       Value<String?> tableNumber,
       Value<DateTime?> startedAt,
@@ -31798,6 +31920,11 @@ class $$KitchenOrdersTableFilterComposer
 
   ColumnFilters<String> get priority => $composableBuilder(
     column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get orderType => $composableBuilder(
+    column: $table.orderType,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -31914,6 +32041,11 @@ class $$KitchenOrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get orderType => $composableBuilder(
+    column: $table.orderType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get specialInstructions => $composableBuilder(
     column: $table.specialInstructions,
     builder: (column) => ColumnOrderings(column),
@@ -31995,6 +32127,9 @@ class $$KitchenOrdersTableAnnotationComposer
 
   GeneratedColumn<String> get priority =>
       $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get orderType =>
+      $composableBuilder(column: $table.orderType, builder: (column) => column);
 
   GeneratedColumn<String> get specialInstructions => $composableBuilder(
     column: $table.specialInstructions,
@@ -32107,6 +32242,7 @@ class $$KitchenOrdersTableTableManager
                 Value<int> saleId = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<String> priority = const Value.absent(),
+                Value<String> orderType = const Value.absent(),
                 Value<String?> specialInstructions = const Value.absent(),
                 Value<String?> tableNumber = const Value.absent(),
                 Value<DateTime?> startedAt = const Value.absent(),
@@ -32120,6 +32256,7 @@ class $$KitchenOrdersTableTableManager
                 saleId: saleId,
                 status: status,
                 priority: priority,
+                orderType: orderType,
                 specialInstructions: specialInstructions,
                 tableNumber: tableNumber,
                 startedAt: startedAt,
@@ -32135,6 +32272,7 @@ class $$KitchenOrdersTableTableManager
                 required int saleId,
                 Value<String> status = const Value.absent(),
                 Value<String> priority = const Value.absent(),
+                Value<String> orderType = const Value.absent(),
                 Value<String?> specialInstructions = const Value.absent(),
                 Value<String?> tableNumber = const Value.absent(),
                 Value<DateTime?> startedAt = const Value.absent(),
@@ -32148,6 +32286,7 @@ class $$KitchenOrdersTableTableManager
                 saleId: saleId,
                 status: status,
                 priority: priority,
+                orderType: orderType,
                 specialInstructions: specialInstructions,
                 tableNumber: tableNumber,
                 startedAt: startedAt,

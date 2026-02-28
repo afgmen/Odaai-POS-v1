@@ -15,6 +15,9 @@ class KitchenOrders extends Table {
   TextColumn get priority => text().withDefault(const Constant('NORMAL'))();
     // 'NORMAL' | 'URGENT'
 
+  /// Order type: dineIn | takeaway | phoneDelivery | platformDelivery
+  TextColumn get orderType => text().withDefault(const Constant('dineIn'))();
+
   // Additional Info
   TextColumn get specialInstructions => text().nullable()();
   TextColumn get tableNumber => text().nullable()(); // 테이블 번호

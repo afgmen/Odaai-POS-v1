@@ -2,13 +2,14 @@ import 'package:drift/drift.dart';
 import '../../../database/app_database.dart';
 import '../../../database/tables/kitchen_orders.dart';
 import '../../../database/tables/sales.dart';
+import '../../../database/tables/store_tables_management.dart';
 import 'models/kitchen_order_with_items.dart';
 
 part 'kitchen_orders_dao.g.dart';
 
 /// KDS (Kitchen Display System) DAO
 /// 주방 주문 관리를 위한 데이터베이스 접근 계층
-@DriftAccessor(tables: [KitchenOrders, Sales, SaleItems])
+@DriftAccessor(tables: [KitchenOrders, Sales, SaleItems, RestaurantTables])
 class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
     with _$KitchenOrdersDaoMixin {
   KitchenOrdersDao(super.db);
@@ -210,9 +211,37 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
         finalUpdates = updates;
     }
 
-    return (update(kitchenOrders)..where((t) => t.id.equals(id)))
+    final result = await (update(kitchenOrders)..where((t) => t.id.equals(id)))
         .write(finalUpdates)
         .then((count) => count > 0);
+
+    // Sync table status based on KDS state change
+    await _syncTableStatus(id, newStatus);
+
+    return result;
+  }
+
+  /// Sync RestaurantTable status when KDS order status changes
+  Future<void> _syncTableStatus(int kitchenOrderId, String newKdsStatus) async {
+    final order = await (select(kitchenOrders)..where((t) => t.id.equals(kitchenOrderId))).getSingleOrNull();
+    if (order == null) return;
+
+    final sale = await (select(sales)..where((s) => s.id.equals(order.saleId))).getSingleOrNull();
+    if (sale == null || sale.tableId == null) return;
+
+    final tableStatus = switch (newKdsStatus) {
+      'PREPARING' => 'PREPARING',
+      'READY' => 'SERVED',
+      'SERVED' => 'CHECKOUT',
+      _ => null,
+    };
+    if (tableStatus == null) return;
+
+    await (update(restaurantTables)..where((t) => t.id.equals(sale.tableId!)))
+        .write(RestaurantTablesCompanion(
+      status: Value(tableStatus),
+      updatedAt: Value(DateTime.now()),
+    ));
   }
 
   /// PENDING → PREPARING

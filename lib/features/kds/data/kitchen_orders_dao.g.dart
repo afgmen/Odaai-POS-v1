@@ -8,6 +8,8 @@ mixin _$KitchenOrdersDaoMixin on DatabaseAccessor<AppDatabase> {
   $KitchenOrdersTable get kitchenOrders => attachedDatabase.kitchenOrders;
   $ProductsTable get products => attachedDatabase.products;
   $SaleItemsTable get saleItems => attachedDatabase.saleItems;
+  $RestaurantTablesTable get restaurantTables =>
+      attachedDatabase.restaurantTables;
   KitchenOrdersDaoManager get managers => KitchenOrdersDaoManager(this);
 }
 
@@ -22,4 +24,9 @@ class KitchenOrdersDaoManager {
       $$ProductsTableTableManager(_db.attachedDatabase, _db.products);
   $$SaleItemsTableTableManager get saleItems =>
       $$SaleItemsTableTableManager(_db.attachedDatabase, _db.saleItems);
+  $$RestaurantTablesTableTableManager get restaurantTables =>
+      $$RestaurantTablesTableTableManager(
+        _db.attachedDatabase,
+        _db.restaurantTables,
+      );
 }

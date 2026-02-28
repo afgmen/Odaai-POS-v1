@@ -122,7 +122,7 @@ class _FloorPlanDesignerTab extends ConsumerWidget {
                                       _handleZoneDragEnd(ref, zone, offset),
                                 )),
                             loading: () => <Widget>[],
-                            error: (_, __) => <Widget>[],
+                            error: (_, _) => <Widget>[],
                           ),
 
                           // Layer 2: Elements (중간)
@@ -137,7 +137,7 @@ class _FloorPlanDesignerTab extends ConsumerWidget {
                                       ref, element, offset),
                                 )),
                             loading: () => <Widget>[],
-                            error: (_, __) => <Widget>[],
+                            error: (_, _) => <Widget>[],
                           ),
 
                           // Layer 3: Tables (최상단)
@@ -151,7 +151,7 @@ class _FloorPlanDesignerTab extends ConsumerWidget {
                                       context, ref, table, offset),
                                 )),
                             loading: () => <Widget>[],
-                            error: (_, __) => <Widget>[],
+                            error: (_, _) => <Widget>[],
                           ),
                         ],
                       ),
@@ -180,13 +180,13 @@ class _FloorPlanDesignerTab extends ConsumerWidget {
         availableCountAsync.when(
           data: (count) => _buildStatBadge('Empty', count, Colors.green),
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
         ),
         const SizedBox(width: 6),
         occupiedCountAsync.when(
           data: (count) => _buildStatBadge('Busy', count, Colors.red),
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
         ),
       ],
     );
@@ -798,7 +798,7 @@ class _FloorPlanPreview extends ConsumerWidget {
                       isDraggable: false,
                     )),
                 loading: () => <Widget>[],
-                error: (_, __) => <Widget>[],
+                error: (_, _) => <Widget>[],
               ),
               // Elements (read-only)
               ...elementsAsync.when(
@@ -807,7 +807,7 @@ class _FloorPlanPreview extends ConsumerWidget {
                       isDraggable: false,
                     )),
                 loading: () => <Widget>[],
-                error: (_, __) => <Widget>[],
+                error: (_, _) => <Widget>[],
               ),
               // Tables (read-only)
               ...tablesAsync.when(
@@ -817,7 +817,7 @@ class _FloorPlanPreview extends ConsumerWidget {
                       isDraggable: false,
                     )),
                 loading: () => <Widget>[],
-                error: (_, __) => <Widget>[],
+                error: (_, _) => <Widget>[],
               ),
             ],
           ),

@@ -101,7 +101,7 @@ class TableMoveModal extends ConsumerWidget {
               padding: EdgeInsets.symmetric(vertical: 32),
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (_, __) => const Padding(
+            error: (_, _) => const Padding(
               padding: EdgeInsets.symmetric(vertical: 32),
               child: Center(child: Text('Failed to load tables')),
             ),

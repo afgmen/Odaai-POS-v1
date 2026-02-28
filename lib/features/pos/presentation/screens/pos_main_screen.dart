@@ -506,42 +506,73 @@ Future<void> _handleSendToKitchen(BuildContext context, WidgetRef ref) async {
     final total = ref.read(cartTotalProvider);
     final employeeId = ref.read(currentEmployeeProvider)?.id;
 
-    // Sale 생성 (isOpenTab=true, status='open')
-    final sale = await salesDao.createSale(
-      sale: SalesCompanion.insert(
-        saleNumber: 'S${DateTime.now().millisecondsSinceEpoch}',
-        paymentMethod: 'pending',
-        subtotal: Value(subtotal),
-        discount: Value(discount),
-        total: Value(total),
-        orderType: Value(OrderType.dineIn.dbValue),
-        tableId: Value(tableId),
-        isOpenTab: const Value(true),
-        status: const Value('open'),
-        employeeId: Value(employeeId),
-      ),
-      items: cart
-          .map((item) => SaleItemsCompanion.insert(
-                saleId: 0, // overridden by createSale
-                productId: item.product.id,
-                productName: item.product.name,
-                sku: item.product.sku,
-                unitPrice: item.product.price,
-                quantity: item.quantity,
-                total: item.subtotal,
-              ))
-          .toList(),
-      tableNumber: tableNumber,
-      createKitchenOrder: true,
-    );
+    final existingSaleId = posScreen.existingSaleId;
 
-    // 테이블 상태 → ORDERING
-    await tablesDao.updateTableStatus(
-      tableId: tableId,
-      status: 'ORDERING',
-      currentSaleId: sale.id,
-      occupiedAt: DateTime.now(),
-    );
+    if (existingSaleId != null) {
+      // Additional round for existing open tab
+      final roundNumber = await salesDao.getNextRoundNumber(existingSaleId);
+      await salesDao.addItemsToSale(
+        saleId: existingSaleId,
+        items: cart
+            .map((item) => SaleItemsCompanion.insert(
+                  saleId: 0,
+                  productId: item.product.id,
+                  productName: item.product.name,
+                  sku: item.product.sku,
+                  unitPrice: item.product.price,
+                  quantity: item.quantity,
+                  total: item.subtotal,
+                ))
+            .toList(),
+        roundNumber: roundNumber,
+        tableNumber: tableNumber,
+      );
+
+      // 테이블 상태 → ORDERING (reset on new round)
+      await tablesDao.updateTableStatus(
+        tableId: tableId,
+        status: 'ORDERING',
+        currentSaleId: existingSaleId,
+        occupiedAt: DateTime.now(),
+      );
+    } else {
+      // New open tab (first round)
+      final sale = await salesDao.createSale(
+        sale: SalesCompanion.insert(
+          saleNumber: 'S${DateTime.now().millisecondsSinceEpoch}',
+          paymentMethod: 'pending',
+          subtotal: Value(subtotal),
+          discount: Value(discount),
+          total: Value(total),
+          orderType: Value(OrderType.dineIn.dbValue),
+          tableId: Value(tableId),
+          isOpenTab: const Value(true),
+          status: const Value('open'),
+          employeeId: Value(employeeId),
+        ),
+        items: cart
+            .map((item) => SaleItemsCompanion.insert(
+                  saleId: 0, // overridden by createSale
+                  productId: item.product.id,
+                  productName: item.product.name,
+                  sku: item.product.sku,
+                  unitPrice: item.product.price,
+                  quantity: item.quantity,
+                  total: item.subtotal,
+                ))
+            .toList(),
+        tableNumber: tableNumber,
+        createKitchenOrder: true,
+      );
+
+      // 테이블 상태 → ORDERING
+      await tablesDao.updateTableStatus(
+        tableId: tableId,
+        status: 'ORDERING',
+        currentSaleId: sale.id,
+        occupiedAt: DateTime.now(),
+      );
+    }
 
     // 장바구니 초기화
     ref.read(cartProvider.notifier).clear();

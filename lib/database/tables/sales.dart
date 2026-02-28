@@ -48,4 +48,5 @@ class SaleItems extends Table {
   RealColumn get unitPrice => real()();
   IntColumn get quantity => integer()();
   RealColumn get total => real()();
+  IntColumn get roundNumber => integer().withDefault(const Constant(1))();
 }

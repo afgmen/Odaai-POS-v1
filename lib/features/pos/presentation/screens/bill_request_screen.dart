@@ -73,6 +73,46 @@ class _BillContent extends StatelessWidget {
     required this.tableNumber,
   });
 
+  List<Widget> _buildGroupedItems(List<SaleItem> items) {
+    final grouped = <int, List<SaleItem>>{};
+    for (final item in items) {
+      final round = item.roundNumber;
+      grouped.putIfAbsent(round, () => []).add(item);
+    }
+    final sortedRounds = grouped.keys.toList()..sort();
+
+    // Only show round headers if there are multiple rounds
+    if (sortedRounds.length <= 1) {
+      return items.map((item) => _BillItemRow(item: item)).toList();
+    }
+
+    return sortedRounds.expand((round) => [
+      Padding(
+        padding: const EdgeInsets.only(top: 12, bottom: 4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Round $round',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.orange,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      ...grouped[round]!.map((item) => _BillItemRow(item: item)),
+    ]).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final subtotal = items.fold<double>(0, (sum, i) => sum + i.total);
@@ -105,8 +145,8 @@ class _BillContent extends StatelessWidget {
           ),
           const Divider(height: 32),
 
-          // 아이템 목록
-          ...items.map((item) => _BillItemRow(item: item)),
+          // 아이템 목록 (grouped by round)
+          ..._buildGroupedItems(items),
 
           const Divider(height: 24),
 

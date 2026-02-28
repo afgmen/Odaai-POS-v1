@@ -2644,6 +2644,18 @@ class $SaleItemsTable extends SaleItems
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _roundNumberMeta = const VerificationMeta(
+    'roundNumber',
+  );
+  @override
+  late final GeneratedColumn<int> roundNumber = GeneratedColumn<int>(
+    'round_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2654,6 +2666,7 @@ class $SaleItemsTable extends SaleItems
     unitPrice,
     quantity,
     total,
+    roundNumber,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2729,6 +2742,15 @@ class $SaleItemsTable extends SaleItems
     } else if (isInserting) {
       context.missing(_totalMeta);
     }
+    if (data.containsKey('round_number')) {
+      context.handle(
+        _roundNumberMeta,
+        roundNumber.isAcceptableOrUnknown(
+          data['round_number']!,
+          _roundNumberMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2770,6 +2792,10 @@ class $SaleItemsTable extends SaleItems
         DriftSqlType.double,
         data['${effectivePrefix}total'],
       )!,
+      roundNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}round_number'],
+      )!,
     );
   }
 
@@ -2788,6 +2814,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
   final double unitPrice;
   final int quantity;
   final double total;
+  final int roundNumber;
   const SaleItem({
     required this.id,
     required this.saleId,
@@ -2797,6 +2824,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
     required this.unitPrice,
     required this.quantity,
     required this.total,
+    required this.roundNumber,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2809,6 +2837,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
     map['unit_price'] = Variable<double>(unitPrice);
     map['quantity'] = Variable<int>(quantity);
     map['total'] = Variable<double>(total);
+    map['round_number'] = Variable<int>(roundNumber);
     return map;
   }
 
@@ -2822,6 +2851,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
       unitPrice: Value(unitPrice),
       quantity: Value(quantity),
       total: Value(total),
+      roundNumber: Value(roundNumber),
     );
   }
 
@@ -2839,6 +2869,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
       unitPrice: serializer.fromJson<double>(json['unitPrice']),
       quantity: serializer.fromJson<int>(json['quantity']),
       total: serializer.fromJson<double>(json['total']),
+      roundNumber: serializer.fromJson<int>(json['roundNumber']),
     );
   }
   @override
@@ -2853,6 +2884,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
       'unitPrice': serializer.toJson<double>(unitPrice),
       'quantity': serializer.toJson<int>(quantity),
       'total': serializer.toJson<double>(total),
+      'roundNumber': serializer.toJson<int>(roundNumber),
     };
   }
 
@@ -2865,6 +2897,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
     double? unitPrice,
     int? quantity,
     double? total,
+    int? roundNumber,
   }) => SaleItem(
     id: id ?? this.id,
     saleId: saleId ?? this.saleId,
@@ -2874,6 +2907,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
     unitPrice: unitPrice ?? this.unitPrice,
     quantity: quantity ?? this.quantity,
     total: total ?? this.total,
+    roundNumber: roundNumber ?? this.roundNumber,
   );
   SaleItem copyWithCompanion(SaleItemsCompanion data) {
     return SaleItem(
@@ -2887,6 +2921,9 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
       unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
       total: data.total.present ? data.total.value : this.total,
+      roundNumber: data.roundNumber.present
+          ? data.roundNumber.value
+          : this.roundNumber,
     );
   }
 
@@ -2900,7 +2937,8 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
           ..write('sku: $sku, ')
           ..write('unitPrice: $unitPrice, ')
           ..write('quantity: $quantity, ')
-          ..write('total: $total')
+          ..write('total: $total, ')
+          ..write('roundNumber: $roundNumber')
           ..write(')'))
         .toString();
   }
@@ -2915,6 +2953,7 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
     unitPrice,
     quantity,
     total,
+    roundNumber,
   );
   @override
   bool operator ==(Object other) =>
@@ -2927,7 +2966,8 @@ class SaleItem extends DataClass implements Insertable<SaleItem> {
           other.sku == this.sku &&
           other.unitPrice == this.unitPrice &&
           other.quantity == this.quantity &&
-          other.total == this.total);
+          other.total == this.total &&
+          other.roundNumber == this.roundNumber);
 }
 
 class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
@@ -2939,6 +2979,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
   final Value<double> unitPrice;
   final Value<int> quantity;
   final Value<double> total;
+  final Value<int> roundNumber;
   const SaleItemsCompanion({
     this.id = const Value.absent(),
     this.saleId = const Value.absent(),
@@ -2948,6 +2989,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
     this.unitPrice = const Value.absent(),
     this.quantity = const Value.absent(),
     this.total = const Value.absent(),
+    this.roundNumber = const Value.absent(),
   });
   SaleItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -2958,6 +3000,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
     required double unitPrice,
     required int quantity,
     required double total,
+    this.roundNumber = const Value.absent(),
   }) : saleId = Value(saleId),
        productId = Value(productId),
        productName = Value(productName),
@@ -2974,6 +3017,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
     Expression<double>? unitPrice,
     Expression<int>? quantity,
     Expression<double>? total,
+    Expression<int>? roundNumber,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2984,6 +3028,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
       if (unitPrice != null) 'unit_price': unitPrice,
       if (quantity != null) 'quantity': quantity,
       if (total != null) 'total': total,
+      if (roundNumber != null) 'round_number': roundNumber,
     });
   }
 
@@ -2996,6 +3041,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
     Value<double>? unitPrice,
     Value<int>? quantity,
     Value<double>? total,
+    Value<int>? roundNumber,
   }) {
     return SaleItemsCompanion(
       id: id ?? this.id,
@@ -3006,6 +3052,7 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
       unitPrice: unitPrice ?? this.unitPrice,
       quantity: quantity ?? this.quantity,
       total: total ?? this.total,
+      roundNumber: roundNumber ?? this.roundNumber,
     );
   }
 
@@ -3036,6 +3083,9 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
     if (total.present) {
       map['total'] = Variable<double>(total.value);
     }
+    if (roundNumber.present) {
+      map['round_number'] = Variable<int>(roundNumber.value);
+    }
     return map;
   }
 
@@ -3049,7 +3099,8 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItem> {
           ..write('sku: $sku, ')
           ..write('unitPrice: $unitPrice, ')
           ..write('quantity: $quantity, ')
-          ..write('total: $total')
+          ..write('total: $total, ')
+          ..write('roundNumber: $roundNumber')
           ..write(')'))
         .toString();
   }
@@ -24469,6 +24520,7 @@ typedef $$SaleItemsTableCreateCompanionBuilder =
       required double unitPrice,
       required int quantity,
       required double total,
+      Value<int> roundNumber,
     });
 typedef $$SaleItemsTableUpdateCompanionBuilder =
     SaleItemsCompanion Function({
@@ -24480,6 +24532,7 @@ typedef $$SaleItemsTableUpdateCompanionBuilder =
       Value<double> unitPrice,
       Value<int> quantity,
       Value<double> total,
+      Value<int> roundNumber,
     });
 
 final class $$SaleItemsTableReferences
@@ -24560,6 +24613,11 @@ class $$SaleItemsTableFilterComposer
 
   ColumnFilters<double> get total => $composableBuilder(
     column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get roundNumber => $composableBuilder(
+    column: $table.roundNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -24649,6 +24707,11 @@ class $$SaleItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get roundNumber => $composableBuilder(
+    column: $table.roundNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$SalesTableOrderingComposer get saleId {
     final $$SalesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -24724,6 +24787,11 @@ class $$SaleItemsTableAnnotationComposer
 
   GeneratedColumn<double> get total =>
       $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<int> get roundNumber => $composableBuilder(
+    column: $table.roundNumber,
+    builder: (column) => column,
+  );
 
   $$SalesTableAnnotationComposer get saleId {
     final $$SalesTableAnnotationComposer composer = $composerBuilder(
@@ -24808,6 +24876,7 @@ class $$SaleItemsTableTableManager
                 Value<double> unitPrice = const Value.absent(),
                 Value<int> quantity = const Value.absent(),
                 Value<double> total = const Value.absent(),
+                Value<int> roundNumber = const Value.absent(),
               }) => SaleItemsCompanion(
                 id: id,
                 saleId: saleId,
@@ -24817,6 +24886,7 @@ class $$SaleItemsTableTableManager
                 unitPrice: unitPrice,
                 quantity: quantity,
                 total: total,
+                roundNumber: roundNumber,
               ),
           createCompanionCallback:
               ({
@@ -24828,6 +24898,7 @@ class $$SaleItemsTableTableManager
                 required double unitPrice,
                 required int quantity,
                 required double total,
+                Value<int> roundNumber = const Value.absent(),
               }) => SaleItemsCompanion.insert(
                 id: id,
                 saleId: saleId,
@@ -24837,6 +24908,7 @@ class $$SaleItemsTableTableManager
                 unitPrice: unitPrice,
                 quantity: quantity,
                 total: total,
+                roundNumber: roundNumber,
               ),
           withReferenceMapper: (p0) => p0
               .map(

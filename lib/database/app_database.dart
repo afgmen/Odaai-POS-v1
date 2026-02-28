@@ -123,7 +123,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration {
@@ -264,6 +264,10 @@ class AppDatabase extends _$AppDatabase {
           await _safeCreateTable(m, floorPlanConfig, 'floor_plan_config');
           await _safeAddColumn('restaurant_tables', 'shape', "TEXT NOT NULL DEFAULT 'square'");
           await _safeAddColumn('restaurant_tables', 'zone_id', 'INTEGER NULL');
+        }
+        if (from < 19) {
+          // v18 → v19: Round number for SaleItems
+          await _safeAddColumn('sale_items', 'round_number', 'INTEGER NOT NULL DEFAULT 1');
         }
       },
       beforeOpen: (details) async {

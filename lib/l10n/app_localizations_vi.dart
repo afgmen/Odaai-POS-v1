@@ -2304,7 +2304,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get deliveryCustomer => 'Khách hàng';
 
   @override
-  String get deliveryAddress => 'Địa chỉ giao';
+  String get deliveryAddress => 'Địa chỉ giao hàng';
 
   @override
   String get deliveryDriver => 'Tài xế';
@@ -2458,4 +2458,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get preparing => 'Đang chuẩn bị';
+
+  @override
+  String get phoneDelivery => 'Giao hàng qua điện thoại';
+
+  @override
+  String get deliveryPhone => 'Số điện thoại';
+
+  @override
+  String get estimatedTime => 'Thời gian ước tính';
+
+  @override
+  String get note => 'Ghi chú';
+
+  @override
+  String get startOrder => 'Bắt đầu đơn hàng';
 }

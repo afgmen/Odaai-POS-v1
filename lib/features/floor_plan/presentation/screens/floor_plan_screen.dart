@@ -108,7 +108,7 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
                               isDraggable: false,
                             )),
                         loading: () => <Widget>[],
-                        error: (_, __) => <Widget>[],
+                        error: (_, _) => <Widget>[],
                       ),
 
                       // Elements (read-only)
@@ -119,7 +119,7 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
                                   isDraggable: false,
                                 )),
                         loading: () => <Widget>[],
-                        error: (_, __) => <Widget>[],
+                        error: (_, _) => <Widget>[],
                       ),
 
                       // Tables (tappable, not draggable)
@@ -139,7 +139,7 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
                                   ));
                         },
                         loading: () => <Widget>[],
-                        error: (_, __) => <Widget>[],
+                        error: (_, _) => <Widget>[],
                       ),
                     ],
                   ),
@@ -181,7 +181,7 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
                             setState(() => _selectedZoneFilter = z.id.toString()),
                       )),
                   loading: () => <Widget>[],
-                  error: (_, __) => <Widget>[],
+                  error: (_, _) => <Widget>[],
                 ),
               ],
             ),
@@ -192,7 +192,7 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
           tablesAsync.when(
             data: (tables) => _buildStatsStrip(tables),
             loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
         ],
       ),

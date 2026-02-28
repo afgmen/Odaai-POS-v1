@@ -5,6 +5,7 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -18,8 +19,8 @@ void main() {
       ),
     );
 
-    // POS 메인 화면 기본 요소 확인
+    // App launches on PinLoginScreen — verify visible elements
     expect(find.text('Oda POS'), findsOneWidget);
-    expect(find.text('장바구니'), findsOneWidget);
+    expect(find.byIcon(Icons.store), findsOneWidget);
   });
 }

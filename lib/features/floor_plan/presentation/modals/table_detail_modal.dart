@@ -8,6 +8,7 @@ import '../../../tables/data/tables_providers.dart';
 import '../../../pos/presentation/screens/pos_main_screen.dart';
 import '../../../pos/presentation/screens/bill_request_screen.dart';
 import '../../../pos/data/models/order_type.dart';
+import 'table_move_modal.dart';
 
 /// TableDetailModal — 사용 중인 테이블의 상세 정보 + 액션 버튼
 /// Phase 2: [추가주문] [청구서요청] [테이블이동] [주문취소]
@@ -187,9 +188,14 @@ class TableDetailModal extends ConsumerWidget {
                 color: Colors.orange,
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: 테이블 이동 다이얼로그
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Table move — coming soon')),
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (_) => TableMoveModal(sourceTable: table),
                   );
                 },
               ),

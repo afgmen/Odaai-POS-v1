@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/currency_provider.dart';
 import '../../../../providers/database_providers.dart';
@@ -11,7 +12,9 @@ import '../../../auth/providers/auth_provider.dart';
 import '../../../customers/providers/customers_provider.dart';
 import '../../../loyalty/domain/services/loyalty_service.dart';
 import '../../providers/cart_provider.dart';
+import '../../data/models/order_type.dart';
 import '../screens/receipt_screen.dart';
+import 'delivery_info_section.dart';
 
 /// 결제 방법 열거형
 enum PaymentMethod {
@@ -36,7 +39,14 @@ enum PaymentMethod {
 
 /// 결제 모달 (BottomSheet)
 class PaymentModal extends ConsumerStatefulWidget {
-  const PaymentModal({super.key});
+  final OrderType? orderType;
+  final int? tableId;
+  
+  const PaymentModal({
+    super.key,
+    this.orderType,
+    this.tableId,
+  });
 
   @override
   ConsumerState<PaymentModal> createState() => _PaymentModalState();
@@ -49,6 +59,9 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
   late final TextEditingController _cashController;
   late final TextEditingController _tableNumberController;
   late final TextEditingController _specialInstructionsController;
+  late final TextEditingController _customerNameController;
+  late final TextEditingController _deliveryPhoneController;
+  late final TextEditingController _deliveryAddressController;
 
   @override
   void initState() {
@@ -56,13 +69,23 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     _cashController = TextEditingController();
     _tableNumberController = TextEditingController();
     _specialInstructionsController = TextEditingController();
+    _customerNameController = TextEditingController();
+    _deliveryPhoneController = TextEditingController();
+    _deliveryAddressController = TextEditingController();
   }
+  
+  bool get _isDeliveryOrder =>
+      widget.orderType == OrderType.phoneDelivery ||
+      widget.orderType == OrderType.platformDelivery;
 
   @override
   void dispose() {
     _cashController.dispose();
     _tableNumberController.dispose();
     _specialInstructionsController.dispose();
+    _customerNameController.dispose();
+    _deliveryPhoneController.dispose();
+    _deliveryAddressController.dispose();
     super.dispose();
   }
 
@@ -252,6 +275,16 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             ),
             const SizedBox(height: 20),
 
+            // ─── 배달 정보 입력 (phoneDelivery, platformDelivery만 표시) ────
+            if (_isDeliveryOrder) ...[
+              DeliveryInfoSection(
+                customerNameController: _customerNameController,
+                deliveryPhoneController: _deliveryPhoneController,
+                deliveryAddressController: _deliveryAddressController,
+              ),
+              const SizedBox(height: 20),
+            ],
+
             // ─── 결제 방법 선택 버튼 ────────────────
             Row(
               children: PaymentMethod.values.map((method) {
@@ -377,7 +410,24 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             SizedBox(
               height: 52,
               child: ElevatedButton(
-                onPressed: (!isCashValid || _isProcessing) ? null : () => _processPayment(subtotal, allDiscount, total),
+                onPressed: (!isCashValid || _isProcessing) ? null : () async {
+                  // Validate delivery information if it's a delivery order
+                  if (_isDeliveryOrder) {
+                    final validationError = DeliveryInfoSection.validate(
+                      context,
+                      _customerNameController.text,
+                      _deliveryPhoneController.text,
+                      _deliveryAddressController.text,
+                    );
+                    
+                    if (validationError != null) {
+                      SnackBarHelper.showError(context, validationError);
+                      return;
+                    }
+                  }
+                  
+                  await _processPayment(subtotal, allDiscount, total);
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.success,
                   disabledBackgroundColor: AppTheme.textDisabled,
@@ -443,7 +493,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         }
       }
 
-      // ── Sales 레코드 구성 ──────────────────
+      // ── Sales 레코드 구성 (delivery 정보 포함) ──────────────────
       final saleCompanion = SalesCompanion.insert(
         saleNumber: saleNumber,
         paymentMethod: _selectedMethod.name, // 'cash' | 'card' | 'qr' | 'transfer'
@@ -452,6 +502,15 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         total: Value(finalTotal),
         customerId: Value(selectedCustomer?.id),
         employeeId: Value(currentEmployee.id),
+        customerName: _isDeliveryOrder && _customerNameController.text.trim().isNotEmpty
+            ? Value(_customerNameController.text.trim())
+            : const Value.absent(),
+        deliveryPhone: _isDeliveryOrder && _deliveryPhoneController.text.trim().isNotEmpty
+            ? Value(_deliveryPhoneController.text.trim())
+            : const Value.absent(),
+        deliveryAddress: _isDeliveryOrder && _deliveryAddressController.text.trim().isNotEmpty
+            ? Value(_deliveryAddressController.text.trim())
+            : const Value.absent(),
         needsSync: const Value(true),
       );
 

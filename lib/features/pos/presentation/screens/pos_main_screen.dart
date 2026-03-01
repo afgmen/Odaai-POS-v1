@@ -95,7 +95,7 @@ class PosMainScreen extends ConsumerWidget {
                   child: CartPanel(
                     onCheckout: _isDineInWithTable
                         ? () => _handleSendToKitchen(context, ref)
-                        : () => _showPaymentModal(context),
+                        : () => _showPaymentModal(context, orderType: orderType, tableId: tableId),
                     isSidePanel: true,
                     orderType: orderType,
                     tableId: tableId,
@@ -125,7 +125,7 @@ class PosMainScreen extends ConsumerWidget {
                 CartPanel(
                   onCheckout: _isDineInWithTable
                       ? () => _handleSendToKitchen(context, ref)
-                      : () => _showPaymentModal(context),
+                      : () => _showPaymentModal(context, orderType: orderType, tableId: tableId),
                   isSidePanel: false,
                   orderType: orderType,
                   tableId: tableId,
@@ -612,12 +612,15 @@ Future<void> _handleSendToKitchen(BuildContext context, WidgetRef ref) async {
 }
 
 /// 결제 모달 표시
-void _showPaymentModal(BuildContext context) {
+void _showPaymentModal(BuildContext context, {OrderType? orderType, int? tableId}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => const PaymentModal(),
+    builder: (_) => PaymentModal(
+        orderType: orderType,
+        tableId: tableId,
+      ),
   );
 }
 

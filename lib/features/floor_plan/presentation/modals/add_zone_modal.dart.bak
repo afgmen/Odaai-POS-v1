@@ -1,0 +1,279 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/snackbar_helper.dart';
+import '../../../../database/app_database.dart';
+import '../../data/floor_plan_providers.dart';
+import 'package:drift/drift.dart' hide Column;
+
+/// Add/Edit Zone Modal for Floor Plan Designer
+class AddZoneModal extends ConsumerStatefulWidget {
+  final FloorZone? existingZone; // null = create mode, non-null = edit mode
+
+  const AddZoneModal({super.key, this.existingZone});
+
+  @override
+  ConsumerState<AddZoneModal> createState() => _AddZoneModalState();
+}
+
+class _AddZoneModalState extends ConsumerState<AddZoneModal> {
+  late final TextEditingController _nameController;
+  String _selectedColor = '#4CAF50'; // Default green
+
+  final List<String> _colorPresets = [
+    '#4CAF50', // Green
+    '#2196F3', // Blue
+    '#FF9800', // Orange
+    '#9C27B0', // Purple
+    '#F44336', // Red
+    '#00BCD4', // Cyan
+    '#FFEB3B', // Yellow
+    '#795548', // Brown
+  ];
+
+  bool _isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(
+      text: widget.existingZone?.name ?? '',
+    );
+    _selectedColor = widget.existingZone?.colorHex ?? '#4CAF50';
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  bool get _isEditMode => widget.existingZone != null;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _isEditMode ? 'Edit Zone' : 'Add Zone',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Zone Name
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: 'Zone Name *',
+                hintText: 'e.g. Main Dining, VIP Area',
+                prefixIcon: const Icon(Icons.label_outline),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Color Picker
+            const Text(
+              'Zone Color',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: _colorPresets.map((color) {
+                final isSelected = _selectedColor == color;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedColor = color),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Color(int.parse(color.substring(1), radix: 16) + 0xFF000000),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected ? AppTheme.primary : Colors.transparent,
+                        width: 3,
+                      ),
+                    ),
+                    child: isSelected
+                        ? const Icon(Icons.check, color: Colors.white)
+                        : null,
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 24),
+
+            // Action Buttons
+            Row(
+              children: [
+                if (_isEditMode) ...[
+                  // Delete Button
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _isProcessing ? null : _handleDelete,
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Delete'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.error,
+                        side: const BorderSide(color: AppTheme.error),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isProcessing ? null : _handleSave,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: _isProcessing
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(_isEditMode ? 'Update' : 'Create'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleSave() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      SnackBarHelper.showError(context, 'Please enter zone name');
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final zoneDao = ref.read(floorZoneProvider);
+
+      if (_isEditMode) {
+        // Update existing zone
+        final updated = FloorZone(
+          id: widget.existingZone!.id,
+          name: name,
+          colorHex: _selectedColor,
+          posX: widget.existingZone!.posX,
+          posY: widget.existingZone!.posY,
+          width: widget.existingZone!.width,
+          height: widget.existingZone!.height,
+          createdAt: widget.existingZone!.createdAt,
+        );
+
+        await zoneDao.updateZone(FloorZonesCompanion(
+          id: Value(updated.id),
+          name: Value(updated.name),
+          colorHex: Value(updated.colorHex),
+        ));
+
+        if (mounted) {
+          SnackBarHelper.showSuccess(context, 'Zone updated successfully');
+          Navigator.of(context).pop(true);
+        }
+      } else {
+        // Create new zone
+        await zoneDao.createZone(FloorZonesCompanion.insert(
+          name: name,
+          colorHex: Value(_selectedColor),
+        ));
+
+        if (mounted) {
+          SnackBarHelper.showSuccess(context, 'Zone created successfully');
+          Navigator.of(context).pop(true);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+      }
+    }
+  }
+
+  Future<void> _handleDelete() async {
+    if (!_isEditMode) return;
+
+    // Confirm deletion
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Zone?'),
+        content: const Text('This will remove the zone and all its elements.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final zoneDao = ref.read(floorZoneProvider);
+      await zoneDao.deleteZone(widget.existingZone!.id);
+
+      if (mounted) {
+        SnackBarHelper.showSuccess(context, 'Zone deleted successfully');
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+      }
+    }
+  }
+}

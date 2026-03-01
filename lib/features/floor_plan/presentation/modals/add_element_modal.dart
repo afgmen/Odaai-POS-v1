@@ -1,0 +1,253 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/snackbar_helper.dart';
+import '../../../../database/app_database.dart';
+import '../../data/floor_plan_providers.dart';
+import 'package:drift/drift.dart' hide Column;
+
+/// Add/Edit Element Modal for Floor Plan Designer
+class AddElementModal extends ConsumerStatefulWidget {
+  final FloorElement? existingElement;
+
+  const AddElementModal({super.key, this.existingElement});
+
+  @override
+  ConsumerState<AddElementModal> createState() => _AddElementModalState();
+}
+
+class _AddElementModalState extends ConsumerState<AddElementModal> {
+  late final TextEditingController _labelController;
+  String _selectedType = 'entrance';
+
+  final List<Map<String, dynamic>> _elementTypes = [
+    {'value': 'entrance', 'label': 'Entrance', 'icon': Icons.door_front_door},
+    {'value': 'counter', 'label': 'Counter', 'icon': Icons.countertops},
+    {'value': 'restroom', 'label': 'Restroom', 'icon': Icons.wc},
+    {'value': 'window', 'label': 'Window', 'icon': Icons.window},
+    {'value': 'wall', 'label': 'Wall', 'icon': Icons.architecture},
+    {'value': 'bar_counter', 'label': 'Bar Counter', 'icon': Icons.local_bar},
+  ];
+
+  bool _isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _labelController = TextEditingController(
+      text: widget.existingElement?.label ?? '',
+    );
+    _selectedType = widget.existingElement?.elementType ?? 'entrance';
+  }
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    super.dispose();
+  }
+
+  bool get _isEditMode => widget.existingElement != null;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _isEditMode ? 'Edit Element' : 'Add Element',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Element Type Dropdown
+            DropdownButtonFormField<String>(
+              initialValue: _selectedType,
+              decoration: InputDecoration(
+                labelText: 'Element Type *',
+                prefixIcon: Icon(_elementTypes
+                    .firstWhere((e) => e['value'] == _selectedType)['icon']),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              items: _elementTypes.map<DropdownMenuItem<String>>((type) {
+                return DropdownMenuItem(
+                  value: type['value'],
+                  child: Row(
+                    children: [
+                      Icon(type['icon'], size: 20),
+                      const SizedBox(width: 8),
+                      Text(type['label']),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _selectedType = value);
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Label (Optional)
+            TextField(
+              controller: _labelController,
+              decoration: InputDecoration(
+                labelText: 'Label (Optional)',
+                hintText: 'e.g. Main Entrance, Staff Restroom',
+                prefixIcon: const Icon(Icons.label_outline),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Action Buttons
+            Row(
+              children: [
+                if (_isEditMode) ...[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _isProcessing ? null : _handleDelete,
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Delete'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.error,
+                        side: const BorderSide(color: AppTheme.error),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isProcessing ? null : _handleSave,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: _isProcessing
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(_isEditMode ? 'Update' : 'Create'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleSave() async {
+    setState(() => _isProcessing = true);
+
+    try {
+      final elementDao = ref.read(floorElementDaoProvider);
+      final label = _labelController.text.trim();
+
+      if (_isEditMode) {
+        // Update existing element
+        await elementDao.updateElement(FloorElementsCompanion(
+          id: Value(widget.existingElement!.id),
+          elementType: Value(_selectedType),
+          label: Value(label.isEmpty ? null : label),
+        ));
+
+        if (mounted) {
+          SnackBarHelper.showSuccess(context, 'Element updated successfully');
+          Navigator.of(context).pop(true);
+        }
+      } else {
+        // Create new element
+        await elementDao.createElement(FloorElementsCompanion.insert(
+          elementType: _selectedType,
+          label: Value(label.isEmpty ? null : label),
+        ));
+
+        if (mounted) {
+          SnackBarHelper.showSuccess(context, 'Element created successfully');
+          Navigator.of(context).pop(true);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+      }
+    }
+  }
+
+  Future<void> _handleDelete() async {
+    if (!_isEditMode) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Element?'),
+        content: const Text('This will permanently remove this element.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final elementDao = ref.read(floorElementDaoProvider);
+      await elementDao.deleteElement(widget.existingElement!.id);
+
+      if (mounted) {
+        SnackBarHelper.showSuccess(context, 'Element deleted successfully');
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+      }
+    }
+  }
+}

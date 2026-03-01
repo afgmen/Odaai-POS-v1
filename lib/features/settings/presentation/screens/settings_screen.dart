@@ -258,6 +258,17 @@ class SettingsScreen extends ConsumerWidget {
           _BackupRestoreCard(ref: ref),
 
 
+
+          const SizedBox(height: 24),
+
+          // ─── 환율 설정 섹션 ─────────────────────────────
+          _SectionHeader(
+            title: 'Exchange Rate Settings',
+            icon: Icons.currency_exchange,
+          ),
+          const SizedBox(height: 8),
+          _ExchangeRateCard(ref: ref),
+
           // ─── 앱 정보 섹션 ─────────────────────────────
           _SectionHeader(
             title: l10n.appInfo,
@@ -837,5 +848,164 @@ class _BackupRestoreCard extends StatelessWidget {
         SnackBarHelper.showError(context, 'Error: ${e.toString()}');
       }
     }
+  }
+}
+
+/// 환율 설정 카드
+class _ExchangeRateCard extends StatefulWidget {
+  final WidgetRef ref;
+
+  const _ExchangeRateCard({required this.ref});
+
+  @override
+  State<_ExchangeRateCard> createState() => _ExchangeRateCardState();
+}
+
+class _ExchangeRateCardState extends State<_ExchangeRateCard> {
+  final TextEditingController _usdToVndController = TextEditingController();
+  double? _currentRate;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentRate();
+  }
+
+  @override
+  void dispose() {
+    _usdToVndController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCurrentRate() async {
+    final service = widget.ref.read(exchangeRateServiceProvider);
+    final rate = await service.getExchangeRate('VND', 'USD');
+    
+    setState(() {
+      _currentRate = rate;
+      if (rate != null) {
+        // Display as "1 USD = X VND"
+        final vndPerUsd = 1.0 / rate;
+        _usdToVndController.text = vndPerUsd.toStringAsFixed(0);
+      } else {
+        // Default: 1 USD = 25,000 VND
+        _usdToVndController.text = '25000';
+      }
+    });
+  }
+
+  Future<void> _saveExchangeRate() async {
+    final input = _usdToVndController.text.trim();
+    if (input.isEmpty) {
+      if (mounted) {
+        SnackBarHelper.showError(context, 'Please enter exchange rate');
+      }
+      return;
+    }
+
+    final vndPerUsd = double.tryParse(input.replaceAll(',', ''));
+    if (vndPerUsd == null || vndPerUsd <= 0) {
+      if (mounted) {
+        SnackBarHelper.showError(context, 'Invalid exchange rate');
+      }
+      return;
+    }
+
+    // Convert to rate: VND → USD (e.g., 1 VND = 0.00004 USD)
+    final rate = 1.0 / vndPerUsd;
+
+    final service = widget.ref.read(exchangeRateServiceProvider);
+    await service.saveExchangeRate('VND', 'USD', rate);
+
+    setState(() {
+      _currentRate = rate;
+    });
+
+    if (mounted) {
+      SnackBarHelper.showSuccess(
+        context,
+        'Exchange rate saved: 1 USD = ${vndPerUsd.toStringAsFixed(0)} VND',
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardWhite,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Current rate display
+          if (_currentRate != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.background,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 20, color: AppTheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Current: 1 USD = ${(1.0 / _currentRate!).toStringAsFixed(0)} VND',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          
+          if (_currentRate != null) const SizedBox(height: 16),
+
+          // Input field
+          TextField(
+            controller: _usdToVndController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: '1 USD = ? VND',
+              hintText: 'e.g., 25000',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.attach_money),
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+
+          // Save button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _saveExchangeRate,
+              icon: const Icon(Icons.save),
+              label: const Text('Save Exchange Rate'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Info text
+          const Text(
+            'Enter the exchange rate as VND per 1 USD.\nExample: 25000 means 1 USD = 25,000 VND',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

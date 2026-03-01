@@ -38,20 +38,73 @@ class CurrencyNotifier extends StateNotifier<AppCurrency> {
   }
 }
 
-/// 환율 Provider (데이터베이스 연동 전까지는 기본 환율 사용)
-final exchangeRateProvider = Provider.family<double, String>((ref, toCurrency) {
-  // TODO: 데이터베이스에서 환율 조회
-  // final db = ref.watch(databaseProvider);
-  // return db.getExchangeRate('VND', toCurrency);
-
-  // 임시: 기본 환율 사용
-  return AppCurrency.fromCode(toCurrency).defaultRate;
+/// Exchange Rate Service
+final exchangeRateServiceProvider = Provider<ExchangeRateService>((ref) {
+  return ExchangeRateService();
 });
+
+/// 환율 Provider (SharedPreferences 연동)
+final exchangeRateProvider = FutureProvider.family<double, String>((ref, toCurrency) async {
+  final service = ref.watch(exchangeRateServiceProvider);
+  final fromCurrency = ref.watch(currencyProvider).code;
+  
+  // Load from SharedPreferences, fallback to default rate
+  final rate = await service.getExchangeRate(fromCurrency, toCurrency);
+  return rate ?? AppCurrency.fromCode(toCurrency).defaultRate;
+});
+
+/// Exchange Rate Service
+class ExchangeRateService {
+  /// Save exchange rate to SharedPreferences
+  Future<void> saveExchangeRate(String fromCurrency, String toCurrency, double rate) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'exchange_rate_${fromCurrency}_$toCurrency';
+    await prefs.setDouble(key, rate);
+    debugPrint('💱 [ExchangeRate] Saved: $fromCurrency → $toCurrency = $rate');
+  }
+
+  /// Load exchange rate from SharedPreferences
+  Future<double?> getExchangeRate(String fromCurrency, String toCurrency) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'exchange_rate_${fromCurrency}_$toCurrency';
+    final rate = prefs.getDouble(key);
+    
+    if (rate != null) {
+      debugPrint('💱 [ExchangeRate] Loaded: $fromCurrency → $toCurrency = $rate');
+    } else {
+      debugPrint('💱 [ExchangeRate] Not found: $fromCurrency → $toCurrency (using default)');
+    }
+    
+    return rate;
+  }
+
+  /// Get all saved exchange rates
+  Future<Map<String, double>> getAllExchangeRates() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys().where((k) => k.startsWith('exchange_rate_'));
+    
+    final Map<String, double> rates = {};
+    for (final key in keys) {
+      final rate = prefs.getDouble(key);
+      if (rate != null) {
+        rates[key.replaceFirst('exchange_rate_', '')] = rate;
+      }
+    }
+    
+    return rates;
+  }
+}
 
 /// Price Formatter Provider
 final priceFormatterProvider = Provider<PriceFormatter>((ref) {
   final currency = ref.watch(currencyProvider);
-  final exchangeRate = ref.watch(exchangeRateProvider(currency.code));
+  
+  // Try to get saved exchange rate, fallback to default
+  final exchangeRateAsync = ref.watch(exchangeRateProvider(currency.code));
+  final exchangeRate = exchangeRateAsync.maybeWhen(
+    data: (rate) => rate,
+    orElse: () => currency.defaultRate,
+  );
 
   return PriceFormatter(
     currency: currency,

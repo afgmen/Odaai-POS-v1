@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:drift/drift.dart' as drift;
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../floor_plan/data/floor_plan_providers.dart';
@@ -10,6 +9,9 @@ import '../../data/tables_providers.dart';
 import '../widgets/table_widget.dart';
 import '../widgets/status_filter_tabs.dart';
 import 'reservations_screen.dart';
+import '../../../floor_plan/presentation/modals/add_zone_modal.dart';
+import '../../../floor_plan/presentation/modals/add_element_modal.dart';
+import '../../../floor_plan/presentation/modals/add_table_modal.dart';
 
 /// Table Layout Screen (Phase 0: Floor Plan Designer 통합)
 class TableManagementScreen extends ConsumerStatefulWidget {
@@ -273,115 +275,26 @@ class _FloorPlanDesignerTab extends ConsumerWidget {
 
   // ─── Zone Handlers ───
 
-  void _showAddZoneDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController();
-    String selectedColor = '#E3F2FD';
-
-    final colors = {
-      '#E3F2FD': 'Blue',
-      '#E8F5E9': 'Green',
-      '#FFF3E0': 'Orange',
-      '#FCE4EC': 'Pink',
-      '#F3E5F5': 'Purple',
-      '#FFFDE7': 'Yellow',
-    };
-
-    showDialog(
+  void _showAddZoneDialog(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(l10n.addZone),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: l10n.zoneName,
-                  hintText: 'e.g. Terrace, VIP Room',
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(l10n.zoneColor,
-                  style: const TextStyle(fontWeight: FontWeight.w500)),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: colors.entries.map((entry) {
-                  final hex = entry.key.replaceFirst('#', '');
-                  final color = Color(int.parse('FF$hex', radix: 16));
-                  return GestureDetector(
-                    onTap: () =>
-                        setDialogState(() => selectedColor = entry.key),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: color,
-                        border: Border.all(
-                          color: selectedColor == entry.key
-                              ? Colors.black
-                              : Colors.grey.shade300,
-                          width: selectedColor == entry.key ? 2 : 1,
-                        ),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-                if (name.isEmpty) return;
-
-                final dao = ref.read(floorZoneDaoProvider);
-                await dao.createZone(FloorZonesCompanion.insert(
-                  name: name,
-                  colorHex: drift.Value(selectedColor),
-                ));
-
-                if (ctx.mounted) Navigator.pop(ctx);
-              },
-              child: Text(l10n.add),
-            ),
-          ],
-        ),
-      ),
+      builder: (ctx) => const AddZoneModal(),
     );
+    
+    if (result == true && context.mounted) {
+      // Zone list will auto-refresh via stream provider
+    }
   }
 
-  void _showZoneDetail(BuildContext context, WidgetRef ref, FloorZone zone) {
-    showDialog(
+    void _showZoneDetail(BuildContext context, WidgetRef ref, FloorZone zone) async {
+    final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(zone.name),
-        content: Text(
-            'Position: (${zone.posX.toInt()}, ${zone.posY.toInt()})\nSize: ${zone.width.toInt()}×${zone.height.toInt()}'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              final dao = ref.read(floorZoneDaoProvider);
-              await dao.deleteZone(zone.id);
-              if (ctx.mounted) Navigator.pop(ctx);
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
+      builder: (ctx) => AddZoneModal(existingZone: zone),
     );
+    
+    if (result == true && context.mounted) {
+      // Zone list will auto-refresh via stream provider
+    }
   }
 
   Future<void> _handleZoneDragEnd(
@@ -398,68 +311,18 @@ class _FloorPlanDesignerTab extends ConsumerWidget {
 
   // ─── Element Handlers ───
 
-  void _showAddElementDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    String selectedType = 'entrance';
-
-    final types = {
-      'entrance': (l10n.entrance, Icons.door_front_door),
-      'counter': (l10n.counter, Icons.point_of_sale),
-      'restroom': (l10n.restroom, Icons.wc),
-      'window': (l10n.window, Icons.window),
-      'wall': (l10n.wall, Icons.crop_square),
-      'bar_counter': (l10n.barCounter, Icons.local_bar),
-    };
-
-    showDialog(
+  void _showAddElementDialog(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(l10n.addElement),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.elementType,
-                  style: const TextStyle(fontWeight: FontWeight.w500)),
-              const SizedBox(height: 12),
-              ...types.entries.map((entry) {
-                final isSelected = selectedType == entry.key;
-                return ListTile(
-                  leading: Icon(entry.value.$2,
-                      color: isSelected ? Colors.blue : Colors.grey),
-                  title: Text(entry.value.$1),
-                  selected: isSelected,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                  onTap: () =>
-                      setDialogState(() => selectedType = entry.key),
-                );
-              }),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final dao = ref.read(floorElementDaoProvider);
-                await dao.createElement(FloorElementsCompanion.insert(
-                  elementType: selectedType,
-                  label: drift.Value(types[selectedType]!.$1),
-                ));
-                if (ctx.mounted) Navigator.pop(ctx);
-              },
-              child: Text(l10n.add),
-            ),
-          ],
-        ),
-      ),
+      builder: (ctx) => const AddElementModal(),
     );
+    
+    if (result == true && context.mounted) {
+      // Element list will auto-refresh via stream provider
+    }
   }
 
-  void _showElementDetail(
+    void _showElementDetail(
       BuildContext context, WidgetRef ref, FloorElement element) {
     showDialog(
       context: context,
@@ -497,140 +360,30 @@ class _FloorPlanDesignerTab extends ConsumerWidget {
 
   // ─── Table Handlers ───
 
-  void _showAddTableDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final tableNumberController = TextEditingController();
-    final seatsController = TextEditingController(text: '4');
-    String selectedShape = 'square';
-
-    showDialog(
+  void _showAddTableDialog(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(l10n.addTable),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: tableNumberController,
-                decoration: InputDecoration(
-                  labelText: l10n.tableNumber,
-                  hintText: l10n.tableNumberHint,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: seatsController,
-                decoration: InputDecoration(labelText: l10n.seatsCount),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              Text(l10n.tableShape,
-                  style: const TextStyle(fontWeight: FontWeight.w500)),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _ShapeOption(
-                    label: l10n.square,
-                    shape: 'square',
-                    isSelected: selectedShape == 'square',
-                    onTap: () =>
-                        setDialogState(() => selectedShape = 'square'),
-                  ),
-                  _ShapeOption(
-                    label: l10n.round,
-                    shape: 'round',
-                    isSelected: selectedShape == 'round',
-                    onTap: () =>
-                        setDialogState(() => selectedShape = 'round'),
-                  ),
-                  _ShapeOption(
-                    label: l10n.rectangle,
-                    shape: 'rectangle',
-                    isSelected: selectedShape == 'rectangle',
-                    onTap: () =>
-                        setDialogState(() => selectedShape = 'rectangle'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final tableNumber = tableNumberController.text.trim();
-                if (tableNumber.isEmpty) return;
-                final seats = int.tryParse(seatsController.text) ?? 4;
-
-                final dao = ref.read(tablesDaoProvider);
-                await dao.createTable(
-                  RestaurantTablesCompanion.insert(
-                    tableNumber: tableNumber,
-                    seats: drift.Value(seats),
-                    positionX: const drift.Value(100),
-                    positionY: const drift.Value(100),
-                    shape: drift.Value(selectedShape),
-                  ),
-                );
-
-                if (ctx.mounted) {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text(l10n.tableAdded(tableNumber))),
-                  );
-                }
-              },
-              child: Text(l10n.add),
-            ),
-          ],
-        ),
-      ),
+      builder: (ctx) => const AddTableModal(),
     );
+    
+    if (result == true && context.mounted) {
+      // Table list will auto-refresh via stream provider
+    }
   }
 
-  void _showTableDetail(
-      BuildContext context, WidgetRef ref, RestaurantTable table) {
-    showDialog(
+    void _showTableDetail(
+      BuildContext context, WidgetRef ref, RestaurantTable table) async {
+    final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Table ${table.tableNumber}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Status: ${table.status}'),
-            Text('Seats: ${table.seats}'),
-            Text('Shape: ${table.shape}'),
-            Text(
-                'Position: (${table.positionX.toInt()}, ${table.positionY.toInt()})'),
-            if (table.occupiedAt != null)
-              Text(
-                  'Occupied at: ${table.occupiedAt!.hour.toString().padLeft(2, '0')}:${table.occupiedAt!.minute.toString().padLeft(2, '0')}'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              final dao = ref.read(tablesDaoProvider);
-              await dao.softDeleteTable(table.id);
-              if (ctx.mounted) Navigator.pop(ctx);
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
+      builder: (ctx) => AddTableModal(existingTable: table),
     );
+    
+    if (result == true && context.mounted) {
+      // Table list will auto-refresh via stream provider
+    }
   }
 
+  
   Future<void> _handleTableDragEnd(BuildContext context, WidgetRef ref,
       RestaurantTable table, Offset offset) async {
     final dao = ref.read(tablesDaoProvider);

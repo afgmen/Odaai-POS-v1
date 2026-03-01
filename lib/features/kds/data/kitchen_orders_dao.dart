@@ -314,9 +314,15 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
 
   /// 상태별 주문 개수 조회
   Future<int> countOrdersByStatus(String status) {
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
     final query = selectOnly(kitchenOrders)
       ..addColumns([kitchenOrders.id.count()])
-      ..where(kitchenOrders.status.equals(status));
+      ..where(kitchenOrders.status.equals(status))
+      ..where(kitchenOrders.createdAt.isBiggerOrEqualValue(startOfDay))
+      ..where(kitchenOrders.createdAt.isSmallerThanValue(endOfDay));
 
     return query
         .map((row) => row.read(kitchenOrders.id.count()) ?? 0)
@@ -340,13 +346,18 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
         .getSingle();
   }
 
-  /// 평균 조리 시간 계산 (초 단위)
+  /// 평균 조리 시간 계산 (초 단위) - 오늘 주문만
   Future<double> calculateAveragePrepTime() async {
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
     final orders = await (select(kitchenOrders)
           ..where((t) => t.status.equals('READY') | t.status.equals('SERVED'))
           ..where((t) => t.startedAt.isNotNull())
           ..where((t) => t.readyAt.isNotNull())
-          ..limit(100))
+          ..where((t) => t.createdAt.isBiggerOrEqualValue(startOfDay))
+          ..where((t) => t.createdAt.isSmallerThanValue(endOfDay)))
         .get();
 
     if (orders.isEmpty) return 0.0;

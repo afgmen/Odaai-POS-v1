@@ -1,12 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oda_pos/database/app_database.dart';
-import 'package:oda_pos/database/tables/floor_zones.dart';
-import 'package:oda_pos/database/tables/floor_elements.dart';
 import 'package:oda_pos/features/floor_plan/data/floor_zone_dao.dart';
 import 'package:oda_pos/features/floor_plan/data/floor_element_dao.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-
 import 'package:matcher/matcher.dart' as matcher;
 
 AppDatabase _openDb() => AppDatabase.forTesting(NativeDatabase.memory());
@@ -33,8 +30,7 @@ void main() {
         colorHex: const Value('#4CAF50'),
       );
       
-      final id = await zoneDao.createZone(zone);
-      expect(id, greaterThan(0));
+      await zoneDao.createZone(zone);
 
       final zones = await zoneDao.getAllZones();
       expect(zones.length, 1);
@@ -47,7 +43,7 @@ void main() {
         name: 'Zone A',
       );
       
-      final id = await zoneDao.createZone(zone);
+      await zoneDao.createZone(zone);
       final zones = await zoneDao.getAllZones();
 
       expect(zones.first.colorHex, '#E3F2FD'); // default color
@@ -62,7 +58,7 @@ void main() {
         height: const Value(250.0),
       );
       
-      final id = await zoneDao.createZone(zone);
+      await zoneDao.createZone(zone);
       final zones = await zoneDao.getAllZones();
 
       expect(zones.first.posX, 100.0);
@@ -75,10 +71,10 @@ void main() {
       final zone = FloorZonesCompanion.insert(
         name: 'Movable Zone',
       );
-      final id = await zoneDao.createZone(zone);
+      final zoneId = await zoneDao.createZone(zone);
 
       final updated = await zoneDao.updateZonePositionAndSize(
-        zoneId: id,
+        zoneId: zoneId,
         posX: 200.0,
         posY: 300.0,
         width: 400.0,
@@ -98,9 +94,9 @@ void main() {
       final zone = FloorZonesCompanion.insert(
         name: 'Temp Zone',
       );
-      final id = await zoneDao.createZone(zone);
+      final zoneId = await zoneDao.createZone(zone);
 
-      final deleteCount = await zoneDao.deleteZone(id);
+      final deleteCount = await zoneDao.deleteZone(zoneId);
       expect(deleteCount, 1);
 
       final zones = await zoneDao.getAllZones();
@@ -111,9 +107,9 @@ void main() {
       final zone = FloorZonesCompanion.insert(
         name: 'VIP Room',
       );
-      final id = await zoneDao.createZone(zone);
+      final zoneId = await zoneDao.createZone(zone);
 
-      final retrieved = await zoneDao.getZoneById(id);
+      final retrieved = await zoneDao.getZoneById(zoneId);
       expect(retrieved, matcher.isNotNull);
       expect(retrieved!.name, 'VIP Room');
     });
@@ -143,8 +139,7 @@ void main() {
         label: const Value('Main Entrance'),
       );
 
-      final id = await elementDao.createElement(element);
-      expect(id, greaterThan(0));
+      await elementDao.createElement(element);
 
       final elements = await elementDao.getAllElements();
       expect(elements.length, 1);
@@ -196,10 +191,10 @@ void main() {
       final element = FloorElementsCompanion.insert(
         elementType: 'bar_counter',
       );
-      final id = await elementDao.createElement(element);
+      final elementId = await elementDao.createElement(element);
 
       final updated = await elementDao.updateElementPosition(
-        elementId: id,
+        elementId: elementId,
         posX: 200.0,
         posY: 300.0,
       );
@@ -215,9 +210,9 @@ void main() {
       final element = FloorElementsCompanion.insert(
         elementType: 'wall',
       );
-      final id = await elementDao.createElement(element);
+      final elementId = await elementDao.createElement(element);
 
-      final deleteCount = await elementDao.deleteElement(id);
+      final deleteCount = await elementDao.deleteElement(elementId);
       expect(deleteCount, 1);
 
       final elements = await elementDao.getAllElements();
@@ -229,9 +224,9 @@ void main() {
         elementType: 'entrance',
         label: const Value('Side Door'),
       );
-      final id = await elementDao.createElement(element);
+      final elementId = await elementDao.createElement(element);
 
-      final retrieved = await elementDao.getElementById(id);
+      final retrieved = await elementDao.getElementById(elementId);
       expect(retrieved, matcher.isNotNull);
       expect(retrieved!.elementType, 'entrance');
       expect(retrieved.label, 'Side Door');

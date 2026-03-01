@@ -14,6 +14,9 @@ import '../widgets/enable_rbac_button.dart';
 import '../widgets/delivery_server_settings.dart';
 import '../../../delivery/presentation/screens/delivery_platform_settings_screen.dart';
 import '../../providers/store_settings_provider.dart';
+import '../../../backup/domain/services/backup_service.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 
 /// 설정 화면 — 언어, 통화, 매장 정보, 앱 정보 등
 class SettingsScreen extends ConsumerWidget {
@@ -243,6 +246,17 @@ class SettingsScreen extends ConsumerWidget {
           ),
 
           const SizedBox(height: 24),
+
+          const SizedBox(height: 24),
+
+          // ─── 백업 & 복원 섹션 ─────────────────────────────
+          _SectionHeader(
+            title: 'Backup & Restore',
+            icon: Icons.backup,
+          ),
+          const SizedBox(height: 8),
+          _BackupRestoreCard(ref: ref),
+
 
           // ─── 앱 정보 섹션 ─────────────────────────────
           _SectionHeader(
@@ -640,5 +654,188 @@ class _SwitchTile extends StatelessWidget {
       activeThumbColor: AppTheme.primary,
       onChanged: onChanged,
     );
+  }
+}
+
+/// 백업 & 복원 카드
+class _BackupRestoreCard extends StatelessWidget {
+  final WidgetRef ref;
+
+  const _BackupRestoreCard({required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardWhite,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Create Backup Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _handleCreateBackup(context, ref),
+              icon: const Icon(Icons.backup),
+              label: const Text('Create Backup'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Restore Backup Button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _handleRestoreBackup(context, ref),
+              icon: const Icon(Icons.restore),
+              label: const Text('Restore from Backup'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.error,
+                side: const BorderSide(color: AppTheme.error),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleCreateBackup(BuildContext context, WidgetRef ref) async {
+    try {
+      final backupService = ref.read(backupServiceProvider);
+      final currentEmployee = ref.read(currentEmployeeProvider);
+
+      final result = await backupService.createBackup(
+        type: BackupType.manual,
+        employeeId: currentEmployee?.id,
+      );
+
+      if (context.mounted) {
+        if (result.success && result.backupFile != null) {
+          SnackBarHelper.showSuccess(
+            context,
+            'Backup created successfully!\nPath: ${result.backupFile!.path}',
+          );
+        } else {
+          SnackBarHelper.showError(
+            context,
+            result.errorMessage ?? 'Backup failed',
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+      }
+    }
+  }
+
+  Future<void> _handleRestoreBackup(BuildContext context, WidgetRef ref) async {
+    // 1. FilePicker로 백업 파일 선택
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['db'],
+      dialogTitle: 'Select Backup File',
+    );
+
+    if (result == null || result.files.single.path == null) {
+      return; // User canceled
+    }
+
+    final filePath = result.files.single.path!;
+
+    if (!context.mounted) return;
+
+    // 2. 확인 다이얼로그
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning, color: AppTheme.error),
+            SizedBox(width: 8),
+            Text('Warning'),
+          ],
+        ),
+        content: const Text(
+          'All current data will be overwritten with the backup data.\n\n'
+          'This action cannot be undone.\n\n'
+          'The app will need to restart after restoration.\n\n'
+          'Do you want to continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.error,
+            ),
+            child: const Text('Restore'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    // 3. 복원 실행
+    try {
+      final backupService = ref.read(backupServiceProvider);
+      
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Restoring backup...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final restoreResult = await backupService.restoreFromBackup(filePath);
+
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+
+        if (restoreResult.success) {
+          SnackBarHelper.showSuccess(
+            context,
+            'Backup restored successfully!\nPlease restart the app.',
+          );
+        } else {
+          SnackBarHelper.showError(
+            context,
+            restoreResult.errorMessage ?? 'Restore failed',
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+      }
+    }
   }
 }

@@ -265,6 +265,136 @@ class BackupService {
     return _dao.watchBackupLogs(limit: limit);
   }
 
+
+  /// 백업에서 복원
+  Future<BackupResult> restoreFromBackup(String backupFilePath) async {
+    try {
+      // 1. 백업 파일 존재 확인
+      final backupFile = File(backupFilePath);
+      if (!await backupFile.exists()) {
+        return BackupResult(
+          success: false,
+          errorMessage: 'Backup file not found: $backupFilePath',
+        );
+      }
+
+      // 2. 파일 복사 (원본 보존)
+      final backupDir = await _getBackupDirectory();
+      final tempCopy = File(path.join(backupDir.path, 'temp_restore.db'));
+      await backupFile.copy(tempCopy.path);
+
+      // 3. 파일 무결성 검증
+      if (!await _validateBackupFile(tempCopy.path)) {
+        await tempCopy.delete();
+        return BackupResult(
+          success: false,
+          errorMessage: 'Invalid backup file (corrupted or wrong format)',
+        );
+      }
+
+      // 4. 기존 데이터 백업 (복원 실패 시 롤백용)
+      final rollbackBackup = await createBackup(
+        type: BackupType.auto,
+      );
+
+      if (!rollbackBackup.success) {
+        await tempCopy.delete();
+        return BackupResult(
+          success: false,
+          errorMessage: 'Failed to create rollback backup',
+        );
+      }
+
+      // 5. 데이터 복원 실행
+      try {
+        await _performRestore(tempCopy.path);
+        
+        // 6. 임시 파일 삭제
+        await tempCopy.delete();
+
+        return BackupResult(
+          success: true,
+          backupFile: backupFile,
+        );
+      } catch (restoreError) {
+        // 복원 실패 시 롤백
+        if (rollbackBackup.backupFile != null) {
+          await _performRestore(rollbackBackup.backupFile!.path);
+        }
+        
+        await tempCopy.delete();
+        
+        return BackupResult(
+          success: false,
+          errorMessage: 'Restore failed: ${restoreError.toString()}',
+        );
+      }
+    } catch (e) {
+      return BackupResult(
+        success: false,
+        errorMessage: 'Restore error: ${e.toString()}',
+      );
+    }
+  }
+
+  /// 백업 파일 검증
+  Future<bool> _validateBackupFile(String filePath) async {
+    try {
+      final file = File(filePath);
+      final stats = await file.stat();
+      
+      // 파일 크기 확인 (최소 1KB)
+      if (stats.size < 1024) {
+        return false;
+      }
+
+      // SQLite 파일 헤더 확인
+      final bytes = await file.openRead(0, 16).first;
+      final header = String.fromCharCodes(bytes.take(15));
+      
+      return header.startsWith('SQLite format 3');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// 실제 복원 수행
+  Future<void> _performRestore(String backupFilePath) async {
+    // 1. WAL 체크포인트
+    await _performWALCheckpoint();
+
+    // 2. 연결 닫기
+    await _db.close();
+
+    // 3. 현재 DB 파일 경로
+    final currentDbPath = await _getDatabasePath();
+
+    // 4. 백업으로 덮어쓰기
+    final backupFile = File(backupFilePath);
+    await backupFile.copy(currentDbPath);
+
+    // 5. WAL 및 SHM 파일 삭제 (재생성 필요)
+    final walFile = File('$currentDbPath-wal');
+    final shmFile = File('$currentDbPath-shm');
+    
+    if (await walFile.exists()) {
+      await walFile.delete();
+    }
+    if (await shmFile.exists()) {
+      await shmFile.delete();
+    }
+
+    // 6. DB 재연결 (AppDatabase가 자동으로 처리)
+    // Note: 앱 재시작 권장
+  }
+
+  /// 데이터베이스 경로 가져오기
+  Future<String> _getDatabasePath() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    return path.join(appDir.path, 'oda_pos.db');
+  }
+
+
   /// 백업 삭제 (파일 + 로그)
   Future<bool> deleteBackup(BackupLog backup) async {
     try {

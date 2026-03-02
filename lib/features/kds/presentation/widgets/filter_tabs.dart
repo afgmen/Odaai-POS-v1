@@ -4,7 +4,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/enums/order_status.dart';
 import '../providers/kds_screen_provider.dart';
 
-/// 상태 필터 탭 위젯
 class FilterTabs extends ConsumerWidget {
   const FilterTabs({super.key});
 
@@ -33,8 +32,7 @@ class FilterTabs extends ConsumerWidget {
             label: l10n.kdsFilterPending,
             status: OrderStatus.pending,
             isSelected: selectedFilter == OrderStatus.pending,
-            color: Color(int.parse(
-                OrderStatus.pending.colorHex.replaceFirst('#', '0xFF'))),
+            color: Color(int.parse(OrderStatus.pending.colorHex.replaceFirst('#', '0xFF'))),
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
@@ -43,8 +41,7 @@ class FilterTabs extends ConsumerWidget {
             label: l10n.kdsFilterPreparing,
             status: OrderStatus.preparing,
             isSelected: selectedFilter == OrderStatus.preparing,
-            color: Color(int.parse(
-                OrderStatus.preparing.colorHex.replaceFirst('#', '0xFF'))),
+            color: Color(int.parse(OrderStatus.preparing.colorHex.replaceFirst('#', '0xFF'))),
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
@@ -53,8 +50,8 @@ class FilterTabs extends ConsumerWidget {
             label: l10n.kdsFilterReady,
             status: OrderStatus.ready,
             isSelected: selectedFilter == OrderStatus.ready,
-            color: Color(int.parse(
-                OrderStatus.ready.colorHex.replaceFirst('#', '0xFF'))),
+            color: Color(int.parse(OrderStatus.ready.colorHex.replaceFirst('#', '0xFF'))),
+          ),
           const SizedBox(width: 8),
           _buildFilterChip(
             context: context,
@@ -62,8 +59,7 @@ class FilterTabs extends ConsumerWidget {
             label: 'Served',
             status: OrderStatus.served,
             isSelected: selectedFilter == OrderStatus.served,
-            color: Color(int.parse(
-                OrderStatus.served.colorHex.replaceFirst('#', '0xFF'))),
+            color: Color(int.parse(OrderStatus.served.colorHex.replaceFirst('#', '0xFF'))),
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
@@ -72,10 +68,7 @@ class FilterTabs extends ConsumerWidget {
             label: 'Cancelled',
             status: OrderStatus.cancelled,
             isSelected: selectedFilter == OrderStatus.cancelled,
-            color: Color(int.parse(
-                OrderStatus.cancelled.colorHex.replaceFirst('#', '0xFF'))),
-          ),
-
+            color: Color(int.parse(OrderStatus.cancelled.colorHex.replaceFirst('#', '0xFF'))),
           ),
         ],
       ),

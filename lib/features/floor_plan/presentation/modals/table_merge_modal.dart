@@ -52,7 +52,7 @@ class TableMergeModal extends ConsumerWidget {
                             ),
                           ),
                           title: Text('Table ${table.tableNumber}'),
-                          subtitle: Text('Capacity: ${table.capacity}'),
+                          subtitle: Text('Capacity: ${table.seats}'),
                           trailing: const Icon(Icons.arrow_forward),
                           onTap: () => _confirmMerge(context, ref, table),
                         ),

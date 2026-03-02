@@ -208,8 +208,8 @@ class TableDetailModal extends ConsumerWidget {
                 onTap: () => _showMergeModal(context, ref),
               ),
 
-              ),
-
+              _ActionButton(
+                icon: Icons.cancel_outlined,
                 label: 'Cancel Order',
                 color: Colors.red,
                 onTap: () => _confirmCancelOrder(context, ref),

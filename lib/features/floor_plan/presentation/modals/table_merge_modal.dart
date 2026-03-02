@@ -8,7 +8,7 @@ import '../../../../providers/database_providers.dart';
 
 class TableMergeModal extends ConsumerWidget {
   final RestaurantTable currentTable;
-  final int? currentSaleIdId;
+  final int? currentSaleId;
 
   const TableMergeModal({
     super.key,
@@ -52,7 +52,7 @@ class TableMergeModal extends ConsumerWidget {
                             ),
                           ),
                           title: Text('Table ${table.tableNumber}'),
-                          subtitle: Text('Zone: ${table.zone ?? "N/A"}'),
+                          subtitle: Text('Capacity: ${table.capacity}'),
                           trailing: const Icon(Icons.arrow_forward),
                           onTap: () => _confirmMerge(context, ref, table),
                         ),
@@ -105,8 +105,6 @@ class TableMergeModal extends ConsumerWidget {
     );
   }
 
-  Future<void> _performMerge(
-    BuildContext context,
   Future<void> _performMerge(
     BuildContext context,
     WidgetRef ref,

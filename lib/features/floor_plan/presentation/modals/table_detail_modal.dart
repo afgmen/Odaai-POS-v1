@@ -202,12 +202,12 @@ class TableDetailModal extends ConsumerWidget {
                 },
               ),
               _ActionButton(
-                icon: Icons.cancel_outlined,
-              _ActionButton(
                 icon: Icons.merge,
                 label: 'Merge Table',
                 color: AppTheme.primary,
                 onTap: () => _showMergeModal(context, ref),
+              ),
+
               ),
 
                 label: 'Cancel Order',

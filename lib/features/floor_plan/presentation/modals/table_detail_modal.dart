@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../tables/domain/enums/table_status.dart';
 import '../../../tables/data/tables_providers.dart';
 import '../../../pos/presentation/screens/pos_main_screen.dart';
 import '../../../pos/presentation/screens/bill_request_screen.dart';
 import '../../../pos/data/models/order_type.dart';
 import 'table_move_modal.dart';
+import 'table_merge_modal.dart';
 
 /// TableDetailModal — 사용 중인 테이블의 상세 정보 + 액션 버튼
 /// Phase 2: [추가주문] [청구서요청] [테이블이동] [주문취소]
@@ -201,6 +203,13 @@ class TableDetailModal extends ConsumerWidget {
               ),
               _ActionButton(
                 icon: Icons.cancel_outlined,
+              _ActionButton(
+                icon: Icons.merge,
+                label: 'Merge Table',
+                color: AppTheme.primary,
+                onTap: () => _showMergeModal(context, ref),
+              ),
+
                 label: 'Cancel Order',
                 color: Colors.red,
                 onTap: () => _confirmCancelOrder(context, ref),
@@ -227,6 +236,14 @@ class TableDetailModal extends ConsumerWidget {
       WidgetRef ref, int tableId, String status) async {
     final dao = ref.read(tablesDaoProvider);
     await dao.updateTableStatus(tableId: tableId, status: status);
+  }
+
+
+  void _showMergeModal(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (_) => TableMergeModal(currentTable: table, currentSaleId: table.currentSaleId),
+    );
   }
 
   void _confirmCancelOrder(BuildContext context, WidgetRef ref) {

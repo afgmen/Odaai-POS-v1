@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../../database/app_database.dart';
-import '../../../../providers/database_providers.dart';
 import '../../../pos/providers/modifier_provider.dart';
 import 'product_modifier_link_screen.dart';
 import '../../../products/providers/products_management_provider.dart';

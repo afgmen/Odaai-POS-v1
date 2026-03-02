@@ -5,7 +5,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
 import '../../../pos/providers/modifier_provider.dart';
-import '../../../products/providers/products_management_provider.dart';
 
 class ProductModifierLinkScreen extends ConsumerStatefulWidget {
   final Product product;

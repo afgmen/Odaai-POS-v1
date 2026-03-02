@@ -36,7 +36,7 @@ class KdsScreen extends ConsumerWidget {
                   !showMenuSummary;
             },
             icon: Icon(
-              showMenuSummary ? Icons.menu_book : Icons.menu_book_outlined,
+              showMenuSummary ? Icons.list_alt : Icons.grid_view,
             ),
             tooltip: l10n.kdsMenuSummaryToggle,
           ),
@@ -49,84 +49,84 @@ class KdsScreen extends ConsumerWidget {
         children: [
           // Main order grid area
           Expanded(
-            child: Column(
-              children: [
-                // Status filter tabs
-                const FilterTabs(),
+            child: showMenuSummary
+                ? const MenuItemSummaryPanel()
+                : Column(
+                    children: [
+                      // Status filter tabs
+                      const FilterTabs(),
 
-                // Order grid
-                Expanded(
-                  child: filteredOrders.when(
-                    data: (orders) {
-                      if (orders.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.restaurant_menu,
-                                size: 80,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                l10n.kdsNoOrders,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.grey,
+                      // Order grid
+                      Expanded(
+                        child: filteredOrders.when(
+                          data: (orders) {
+                            if (orders.isEmpty) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.restaurant_menu,
+                                      size: 80,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      l10n.kdsNoOrders,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                              );
+                            }
+
+                            return GridView.builder(
+                              padding: const EdgeInsets.all(16),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 1.2,
                               ),
-                            ],
+                              itemCount: orders.length,
+                              itemBuilder: (context, index) {
+                                final orderWithItems = orders[index];
+                                return OrderCard(
+                                  orderWithItems: orderWithItems,
+                                  onTap: () {
+                                    ref
+                                        .read(selectedOrderIdProvider.notifier)
+                                        .state = orderWithItems.order.id;
+                                    ref
+                                        .read(showOrderDetailProvider.notifier)
+                                        .state = true;
+                                  },
+                                );
+                              },
+                            );
+                          },
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (error, stack) => Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.error, color: Colors.red, size: 48),
+                                const SizedBox(height: 16),
+                                Text(l10n.kdsErrorOccurred(error)),
+                              ],
+                            ),
                           ),
-                        );
-                      }
-
-                      return GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 1.2,
                         ),
-                        itemCount: orders.length,
-                        itemBuilder: (context, index) {
-                          final orderWithItems = orders[index];
-                          return OrderCard(
-                            orderWithItems: orderWithItems,
-                            onTap: () {
-                              ref
-                                  .read(selectedOrderIdProvider.notifier)
-                                  .state = orderWithItems.order.id;
-                              ref
-                                  .read(showOrderDetailProvider.notifier)
-                                  .state = true;
-                            },
-                          );
-                        },
-                      );
-                    },
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, stack) => Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.error, color: Colors.red, size: 48),
-                          const SizedBox(height: 16),
-                          Text(l10n.kdsErrorOccurred(error)),
-                        ],
                       ),
-                    ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
-
           // Menu item summary side panel (conditionally shown)
-          if (showMenuSummary) const MenuItemSummaryPanel(),
         ],
       ),
 

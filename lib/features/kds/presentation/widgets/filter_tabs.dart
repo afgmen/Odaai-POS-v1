@@ -55,6 +55,27 @@ class FilterTabs extends ConsumerWidget {
             isSelected: selectedFilter == OrderStatus.ready,
             color: Color(int.parse(
                 OrderStatus.ready.colorHex.replaceFirst('#', '0xFF'))),
+          const SizedBox(width: 8),
+          _buildFilterChip(
+            context: context,
+            ref: ref,
+            label: 'Served',
+            status: OrderStatus.served,
+            isSelected: selectedFilter == OrderStatus.served,
+            color: Color(int.parse(
+                OrderStatus.served.colorHex.replaceFirst('#', '0xFF'))),
+          ),
+          const SizedBox(width: 8),
+          _buildFilterChip(
+            context: context,
+            ref: ref,
+            label: 'Cancelled',
+            status: OrderStatus.cancelled,
+            isSelected: selectedFilter == OrderStatus.cancelled,
+            color: Color(int.parse(
+                OrderStatus.cancelled.colorHex.replaceFirst('#', '0xFF'))),
+          ),
+
           ),
         ],
       ),

@@ -418,6 +418,23 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               ),
             ],
 
+            // Split Bill Button
+            if (widget.saleItems != null && widget.saleItems!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: OutlinedButton.icon(
+                  onPressed: () => _showSplitBillModal(),
+                  icon: const Icon(Icons.splitscreen),
+                  label: const Text('Split Bill'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primary,
+                    side: const BorderSide(color: AppTheme.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    minimumSize: const Size(double.infinity, 0),
+                  ),
+                ),
+              ),
+
             const SizedBox(height: 20),
 
             // ─── 결제 완료 버튼 ─────────────────────

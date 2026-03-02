@@ -77,7 +77,7 @@ class _ModifierSelectionModalState extends ConsumerState<ModifierSelectionModal>
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: widget.groups.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 final group = widget.groups[index];
                 return _buildModifierGroup(group);
@@ -89,7 +89,7 @@ class _ModifierSelectionModalState extends ConsumerState<ModifierSelectionModal>
           if (_errorMessage != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: AppTheme.error.withOpacity(0.1),
+              color: AppTheme.error.withValues(alpha: 0.1),
               child: Row(
                 children: [
                   const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
@@ -111,7 +111,7 @@ class _ModifierSelectionModalState extends ConsumerState<ModifierSelectionModal>
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -355,7 +355,7 @@ class _ModifierSelectionModalState extends ConsumerState<ModifierSelectionModal>
           }
         },
         loading: () async {},
-        error: (_, __) async {},
+        error: (context, index) async {},
       );
     }
 

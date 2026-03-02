@@ -33,7 +33,7 @@ class ModifierManagementScreen extends ConsumerWidget {
               return Card(
                 child: ListTile(
                   title: Text(group.name),
-                  subtitle: Text('${group.isRequired ? "Required" : "Optional"}'),
+                  subtitle: Text(group.isRequired ? 'Required' : 'Optional'),
                 ),
               );
             },

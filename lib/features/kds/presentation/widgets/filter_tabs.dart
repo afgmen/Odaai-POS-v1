@@ -15,7 +15,7 @@ class FilterTabs extends ConsumerWidget {
     return Container(
       color: Colors.grey.shade100,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: Row(
+      child: Wrap(
         children: [
           _buildFilterChip(
             context: context,

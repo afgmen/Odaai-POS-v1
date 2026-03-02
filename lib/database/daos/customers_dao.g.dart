@@ -6,6 +6,7 @@ part of 'customers_dao.dart';
 mixin _$CustomersDaoMixin on DatabaseAccessor<AppDatabase> {
   $CustomersTable get customers => attachedDatabase.customers;
   $SalesTable get sales => attachedDatabase.sales;
+  $CategoriesTable get categories => attachedDatabase.categories;
   $ProductsTable get products => attachedDatabase.products;
   $SaleItemsTable get saleItems => attachedDatabase.saleItems;
   $CashDrawerLogsTable get cashDrawerLogs => attachedDatabase.cashDrawerLogs;
@@ -21,6 +22,8 @@ class CustomersDaoManager {
       $$CustomersTableTableManager(_db.attachedDatabase, _db.customers);
   $$SalesTableTableManager get sales =>
       $$SalesTableTableManager(_db.attachedDatabase, _db.sales);
+  $$CategoriesTableTableManager get categories =>
+      $$CategoriesTableTableManager(_db.attachedDatabase, _db.categories);
   $$ProductsTableTableManager get products =>
       $$ProductsTableTableManager(_db.attachedDatabase, _db.products);
   $$SaleItemsTableTableManager get saleItems =>

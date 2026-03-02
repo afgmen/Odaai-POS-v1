@@ -3,6 +3,408 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
+class $CategoriesTable extends Categories
+    with TableInfo<$CategoriesTable, Category> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CategoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    description,
+    sortOrder,
+    isActive,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'categories';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Category> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Category map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Category(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CategoriesTable createAlias(String alias) {
+    return $CategoriesTable(attachedDatabase, alias);
+  }
+}
+
+class Category extends DataClass implements Insertable<Category> {
+  final int id;
+  final String name;
+  final String? description;
+  final int sortOrder;
+  final bool isActive;
+  final DateTime createdAt;
+  const Category({
+    required this.id,
+    required this.name,
+    this.description,
+    required this.sortOrder,
+    required this.isActive,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  CategoriesCompanion toCompanion(bool nullToAbsent) {
+    return CategoriesCompanion(
+      id: Value(id),
+      name: Value(name),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      sortOrder: Value(sortOrder),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory Category.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Category(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String?>(json['description']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String?>(description),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  Category copyWith({
+    int? id,
+    String? name,
+    Value<String?> description = const Value.absent(),
+    int? sortOrder,
+    bool? isActive,
+    DateTime? createdAt,
+  }) => Category(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    description: description.present ? description.value : this.description,
+    sortOrder: sortOrder ?? this.sortOrder,
+    isActive: isActive ?? this.isActive,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  Category copyWithCompanion(CategoriesCompanion data) {
+    return Category(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Category(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, description, sortOrder, isActive, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Category &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.sortOrder == this.sortOrder &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt);
+}
+
+class CategoriesCompanion extends UpdateCompanion<Category> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String?> description;
+  final Value<int> sortOrder;
+  final Value<bool> isActive;
+  final Value<DateTime> createdAt;
+  const CategoriesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  CategoriesCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.description = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : name = Value(name);
+  static Insertable<Category> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<int>? sortOrder,
+    Expression<bool>? isActive,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  CategoriesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String?>? description,
+    Value<int>? sortOrder,
+    Value<bool>? isActive,
+    Value<DateTime>? createdAt,
+  }) {
+    return CategoriesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      sortOrder: sortOrder ?? this.sortOrder,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoriesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -104,6 +506,20 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES categories (id)',
+    ),
+  );
   static const VerificationMeta _imageUrlMeta = const VerificationMeta(
     'imageUrl',
   );
@@ -180,6 +596,7 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     stock,
     minStock,
     category,
+    categoryId,
     imageUrl,
     isActive,
     needsSync,
@@ -251,6 +668,12 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
       context.handle(
         _categoryMeta,
         category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
       );
     }
     if (data.containsKey('image_url')) {
@@ -328,6 +751,10 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
         DriftSqlType.string,
         data['${effectivePrefix}category'],
       ),
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}category_id'],
+      ),
       imageUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}image_url'],
@@ -367,6 +794,7 @@ class Product extends DataClass implements Insertable<Product> {
   final int stock;
   final int minStock;
   final String? category;
+  final int? categoryId;
   final String? imageUrl;
   final bool isActive;
   final bool needsSync;
@@ -382,6 +810,7 @@ class Product extends DataClass implements Insertable<Product> {
     required this.stock,
     required this.minStock,
     this.category,
+    this.categoryId,
     this.imageUrl,
     required this.isActive,
     required this.needsSync,
@@ -403,6 +832,9 @@ class Product extends DataClass implements Insertable<Product> {
     map['min_stock'] = Variable<int>(minStock);
     if (!nullToAbsent || category != null) {
       map['category'] = Variable<String>(category);
+    }
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<int>(categoryId);
     }
     if (!nullToAbsent || imageUrl != null) {
       map['image_url'] = Variable<String>(imageUrl);
@@ -429,6 +861,9 @@ class Product extends DataClass implements Insertable<Product> {
       category: category == null && nullToAbsent
           ? const Value.absent()
           : Value(category),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
       imageUrl: imageUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(imageUrl),
@@ -454,6 +889,7 @@ class Product extends DataClass implements Insertable<Product> {
       stock: serializer.fromJson<int>(json['stock']),
       minStock: serializer.fromJson<int>(json['minStock']),
       category: serializer.fromJson<String?>(json['category']),
+      categoryId: serializer.fromJson<int?>(json['categoryId']),
       imageUrl: serializer.fromJson<String?>(json['imageUrl']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       needsSync: serializer.fromJson<bool>(json['needsSync']),
@@ -474,6 +910,7 @@ class Product extends DataClass implements Insertable<Product> {
       'stock': serializer.toJson<int>(stock),
       'minStock': serializer.toJson<int>(minStock),
       'category': serializer.toJson<String?>(category),
+      'categoryId': serializer.toJson<int?>(categoryId),
       'imageUrl': serializer.toJson<String?>(imageUrl),
       'isActive': serializer.toJson<bool>(isActive),
       'needsSync': serializer.toJson<bool>(needsSync),
@@ -492,6 +929,7 @@ class Product extends DataClass implements Insertable<Product> {
     int? stock,
     int? minStock,
     Value<String?> category = const Value.absent(),
+    Value<int?> categoryId = const Value.absent(),
     Value<String?> imageUrl = const Value.absent(),
     bool? isActive,
     bool? needsSync,
@@ -507,6 +945,7 @@ class Product extends DataClass implements Insertable<Product> {
     stock: stock ?? this.stock,
     minStock: minStock ?? this.minStock,
     category: category.present ? category.value : this.category,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
     imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
     isActive: isActive ?? this.isActive,
     needsSync: needsSync ?? this.needsSync,
@@ -524,6 +963,9 @@ class Product extends DataClass implements Insertable<Product> {
       stock: data.stock.present ? data.stock.value : this.stock,
       minStock: data.minStock.present ? data.minStock.value : this.minStock,
       category: data.category.present ? data.category.value : this.category,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
       imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       needsSync: data.needsSync.present ? data.needsSync.value : this.needsSync,
@@ -544,6 +986,7 @@ class Product extends DataClass implements Insertable<Product> {
           ..write('stock: $stock, ')
           ..write('minStock: $minStock, ')
           ..write('category: $category, ')
+          ..write('categoryId: $categoryId, ')
           ..write('imageUrl: $imageUrl, ')
           ..write('isActive: $isActive, ')
           ..write('needsSync: $needsSync, ')
@@ -564,6 +1007,7 @@ class Product extends DataClass implements Insertable<Product> {
     stock,
     minStock,
     category,
+    categoryId,
     imageUrl,
     isActive,
     needsSync,
@@ -583,6 +1027,7 @@ class Product extends DataClass implements Insertable<Product> {
           other.stock == this.stock &&
           other.minStock == this.minStock &&
           other.category == this.category &&
+          other.categoryId == this.categoryId &&
           other.imageUrl == this.imageUrl &&
           other.isActive == this.isActive &&
           other.needsSync == this.needsSync &&
@@ -600,6 +1045,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   final Value<int> stock;
   final Value<int> minStock;
   final Value<String?> category;
+  final Value<int?> categoryId;
   final Value<String?> imageUrl;
   final Value<bool> isActive;
   final Value<bool> needsSync;
@@ -615,6 +1061,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.stock = const Value.absent(),
     this.minStock = const Value.absent(),
     this.category = const Value.absent(),
+    this.categoryId = const Value.absent(),
     this.imageUrl = const Value.absent(),
     this.isActive = const Value.absent(),
     this.needsSync = const Value.absent(),
@@ -631,6 +1078,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.stock = const Value.absent(),
     this.minStock = const Value.absent(),
     this.category = const Value.absent(),
+    this.categoryId = const Value.absent(),
     this.imageUrl = const Value.absent(),
     this.isActive = const Value.absent(),
     this.needsSync = const Value.absent(),
@@ -648,6 +1096,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Expression<int>? stock,
     Expression<int>? minStock,
     Expression<String>? category,
+    Expression<int>? categoryId,
     Expression<String>? imageUrl,
     Expression<bool>? isActive,
     Expression<bool>? needsSync,
@@ -664,6 +1113,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       if (stock != null) 'stock': stock,
       if (minStock != null) 'min_stock': minStock,
       if (category != null) 'category': category,
+      if (categoryId != null) 'category_id': categoryId,
       if (imageUrl != null) 'image_url': imageUrl,
       if (isActive != null) 'is_active': isActive,
       if (needsSync != null) 'needs_sync': needsSync,
@@ -682,6 +1132,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Value<int>? stock,
     Value<int>? minStock,
     Value<String?>? category,
+    Value<int?>? categoryId,
     Value<String?>? imageUrl,
     Value<bool>? isActive,
     Value<bool>? needsSync,
@@ -698,6 +1149,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       stock: stock ?? this.stock,
       minStock: minStock ?? this.minStock,
       category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       imageUrl: imageUrl ?? this.imageUrl,
       isActive: isActive ?? this.isActive,
       needsSync: needsSync ?? this.needsSync,
@@ -736,6 +1188,9 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     if (category.present) {
       map['category'] = Variable<String>(category.value);
     }
+    if (categoryId.present) {
+      map['category_id'] = Variable<int>(categoryId.value);
+    }
     if (imageUrl.present) {
       map['image_url'] = Variable<String>(imageUrl.value);
     }
@@ -766,6 +1221,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
           ..write('stock: $stock, ')
           ..write('minStock: $minStock, ')
           ..write('category: $category, ')
+          ..write('categoryId: $categoryId, ')
           ..write('imageUrl: $imageUrl, ')
           ..write('isActive: $isActive, ')
           ..write('needsSync: $needsSync, ')
@@ -22468,9 +22924,1729 @@ class FloorPlanConfigCompanion extends UpdateCompanion<FloorPlanConfigData> {
   }
 }
 
+class $ModifierGroupsTable extends ModifierGroups
+    with TableInfo<$ModifierGroupsTable, ModifierGroup> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ModifierGroupsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isRequiredMeta = const VerificationMeta(
+    'isRequired',
+  );
+  @override
+  late final GeneratedColumn<bool> isRequired = GeneratedColumn<bool>(
+    'is_required',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_required" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _allowMultipleMeta = const VerificationMeta(
+    'allowMultiple',
+  );
+  @override
+  late final GeneratedColumn<bool> allowMultiple = GeneratedColumn<bool>(
+    'allow_multiple',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("allow_multiple" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _maxSelectionsMeta = const VerificationMeta(
+    'maxSelections',
+  );
+  @override
+  late final GeneratedColumn<int> maxSelections = GeneratedColumn<int>(
+    'max_selections',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    isRequired,
+    allowMultiple,
+    maxSelections,
+    sortOrder,
+    isActive,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'modifier_groups';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ModifierGroup> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('is_required')) {
+      context.handle(
+        _isRequiredMeta,
+        isRequired.isAcceptableOrUnknown(data['is_required']!, _isRequiredMeta),
+      );
+    }
+    if (data.containsKey('allow_multiple')) {
+      context.handle(
+        _allowMultipleMeta,
+        allowMultiple.isAcceptableOrUnknown(
+          data['allow_multiple']!,
+          _allowMultipleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('max_selections')) {
+      context.handle(
+        _maxSelectionsMeta,
+        maxSelections.isAcceptableOrUnknown(
+          data['max_selections']!,
+          _maxSelectionsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ModifierGroup map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ModifierGroup(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      isRequired: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_required'],
+      )!,
+      allowMultiple: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}allow_multiple'],
+      )!,
+      maxSelections: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}max_selections'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ModifierGroupsTable createAlias(String alias) {
+    return $ModifierGroupsTable(attachedDatabase, alias);
+  }
+}
+
+class ModifierGroup extends DataClass implements Insertable<ModifierGroup> {
+  final int id;
+  final String name;
+  final bool isRequired;
+  final bool allowMultiple;
+  final int maxSelections;
+  final int sortOrder;
+  final bool isActive;
+  final DateTime createdAt;
+  const ModifierGroup({
+    required this.id,
+    required this.name,
+    required this.isRequired,
+    required this.allowMultiple,
+    required this.maxSelections,
+    required this.sortOrder,
+    required this.isActive,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['is_required'] = Variable<bool>(isRequired);
+    map['allow_multiple'] = Variable<bool>(allowMultiple);
+    map['max_selections'] = Variable<int>(maxSelections);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  ModifierGroupsCompanion toCompanion(bool nullToAbsent) {
+    return ModifierGroupsCompanion(
+      id: Value(id),
+      name: Value(name),
+      isRequired: Value(isRequired),
+      allowMultiple: Value(allowMultiple),
+      maxSelections: Value(maxSelections),
+      sortOrder: Value(sortOrder),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory ModifierGroup.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ModifierGroup(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      isRequired: serializer.fromJson<bool>(json['isRequired']),
+      allowMultiple: serializer.fromJson<bool>(json['allowMultiple']),
+      maxSelections: serializer.fromJson<int>(json['maxSelections']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'isRequired': serializer.toJson<bool>(isRequired),
+      'allowMultiple': serializer.toJson<bool>(allowMultiple),
+      'maxSelections': serializer.toJson<int>(maxSelections),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  ModifierGroup copyWith({
+    int? id,
+    String? name,
+    bool? isRequired,
+    bool? allowMultiple,
+    int? maxSelections,
+    int? sortOrder,
+    bool? isActive,
+    DateTime? createdAt,
+  }) => ModifierGroup(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    isRequired: isRequired ?? this.isRequired,
+    allowMultiple: allowMultiple ?? this.allowMultiple,
+    maxSelections: maxSelections ?? this.maxSelections,
+    sortOrder: sortOrder ?? this.sortOrder,
+    isActive: isActive ?? this.isActive,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  ModifierGroup copyWithCompanion(ModifierGroupsCompanion data) {
+    return ModifierGroup(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      isRequired: data.isRequired.present
+          ? data.isRequired.value
+          : this.isRequired,
+      allowMultiple: data.allowMultiple.present
+          ? data.allowMultiple.value
+          : this.allowMultiple,
+      maxSelections: data.maxSelections.present
+          ? data.maxSelections.value
+          : this.maxSelections,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ModifierGroup(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('isRequired: $isRequired, ')
+          ..write('allowMultiple: $allowMultiple, ')
+          ..write('maxSelections: $maxSelections, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    isRequired,
+    allowMultiple,
+    maxSelections,
+    sortOrder,
+    isActive,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ModifierGroup &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.isRequired == this.isRequired &&
+          other.allowMultiple == this.allowMultiple &&
+          other.maxSelections == this.maxSelections &&
+          other.sortOrder == this.sortOrder &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt);
+}
+
+class ModifierGroupsCompanion extends UpdateCompanion<ModifierGroup> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<bool> isRequired;
+  final Value<bool> allowMultiple;
+  final Value<int> maxSelections;
+  final Value<int> sortOrder;
+  final Value<bool> isActive;
+  final Value<DateTime> createdAt;
+  const ModifierGroupsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.isRequired = const Value.absent(),
+    this.allowMultiple = const Value.absent(),
+    this.maxSelections = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  ModifierGroupsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.isRequired = const Value.absent(),
+    this.allowMultiple = const Value.absent(),
+    this.maxSelections = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : name = Value(name);
+  static Insertable<ModifierGroup> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<bool>? isRequired,
+    Expression<bool>? allowMultiple,
+    Expression<int>? maxSelections,
+    Expression<int>? sortOrder,
+    Expression<bool>? isActive,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (isRequired != null) 'is_required': isRequired,
+      if (allowMultiple != null) 'allow_multiple': allowMultiple,
+      if (maxSelections != null) 'max_selections': maxSelections,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  ModifierGroupsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<bool>? isRequired,
+    Value<bool>? allowMultiple,
+    Value<int>? maxSelections,
+    Value<int>? sortOrder,
+    Value<bool>? isActive,
+    Value<DateTime>? createdAt,
+  }) {
+    return ModifierGroupsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      isRequired: isRequired ?? this.isRequired,
+      allowMultiple: allowMultiple ?? this.allowMultiple,
+      maxSelections: maxSelections ?? this.maxSelections,
+      sortOrder: sortOrder ?? this.sortOrder,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (isRequired.present) {
+      map['is_required'] = Variable<bool>(isRequired.value);
+    }
+    if (allowMultiple.present) {
+      map['allow_multiple'] = Variable<bool>(allowMultiple.value);
+    }
+    if (maxSelections.present) {
+      map['max_selections'] = Variable<int>(maxSelections.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ModifierGroupsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('isRequired: $isRequired, ')
+          ..write('allowMultiple: $allowMultiple, ')
+          ..write('maxSelections: $maxSelections, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ModifierOptionsTable extends ModifierOptions
+    with TableInfo<$ModifierOptionsTable, ModifierOption> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ModifierOptionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<int> groupId = GeneratedColumn<int>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES modifier_groups (id)',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _priceAdjustmentMeta = const VerificationMeta(
+    'priceAdjustment',
+  );
+  @override
+  late final GeneratedColumn<double> priceAdjustment = GeneratedColumn<double>(
+    'price_adjustment',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    groupId,
+    name,
+    priceAdjustment,
+    sortOrder,
+    isActive,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'modifier_options';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ModifierOption> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('price_adjustment')) {
+      context.handle(
+        _priceAdjustmentMeta,
+        priceAdjustment.isAcceptableOrUnknown(
+          data['price_adjustment']!,
+          _priceAdjustmentMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ModifierOption map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ModifierOption(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}group_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      priceAdjustment: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}price_adjustment'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ModifierOptionsTable createAlias(String alias) {
+    return $ModifierOptionsTable(attachedDatabase, alias);
+  }
+}
+
+class ModifierOption extends DataClass implements Insertable<ModifierOption> {
+  final int id;
+  final int groupId;
+  final String name;
+  final double priceAdjustment;
+  final int sortOrder;
+  final bool isActive;
+  final DateTime createdAt;
+  const ModifierOption({
+    required this.id,
+    required this.groupId,
+    required this.name,
+    required this.priceAdjustment,
+    required this.sortOrder,
+    required this.isActive,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['group_id'] = Variable<int>(groupId);
+    map['name'] = Variable<String>(name);
+    map['price_adjustment'] = Variable<double>(priceAdjustment);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  ModifierOptionsCompanion toCompanion(bool nullToAbsent) {
+    return ModifierOptionsCompanion(
+      id: Value(id),
+      groupId: Value(groupId),
+      name: Value(name),
+      priceAdjustment: Value(priceAdjustment),
+      sortOrder: Value(sortOrder),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory ModifierOption.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ModifierOption(
+      id: serializer.fromJson<int>(json['id']),
+      groupId: serializer.fromJson<int>(json['groupId']),
+      name: serializer.fromJson<String>(json['name']),
+      priceAdjustment: serializer.fromJson<double>(json['priceAdjustment']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'groupId': serializer.toJson<int>(groupId),
+      'name': serializer.toJson<String>(name),
+      'priceAdjustment': serializer.toJson<double>(priceAdjustment),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  ModifierOption copyWith({
+    int? id,
+    int? groupId,
+    String? name,
+    double? priceAdjustment,
+    int? sortOrder,
+    bool? isActive,
+    DateTime? createdAt,
+  }) => ModifierOption(
+    id: id ?? this.id,
+    groupId: groupId ?? this.groupId,
+    name: name ?? this.name,
+    priceAdjustment: priceAdjustment ?? this.priceAdjustment,
+    sortOrder: sortOrder ?? this.sortOrder,
+    isActive: isActive ?? this.isActive,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  ModifierOption copyWithCompanion(ModifierOptionsCompanion data) {
+    return ModifierOption(
+      id: data.id.present ? data.id.value : this.id,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      name: data.name.present ? data.name.value : this.name,
+      priceAdjustment: data.priceAdjustment.present
+          ? data.priceAdjustment.value
+          : this.priceAdjustment,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ModifierOption(')
+          ..write('id: $id, ')
+          ..write('groupId: $groupId, ')
+          ..write('name: $name, ')
+          ..write('priceAdjustment: $priceAdjustment, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    groupId,
+    name,
+    priceAdjustment,
+    sortOrder,
+    isActive,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ModifierOption &&
+          other.id == this.id &&
+          other.groupId == this.groupId &&
+          other.name == this.name &&
+          other.priceAdjustment == this.priceAdjustment &&
+          other.sortOrder == this.sortOrder &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt);
+}
+
+class ModifierOptionsCompanion extends UpdateCompanion<ModifierOption> {
+  final Value<int> id;
+  final Value<int> groupId;
+  final Value<String> name;
+  final Value<double> priceAdjustment;
+  final Value<int> sortOrder;
+  final Value<bool> isActive;
+  final Value<DateTime> createdAt;
+  const ModifierOptionsCompanion({
+    this.id = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.priceAdjustment = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  ModifierOptionsCompanion.insert({
+    this.id = const Value.absent(),
+    required int groupId,
+    required String name,
+    this.priceAdjustment = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : groupId = Value(groupId),
+       name = Value(name);
+  static Insertable<ModifierOption> custom({
+    Expression<int>? id,
+    Expression<int>? groupId,
+    Expression<String>? name,
+    Expression<double>? priceAdjustment,
+    Expression<int>? sortOrder,
+    Expression<bool>? isActive,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (groupId != null) 'group_id': groupId,
+      if (name != null) 'name': name,
+      if (priceAdjustment != null) 'price_adjustment': priceAdjustment,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  ModifierOptionsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? groupId,
+    Value<String>? name,
+    Value<double>? priceAdjustment,
+    Value<int>? sortOrder,
+    Value<bool>? isActive,
+    Value<DateTime>? createdAt,
+  }) {
+    return ModifierOptionsCompanion(
+      id: id ?? this.id,
+      groupId: groupId ?? this.groupId,
+      name: name ?? this.name,
+      priceAdjustment: priceAdjustment ?? this.priceAdjustment,
+      sortOrder: sortOrder ?? this.sortOrder,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<int>(groupId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (priceAdjustment.present) {
+      map['price_adjustment'] = Variable<double>(priceAdjustment.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ModifierOptionsCompanion(')
+          ..write('id: $id, ')
+          ..write('groupId: $groupId, ')
+          ..write('name: $name, ')
+          ..write('priceAdjustment: $priceAdjustment, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ProductModifierLinksTable extends ProductModifierLinks
+    with TableInfo<$ProductModifierLinksTable, ProductModifierLink> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProductModifierLinksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _productIdMeta = const VerificationMeta(
+    'productId',
+  );
+  @override
+  late final GeneratedColumn<int> productId = GeneratedColumn<int>(
+    'product_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES products (id)',
+    ),
+  );
+  static const VerificationMeta _modifierGroupIdMeta = const VerificationMeta(
+    'modifierGroupId',
+  );
+  @override
+  late final GeneratedColumn<int> modifierGroupId = GeneratedColumn<int>(
+    'modifier_group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES modifier_groups (id)',
+    ),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    productId,
+    modifierGroupId,
+    sortOrder,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'product_modifier_links';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProductModifierLink> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('product_id')) {
+      context.handle(
+        _productIdMeta,
+        productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_productIdMeta);
+    }
+    if (data.containsKey('modifier_group_id')) {
+      context.handle(
+        _modifierGroupIdMeta,
+        modifierGroupId.isAcceptableOrUnknown(
+          data['modifier_group_id']!,
+          _modifierGroupIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_modifierGroupIdMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {productId, modifierGroupId},
+  ];
+  @override
+  ProductModifierLink map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProductModifierLink(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      productId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}product_id'],
+      )!,
+      modifierGroupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}modifier_group_id'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+    );
+  }
+
+  @override
+  $ProductModifierLinksTable createAlias(String alias) {
+    return $ProductModifierLinksTable(attachedDatabase, alias);
+  }
+}
+
+class ProductModifierLink extends DataClass
+    implements Insertable<ProductModifierLink> {
+  final int id;
+  final int productId;
+  final int modifierGroupId;
+  final int sortOrder;
+  const ProductModifierLink({
+    required this.id,
+    required this.productId,
+    required this.modifierGroupId,
+    required this.sortOrder,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['product_id'] = Variable<int>(productId);
+    map['modifier_group_id'] = Variable<int>(modifierGroupId);
+    map['sort_order'] = Variable<int>(sortOrder);
+    return map;
+  }
+
+  ProductModifierLinksCompanion toCompanion(bool nullToAbsent) {
+    return ProductModifierLinksCompanion(
+      id: Value(id),
+      productId: Value(productId),
+      modifierGroupId: Value(modifierGroupId),
+      sortOrder: Value(sortOrder),
+    );
+  }
+
+  factory ProductModifierLink.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProductModifierLink(
+      id: serializer.fromJson<int>(json['id']),
+      productId: serializer.fromJson<int>(json['productId']),
+      modifierGroupId: serializer.fromJson<int>(json['modifierGroupId']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'productId': serializer.toJson<int>(productId),
+      'modifierGroupId': serializer.toJson<int>(modifierGroupId),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+    };
+  }
+
+  ProductModifierLink copyWith({
+    int? id,
+    int? productId,
+    int? modifierGroupId,
+    int? sortOrder,
+  }) => ProductModifierLink(
+    id: id ?? this.id,
+    productId: productId ?? this.productId,
+    modifierGroupId: modifierGroupId ?? this.modifierGroupId,
+    sortOrder: sortOrder ?? this.sortOrder,
+  );
+  ProductModifierLink copyWithCompanion(ProductModifierLinksCompanion data) {
+    return ProductModifierLink(
+      id: data.id.present ? data.id.value : this.id,
+      productId: data.productId.present ? data.productId.value : this.productId,
+      modifierGroupId: data.modifierGroupId.present
+          ? data.modifierGroupId.value
+          : this.modifierGroupId,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductModifierLink(')
+          ..write('id: $id, ')
+          ..write('productId: $productId, ')
+          ..write('modifierGroupId: $modifierGroupId, ')
+          ..write('sortOrder: $sortOrder')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, productId, modifierGroupId, sortOrder);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProductModifierLink &&
+          other.id == this.id &&
+          other.productId == this.productId &&
+          other.modifierGroupId == this.modifierGroupId &&
+          other.sortOrder == this.sortOrder);
+}
+
+class ProductModifierLinksCompanion
+    extends UpdateCompanion<ProductModifierLink> {
+  final Value<int> id;
+  final Value<int> productId;
+  final Value<int> modifierGroupId;
+  final Value<int> sortOrder;
+  const ProductModifierLinksCompanion({
+    this.id = const Value.absent(),
+    this.productId = const Value.absent(),
+    this.modifierGroupId = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+  });
+  ProductModifierLinksCompanion.insert({
+    this.id = const Value.absent(),
+    required int productId,
+    required int modifierGroupId,
+    this.sortOrder = const Value.absent(),
+  }) : productId = Value(productId),
+       modifierGroupId = Value(modifierGroupId);
+  static Insertable<ProductModifierLink> custom({
+    Expression<int>? id,
+    Expression<int>? productId,
+    Expression<int>? modifierGroupId,
+    Expression<int>? sortOrder,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (productId != null) 'product_id': productId,
+      if (modifierGroupId != null) 'modifier_group_id': modifierGroupId,
+      if (sortOrder != null) 'sort_order': sortOrder,
+    });
+  }
+
+  ProductModifierLinksCompanion copyWith({
+    Value<int>? id,
+    Value<int>? productId,
+    Value<int>? modifierGroupId,
+    Value<int>? sortOrder,
+  }) {
+    return ProductModifierLinksCompanion(
+      id: id ?? this.id,
+      productId: productId ?? this.productId,
+      modifierGroupId: modifierGroupId ?? this.modifierGroupId,
+      sortOrder: sortOrder ?? this.sortOrder,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (productId.present) {
+      map['product_id'] = Variable<int>(productId.value);
+    }
+    if (modifierGroupId.present) {
+      map['modifier_group_id'] = Variable<int>(modifierGroupId.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductModifierLinksCompanion(')
+          ..write('id: $id, ')
+          ..write('productId: $productId, ')
+          ..write('modifierGroupId: $modifierGroupId, ')
+          ..write('sortOrder: $sortOrder')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SaleItemModifiersTable extends SaleItemModifiers
+    with TableInfo<$SaleItemModifiersTable, SaleItemModifier> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SaleItemModifiersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _saleItemIdMeta = const VerificationMeta(
+    'saleItemId',
+  );
+  @override
+  late final GeneratedColumn<int> saleItemId = GeneratedColumn<int>(
+    'sale_item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES sale_items (id)',
+    ),
+  );
+  static const VerificationMeta _modifierOptionIdMeta = const VerificationMeta(
+    'modifierOptionId',
+  );
+  @override
+  late final GeneratedColumn<int> modifierOptionId = GeneratedColumn<int>(
+    'modifier_option_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _modifierNameMeta = const VerificationMeta(
+    'modifierName',
+  );
+  @override
+  late final GeneratedColumn<String> modifierName = GeneratedColumn<String>(
+    'modifier_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _optionNameMeta = const VerificationMeta(
+    'optionName',
+  );
+  @override
+  late final GeneratedColumn<String> optionName = GeneratedColumn<String>(
+    'option_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _priceAdjustmentMeta = const VerificationMeta(
+    'priceAdjustment',
+  );
+  @override
+  late final GeneratedColumn<double> priceAdjustment = GeneratedColumn<double>(
+    'price_adjustment',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    saleItemId,
+    modifierOptionId,
+    modifierName,
+    optionName,
+    priceAdjustment,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sale_item_modifiers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SaleItemModifier> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('sale_item_id')) {
+      context.handle(
+        _saleItemIdMeta,
+        saleItemId.isAcceptableOrUnknown(
+          data['sale_item_id']!,
+          _saleItemIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_saleItemIdMeta);
+    }
+    if (data.containsKey('modifier_option_id')) {
+      context.handle(
+        _modifierOptionIdMeta,
+        modifierOptionId.isAcceptableOrUnknown(
+          data['modifier_option_id']!,
+          _modifierOptionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('modifier_name')) {
+      context.handle(
+        _modifierNameMeta,
+        modifierName.isAcceptableOrUnknown(
+          data['modifier_name']!,
+          _modifierNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_modifierNameMeta);
+    }
+    if (data.containsKey('option_name')) {
+      context.handle(
+        _optionNameMeta,
+        optionName.isAcceptableOrUnknown(data['option_name']!, _optionNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_optionNameMeta);
+    }
+    if (data.containsKey('price_adjustment')) {
+      context.handle(
+        _priceAdjustmentMeta,
+        priceAdjustment.isAcceptableOrUnknown(
+          data['price_adjustment']!,
+          _priceAdjustmentMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_priceAdjustmentMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SaleItemModifier map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SaleItemModifier(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      saleItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sale_item_id'],
+      )!,
+      modifierOptionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}modifier_option_id'],
+      ),
+      modifierName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}modifier_name'],
+      )!,
+      optionName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}option_name'],
+      )!,
+      priceAdjustment: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}price_adjustment'],
+      )!,
+    );
+  }
+
+  @override
+  $SaleItemModifiersTable createAlias(String alias) {
+    return $SaleItemModifiersTable(attachedDatabase, alias);
+  }
+}
+
+class SaleItemModifier extends DataClass
+    implements Insertable<SaleItemModifier> {
+  final int id;
+  final int saleItemId;
+  final int? modifierOptionId;
+  final String modifierName;
+  final String optionName;
+  final double priceAdjustment;
+  const SaleItemModifier({
+    required this.id,
+    required this.saleItemId,
+    this.modifierOptionId,
+    required this.modifierName,
+    required this.optionName,
+    required this.priceAdjustment,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['sale_item_id'] = Variable<int>(saleItemId);
+    if (!nullToAbsent || modifierOptionId != null) {
+      map['modifier_option_id'] = Variable<int>(modifierOptionId);
+    }
+    map['modifier_name'] = Variable<String>(modifierName);
+    map['option_name'] = Variable<String>(optionName);
+    map['price_adjustment'] = Variable<double>(priceAdjustment);
+    return map;
+  }
+
+  SaleItemModifiersCompanion toCompanion(bool nullToAbsent) {
+    return SaleItemModifiersCompanion(
+      id: Value(id),
+      saleItemId: Value(saleItemId),
+      modifierOptionId: modifierOptionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(modifierOptionId),
+      modifierName: Value(modifierName),
+      optionName: Value(optionName),
+      priceAdjustment: Value(priceAdjustment),
+    );
+  }
+
+  factory SaleItemModifier.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SaleItemModifier(
+      id: serializer.fromJson<int>(json['id']),
+      saleItemId: serializer.fromJson<int>(json['saleItemId']),
+      modifierOptionId: serializer.fromJson<int?>(json['modifierOptionId']),
+      modifierName: serializer.fromJson<String>(json['modifierName']),
+      optionName: serializer.fromJson<String>(json['optionName']),
+      priceAdjustment: serializer.fromJson<double>(json['priceAdjustment']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'saleItemId': serializer.toJson<int>(saleItemId),
+      'modifierOptionId': serializer.toJson<int?>(modifierOptionId),
+      'modifierName': serializer.toJson<String>(modifierName),
+      'optionName': serializer.toJson<String>(optionName),
+      'priceAdjustment': serializer.toJson<double>(priceAdjustment),
+    };
+  }
+
+  SaleItemModifier copyWith({
+    int? id,
+    int? saleItemId,
+    Value<int?> modifierOptionId = const Value.absent(),
+    String? modifierName,
+    String? optionName,
+    double? priceAdjustment,
+  }) => SaleItemModifier(
+    id: id ?? this.id,
+    saleItemId: saleItemId ?? this.saleItemId,
+    modifierOptionId: modifierOptionId.present
+        ? modifierOptionId.value
+        : this.modifierOptionId,
+    modifierName: modifierName ?? this.modifierName,
+    optionName: optionName ?? this.optionName,
+    priceAdjustment: priceAdjustment ?? this.priceAdjustment,
+  );
+  SaleItemModifier copyWithCompanion(SaleItemModifiersCompanion data) {
+    return SaleItemModifier(
+      id: data.id.present ? data.id.value : this.id,
+      saleItemId: data.saleItemId.present
+          ? data.saleItemId.value
+          : this.saleItemId,
+      modifierOptionId: data.modifierOptionId.present
+          ? data.modifierOptionId.value
+          : this.modifierOptionId,
+      modifierName: data.modifierName.present
+          ? data.modifierName.value
+          : this.modifierName,
+      optionName: data.optionName.present
+          ? data.optionName.value
+          : this.optionName,
+      priceAdjustment: data.priceAdjustment.present
+          ? data.priceAdjustment.value
+          : this.priceAdjustment,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SaleItemModifier(')
+          ..write('id: $id, ')
+          ..write('saleItemId: $saleItemId, ')
+          ..write('modifierOptionId: $modifierOptionId, ')
+          ..write('modifierName: $modifierName, ')
+          ..write('optionName: $optionName, ')
+          ..write('priceAdjustment: $priceAdjustment')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    saleItemId,
+    modifierOptionId,
+    modifierName,
+    optionName,
+    priceAdjustment,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SaleItemModifier &&
+          other.id == this.id &&
+          other.saleItemId == this.saleItemId &&
+          other.modifierOptionId == this.modifierOptionId &&
+          other.modifierName == this.modifierName &&
+          other.optionName == this.optionName &&
+          other.priceAdjustment == this.priceAdjustment);
+}
+
+class SaleItemModifiersCompanion extends UpdateCompanion<SaleItemModifier> {
+  final Value<int> id;
+  final Value<int> saleItemId;
+  final Value<int?> modifierOptionId;
+  final Value<String> modifierName;
+  final Value<String> optionName;
+  final Value<double> priceAdjustment;
+  const SaleItemModifiersCompanion({
+    this.id = const Value.absent(),
+    this.saleItemId = const Value.absent(),
+    this.modifierOptionId = const Value.absent(),
+    this.modifierName = const Value.absent(),
+    this.optionName = const Value.absent(),
+    this.priceAdjustment = const Value.absent(),
+  });
+  SaleItemModifiersCompanion.insert({
+    this.id = const Value.absent(),
+    required int saleItemId,
+    this.modifierOptionId = const Value.absent(),
+    required String modifierName,
+    required String optionName,
+    required double priceAdjustment,
+  }) : saleItemId = Value(saleItemId),
+       modifierName = Value(modifierName),
+       optionName = Value(optionName),
+       priceAdjustment = Value(priceAdjustment);
+  static Insertable<SaleItemModifier> custom({
+    Expression<int>? id,
+    Expression<int>? saleItemId,
+    Expression<int>? modifierOptionId,
+    Expression<String>? modifierName,
+    Expression<String>? optionName,
+    Expression<double>? priceAdjustment,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (saleItemId != null) 'sale_item_id': saleItemId,
+      if (modifierOptionId != null) 'modifier_option_id': modifierOptionId,
+      if (modifierName != null) 'modifier_name': modifierName,
+      if (optionName != null) 'option_name': optionName,
+      if (priceAdjustment != null) 'price_adjustment': priceAdjustment,
+    });
+  }
+
+  SaleItemModifiersCompanion copyWith({
+    Value<int>? id,
+    Value<int>? saleItemId,
+    Value<int?>? modifierOptionId,
+    Value<String>? modifierName,
+    Value<String>? optionName,
+    Value<double>? priceAdjustment,
+  }) {
+    return SaleItemModifiersCompanion(
+      id: id ?? this.id,
+      saleItemId: saleItemId ?? this.saleItemId,
+      modifierOptionId: modifierOptionId ?? this.modifierOptionId,
+      modifierName: modifierName ?? this.modifierName,
+      optionName: optionName ?? this.optionName,
+      priceAdjustment: priceAdjustment ?? this.priceAdjustment,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (saleItemId.present) {
+      map['sale_item_id'] = Variable<int>(saleItemId.value);
+    }
+    if (modifierOptionId.present) {
+      map['modifier_option_id'] = Variable<int>(modifierOptionId.value);
+    }
+    if (modifierName.present) {
+      map['modifier_name'] = Variable<String>(modifierName.value);
+    }
+    if (optionName.present) {
+      map['option_name'] = Variable<String>(optionName.value);
+    }
+    if (priceAdjustment.present) {
+      map['price_adjustment'] = Variable<double>(priceAdjustment.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SaleItemModifiersCompanion(')
+          ..write('id: $id, ')
+          ..write('saleItemId: $saleItemId, ')
+          ..write('modifierOptionId: $modifierOptionId, ')
+          ..write('modifierName: $modifierName, ')
+          ..write('optionName: $optionName, ')
+          ..write('priceAdjustment: $priceAdjustment')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
+  late final $CategoriesTable categories = $CategoriesTable(this);
   late final $ProductsTable products = $ProductsTable(this);
   late final $StockMovementsTable stockMovements = $StockMovementsTable(this);
   late final $SalesTable sales = $SalesTable(this);
@@ -22518,6 +24694,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $FloorPlanConfigTable floorPlanConfig = $FloorPlanConfigTable(
     this,
   );
+  late final $ModifierGroupsTable modifierGroups = $ModifierGroupsTable(this);
+  late final $ModifierOptionsTable modifierOptions = $ModifierOptionsTable(
+    this,
+  );
+  late final $ProductModifierLinksTable productModifierLinks =
+      $ProductModifierLinksTable(this);
+  late final $SaleItemModifiersTable saleItemModifiers =
+      $SaleItemModifiersTable(this);
   late final ProductsDao productsDao = ProductsDao(this as AppDatabase);
   late final SalesDao salesDao = SalesDao(this as AppDatabase);
   late final SyncDao syncDao = SyncDao(this as AppDatabase);
@@ -22556,11 +24740,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final FloorElementDao floorElementDao = FloorElementDao(
     this as AppDatabase,
   );
+  late final CategoriesDao categoriesDao = CategoriesDao(this as AppDatabase);
+  late final ModifierDao modifierDao = ModifierDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
+    categories,
     products,
     stockMovements,
     sales,
@@ -22595,6 +24782,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     floorZones,
     floorElements,
     floorPlanConfig,
+    modifierGroups,
+    modifierOptions,
+    productModifierLinks,
+    saleItemModifiers,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -22657,6 +24848,323 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ]);
 }
 
+typedef $$CategoriesTableCreateCompanionBuilder =
+    CategoriesCompanion Function({
+      Value<int> id,
+      required String name,
+      Value<String?> description,
+      Value<int> sortOrder,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+    });
+typedef $$CategoriesTableUpdateCompanionBuilder =
+    CategoriesCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String?> description,
+      Value<int> sortOrder,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+    });
+
+final class $$CategoriesTableReferences
+    extends BaseReferences<_$AppDatabase, $CategoriesTable, Category> {
+  $$CategoriesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$ProductsTable, List<Product>> _productsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.products,
+    aliasName: $_aliasNameGenerator(db.categories.id, db.products.categoryId),
+  );
+
+  $$ProductsTableProcessedTableManager get productsRefs {
+    final manager = $$ProductsTableTableManager(
+      $_db,
+      $_db.products,
+    ).filter((f) => f.categoryId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_productsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$CategoriesTableFilterComposer
+    extends Composer<_$AppDatabase, $CategoriesTable> {
+  $$CategoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> productsRefs(
+    Expression<bool> Function($$ProductsTableFilterComposer f) f,
+  ) {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableFilterComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CategoriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CategoriesTable> {
+  $$CategoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CategoriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CategoriesTable> {
+  $$CategoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> productsRefs<T extends Object>(
+    Expression<T> Function($$ProductsTableAnnotationComposer a) f,
+  ) {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CategoriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CategoriesTable,
+          Category,
+          $$CategoriesTableFilterComposer,
+          $$CategoriesTableOrderingComposer,
+          $$CategoriesTableAnnotationComposer,
+          $$CategoriesTableCreateCompanionBuilder,
+          $$CategoriesTableUpdateCompanionBuilder,
+          (Category, $$CategoriesTableReferences),
+          Category,
+          PrefetchHooks Function({bool productsRefs})
+        > {
+  $$CategoriesTableTableManager(_$AppDatabase db, $CategoriesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CategoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CategoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CategoriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => CategoriesCompanion(
+                id: id,
+                name: name,
+                description: description,
+                sortOrder: sortOrder,
+                isActive: isActive,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                Value<String?> description = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => CategoriesCompanion.insert(
+                id: id,
+                name: name,
+                description: description,
+                sortOrder: sortOrder,
+                isActive: isActive,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$CategoriesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({productsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (productsRefs) db.products],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (productsRefs)
+                    await $_getPrefetchedData<
+                      Category,
+                      $CategoriesTable,
+                      Product
+                    >(
+                      currentTable: table,
+                      referencedTable: $$CategoriesTableReferences
+                          ._productsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$CategoriesTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).productsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.categoryId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CategoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CategoriesTable,
+      Category,
+      $$CategoriesTableFilterComposer,
+      $$CategoriesTableOrderingComposer,
+      $$CategoriesTableAnnotationComposer,
+      $$CategoriesTableCreateCompanionBuilder,
+      $$CategoriesTableUpdateCompanionBuilder,
+      (Category, $$CategoriesTableReferences),
+      Category,
+      PrefetchHooks Function({bool productsRefs})
+    >;
 typedef $$ProductsTableCreateCompanionBuilder =
     ProductsCompanion Function({
       Value<int> id,
@@ -22668,6 +25176,7 @@ typedef $$ProductsTableCreateCompanionBuilder =
       Value<int> stock,
       Value<int> minStock,
       Value<String?> category,
+      Value<int?> categoryId,
       Value<String?> imageUrl,
       Value<bool> isActive,
       Value<bool> needsSync,
@@ -22685,6 +25194,7 @@ typedef $$ProductsTableUpdateCompanionBuilder =
       Value<int> stock,
       Value<int> minStock,
       Value<String?> category,
+      Value<int?> categoryId,
       Value<String?> imageUrl,
       Value<bool> isActive,
       Value<bool> needsSync,
@@ -22695,6 +25205,25 @@ typedef $$ProductsTableUpdateCompanionBuilder =
 final class $$ProductsTableReferences
     extends BaseReferences<_$AppDatabase, $ProductsTable, Product> {
   $$ProductsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
+      db.categories.createAlias(
+        $_aliasNameGenerator(db.products.categoryId, db.categories.id),
+      );
+
+  $$CategoriesTableProcessedTableManager? get categoryId {
+    final $_column = $_itemColumn<int>('category_id');
+    if ($_column == null) return null;
+    final manager = $$CategoriesTableTableManager(
+      $_db,
+      $_db.categories,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
 
   static MultiTypedResultKey<$StockMovementsTable, List<StockMovement>>
   _stockMovementsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
@@ -22748,6 +25277,34 @@ final class $$ProductsTableReferences
     ).filter((f) => f.productId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_promotionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ProductModifierLinksTable,
+    List<ProductModifierLink>
+  >
+  _productModifierLinksRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.productModifierLinks,
+        aliasName: $_aliasNameGenerator(
+          db.products.id,
+          db.productModifierLinks.productId,
+        ),
+      );
+
+  $$ProductModifierLinksTableProcessedTableManager
+  get productModifierLinksRefs {
+    final manager = $$ProductModifierLinksTableTableManager(
+      $_db,
+      $_db.productModifierLinks,
+    ).filter((f) => f.productId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _productModifierLinksRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -22833,6 +25390,29 @@ class $$ProductsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  $$CategoriesTableFilterComposer get categoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   Expression<bool> stockMovementsRefs(
     Expression<bool> Function($$StockMovementsTableFilterComposer f) f,
   ) {
@@ -22899,6 +25479,31 @@ class $$ProductsTableFilterComposer
           }) => $$PromotionsTableFilterComposer(
             $db: $db,
             $table: $db.promotions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> productModifierLinksRefs(
+    Expression<bool> Function($$ProductModifierLinksTableFilterComposer f) f,
+  ) {
+    final $$ProductModifierLinksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.productModifierLinks,
+      getReferencedColumn: (t) => t.productId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductModifierLinksTableFilterComposer(
+            $db: $db,
+            $table: $db.productModifierLinks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -22987,6 +25592,29 @@ class $$ProductsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  $$CategoriesTableOrderingComposer get categoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$ProductsTableAnnotationComposer
@@ -23039,6 +25667,29 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$CategoriesTableAnnotationComposer get categoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 
   Expression<T> stockMovementsRefs<T extends Object>(
     Expression<T> Function($$StockMovementsTableAnnotationComposer a) f,
@@ -23114,6 +25765,32 @@ class $$ProductsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> productModifierLinksRefs<T extends Object>(
+    Expression<T> Function($$ProductModifierLinksTableAnnotationComposer a) f,
+  ) {
+    final $$ProductModifierLinksTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.productModifierLinks,
+          getReferencedColumn: (t) => t.productId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ProductModifierLinksTableAnnotationComposer(
+                $db: $db,
+                $table: $db.productModifierLinks,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$ProductsTableTableManager
@@ -23130,9 +25807,11 @@ class $$ProductsTableTableManager
           (Product, $$ProductsTableReferences),
           Product,
           PrefetchHooks Function({
+            bool categoryId,
             bool stockMovementsRefs,
             bool saleItemsRefs,
             bool promotionsRefs,
+            bool productModifierLinksRefs,
           })
         > {
   $$ProductsTableTableManager(_$AppDatabase db, $ProductsTable table)
@@ -23157,6 +25836,7 @@ class $$ProductsTableTableManager
                 Value<int> stock = const Value.absent(),
                 Value<int> minStock = const Value.absent(),
                 Value<String?> category = const Value.absent(),
+                Value<int?> categoryId = const Value.absent(),
                 Value<String?> imageUrl = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<bool> needsSync = const Value.absent(),
@@ -23172,6 +25852,7 @@ class $$ProductsTableTableManager
                 stock: stock,
                 minStock: minStock,
                 category: category,
+                categoryId: categoryId,
                 imageUrl: imageUrl,
                 isActive: isActive,
                 needsSync: needsSync,
@@ -23189,6 +25870,7 @@ class $$ProductsTableTableManager
                 Value<int> stock = const Value.absent(),
                 Value<int> minStock = const Value.absent(),
                 Value<String?> category = const Value.absent(),
+                Value<int?> categoryId = const Value.absent(),
                 Value<String?> imageUrl = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<bool> needsSync = const Value.absent(),
@@ -23204,6 +25886,7 @@ class $$ProductsTableTableManager
                 stock: stock,
                 minStock: minStock,
                 category: category,
+                categoryId: categoryId,
                 imageUrl: imageUrl,
                 isActive: isActive,
                 needsSync: needsSync,
@@ -23220,9 +25903,11 @@ class $$ProductsTableTableManager
               .toList(),
           prefetchHooksCallback:
               ({
+                categoryId = false,
                 stockMovementsRefs = false,
                 saleItemsRefs = false,
                 promotionsRefs = false,
+                productModifierLinksRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -23230,8 +25915,40 @@ class $$ProductsTableTableManager
                     if (stockMovementsRefs) db.stockMovements,
                     if (saleItemsRefs) db.saleItems,
                     if (promotionsRefs) db.promotions,
+                    if (productModifierLinksRefs) db.productModifierLinks,
                   ],
-                  addJoins: null,
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (categoryId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.categoryId,
+                                    referencedTable: $$ProductsTableReferences
+                                        ._categoryIdTable(db),
+                                    referencedColumn: $$ProductsTableReferences
+                                        ._categoryIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (stockMovementsRefs)
@@ -23297,6 +26014,27 @@ class $$ProductsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (productModifierLinksRefs)
+                        await $_getPrefetchedData<
+                          Product,
+                          $ProductsTable,
+                          ProductModifierLink
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductsTableReferences
+                              ._productModifierLinksRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).productModifierLinksRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.productId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -23318,9 +26056,11 @@ typedef $$ProductsTableProcessedTableManager =
       (Product, $$ProductsTableReferences),
       Product,
       PrefetchHooks Function({
+        bool categoryId,
         bool stockMovementsRefs,
         bool saleItemsRefs,
         bool promotionsRefs,
+        bool productModifierLinksRefs,
       })
     >;
 typedef $$StockMovementsTableCreateCompanionBuilder =
@@ -24623,6 +27363,30 @@ final class $$SaleItemsTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
+
+  static MultiTypedResultKey<$SaleItemModifiersTable, List<SaleItemModifier>>
+  _saleItemModifiersRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.saleItemModifiers,
+        aliasName: $_aliasNameGenerator(
+          db.saleItems.id,
+          db.saleItemModifiers.saleItemId,
+        ),
+      );
+
+  $$SaleItemModifiersTableProcessedTableManager get saleItemModifiersRefs {
+    final manager = $$SaleItemModifiersTableTableManager(
+      $_db,
+      $_db.saleItemModifiers,
+    ).filter((f) => f.saleItemId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _saleItemModifiersRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$SaleItemsTableFilterComposer
@@ -24713,6 +27477,31 @@ class $$SaleItemsTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> saleItemModifiersRefs(
+    Expression<bool> Function($$SaleItemModifiersTableFilterComposer f) f,
+  ) {
+    final $$SaleItemModifiersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.saleItemModifiers,
+      getReferencedColumn: (t) => t.saleItemId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SaleItemModifiersTableFilterComposer(
+            $db: $db,
+            $table: $db.saleItemModifiers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -24886,6 +27675,32 @@ class $$SaleItemsTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> saleItemModifiersRefs<T extends Object>(
+    Expression<T> Function($$SaleItemModifiersTableAnnotationComposer a) f,
+  ) {
+    final $$SaleItemModifiersTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.saleItemModifiers,
+          getReferencedColumn: (t) => t.saleItemId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SaleItemModifiersTableAnnotationComposer(
+                $db: $db,
+                $table: $db.saleItemModifiers,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$SaleItemsTableTableManager
@@ -24901,7 +27716,11 @@ class $$SaleItemsTableTableManager
           $$SaleItemsTableUpdateCompanionBuilder,
           (SaleItem, $$SaleItemsTableReferences),
           SaleItem,
-          PrefetchHooks Function({bool saleId, bool productId})
+          PrefetchHooks Function({
+            bool saleId,
+            bool productId,
+            bool saleItemModifiersRefs,
+          })
         > {
   $$SaleItemsTableTableManager(_$AppDatabase db, $SaleItemsTable table)
     : super(
@@ -24966,60 +27785,89 @@ class $$SaleItemsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({saleId = false, productId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (saleId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.saleId,
-                                referencedTable: $$SaleItemsTableReferences
-                                    ._saleIdTable(db),
-                                referencedColumn: $$SaleItemsTableReferences
-                                    ._saleIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-                    if (productId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.productId,
-                                referencedTable: $$SaleItemsTableReferences
-                                    ._productIdTable(db),
-                                referencedColumn: $$SaleItemsTableReferences
-                                    ._productIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+          prefetchHooksCallback:
+              ({
+                saleId = false,
+                productId = false,
+                saleItemModifiersRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (saleItemModifiersRefs) db.saleItemModifiers,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (saleId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.saleId,
+                                    referencedTable: $$SaleItemsTableReferences
+                                        ._saleIdTable(db),
+                                    referencedColumn: $$SaleItemsTableReferences
+                                        ._saleIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+                        if (productId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.productId,
+                                    referencedTable: $$SaleItemsTableReferences
+                                        ._productIdTable(db),
+                                    referencedColumn: $$SaleItemsTableReferences
+                                        ._productIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (saleItemModifiersRefs)
+                        await $_getPrefetchedData<
+                          SaleItem,
+                          $SaleItemsTable,
+                          SaleItemModifier
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SaleItemsTableReferences
+                              ._saleItemModifiersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SaleItemsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).saleItemModifiersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.saleItemId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -25036,7 +27884,11 @@ typedef $$SaleItemsTableProcessedTableManager =
       $$SaleItemsTableUpdateCompanionBuilder,
       (SaleItem, $$SaleItemsTableReferences),
       SaleItem,
-      PrefetchHooks Function({bool saleId, bool productId})
+      PrefetchHooks Function({
+        bool saleId,
+        bool productId,
+        bool saleItemModifiersRefs,
+      })
     >;
 typedef $$EmployeesTableCreateCompanionBuilder =
     EmployeesCompanion Function({
@@ -36235,10 +39087,1621 @@ typedef $$FloorPlanConfigTableProcessedTableManager =
       FloorPlanConfigData,
       PrefetchHooks Function()
     >;
+typedef $$ModifierGroupsTableCreateCompanionBuilder =
+    ModifierGroupsCompanion Function({
+      Value<int> id,
+      required String name,
+      Value<bool> isRequired,
+      Value<bool> allowMultiple,
+      Value<int> maxSelections,
+      Value<int> sortOrder,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+    });
+typedef $$ModifierGroupsTableUpdateCompanionBuilder =
+    ModifierGroupsCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<bool> isRequired,
+      Value<bool> allowMultiple,
+      Value<int> maxSelections,
+      Value<int> sortOrder,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+    });
+
+final class $$ModifierGroupsTableReferences
+    extends BaseReferences<_$AppDatabase, $ModifierGroupsTable, ModifierGroup> {
+  $$ModifierGroupsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<$ModifierOptionsTable, List<ModifierOption>>
+  _modifierOptionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.modifierOptions,
+    aliasName: $_aliasNameGenerator(
+      db.modifierGroups.id,
+      db.modifierOptions.groupId,
+    ),
+  );
+
+  $$ModifierOptionsTableProcessedTableManager get modifierOptionsRefs {
+    final manager = $$ModifierOptionsTableTableManager(
+      $_db,
+      $_db.modifierOptions,
+    ).filter((f) => f.groupId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _modifierOptionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ProductModifierLinksTable,
+    List<ProductModifierLink>
+  >
+  _productModifierLinksRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.productModifierLinks,
+        aliasName: $_aliasNameGenerator(
+          db.modifierGroups.id,
+          db.productModifierLinks.modifierGroupId,
+        ),
+      );
+
+  $$ProductModifierLinksTableProcessedTableManager
+  get productModifierLinksRefs {
+    final manager = $$ProductModifierLinksTableTableManager(
+      $_db,
+      $_db.productModifierLinks,
+    ).filter((f) => f.modifierGroupId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _productModifierLinksRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$ModifierGroupsTableFilterComposer
+    extends Composer<_$AppDatabase, $ModifierGroupsTable> {
+  $$ModifierGroupsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isRequired => $composableBuilder(
+    column: $table.isRequired,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get allowMultiple => $composableBuilder(
+    column: $table.allowMultiple,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get maxSelections => $composableBuilder(
+    column: $table.maxSelections,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> modifierOptionsRefs(
+    Expression<bool> Function($$ModifierOptionsTableFilterComposer f) f,
+  ) {
+    final $$ModifierOptionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.modifierOptions,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ModifierOptionsTableFilterComposer(
+            $db: $db,
+            $table: $db.modifierOptions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> productModifierLinksRefs(
+    Expression<bool> Function($$ProductModifierLinksTableFilterComposer f) f,
+  ) {
+    final $$ProductModifierLinksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.productModifierLinks,
+      getReferencedColumn: (t) => t.modifierGroupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductModifierLinksTableFilterComposer(
+            $db: $db,
+            $table: $db.productModifierLinks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ModifierGroupsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ModifierGroupsTable> {
+  $$ModifierGroupsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isRequired => $composableBuilder(
+    column: $table.isRequired,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get allowMultiple => $composableBuilder(
+    column: $table.allowMultiple,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get maxSelections => $composableBuilder(
+    column: $table.maxSelections,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ModifierGroupsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ModifierGroupsTable> {
+  $$ModifierGroupsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<bool> get isRequired => $composableBuilder(
+    column: $table.isRequired,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get allowMultiple => $composableBuilder(
+    column: $table.allowMultiple,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get maxSelections => $composableBuilder(
+    column: $table.maxSelections,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> modifierOptionsRefs<T extends Object>(
+    Expression<T> Function($$ModifierOptionsTableAnnotationComposer a) f,
+  ) {
+    final $$ModifierOptionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.modifierOptions,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ModifierOptionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.modifierOptions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> productModifierLinksRefs<T extends Object>(
+    Expression<T> Function($$ProductModifierLinksTableAnnotationComposer a) f,
+  ) {
+    final $$ProductModifierLinksTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.productModifierLinks,
+          getReferencedColumn: (t) => t.modifierGroupId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ProductModifierLinksTableAnnotationComposer(
+                $db: $db,
+                $table: $db.productModifierLinks,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$ModifierGroupsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ModifierGroupsTable,
+          ModifierGroup,
+          $$ModifierGroupsTableFilterComposer,
+          $$ModifierGroupsTableOrderingComposer,
+          $$ModifierGroupsTableAnnotationComposer,
+          $$ModifierGroupsTableCreateCompanionBuilder,
+          $$ModifierGroupsTableUpdateCompanionBuilder,
+          (ModifierGroup, $$ModifierGroupsTableReferences),
+          ModifierGroup,
+          PrefetchHooks Function({
+            bool modifierOptionsRefs,
+            bool productModifierLinksRefs,
+          })
+        > {
+  $$ModifierGroupsTableTableManager(
+    _$AppDatabase db,
+    $ModifierGroupsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ModifierGroupsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ModifierGroupsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ModifierGroupsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<bool> isRequired = const Value.absent(),
+                Value<bool> allowMultiple = const Value.absent(),
+                Value<int> maxSelections = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ModifierGroupsCompanion(
+                id: id,
+                name: name,
+                isRequired: isRequired,
+                allowMultiple: allowMultiple,
+                maxSelections: maxSelections,
+                sortOrder: sortOrder,
+                isActive: isActive,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                Value<bool> isRequired = const Value.absent(),
+                Value<bool> allowMultiple = const Value.absent(),
+                Value<int> maxSelections = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ModifierGroupsCompanion.insert(
+                id: id,
+                name: name,
+                isRequired: isRequired,
+                allowMultiple: allowMultiple,
+                maxSelections: maxSelections,
+                sortOrder: sortOrder,
+                isActive: isActive,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ModifierGroupsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                modifierOptionsRefs = false,
+                productModifierLinksRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (modifierOptionsRefs) db.modifierOptions,
+                    if (productModifierLinksRefs) db.productModifierLinks,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (modifierOptionsRefs)
+                        await $_getPrefetchedData<
+                          ModifierGroup,
+                          $ModifierGroupsTable,
+                          ModifierOption
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ModifierGroupsTableReferences
+                              ._modifierOptionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ModifierGroupsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).modifierOptionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.groupId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (productModifierLinksRefs)
+                        await $_getPrefetchedData<
+                          ModifierGroup,
+                          $ModifierGroupsTable,
+                          ProductModifierLink
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ModifierGroupsTableReferences
+                              ._productModifierLinksRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ModifierGroupsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).productModifierLinksRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.modifierGroupId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$ModifierGroupsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ModifierGroupsTable,
+      ModifierGroup,
+      $$ModifierGroupsTableFilterComposer,
+      $$ModifierGroupsTableOrderingComposer,
+      $$ModifierGroupsTableAnnotationComposer,
+      $$ModifierGroupsTableCreateCompanionBuilder,
+      $$ModifierGroupsTableUpdateCompanionBuilder,
+      (ModifierGroup, $$ModifierGroupsTableReferences),
+      ModifierGroup,
+      PrefetchHooks Function({
+        bool modifierOptionsRefs,
+        bool productModifierLinksRefs,
+      })
+    >;
+typedef $$ModifierOptionsTableCreateCompanionBuilder =
+    ModifierOptionsCompanion Function({
+      Value<int> id,
+      required int groupId,
+      required String name,
+      Value<double> priceAdjustment,
+      Value<int> sortOrder,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+    });
+typedef $$ModifierOptionsTableUpdateCompanionBuilder =
+    ModifierOptionsCompanion Function({
+      Value<int> id,
+      Value<int> groupId,
+      Value<String> name,
+      Value<double> priceAdjustment,
+      Value<int> sortOrder,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+    });
+
+final class $$ModifierOptionsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $ModifierOptionsTable, ModifierOption> {
+  $$ModifierOptionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ModifierGroupsTable _groupIdTable(_$AppDatabase db) =>
+      db.modifierGroups.createAlias(
+        $_aliasNameGenerator(db.modifierOptions.groupId, db.modifierGroups.id),
+      );
+
+  $$ModifierGroupsTableProcessedTableManager get groupId {
+    final $_column = $_itemColumn<int>('group_id')!;
+
+    final manager = $$ModifierGroupsTableTableManager(
+      $_db,
+      $_db.modifierGroups,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ModifierOptionsTableFilterComposer
+    extends Composer<_$AppDatabase, $ModifierOptionsTable> {
+  $$ModifierOptionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get priceAdjustment => $composableBuilder(
+    column: $table.priceAdjustment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ModifierGroupsTableFilterComposer get groupId {
+    final $$ModifierGroupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.modifierGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ModifierGroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.modifierGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ModifierOptionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ModifierOptionsTable> {
+  $$ModifierOptionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get priceAdjustment => $composableBuilder(
+    column: $table.priceAdjustment,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ModifierGroupsTableOrderingComposer get groupId {
+    final $$ModifierGroupsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.modifierGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ModifierGroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.modifierGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ModifierOptionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ModifierOptionsTable> {
+  $$ModifierOptionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get priceAdjustment => $composableBuilder(
+    column: $table.priceAdjustment,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$ModifierGroupsTableAnnotationComposer get groupId {
+    final $$ModifierGroupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.modifierGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ModifierGroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.modifierGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ModifierOptionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ModifierOptionsTable,
+          ModifierOption,
+          $$ModifierOptionsTableFilterComposer,
+          $$ModifierOptionsTableOrderingComposer,
+          $$ModifierOptionsTableAnnotationComposer,
+          $$ModifierOptionsTableCreateCompanionBuilder,
+          $$ModifierOptionsTableUpdateCompanionBuilder,
+          (ModifierOption, $$ModifierOptionsTableReferences),
+          ModifierOption,
+          PrefetchHooks Function({bool groupId})
+        > {
+  $$ModifierOptionsTableTableManager(
+    _$AppDatabase db,
+    $ModifierOptionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ModifierOptionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ModifierOptionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ModifierOptionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> groupId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<double> priceAdjustment = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ModifierOptionsCompanion(
+                id: id,
+                groupId: groupId,
+                name: name,
+                priceAdjustment: priceAdjustment,
+                sortOrder: sortOrder,
+                isActive: isActive,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int groupId,
+                required String name,
+                Value<double> priceAdjustment = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ModifierOptionsCompanion.insert(
+                id: id,
+                groupId: groupId,
+                name: name,
+                priceAdjustment: priceAdjustment,
+                sortOrder: sortOrder,
+                isActive: isActive,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ModifierOptionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({groupId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (groupId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.groupId,
+                                referencedTable:
+                                    $$ModifierOptionsTableReferences
+                                        ._groupIdTable(db),
+                                referencedColumn:
+                                    $$ModifierOptionsTableReferences
+                                        ._groupIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ModifierOptionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ModifierOptionsTable,
+      ModifierOption,
+      $$ModifierOptionsTableFilterComposer,
+      $$ModifierOptionsTableOrderingComposer,
+      $$ModifierOptionsTableAnnotationComposer,
+      $$ModifierOptionsTableCreateCompanionBuilder,
+      $$ModifierOptionsTableUpdateCompanionBuilder,
+      (ModifierOption, $$ModifierOptionsTableReferences),
+      ModifierOption,
+      PrefetchHooks Function({bool groupId})
+    >;
+typedef $$ProductModifierLinksTableCreateCompanionBuilder =
+    ProductModifierLinksCompanion Function({
+      Value<int> id,
+      required int productId,
+      required int modifierGroupId,
+      Value<int> sortOrder,
+    });
+typedef $$ProductModifierLinksTableUpdateCompanionBuilder =
+    ProductModifierLinksCompanion Function({
+      Value<int> id,
+      Value<int> productId,
+      Value<int> modifierGroupId,
+      Value<int> sortOrder,
+    });
+
+final class $$ProductModifierLinksTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $ProductModifierLinksTable,
+          ProductModifierLink
+        > {
+  $$ProductModifierLinksTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ProductsTable _productIdTable(_$AppDatabase db) =>
+      db.products.createAlias(
+        $_aliasNameGenerator(db.productModifierLinks.productId, db.products.id),
+      );
+
+  $$ProductsTableProcessedTableManager get productId {
+    final $_column = $_itemColumn<int>('product_id')!;
+
+    final manager = $$ProductsTableTableManager(
+      $_db,
+      $_db.products,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ModifierGroupsTable _modifierGroupIdTable(_$AppDatabase db) =>
+      db.modifierGroups.createAlias(
+        $_aliasNameGenerator(
+          db.productModifierLinks.modifierGroupId,
+          db.modifierGroups.id,
+        ),
+      );
+
+  $$ModifierGroupsTableProcessedTableManager get modifierGroupId {
+    final $_column = $_itemColumn<int>('modifier_group_id')!;
+
+    final manager = $$ModifierGroupsTableTableManager(
+      $_db,
+      $_db.modifierGroups,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_modifierGroupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ProductModifierLinksTableFilterComposer
+    extends Composer<_$AppDatabase, $ProductModifierLinksTable> {
+  $$ProductModifierLinksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ProductsTableFilterComposer get productId {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableFilterComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ModifierGroupsTableFilterComposer get modifierGroupId {
+    final $$ModifierGroupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.modifierGroupId,
+      referencedTable: $db.modifierGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ModifierGroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.modifierGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProductModifierLinksTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProductModifierLinksTable> {
+  $$ProductModifierLinksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ProductsTableOrderingComposer get productId {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableOrderingComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ModifierGroupsTableOrderingComposer get modifierGroupId {
+    final $$ModifierGroupsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.modifierGroupId,
+      referencedTable: $db.modifierGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ModifierGroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.modifierGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProductModifierLinksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProductModifierLinksTable> {
+  $$ProductModifierLinksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  $$ProductsTableAnnotationComposer get productId {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ModifierGroupsTableAnnotationComposer get modifierGroupId {
+    final $$ModifierGroupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.modifierGroupId,
+      referencedTable: $db.modifierGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ModifierGroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.modifierGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProductModifierLinksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProductModifierLinksTable,
+          ProductModifierLink,
+          $$ProductModifierLinksTableFilterComposer,
+          $$ProductModifierLinksTableOrderingComposer,
+          $$ProductModifierLinksTableAnnotationComposer,
+          $$ProductModifierLinksTableCreateCompanionBuilder,
+          $$ProductModifierLinksTableUpdateCompanionBuilder,
+          (ProductModifierLink, $$ProductModifierLinksTableReferences),
+          ProductModifierLink,
+          PrefetchHooks Function({bool productId, bool modifierGroupId})
+        > {
+  $$ProductModifierLinksTableTableManager(
+    _$AppDatabase db,
+    $ProductModifierLinksTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProductModifierLinksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProductModifierLinksTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ProductModifierLinksTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> productId = const Value.absent(),
+                Value<int> modifierGroupId = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+              }) => ProductModifierLinksCompanion(
+                id: id,
+                productId: productId,
+                modifierGroupId: modifierGroupId,
+                sortOrder: sortOrder,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int productId,
+                required int modifierGroupId,
+                Value<int> sortOrder = const Value.absent(),
+              }) => ProductModifierLinksCompanion.insert(
+                id: id,
+                productId: productId,
+                modifierGroupId: modifierGroupId,
+                sortOrder: sortOrder,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ProductModifierLinksTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({productId = false, modifierGroupId = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (productId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.productId,
+                                    referencedTable:
+                                        $$ProductModifierLinksTableReferences
+                                            ._productIdTable(db),
+                                    referencedColumn:
+                                        $$ProductModifierLinksTableReferences
+                                            ._productIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (modifierGroupId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.modifierGroupId,
+                                    referencedTable:
+                                        $$ProductModifierLinksTableReferences
+                                            ._modifierGroupIdTable(db),
+                                    referencedColumn:
+                                        $$ProductModifierLinksTableReferences
+                                            ._modifierGroupIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$ProductModifierLinksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProductModifierLinksTable,
+      ProductModifierLink,
+      $$ProductModifierLinksTableFilterComposer,
+      $$ProductModifierLinksTableOrderingComposer,
+      $$ProductModifierLinksTableAnnotationComposer,
+      $$ProductModifierLinksTableCreateCompanionBuilder,
+      $$ProductModifierLinksTableUpdateCompanionBuilder,
+      (ProductModifierLink, $$ProductModifierLinksTableReferences),
+      ProductModifierLink,
+      PrefetchHooks Function({bool productId, bool modifierGroupId})
+    >;
+typedef $$SaleItemModifiersTableCreateCompanionBuilder =
+    SaleItemModifiersCompanion Function({
+      Value<int> id,
+      required int saleItemId,
+      Value<int?> modifierOptionId,
+      required String modifierName,
+      required String optionName,
+      required double priceAdjustment,
+    });
+typedef $$SaleItemModifiersTableUpdateCompanionBuilder =
+    SaleItemModifiersCompanion Function({
+      Value<int> id,
+      Value<int> saleItemId,
+      Value<int?> modifierOptionId,
+      Value<String> modifierName,
+      Value<String> optionName,
+      Value<double> priceAdjustment,
+    });
+
+final class $$SaleItemModifiersTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $SaleItemModifiersTable,
+          SaleItemModifier
+        > {
+  $$SaleItemModifiersTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SaleItemsTable _saleItemIdTable(_$AppDatabase db) =>
+      db.saleItems.createAlias(
+        $_aliasNameGenerator(db.saleItemModifiers.saleItemId, db.saleItems.id),
+      );
+
+  $$SaleItemsTableProcessedTableManager get saleItemId {
+    final $_column = $_itemColumn<int>('sale_item_id')!;
+
+    final manager = $$SaleItemsTableTableManager(
+      $_db,
+      $_db.saleItems,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_saleItemIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SaleItemModifiersTableFilterComposer
+    extends Composer<_$AppDatabase, $SaleItemModifiersTable> {
+  $$SaleItemModifiersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get modifierOptionId => $composableBuilder(
+    column: $table.modifierOptionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get modifierName => $composableBuilder(
+    column: $table.modifierName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get optionName => $composableBuilder(
+    column: $table.optionName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get priceAdjustment => $composableBuilder(
+    column: $table.priceAdjustment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SaleItemsTableFilterComposer get saleItemId {
+    final $$SaleItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleItemId,
+      referencedTable: $db.saleItems,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SaleItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.saleItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SaleItemModifiersTableOrderingComposer
+    extends Composer<_$AppDatabase, $SaleItemModifiersTable> {
+  $$SaleItemModifiersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get modifierOptionId => $composableBuilder(
+    column: $table.modifierOptionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get modifierName => $composableBuilder(
+    column: $table.modifierName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get optionName => $composableBuilder(
+    column: $table.optionName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get priceAdjustment => $composableBuilder(
+    column: $table.priceAdjustment,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SaleItemsTableOrderingComposer get saleItemId {
+    final $$SaleItemsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleItemId,
+      referencedTable: $db.saleItems,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SaleItemsTableOrderingComposer(
+            $db: $db,
+            $table: $db.saleItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SaleItemModifiersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SaleItemModifiersTable> {
+  $$SaleItemModifiersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get modifierOptionId => $composableBuilder(
+    column: $table.modifierOptionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get modifierName => $composableBuilder(
+    column: $table.modifierName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get optionName => $composableBuilder(
+    column: $table.optionName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get priceAdjustment => $composableBuilder(
+    column: $table.priceAdjustment,
+    builder: (column) => column,
+  );
+
+  $$SaleItemsTableAnnotationComposer get saleItemId {
+    final $$SaleItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleItemId,
+      referencedTable: $db.saleItems,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SaleItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.saleItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SaleItemModifiersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SaleItemModifiersTable,
+          SaleItemModifier,
+          $$SaleItemModifiersTableFilterComposer,
+          $$SaleItemModifiersTableOrderingComposer,
+          $$SaleItemModifiersTableAnnotationComposer,
+          $$SaleItemModifiersTableCreateCompanionBuilder,
+          $$SaleItemModifiersTableUpdateCompanionBuilder,
+          (SaleItemModifier, $$SaleItemModifiersTableReferences),
+          SaleItemModifier,
+          PrefetchHooks Function({bool saleItemId})
+        > {
+  $$SaleItemModifiersTableTableManager(
+    _$AppDatabase db,
+    $SaleItemModifiersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SaleItemModifiersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SaleItemModifiersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SaleItemModifiersTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> saleItemId = const Value.absent(),
+                Value<int?> modifierOptionId = const Value.absent(),
+                Value<String> modifierName = const Value.absent(),
+                Value<String> optionName = const Value.absent(),
+                Value<double> priceAdjustment = const Value.absent(),
+              }) => SaleItemModifiersCompanion(
+                id: id,
+                saleItemId: saleItemId,
+                modifierOptionId: modifierOptionId,
+                modifierName: modifierName,
+                optionName: optionName,
+                priceAdjustment: priceAdjustment,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int saleItemId,
+                Value<int?> modifierOptionId = const Value.absent(),
+                required String modifierName,
+                required String optionName,
+                required double priceAdjustment,
+              }) => SaleItemModifiersCompanion.insert(
+                id: id,
+                saleItemId: saleItemId,
+                modifierOptionId: modifierOptionId,
+                modifierName: modifierName,
+                optionName: optionName,
+                priceAdjustment: priceAdjustment,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SaleItemModifiersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({saleItemId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (saleItemId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.saleItemId,
+                                referencedTable:
+                                    $$SaleItemModifiersTableReferences
+                                        ._saleItemIdTable(db),
+                                referencedColumn:
+                                    $$SaleItemModifiersTableReferences
+                                        ._saleItemIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SaleItemModifiersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SaleItemModifiersTable,
+      SaleItemModifier,
+      $$SaleItemModifiersTableFilterComposer,
+      $$SaleItemModifiersTableOrderingComposer,
+      $$SaleItemModifiersTableAnnotationComposer,
+      $$SaleItemModifiersTableCreateCompanionBuilder,
+      $$SaleItemModifiersTableUpdateCompanionBuilder,
+      (SaleItemModifier, $$SaleItemModifiersTableReferences),
+      SaleItemModifier,
+      PrefetchHooks Function({bool saleItemId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
+  $$CategoriesTableTableManager get categories =>
+      $$CategoriesTableTableManager(_db, _db.categories);
   $$ProductsTableTableManager get products =>
       $$ProductsTableTableManager(_db, _db.products);
   $$StockMovementsTableTableManager get stockMovements =>
@@ -36307,4 +40770,12 @@ class $AppDatabaseManager {
       $$FloorElementsTableTableManager(_db, _db.floorElements);
   $$FloorPlanConfigTableTableManager get floorPlanConfig =>
       $$FloorPlanConfigTableTableManager(_db, _db.floorPlanConfig);
+  $$ModifierGroupsTableTableManager get modifierGroups =>
+      $$ModifierGroupsTableTableManager(_db, _db.modifierGroups);
+  $$ModifierOptionsTableTableManager get modifierOptions =>
+      $$ModifierOptionsTableTableManager(_db, _db.modifierOptions);
+  $$ProductModifierLinksTableTableManager get productModifierLinks =>
+      $$ProductModifierLinksTableTableManager(_db, _db.productModifierLinks);
+  $$SaleItemModifiersTableTableManager get saleItemModifiers =>
+      $$SaleItemModifiersTableTableManager(_db, _db.saleItemModifiers);
 }

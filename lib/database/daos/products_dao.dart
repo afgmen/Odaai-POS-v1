@@ -54,6 +54,13 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
+
+  Future<List<Product>> getProductsByCategoryId(int categoryId) {
+    return (select(products)
+          ..where((p) => p.categoryId.equals(categoryId) & p.isActive.equals(true))
+          ..orderBy([(p) => OrderingTerm.asc(p.name)]))
+        .get();
+  }
   Future<List<Product>> getLowStockProducts() {
     return (select(products)
           ..where((p) =>

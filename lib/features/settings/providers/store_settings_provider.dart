@@ -9,6 +9,9 @@ class StoreSettingsKeys {
   static const storeAddress = 'store_address';
   static const receiptFooter = 'receipt_footer';
   static const showQrCode = 'show_qr_code';
+  static const taxEnabled = 'tax_enabled';
+  static const taxRate = 'tax_rate';
+  static const taxInclusive = 'tax_inclusive';
 }
 
 class StoreSettingsNotifier extends Notifier<Map<String, dynamic>> {
@@ -26,6 +29,12 @@ class StoreSettingsNotifier extends Notifier<Map<String, dynamic>> {
           prefs.getString(StoreSettingsKeys.receiptFooter) ?? '',
       StoreSettingsKeys.showQrCode:
           prefs.getBool(StoreSettingsKeys.showQrCode) ?? false,
+      StoreSettingsKeys.taxEnabled:
+          prefs.getBool(StoreSettingsKeys.taxEnabled) ?? true,
+      StoreSettingsKeys.taxRate:
+          prefs.getDouble(StoreSettingsKeys.taxRate) ?? 10.0,
+      StoreSettingsKeys.taxInclusive:
+          prefs.getBool(StoreSettingsKeys.taxInclusive) ?? true,
     };
   }
 
@@ -38,6 +47,12 @@ class StoreSettingsNotifier extends Notifier<Map<String, dynamic>> {
   Future<void> setBool(String key, bool value) async {
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setBool(key, value);
+    state = {...state, key: value};
+  }
+
+  Future<void> setDouble(String key, double value) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setDouble(key, value);
     state = {...state, key: value};
   }
 }

@@ -178,7 +178,7 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
                   );
                 },
                 loading: () => const CircularProgressIndicator(),
-                error: (_, __) => const Text('Error loading zones'),
+                error: (_, _) => const Text('Error loading zones'),
               ),
               const SizedBox(height: 24),
 

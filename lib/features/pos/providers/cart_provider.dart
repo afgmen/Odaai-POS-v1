@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'tax_provider.dart';
 
 import '../../../database/app_database.dart';
 import 'auto_promotion_provider.dart';
@@ -7,13 +8,65 @@ import 'auto_promotion_provider.dart';
 class CartItem {
   final Product product;
   int quantity;
+  final List<SelectedModifier> modifiers; // New field
 
   CartItem({
     required this.product,
     this.quantity = 1,
+    this.modifiers = const [],
   });
 
-  double get subtotal => product.price * quantity;
+  double get subtotal {
+    final modifierTotal = modifiers.fold(0.0, (sum, m) => sum + m.priceAdjustment);
+    return (product.price + modifierTotal) * quantity;
+  }
+
+  double get basePrice => product.price;
+  double get modifierPrice => modifiers.fold(0.0, (sum, m) => sum + m.priceAdjustment);
+  double get pricePerItem => basePrice + modifierPrice;
+
+  /// Check if two cart items are identical (same product + same modifiers)
+  bool isSameAs(Product p, List<SelectedModifier> mods) {
+    if (product.id != p.id) return false;
+    if (modifiers.length != mods.length) return false;
+    
+    // Sort both lists by option ID for comparison
+    final sortedA = [...modifiers]..sort((a, b) => a.optionId.compareTo(b.optionId));
+    final sortedB = [...mods]..sort((a, b) => a.optionId.compareTo(b.optionId));
+    
+    for (int i = 0; i < sortedA.length; i++) {
+      if (sortedA[i].optionId != sortedB[i].optionId) return false;
+    }
+    
+    return true;
+  }
+}
+
+/// Selected modifier option (for cart item)
+class SelectedModifier {
+  final int optionId;
+  final int groupId;
+  final String groupName;
+  final String optionName;
+  final double priceAdjustment;
+
+  const SelectedModifier({
+    required this.optionId,
+    required this.groupId,
+    required this.groupName,
+    required this.optionName,
+    required this.priceAdjustment,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SelectedModifier &&
+          runtimeType == other.runtimeType &&
+          optionId == other.optionId;
+
+  @override
+  int get hashCode => optionId.hashCode;
 }
 
 /// 장바구니 상태 관리 (Riverpod Notifier)
@@ -21,24 +74,46 @@ class CartState extends Notifier<List<CartItem>> {
   @override
   List<CartItem> build() => [];
 
-  /// 상품 추가 (중복 시 수량 증가)
-  void addItem(Product product) {
-    final existing = state.indexWhere((item) => item.product.id == product.id);
+  /// 상품 추가 (modifier 포함, 같은 상품+modifier 조합이면 수량 증가)
+  void addItem(Product product, {List<SelectedModifier> modifiers = const []}) {
+    final existing = state.indexWhere((item) => item.isSameAs(product, modifiers));
     if (existing >= 0) {
       final updated = [...state];
       updated[existing].quantity++;
       state = updated;
     } else {
-      state = [...state, CartItem(product: product)];
+      state = [...state, CartItem(product: product, modifiers: modifiers)];
     }
   }
 
-  /// 상품 제거
+  /// 특정 인덱스의 아이템 제거
+  void removeItemAt(int index) {
+    if (index < 0 || index >= state.length) return;
+    final updated = [...state];
+    updated.removeAt(index);
+    state = updated;
+  }
+
+  /// 상품 제거 (deprecated - use removeItemAt for modifier support)
+  @Deprecated('Use removeItemAt(index) instead')
   void removeItem(int productId) {
     state = state.where((item) => item.product.id != productId).toList();
   }
 
-  /// 수량 변경
+  /// 특정 인덱스의 수량 변경
+  void updateQuantityAt(int index, int quantity) {
+    if (index < 0 || index >= state.length) return;
+    if (quantity <= 0) {
+      removeItemAt(index);
+      return;
+    }
+    final updated = [...state];
+    updated[index].quantity = quantity;
+    state = updated;
+  }
+
+  /// 수량 변경 (deprecated - use updateQuantityAt for modifier support)
+  @Deprecated('Use updateQuantityAt(index, quantity) instead')
   void updateQuantity(int productId, int quantity) {
     if (quantity <= 0) {
       removeItem(productId);
@@ -156,11 +231,20 @@ final cartAllDiscountProvider = Provider<double>((ref) {
   return promoDiscount + manualDiscount + autoPromoDiscount;
 });
 
-/// 최종 결제금액 (소계 - 프로모션 - 할인)
+/// 최종 결제금액 (소계 - 할인 + 세금(exclusive만))
 final cartTotalProvider = Provider<double>((ref) {
   final subtotal = ref.watch(cartSubtotalProvider);
   final allDiscount = ref.watch(cartAllDiscountProvider);
-  return (subtotal - allDiscount).clamp(0.0, subtotal);
+  final taxAmount = ref.watch(cartTaxAmountProvider);
+  final taxInclusive = ref.watch(taxInclusiveProvider);
+  
+  if (taxInclusive) {
+    // Tax inclusive: total = subtotal - discount (tax already included)
+    return (subtotal - allDiscount).clamp(0.0, subtotal);
+  } else {
+    // Tax exclusive: total = subtotal - discount + tax
+    return (subtotal - allDiscount + taxAmount).clamp(0.0, double.infinity);
+  }
 });
 
 // ── 로열티 관련 Provider ────────────────────────

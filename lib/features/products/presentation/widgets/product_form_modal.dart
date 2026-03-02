@@ -13,6 +13,7 @@ import '../../../products/providers/products_management_provider.dart';
 import '../../domain/models/search_image_result.dart';
 import '../providers/image_providers.dart';
 import 'image_search_dialog.dart';
+import '../../providers/category_provider.dart';
 
 /// 상품 추가 / 수정 폼 모달
 /// existingProduct == null → 추가 모드
@@ -40,7 +41,8 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
   late final TextEditingController _costCtrl;
   late final TextEditingController _stockCtrl;
   late final TextEditingController _minStockCtrl;
-  late final TextEditingController _categoryCtrl;
+  // Selected category ID (null if no category selected)
+  int? _selectedCategoryId;
 
   // ── 이미지 상태 ─────────────────────────
   String? _imageUrl;
@@ -59,7 +61,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     _costCtrl = TextEditingController(text: p != null ? _num(p.cost) : '');
     _stockCtrl = TextEditingController(text: p != null ? '${p.stock}' : '0');
     _minStockCtrl = TextEditingController(text: p != null ? '${p.minStock}' : '0');
-    _categoryCtrl = TextEditingController(text: p?.category ?? '');
+        _selectedCategoryId = p?.categoryId;
 
     // Load existing image if in edit mode
     _imageUrl = p?.imageUrl;
@@ -91,7 +93,6 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     _costCtrl.dispose();
     _stockCtrl.dispose();
     _minStockCtrl.dispose();
-    _categoryCtrl.dispose();
     super.dispose();
   }
 
@@ -197,11 +198,11 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 isNumber: true,
                 suffixText: l10n.unit,
               ),
-              _formField(
-                label: l10n.category,
-                controller: _categoryCtrl,
-                hint: l10n.categoryHint,
-              ),
+              // Category Dropdown
+              _sectionLabel(l10n.category),
+              const SizedBox(height: 8),
+              _buildCategoryDropdown(l10n),
+              const SizedBox(height: 16),
 
               // ─── Image section ──────────────────
               _sectionLabel(l10n.productImage),
@@ -263,7 +264,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           price: Value(double.tryParse(_priceCtrl.text) ?? old.price),
           cost: Value(double.tryParse(_costCtrl.text) ?? old.cost),
           minStock: Value(int.tryParse(_minStockCtrl.text) ?? old.minStock),
-          category: Value(_categoryCtrl.text.trim().isEmpty ? null : _categoryCtrl.text.trim()),
+          categoryId: Value(_selectedCategoryId),
           updatedAt: Value(DateTime.now()),
           needsSync: const Value(true),
         );
@@ -286,7 +287,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           cost: Value(double.tryParse(_costCtrl.text) ?? 0),
           stock: Value(int.tryParse(_stockCtrl.text) ?? 0),
           minStock: Value(int.tryParse(_minStockCtrl.text) ?? 0),
-          category: _categoryCtrl.text.trim().isEmpty ? const Value.absent() : Value(_categoryCtrl.text.trim()),
+          categoryId: _selectedCategoryId != null ? Value(_selectedCategoryId) : const Value.absent(),
         );
         await dao.createProduct(companion);
         if (mounted) {
@@ -658,5 +659,47 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
         _showSnackBar(l10n.imageDownloadFailed(e.toString()), AppTheme.error);
       }
     }
+  }
+
+  Widget _buildCategoryDropdown(AppLocalizations l10n) {
+    final categoriesAsync = ref.watch(activeCategoriesListProvider);
+
+    return categoriesAsync.when(
+      data: (categories) {
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppTheme.divider),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int?>(
+              value: _selectedCategoryId,
+              isExpanded: true,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              hint: Text('Select category'),
+              items: [
+                DropdownMenuItem<int?>(
+                  value: null,
+                  child: Text('No category', style: TextStyle(color: Colors.grey.shade600)),
+                ),
+                ...categories.map((category) {
+                  return DropdownMenuItem<int?>(
+                    value: category.id,
+                    child: Text(category.name),
+                  );
+                }),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedCategoryId = value;
+                });
+              },
+            ),
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Text('Error loading categories: $error', style: const TextStyle(color: AppTheme.error)),
+    );
   }
 }

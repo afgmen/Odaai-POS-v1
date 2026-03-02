@@ -13,7 +13,7 @@ class CategoryFilter extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final categoriesAsync = ref.watch(categoryListProvider);
-    final selected = ref.watch(selectedCategoryProvider);
+    final selectedCategoryId = ref.watch(selectedCategoryProvider);
 
     return categoriesAsync.when(
       data: (categories) {
@@ -32,20 +32,20 @@ class CategoryFilter extends ConsumerWidget {
                 _CategoryButton(
                   label: l10n.categoryAll,
                   icon: Icons.apps_outlined,
-                  isSelected: selected == null,
+                  isSelected: selectedCategoryId == null,
                   onTap: () => ref.read(selectedCategoryProvider.notifier).state = null,
                 ),
                 const Divider(height: 1, color: AppTheme.divider),
                 // ─── Category list ─────────────
                 ...categories.map((category) {
-                  final isActive = selected == category;
+                  final isActive = selectedCategoryId == category.id;
                   return Column(
                     children: [
                       _CategoryButton(
-                        label: _getLocalizedCategory(category, l10n),
-                        icon: _getCategoryIcon(category),
+                        label: _getLocalizedCategory(category.name, l10n),
+                        icon: _getCategoryIcon(category.name),
                         isSelected: isActive,
-                        onTap: () => ref.read(selectedCategoryProvider.notifier).state = category,
+                        onTap: () => ref.read(selectedCategoryProvider.notifier).state = category.id,
                       ),
                       if (category != categories.last)
                         const Divider(height: 1, color: AppTheme.divider),

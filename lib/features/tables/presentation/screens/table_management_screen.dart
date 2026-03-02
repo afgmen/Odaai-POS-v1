@@ -473,54 +473,6 @@ class _ToolbarButton extends StatelessWidget {
 }
 
 /// Shape option widget for Add Table dialog
-class _ShapeOption extends StatelessWidget {
-  final String label;
-  final String shape;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _ShapeOption({
-    required this.label,
-    required this.shape,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color:
-                  isSelected ? Colors.blue.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.05),
-              border: Border.all(
-                color: isSelected ? Colors.blue : Colors.grey.shade300,
-                width: isSelected ? 2 : 1,
-              ),
-              borderRadius: shape == 'round'
-                  ? BorderRadius.circular(24)
-                  : BorderRadius.circular(
-                      shape == 'rectangle' ? 8 : 8),
-              shape: BoxShape.rectangle,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(label,
-              style: TextStyle(
-                fontSize: 10,
-                color: isSelected ? Colors.blue : Colors.grey,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              )),
-        ],
-      ),
-    );
-  }
-}
 
 /// Read-only preview of floor plan (no drag)
 class _FloorPlanPreview extends ConsumerWidget {

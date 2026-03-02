@@ -15,6 +15,8 @@ import '../widgets/delivery_server_settings.dart';
 import '../../../delivery/presentation/screens/delivery_platform_settings_screen.dart';
 import '../../providers/store_settings_provider.dart';
 import '../../../backup/domain/services/backup_service.dart';
+import 'category_management_screen.dart';
+import 'modifier_management_screen.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../core/utils/snackbar_helper.dart';
 
@@ -134,6 +136,87 @@ class SettingsScreen extends ConsumerWidget {
 
           const SizedBox(height: 24),
 
+          // ─── 상품 & 카테고리 섹션 ─────────────────────
+          _SectionHeader(
+            title: 'Product & Category',
+            icon: Icons.inventory_2_outlined,
+          ),
+          const SizedBox(height: 8),
+          _SettingsCard(
+            children: [
+              _InfoTile(
+                icon: Icons.label_outlined,
+                label: 'Category Management',
+                value: 'Manage product categories',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CategoryManagementScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              _InfoTile(
+                icon: Icons.tune,
+                label: 'Modifier Management',
+                value: 'Manage modifiers (toppings, options)',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ModifierManagementScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+
+          // ─── Tax (VAT) 설정 섹션 ──────────────────────
+          _SectionHeader(
+            title: 'Tax (VAT) Settings',
+            icon: Icons.receipt_long_outlined,
+          ),
+          const SizedBox(height: 8),
+          _SettingsCard(
+            children: [
+              _SwitchTile(
+                icon: Icons.percent,
+                label: 'Enable VAT',
+                value: storeSettings[StoreSettingsKeys.taxEnabled] as bool? ?? true,
+                onChanged: (val) {
+                  ref.read(storeSettingsProvider.notifier).setBool(
+                    StoreSettingsKeys.taxEnabled,
+                    val,
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              _InfoTile(
+                icon: Icons.calculate,
+                label: 'VAT Rate (%)',
+                value: '${(storeSettings[StoreSettingsKeys.taxRate] as double? ?? 10.0).toStringAsFixed(1)}%',
+                onTap: () => _showTaxRateDialogHelper(context, ref, storeSettings[StoreSettingsKeys.taxRate] as double? ?? 10.0),
+              ),
+              const Divider(height: 1),
+              _SwitchTile(
+                icon: Icons.price_check,
+                label: 'Tax Inclusive Pricing',
+                value: storeSettings[StoreSettingsKeys.taxInclusive] as bool? ?? true,
+                onChanged: (val) {
+                  ref.read(storeSettingsProvider.notifier).setBool(
+                    StoreSettingsKeys.taxInclusive,
+                    val,
+                  );
+                },
+              ),
+            ],
+          ),
           // ─── 영수증 설정 섹션 ─────────────────────────
           _SectionHeader(
             title: l10n.receiptSettings,
@@ -1008,4 +1091,43 @@ class _ExchangeRateCardState extends State<_ExchangeRateCard> {
       ),
     );
   }
+
+}
+
+// Tax Rate Dialog Helper
+void _showTaxRateDialogHelper(BuildContext context, WidgetRef ref, double currentRate) {
+  final controller = TextEditingController(text: currentRate.toStringAsFixed(1));
+  
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('VAT Rate (%)'),
+      content: TextField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(
+          labelText: 'Tax Rate (%)',
+          hintText: 'e.g., 10.0',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            final rate = double.tryParse(controller.text) ?? 10.0;
+            await ref.read(storeSettingsProvider.notifier).setDouble(
+              StoreSettingsKeys.taxRate,
+              rate.clamp(0.0, 100.0),
+            );
+            if (context.mounted) Navigator.pop(context);
+          },
+          child: const Text('Save'),
+        ),
+      ],
+    ),
+  );
 }

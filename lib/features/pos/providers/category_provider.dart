@@ -3,25 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../database/app_database.dart';
 import '../../../providers/database_providers.dart';
 
-/// 현재 선택된 카테고리 ("전체" = null)
-final selectedCategoryProvider = StateProvider<String?>((ref) => null);
+/// 현재 선택된 카테고리 ID ("전체" = null)
+final selectedCategoryProvider = StateProvider<int?>((ref) => null);
 
-/// 카테고리 목록 Provider (DB에서 고유 카테고리 조회)
-final categoryListProvider = FutureProvider<List<String>>((ref) async {
-  final dao = ref.watch(productsDaoProvider);
-  final categories = await dao.getProductCountByCategory();
-  return categories.keys.toList();
+/// 카테고리 목록 Provider (Categories 테이블에서 활성 카테고리 조회)
+final categoryListProvider = StreamProvider<List<Category>>((ref) {
+  final db = ref.watch(databaseProvider);
+  return db.categoriesDao.getAllCategories().asStream();
 });
 
 /// 필터링된 상품 목록 Provider
 final filteredProductsProvider = FutureProvider<List<Product>>((ref) async {
   final dao = ref.watch(productsDaoProvider);
-  final selectedCategory = ref.watch(selectedCategoryProvider);
+  final selectedCategoryId = ref.watch(selectedCategoryProvider);
 
-  if (selectedCategory == null) {
+  if (selectedCategoryId == null) {
     return await dao.getAllProducts();
   } else {
-    return await dao.getProductsByCategory(selectedCategory);
+    return await dao.getProductsByCategoryId(selectedCategoryId);
   }
 });
 

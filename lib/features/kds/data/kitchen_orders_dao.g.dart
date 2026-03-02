@@ -6,6 +6,7 @@ part of 'kitchen_orders_dao.dart';
 mixin _$KitchenOrdersDaoMixin on DatabaseAccessor<AppDatabase> {
   $SalesTable get sales => attachedDatabase.sales;
   $KitchenOrdersTable get kitchenOrders => attachedDatabase.kitchenOrders;
+  $CategoriesTable get categories => attachedDatabase.categories;
   $ProductsTable get products => attachedDatabase.products;
   $SaleItemsTable get saleItems => attachedDatabase.saleItems;
   $RestaurantTablesTable get restaurantTables =>
@@ -20,6 +21,8 @@ class KitchenOrdersDaoManager {
       $$SalesTableTableManager(_db.attachedDatabase, _db.sales);
   $$KitchenOrdersTableTableManager get kitchenOrders =>
       $$KitchenOrdersTableTableManager(_db.attachedDatabase, _db.kitchenOrders);
+  $$CategoriesTableTableManager get categories =>
+      $$CategoriesTableTableManager(_db.attachedDatabase, _db.categories);
   $$ProductsTableTableManager get products =>
       $$ProductsTableTableManager(_db.attachedDatabase, _db.products);
   $$SaleItemsTableTableManager get saleItems =>

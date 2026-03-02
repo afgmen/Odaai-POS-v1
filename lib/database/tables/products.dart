@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'categories.dart';
 
 class Products extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -10,6 +11,7 @@ class Products extends Table {
   IntColumn get stock => integer().withDefault(const Constant(0))();
   IntColumn get minStock => integer().withDefault(const Constant(0))();
   TextColumn get category => text().nullable()();
+  IntColumn get categoryId => integer().nullable().references(Categories, #id)();
   TextColumn get imageUrl => text().nullable()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   BoolColumn get needsSync => boolean().withDefault(const Constant(false))();

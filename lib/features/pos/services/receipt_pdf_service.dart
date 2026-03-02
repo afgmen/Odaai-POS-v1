@@ -12,6 +12,7 @@ class ReceiptData {
   final double subtotal;
   final double discount;
   final double total;
+  final double tax;
   final String paymentMethod;
   final double cashPaid;
   final DateTime saleDate;
@@ -22,6 +23,7 @@ class ReceiptData {
     required this.items,
     required this.subtotal,
     this.discount = 0,
+    this.tax = 0,
     required this.total,
     required this.paymentMethod,
     this.cashPaid = 0,
@@ -263,6 +265,9 @@ class ReceiptPdfService {
         _summaryRow(labels['subtotal'] ?? 'Subtotal', _fmt(data.subtotal)),
         if (data.discount > 0)
           _summaryRow(labels['discount'] ?? 'Discount', '-${_fmt(data.discount)}', isDiscount: true),
+        if (data.tax > 0) ...[
+          _summaryRow(labels['tax'] ?? 'VAT', _fmt(data.tax)),
+        ],
         pw.SizedBox(height: 2),
         _summaryRow(labels['total'] ?? 'Total', _fmt(data.total), isBold: true),
       ],

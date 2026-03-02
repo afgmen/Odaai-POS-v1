@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart' hide Column;
+import '../../providers/tax_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -141,16 +142,29 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             ),
             const SizedBox(height: 4),
             // 금액 요약
-            if (allDiscount > 0) ...[
-              Text(
-                '${l10n.subtotal}: ${priceFormatter.format(subtotal)}',
-                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-              ),
+            // 금액 요약
+            Text(
+              '${l10n.subtotal}: ${priceFormatter.format(subtotal)}',
+              style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+            ),
+            if (allDiscount > 0)
               Text(
                 '${l10n.discount}: -${priceFormatter.format(allDiscount)}',
                 style: const TextStyle(fontSize: 13, color: AppTheme.error),
               ),
+            // VAT line
+            if (ref.watch(taxEnabledProvider)) ...[
+              Builder(builder: (context) {
+                final taxAmount = ref.watch(cartTaxAmountProvider);
+                final taxRate = ref.watch(taxRateProvider);
+                final taxInclusive = ref.watch(taxInclusiveProvider);
+                return Text(
+                  'VAT (${taxRate.toStringAsFixed(0)}%)${taxInclusive ? " (included)" : ""}: ${priceFormatter.format(taxAmount)}',
+                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                );
+              }),
             ],
+            const SizedBox(height: 4),
             Text(
               '${l10n.paymentAmount}: ${priceFormatter.format(total)}',
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
@@ -500,6 +514,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         subtotal: Value(subtotal),
         discount: Value(discountAmount),
         total: Value(finalTotal),
+        tax: Value(ref.read(cartTaxAmountProvider)),
         customerId: Value(selectedCustomer?.id),
         employeeId: Value(currentEmployee.id),
         customerName: _isDeliveryOrder && _customerNameController.text.trim().isNotEmpty
@@ -535,6 +550,28 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         specialInstructions: _specialInstructionsController.text.trim().isNotEmpty ? _specialInstructionsController.text.trim() : null,
         createKitchenOrder: true,
       );
+
+      // ── Save Sale Item Modifiers ──────────────────
+      final saleItemsFromDb = await dao.getSaleItems(createdSale.id);
+      for (int i = 0; i < cart.length; i++) {
+        final cartItem = cart[i];
+        if (cartItem.modifiers.isNotEmpty && i < saleItemsFromDb.length) {
+          final saleItem = saleItemsFromDb[i];
+          final modifierCompanions = cartItem.modifiers.map((mod) {
+            return SaleItemModifiersCompanion.insert(
+              saleItemId: saleItem.id,
+              modifierOptionId: Value(mod.optionId),
+              modifierName: mod.groupName,
+              optionName: mod.optionName,
+              priceAdjustment: mod.priceAdjustment,
+            );
+          }).toList();
+          
+          if (modifierCompanions.isNotEmpty) {
+            await db.modifierDao.saveSaleItemModifiers(saleItem.id, modifierCompanions);
+          }
+        }
+      }
 
       // ── 포인트 사용 및 적립 처리 ──────────────
       if (selectedCustomer != null) {

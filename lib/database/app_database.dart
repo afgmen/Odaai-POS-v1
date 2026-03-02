@@ -8,6 +8,8 @@ import 'connection/unsupported.dart'
 
 import 'daos/customers_dao.dart';
 import 'daos/employees_dao.dart';
+import 'daos/categories_dao.dart';
+import 'daos/modifier_dao.dart';
 import 'daos/products_dao.dart';
 import 'daos/sales_dao.dart';
 import 'daos/sync_dao.dart';
@@ -50,6 +52,8 @@ import 'tables/reservations.dart';
 import 'tables/permission_logs.dart';
 import 'tables/daily_closings.dart';
 import 'tables/permissions.dart';
+import 'tables/categories.dart';
+import 'tables/product_modifiers.dart';
 import 'tables/role_permissions.dart';
 import 'tables/user_roles.dart';
 import 'tables/store_assignments.dart';
@@ -93,6 +97,11 @@ part 'app_database.g.dart';
     FloorZones,
     FloorElements,
     FloorPlanConfig,
+    Categories,
+    ModifierGroups,
+    ModifierOptions,
+    ProductModifierLinks,
+    SaleItemModifiers,
   ],
   daos: [
     ProductsDao,
@@ -115,6 +124,8 @@ part 'app_database.g.dart';
     DeliveryOrdersDao,
     FloorZoneDao,
     FloorElementDao,
+    CategoriesDao,
+    ModifierDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -123,7 +134,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration {
@@ -272,6 +283,14 @@ class AppDatabase extends _$AppDatabase {
         if (from < 20) {
           // v19 → v20: KDS orderType normalization
           await _safeAddColumn('kitchen_orders', 'order_type', "TEXT NOT NULL DEFAULT 'dineIn'");
+        if (from < 21) {
+          // v20 → v21: Categories table and Products.categoryId
+          await _migrateCategorySystem(m);
+        }
+        if (from < 22) {
+          // v21 → v22: Product Modifiers (Groups, Options, Links, SaleItemModifiers)
+          await _migrateProductModifiers(m);
+        }
         }
       },
       beforeOpen: (details) async {
@@ -502,6 +521,76 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
+
+  Future<void> _migrateCategorySystem(Migrator m) async {
+    // 1. Categories 테이블 생성
+    await _safeCreateTable(m, categories, 'categories');
+
+    // 2. Products 테이블에 categoryId 컬럼 추가
+    await _safeAddColumn('products', 'category_id', 'INTEGER NULL');
+
+    // 3. 기존 category (text) 데이터를 Categories 테이블로 마이그레이션
+    try {
+      // 3-1. 기존 category 값들을 중복 제거하여 수집
+      final existingCategories = await customSelect(
+        'SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != ""',
+      ).get();
+
+      // 3-2. Categories 테이블에 삽입
+      int sortOrder = 0;
+      for (final row in existingCategories) {
+        final categoryName = row.data['category'] as String;
+        await customStatement(
+          'INSERT OR IGNORE INTO categories (name, sort_order, is_active, created_at) '
+          'VALUES (?, ?, 1, ?)',
+          [categoryName, sortOrder++, DateTime.now().millisecondsSinceEpoch ~/ 1000],
+        );
+      }
+
+      // 3-3. Products.categoryId를 매핑 (category text → categoryId FK)
+      await customStatement('''
+        UPDATE products
+        SET category_id = (
+          SELECT id FROM categories WHERE categories.name = products.category
+        )
+        WHERE category IS NOT NULL AND category != ""
+      ''');
+
+      debugPrint('[Migration v21] Migrated ${existingCategories.length} categories');
+    } catch (e) {
+      debugPrint('[Migration v21] Error migrating categories: $e');
+    }
+
+    // 4. 인덱스 생성
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_products_category_id '
+      'ON products(category_id) WHERE category_id IS NOT NULL'
+    );
+  }
+
+  Future<void> _migrateProductModifiers(Migrator m) async {
+    // 1. Create modifier tables
+    await _safeCreateTable(m, modifierGroups, 'modifier_groups');
+    await _safeCreateTable(m, modifierOptions, 'modifier_options');
+    await _safeCreateTable(m, productModifierLinks, 'product_modifier_links');
+    await _safeCreateTable(m, saleItemModifiers, 'sale_item_modifiers');
+
+    // 2. Create indexes
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_modifier_options_group '
+      'ON modifier_options(group_id) WHERE is_active = 1'
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_product_modifier_links_product '
+      'ON product_modifier_links(product_id)'
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_sale_item_modifiers_sale_item '
+      'ON sale_item_modifiers(sale_item_id)'
+    );
+
+    debugPrint('[Migration v22] Product Modifiers tables created');
+  }
   Future<void> _seedInitialData() async {
     await into(employees).insert(
       EmployeesCompanion.insert(

@@ -1,4 +1,8 @@
 import 'dart:io';
+import '../../providers/modifier_provider.dart';
+import 'modifier_selection_modal.dart';
+
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,8 +32,27 @@ class ProductCard extends ConsumerWidget {
     return Opacity(
       opacity: isOutOfStock ? 0.5 : 1.0,
       child: InkWell(
-        onTap: isOutOfStock ? null : () {
-          ref.read(cartProvider.notifier).addItem(product);
+        onTap: isOutOfStock ? null : () async {
+          // Check if product has modifiers
+          final modifierGroups = await ref.read(productModifierGroupsProvider(product.id).future);
+          
+          if (modifierGroups.isNotEmpty) {
+            // Show modifier selection modal
+            if (context.mounted) {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => ModifierSelectionModal(
+                  product: product,
+                  groups: modifierGroups,
+                ),
+              );
+            }
+          } else {
+            // Add directly to cart (no modifiers)
+            ref.read(cartProvider.notifier).addItem(product);
+          }
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(

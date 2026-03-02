@@ -4,7 +4,8 @@ import 'package:oda_pos/features/floor_plan/data/floor_zone_dao.dart';
 import 'package:oda_pos/features/floor_plan/data/floor_element_dao.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:matcher/matcher.dart' as matcher;
+import 'package:flutter_test/flutter_test.dart' as test_lib;
+
 
 AppDatabase _openDb() => AppDatabase.forTesting(NativeDatabase.memory());
 
@@ -110,13 +111,13 @@ void main() {
       final zoneId = await zoneDao.createZone(zone);
 
       final retrieved = await zoneDao.getZoneById(zoneId);
-      expect(retrieved, matcher.isNotNull);
+      expect(retrieved, test_lib.isNotNull);
       expect(retrieved!.name, 'VIP Room');
     });
 
     test('get zone by invalid id returns null', () async {
       final retrieved = await zoneDao.getZoneById(9999);
-      expect(retrieved, matcher.isNull);
+      expect(retrieved, test_lib.isNull);
     });
 
     test('getAllZones returns zones sorted by name', () async {
@@ -227,7 +228,7 @@ void main() {
       final elementId = await elementDao.createElement(element);
 
       final retrieved = await elementDao.getElementById(elementId);
-      expect(retrieved, matcher.isNotNull);
+      expect(retrieved, test_lib.isNotNull);
       expect(retrieved!.elementType, 'entrance');
       expect(retrieved.label, 'Side Door');
     });

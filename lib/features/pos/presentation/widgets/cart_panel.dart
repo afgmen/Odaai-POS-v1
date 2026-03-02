@@ -245,7 +245,7 @@ class _CartItemRow extends ConsumerWidget {
     final priceFormatter = ref.watch(priceFormatterProvider);
     // compact 모드: 사이드 패널용 2줄 레이아웃
     if (compact) {
-      return Padding(
+    return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,6 +268,27 @@ class _CartItemRow extends ConsumerWidget {
                 ),
               ],
             ),
+            // Modifiers (if any)
+            if (item.modifiers.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Padding(
+                padding: const EdgeInsets.only(left: 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: item.modifiers.map((mod) {
+                    return Text(
+                      '+ ${mod.optionName}${mod.priceAdjustment != 0 ? ' (${mod.priceAdjustment > 0 ? '+' : ''}${mod.priceAdjustment.toStringAsFixed(0)}đ)' : ''}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
             const SizedBox(height: 4),
             // 2행: 수량 조절 + 소계
             Row(

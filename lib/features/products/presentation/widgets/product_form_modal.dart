@@ -14,6 +14,7 @@ import '../../domain/models/search_image_result.dart';
 import '../providers/image_providers.dart';
 import 'image_search_dialog.dart';
 import '../../providers/category_provider.dart';
+import '../../providers/products_management_provider.dart' show categoryNameMapProvider;
 
 /// 상품 추가 / 수정 폼 모달
 /// existingProduct == null → 추가 모드
@@ -254,6 +255,9 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     setState(() => _isProcessing = true);
     try {
       final dao = ref.read(productsDaoProvider);
+      // categoryId → category name 매핑 (텍스트 필드 동기화용)
+      final catMap = ref.read(categoryNameMapProvider).valueOrNull ?? {};
+      final categoryText = _selectedCategoryId != null ? catMap[_selectedCategoryId!] : null;
 
       if (_isEditMode) {
         // 수정 모드 — Companion을 직접 구성하여 write
@@ -265,6 +269,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           cost: Value(double.tryParse(_costCtrl.text) ?? old.cost),
           minStock: Value(int.tryParse(_minStockCtrl.text) ?? old.minStock),
           categoryId: Value(_selectedCategoryId),
+          category: Value(categoryText),
           updatedAt: Value(DateTime.now()),
           needsSync: const Value(true),
         );
@@ -288,6 +293,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           stock: Value(int.tryParse(_stockCtrl.text) ?? 0),
           minStock: Value(int.tryParse(_minStockCtrl.text) ?? 0),
           categoryId: _selectedCategoryId != null ? Value(_selectedCategoryId) : const Value.absent(),
+          category: categoryText != null ? Value(categoryText) : const Value.absent(),
         );
         await dao.createProduct(companion);
         if (mounted) {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../database/app_database.dart';
 
 /// 드래그 가능한 매장 요소 위젯 (입구, 카운터, 화장실 등)
-class FloorElementWidget extends StatelessWidget {
+class FloorElementWidget extends StatefulWidget {
   final FloorElement element;
   final bool isDraggable;
   final VoidCallback? onTap;
@@ -15,6 +15,31 @@ class FloorElementWidget extends StatelessWidget {
     this.onTap,
     this.onDragEnd,
   });
+
+  @override
+  State<FloorElementWidget> createState() => _FloorElementWidgetState();
+}
+
+class _FloorElementWidgetState extends State<FloorElementWidget> {
+  late double _displayX;
+  late double _displayY;
+  bool _isDragging = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _displayX = widget.element.posX;
+    _displayY = widget.element.posY;
+  }
+
+  @override
+  void didUpdateWidget(FloorElementWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_isDragging) {
+      _displayX = widget.element.posX;
+      _displayY = widget.element.posY;
+    }
+  }
 
   /// 요소 유형별 아이콘
   static IconData iconForType(String type) {
@@ -60,32 +85,35 @@ class FloorElementWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final child = _buildElementCard();
 
-    if (!isDraggable) {
+    if (!widget.isDraggable) {
       return Positioned(
-        left: element.posX,
-        top: element.posY,
+        left: widget.element.posX,
+        top: widget.element.posY,
         child: child,
       );
     }
 
     return Positioned(
-      left: element.posX,
-      top: element.posY,
-      child: Draggable<FloorElement>(
-        data: element,
-        feedback: Material(
-          color: Colors.transparent,
-          child: Opacity(opacity: 0.7, child: _buildElementCard()),
-        ),
-        childWhenDragging: Opacity(
-          opacity: 0.3,
-          child: _buildElementCard(),
-        ),
-        onDragEnd: (details) {
-          onDragEnd?.call(details.offset);
+      left: _displayX,
+      top: _displayY,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        onPanStart: (_) => setState(() => _isDragging = true),
+        onPanUpdate: (details) {
+          setState(() {
+            _displayX = (_displayX + details.delta.dx)
+                .clamp(0, 2000 - widget.element.width);
+            _displayY = (_displayY + details.delta.dy)
+                .clamp(0, 2000 - widget.element.height);
+          });
         },
-        child: GestureDetector(
-          onTap: onTap,
+        onPanEnd: (_) {
+          setState(() => _isDragging = false);
+          widget.onDragEnd?.call(Offset(_displayX, _displayY));
+        },
+        child: AnimatedOpacity(
+          opacity: _isDragging ? 0.7 : 1.0,
+          duration: const Duration(milliseconds: 100),
           child: child,
         ),
       ),
@@ -93,19 +121,31 @@ class FloorElementWidget extends StatelessWidget {
   }
 
   Widget _buildElementCard() {
-    final color = colorForType(element.elementType);
-    final icon = iconForType(element.elementType);
-    final displayLabel = element.label ?? element.elementType;
+    final color = colorForType(widget.element.elementType);
+    final icon = iconForType(widget.element.elementType);
+    final displayLabel = widget.element.label ?? widget.element.elementType;
 
     return Transform.rotate(
-      angle: element.rotation * 3.14159265 / 180,
+      angle: widget.element.rotation * 3.14159265 / 180,
       child: Container(
-        width: element.width,
-        height: element.height,
+        width: widget.element.width,
+        height: widget.element.height,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+          border: Border.all(
+            color: color.withValues(alpha: _isDragging ? 0.7 : 0.4),
+            width: _isDragging ? 2 : 1,
+          ),
           borderRadius: BorderRadius.circular(6),
+          boxShadow: _isDragging
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  )
+                ]
+              : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

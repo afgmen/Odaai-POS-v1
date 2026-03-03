@@ -71,11 +71,42 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen>
 /// Floor Plan Designer Tab (Phase 0)
 /// zones → elements → tables 순서로 Stack 렌더링
 /// 하단 toolbar: [Add Zone] [Add Element] [Add Table] [Preview] [Save]
-class _FloorPlanDesignerTab extends ConsumerWidget {
+class _FloorPlanDesignerTab extends ConsumerStatefulWidget {
   const _FloorPlanDesignerTab();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FloorPlanDesignerTab> createState() =>
+      _FloorPlanDesignerTabState();
+}
+
+class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
+  /// InteractiveViewer의 현재 변환(스케일·이동)을 추적
+  final TransformationController _transformationController =
+      TransformationController();
+
+  /// 캔버스 컨테이너의 화면 위치를 가져오기 위한 키
+  final GlobalKey _canvasContainerKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  /// 글로벌 좌표 → 캔버스 로컬 좌표 변환
+  /// details.offset(글로벌)을 캔버스 Stack 기준 좌표로 바꿔준다.
+  Offset _toCanvasOffset(Offset globalOffset) {
+    final box = _canvasContainerKey.currentContext?.findRenderObject()
+        as RenderBox?;
+    if (box == null) return globalOffset;
+    // 1) 글로벌 → InteractiveViewer 뷰포트 좌표
+    final viewportOffset = box.globalToLocal(globalOffset);
+    // 2) 뷰포트 → 캔버스 씬 좌표 (스케일·패닝 보정)
+    return _transformationController.toScene(viewportOffset);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final filteredTablesAsync = ref.watch(filteredTablesProvider);
     final zonesAsync = ref.watch(allZonesStreamProvider);
@@ -99,10 +130,12 @@ class _FloorPlanDesignerTab extends ConsumerWidget {
           // 캔버스
           Expanded(
             child: Container(
+              key: _canvasContainerKey,
               color: const Color(0xFFF5F5F5),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return InteractiveViewer(
+                    transformationController: _transformationController,
                     boundaryMargin: const EdgeInsets.all(100),
                     minScale: 0.5,
                     maxScale: 2.0,
@@ -298,12 +331,12 @@ class _FloorPlanDesignerTab extends ConsumerWidget {
   }
 
   Future<void> _handleZoneDragEnd(
-      WidgetRef ref, FloorZone zone, Offset offset) async {
+      WidgetRef ref, FloorZone zone, Offset canvasOffset) async {
     final dao = ref.read(floorZoneDaoProvider);
     await dao.updateZonePositionAndSize(
       zoneId: zone.id,
-      posX: offset.dx.clamp(0, 1000),
-      posY: offset.dy.clamp(0, 700),
+      posX: canvasOffset.dx,
+      posY: canvasOffset.dy,
       width: zone.width,
       height: zone.height,
     );
@@ -349,12 +382,12 @@ class _FloorPlanDesignerTab extends ConsumerWidget {
   }
 
   Future<void> _handleElementDragEnd(
-      WidgetRef ref, FloorElement element, Offset offset) async {
+      WidgetRef ref, FloorElement element, Offset canvasOffset) async {
     final dao = ref.read(floorElementDaoProvider);
     await dao.updateElementPosition(
       elementId: element.id,
-      posX: offset.dx.clamp(0, 1000),
-      posY: offset.dy.clamp(0, 700),
+      posX: canvasOffset.dx,
+      posY: canvasOffset.dy,
     );
   }
 
@@ -385,12 +418,12 @@ class _FloorPlanDesignerTab extends ConsumerWidget {
 
   
   Future<void> _handleTableDragEnd(BuildContext context, WidgetRef ref,
-      RestaurantTable table, Offset offset) async {
+      RestaurantTable table, Offset canvasOffset) async {
     final dao = ref.read(tablesDaoProvider);
     await dao.updateTablePosition(
       tableId: table.id,
-      x: offset.dx.clamp(0, 1000),
-      y: offset.dy.clamp(0, 700),
+      x: canvasOffset.dx,
+      y: canvasOffset.dy,
     );
   }
 

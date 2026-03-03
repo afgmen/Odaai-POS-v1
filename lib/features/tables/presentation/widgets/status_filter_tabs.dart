@@ -28,41 +28,44 @@ class StatusFilterTabs extends ConsumerWidget {
         ],
       ),
       child: tableCountAsync.when(
-        data: (counts) => Row(
-          children: [
-            // All tab
-            _buildFilterTab(
-              context: context,
-              label: l10n.allTables,
-              status: null,
-              count: counts.values.fold(0, (sum, count) => sum + count),
-              isSelected: selectedStatus == null,
-              color: Colors.grey[700]!,
-              onTap: () {
-                ref.read(selectedTableStatusProvider.notifier).state = null;
-              },
-            ),
-            const SizedBox(width: 8),
+        data: (counts) => SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              // All tab
+              _buildFilterTab(
+                context: context,
+                label: l10n.allTables,
+                status: null,
+                count: counts.values.fold(0, (sum, count) => sum + count),
+                isSelected: selectedStatus == null,
+                color: Colors.grey[700]!,
+                onTap: () {
+                  ref.read(selectedTableStatusProvider.notifier).state = null;
+                },
+              ),
+              const SizedBox(width: 8),
 
-            // Status tabs
-            ...TableStatus.allStatuses.map((status) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: _buildFilterTab(
-                  context: context,
-                  label: _getLocalizedStatusLabel(l10n, status.value),
-                  status: status.value,
-                  count: counts[status.value] ?? 0,
-                  isSelected: selectedStatus == status.value,
-                  color: status.color,
-                  onTap: () {
-                    ref.read(selectedTableStatusProvider.notifier).state =
-                        status.value;
-                  },
-                ),
-              );
-            }),
-          ],
+              // Status tabs
+              ...TableStatus.allStatuses.map((status) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _buildFilterTab(
+                    context: context,
+                    label: _getLocalizedStatusLabel(l10n, status.value),
+                    status: status.value,
+                    count: counts[status.value] ?? 0,
+                    isSelected: selectedStatus == status.value,
+                    color: status.color,
+                    onTap: () {
+                      ref.read(selectedTableStatusProvider.notifier).state =
+                          status.value;
+                    },
+                  ),
+                );
+              }),
+            ],
+          ),
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(

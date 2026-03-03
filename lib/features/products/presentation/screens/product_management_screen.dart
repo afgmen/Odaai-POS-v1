@@ -188,9 +188,9 @@ class _ProductManagementScreenState extends ConsumerState<ProductManagementScree
                     (cat) => Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: _CategoryChip(
-                        label: cat,
-                        isSelected: selectedCategory == cat,
-                        onTap: () => ref.read(mgmtSelectedCategoryProvider.notifier).state = cat,
+                        label: cat.name,
+                        isSelected: selectedCategory == cat.id,
+                        onTap: () => ref.read(mgmtSelectedCategoryProvider.notifier).state = cat.id,
                       ),
                     ),
                   ),
@@ -754,6 +754,7 @@ class _ProductTable extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final priceFormatter = ref.watch(priceFormatterProvider);
+    final categoryNameMap = ref.watch(categoryNameMapProvider).valueOrNull ?? {};
     if (products.isEmpty) {
       return Center(
         child: Column(
@@ -810,18 +811,21 @@ class _ProductTable extends ConsumerWidget {
                     DataCell(Text(p.name, style: const TextStyle(fontWeight: FontWeight.w600)), onTap: () => onEdit(p)),
                     // SKU
                     DataCell(Text(p.sku, style: const TextStyle(color: AppTheme.textSecondary)), onTap: () => onEdit(p)),
-                    // 카테고리
+                    // 카테고리 — categoryId 기반 표시 (fallback: category text)
                     DataCell(
-                      p.category != null
-                          ? Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: AppTheme.background,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(p.category!, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-                            )
-                          : const Text('-', style: TextStyle(color: AppTheme.textDisabled)),
+                      () {
+                        final catName = (p.categoryId != null ? categoryNameMap[p.categoryId!] : null) ?? p.category;
+                        return catName != null
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.background,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(catName, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                              )
+                            : const Text('-', style: TextStyle(color: AppTheme.textDisabled));
+                      }(),
                       onTap: () => onEdit(p),
                     ),
                     // 판매가

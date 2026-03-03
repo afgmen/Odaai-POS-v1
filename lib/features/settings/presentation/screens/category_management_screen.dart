@@ -58,6 +58,7 @@ class CategoryManagementScreen extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: Text('Add Category'),
         backgroundColor: AppTheme.primary,
+        foregroundColor: Colors.white,
       ),
     );
   }

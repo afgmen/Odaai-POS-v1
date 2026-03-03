@@ -23,11 +23,11 @@ import '../../data/models/order_type.dart';
 
 /// POS 메인 화면
 /// Phase 3: tableId, orderType, existingSaleId 파라미터 추가
-class PosMainScreen extends ConsumerWidget {
+class PosMainScreen extends ConsumerStatefulWidget {
   /// Floor Plan에서 전달되는 테이블 정보
   final int? tableId;
   final String? tableNumber;
-  /// 주문 유형 (dineIn, takeaway, phoneDelivery, platformDelivery)
+  /// 주문 유형 초기값 (dineIn, takeaway, phoneDelivery, platformDelivery)
   final OrderType? orderType;
   /// 기존 Sale ID (추가 주문 시)
   final int? existingSaleId;
@@ -40,10 +40,25 @@ class PosMainScreen extends ConsumerWidget {
     this.existingSaleId,
   });
 
-  bool get _isDineInWithTable => orderType == OrderType.dineIn && tableId != null;
+  @override
+  ConsumerState<PosMainScreen> createState() => _PosMainScreenState();
+}
+
+class _PosMainScreenState extends ConsumerState<PosMainScreen> {
+  late OrderType _selectedOrderType;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    // 외부에서 orderType이 전달되면 사용, 없으면 기본값 dineIn
+    _selectedOrderType = widget.orderType ?? OrderType.dineIn;
+  }
+
+  bool get _isDineInWithTable =>
+      _selectedOrderType == OrderType.dineIn && widget.tableId != null;
+
+  @override
+  Widget build(BuildContext context) {
     final searchQuery = ref.watch(searchQueryProvider);
 
     return Scaffold(
@@ -57,13 +72,14 @@ class PosMainScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          // Phase 3: 컨텍스트 배너 (주문 유형 + 테이블 정보)
-          if (orderType != null || tableNumber != null)
-            _OrderContextBanner(
-              orderType: orderType,
-              tableNumber: tableNumber,
-              existingSaleId: existingSaleId,
-            ),
+          // 항상 표시되는 주문 유형 선택 바
+          _OrderTypeSelectorBar(
+            selectedType: _selectedOrderType,
+            tableNumber: widget.tableNumber,
+            existingSaleId: widget.existingSaleId,
+            showBackButton: widget.tableId != null,
+            onTypeSelected: (type) => setState(() => _selectedOrderType = type),
+          ),
           Expanded(child: LayoutBuilder(
         builder: (context, constraints) {
           final deviceType = ResponsiveHelper.getDeviceType(constraints.maxWidth);
@@ -95,10 +111,10 @@ class PosMainScreen extends ConsumerWidget {
                   child: CartPanel(
                     onCheckout: _isDineInWithTable
                         ? () => _handleSendToKitchen(context, ref)
-                        : () => _showPaymentModal(context, orderType: orderType, tableId: tableId),
+                        : () => _showPaymentModal(context, orderType: _selectedOrderType, tableId: widget.tableId),
                     isSidePanel: true,
-                    orderType: orderType,
-                    tableId: tableId,
+                    orderType: _selectedOrderType,
+                    tableId: widget.tableId,
                   ),
                 ),
               ],
@@ -125,10 +141,10 @@ class PosMainScreen extends ConsumerWidget {
                 CartPanel(
                   onCheckout: _isDineInWithTable
                       ? () => _handleSendToKitchen(context, ref)
-                      : () => _showPaymentModal(context, orderType: orderType, tableId: tableId),
+                      : () => _showPaymentModal(context, orderType: _selectedOrderType, tableId: widget.tableId),
                   isSidePanel: false,
-                  orderType: orderType,
-                  tableId: tableId,
+                  orderType: _selectedOrderType,
+                  tableId: widget.tableId,
                 ),
               ],
             );
@@ -141,77 +157,136 @@ class PosMainScreen extends ConsumerWidget {
   }
 }
 
-/// Phase 3: 주문 컨텍스트 배너 (주문 유형 + 테이블 정보)
-class _OrderContextBanner extends StatelessWidget {
-  final OrderType? orderType;
+/// 주문 유형 선택 바 — 항상 표시, 4가지 옵션 선택 가능
+class _OrderTypeSelectorBar extends StatelessWidget {
+  final OrderType selectedType;
   final String? tableNumber;
   final int? existingSaleId;
+  final bool showBackButton;
+  final ValueChanged<OrderType> onTypeSelected;
 
-  const _OrderContextBanner({this.orderType, this.tableNumber, this.existingSaleId});
+  const _OrderTypeSelectorBar({
+    required this.selectedType,
+    required this.onTypeSelected,
+    this.tableNumber,
+    this.existingSaleId,
+    this.showBackButton = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final type = orderType ?? OrderType.dineIn;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: type.color.withValues(alpha: 0.12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: AppTheme.divider)),
+      ),
       child: Row(
         children: [
-          Icon(type.icon, color: type.color, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            type.displayNameEn,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: type.color,
-            ),
-          ),
-          if (tableNumber != null) ...[
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: type.color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Table $tableNumber',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: type.color,
+          // 주문 유형 칩 목록
+          ...OrderType.values.map((type) {
+            final isSelected = selectedType == type;
+            return GestureDetector(
+              onTap: () => onTypeSelected(type),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? type.color.withValues(alpha: 0.15)
+                      : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected ? type.color : Colors.grey.shade300,
+                    width: isSelected ? 1.5 : 1,
+                  ),
                 ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      type.icon,
+                      size: 14,
+                      color: isSelected ? type.color : Colors.grey.shade500,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      type.displayNameEn,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected ? type.color : Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+
+          // 테이블 번호 배지 (Floor Plan에서 진입 시)
+          if (tableNumber != null) ...[
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: selectedType.color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: selectedType.color.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.table_restaurant, size: 13, color: selectedType.color),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Table $tableNumber',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: selectedType.color,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
+
+          // 추가 라운드 배지
           if (existingSaleId != null) ...[
-            const SizedBox(width: 12),
+            const SizedBox(width: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.orange.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
               ),
-              child: Text(
-                'Round +',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              child: const Text(
+                '+ Round',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                   color: Colors.orange,
                 ),
               ),
             ),
           ],
+
           const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.close, size: 18),
-            onPressed: () => Navigator.pop(context),
-            tooltip: 'Back to Floor Plan',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
+
+          // 뒤로가기 버튼 (Floor Plan에서 진입한 경우만)
+          if (showBackButton)
+            IconButton(
+              icon: const Icon(Icons.close, size: 18),
+              onPressed: () => Navigator.pop(context),
+              tooltip: 'Back to Floor Plan',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              color: AppTheme.textSecondary,
+            ),
         ],
       ),
     );

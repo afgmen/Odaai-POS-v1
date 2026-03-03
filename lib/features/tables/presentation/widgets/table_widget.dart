@@ -3,7 +3,7 @@ import '../../../../database/app_database.dart';
 import '../../domain/enums/table_status.dart';
 
 /// 드래그 가능한 테이블 위젯
-class TableWidget extends StatelessWidget {
+class TableWidget extends StatefulWidget {
   final RestaurantTable table;
   final VoidCallback onTap;
   final Function(Offset)? onDragEnd;
@@ -18,41 +18,68 @@ class TableWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final status = TableStatus.fromString(table.status);
+  State<TableWidget> createState() => _TableWidgetState();
+}
 
-    if (!isDraggable) {
-      return GestureDetector(
-        onTap: onTap,
-        child: _buildTableCard(status),
+class _TableWidgetState extends State<TableWidget> {
+  late double _displayX;
+  late double _displayY;
+  bool _isDragging = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _displayX = widget.table.positionX;
+    _displayY = widget.table.positionY;
+  }
+
+  @override
+  void didUpdateWidget(TableWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_isDragging) {
+      _displayX = widget.table.positionX;
+      _displayY = widget.table.positionY;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final status = TableStatus.fromString(widget.table.status);
+
+    if (!widget.isDraggable) {
+      return Positioned(
+        left: widget.table.positionX,
+        top: widget.table.positionY,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: _buildTableCard(status),
+        ),
       );
     }
 
     return Positioned(
-      left: table.positionX,
-      top: table.positionY,
-      child: Draggable<RestaurantTable>(
-        data: table,
-        feedback: Material(
-          elevation: 8,
-          borderRadius: BorderRadius.circular(12),
-          child: Opacity(
-            opacity: 0.8,
-            child: _buildTableCard(status, isDragging: true),
-          ),
-        ),
-        childWhenDragging: Opacity(
-          opacity: 0.3,
-          child: _buildTableCard(status),
-        ),
-        onDragEnd: (details) {
-          if (onDragEnd != null) {
-            onDragEnd!(details.offset);
-          }
+      left: _displayX,
+      top: _displayY,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        onPanStart: (_) => setState(() => _isDragging = true),
+        onPanUpdate: (details) {
+          final metrics = _shapeMetrics();
+          setState(() {
+            _displayX = (_displayX + details.delta.dx)
+                .clamp(0, 2000 - metrics.w);
+            _displayY = (_displayY + details.delta.dy)
+                .clamp(0, 2000 - metrics.h);
+          });
         },
-        child: GestureDetector(
-          onTap: onTap,
-          child: _buildTableCard(status),
+        onPanEnd: (_) {
+          setState(() => _isDragging = false);
+          widget.onDragEnd?.call(Offset(_displayX, _displayY));
+        },
+        child: AnimatedOpacity(
+          opacity: _isDragging ? 0.75 : 1.0,
+          duration: const Duration(milliseconds: 100),
+          child: _buildTableCard(status, isDragging: _isDragging),
         ),
       ),
     );
@@ -60,9 +87,10 @@ class TableWidget extends StatelessWidget {
 
   /// 테이블 모양에 따른 크기와 BorderRadius 계산
   ({double w, double h, BorderRadius radius}) _shapeMetrics() {
-    final shape = table.shape;
+    final shape = widget.table.shape;
     switch (shape) {
       case 'round':
+      case 'circle':
         return (w: 100.0, h: 100.0, radius: BorderRadius.circular(50));
       case 'rectangle':
         return (w: 160.0, h: 100.0, radius: BorderRadius.circular(12));
@@ -99,7 +127,7 @@ class TableWidget extends StatelessWidget {
         children: [
           // 테이블 번호
           Text(
-            table.tableNumber,
+            widget.table.tableNumber,
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -127,9 +155,9 @@ class TableWidget extends StatelessWidget {
           const SizedBox(height: 2),
 
           // 좌석 수
-          if (table.seats > 0)
+          if (widget.table.seats > 0)
             Text(
-              '${table.seats} seats',
+              '${widget.table.seats} seats',
               style: TextStyle(
                 fontSize: 9,
                 color: Colors.grey[600],
@@ -137,9 +165,12 @@ class TableWidget extends StatelessWidget {
             ),
 
           // 착석 시간 (OCCUPIED 상태일 때)
-          if (table.occupiedAt != null && status != TableStatus.available && status != TableStatus.cleaning)
+          if (widget.table.occupiedAt != null &&
+              status != TableStatus.available &&
+              status != TableStatus.cleaning)
             Text(
-              _formatDuration(DateTime.now().difference(table.occupiedAt!)),
+              _formatDuration(
+                  DateTime.now().difference(widget.table.occupiedAt!)),
               style: TextStyle(
                 fontSize: 8,
                 color: Colors.grey[500],

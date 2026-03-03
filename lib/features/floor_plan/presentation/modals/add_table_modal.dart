@@ -279,9 +279,22 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+        final msg = _friendlyError(e);
+        SnackBarHelper.showError(context, msg);
       }
     }
+  }
+
+  /// SQLite 에러를 사용자 친화적인 메시지로 변환
+  String _friendlyError(Object e) {
+    final raw = e.toString();
+    if (raw.contains('UNIQUE') && raw.contains('table_number')) {
+      return 'Table number "${_tableNumberController.text.trim()}" already exists. Please use a different number.';
+    }
+    if (raw.contains('UNIQUE')) {
+      return 'A duplicate value was detected. Please check your input.';
+    }
+    return 'An error occurred. Please try again.';
   }
 
   Future<void> _handleDelete() async {

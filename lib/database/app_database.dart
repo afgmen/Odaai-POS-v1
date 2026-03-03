@@ -602,6 +602,17 @@ class AppDatabase extends _$AppDatabase {
       ),
     );
 
+    // 시드 카테고리 생성
+    final foodId = await into(categories).insert(
+      CategoriesCompanion.insert(name: 'Food', sortOrder: const Value(0)),
+    );
+    final snacksId = await into(categories).insert(
+      CategoriesCompanion.insert(name: 'Snacks', sortOrder: const Value(1)),
+    );
+    final beveragesId = await into(categories).insert(
+      CategoriesCompanion.insert(name: 'Beverages', sortOrder: const Value(2)),
+    );
+
     await batch((batch) {
       batch.insertAll(products, [
         ProductsCompanion.insert(
@@ -613,6 +624,7 @@ class AppDatabase extends _$AppDatabase {
           stock: const Value(100),
           minStock: const Value(10),
           category: const Value('Snacks'),
+          categoryId: Value(snacksId),
         ),
         ProductsCompanion.insert(
           sku: 'DEMO002',
@@ -623,6 +635,7 @@ class AppDatabase extends _$AppDatabase {
           stock: const Value(50),
           minStock: const Value(5),
           category: const Value('Food'),
+          categoryId: Value(foodId),
         ),
         ProductsCompanion.insert(
           sku: 'DEMO003',
@@ -633,6 +646,7 @@ class AppDatabase extends _$AppDatabase {
           stock: const Value(30),
           minStock: const Value(10),
           category: const Value('Beverages'),
+          categoryId: Value(beveragesId),
         ),
       ]);
     });

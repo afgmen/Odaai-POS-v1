@@ -326,6 +326,7 @@ class _OperationalTableWidgetState extends State<_OperationalTableWidget>
     final shape = widget.table.shape;
     switch (shape) {
       case 'round':
+      case 'circle':
         return (w: 100.0, h: 100.0, radius: BorderRadius.circular(50));
       case 'rectangle':
         return (w: 160.0, h: 100.0, radius: BorderRadius.circular(12));

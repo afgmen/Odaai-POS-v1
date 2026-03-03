@@ -16,6 +16,8 @@ class FilterTabs extends ConsumerWidget {
       color: Colors.grey.shade100,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
         children: [
           _buildFilterChip(
             context: context,
@@ -25,7 +27,6 @@ class FilterTabs extends ConsumerWidget {
             isSelected: selectedFilter == null,
             color: Colors.grey,
           ),
-          const SizedBox(width: 8),
           _buildFilterChip(
             context: context,
             ref: ref,
@@ -34,7 +35,6 @@ class FilterTabs extends ConsumerWidget {
             isSelected: selectedFilter == OrderStatus.pending,
             color: Color(int.parse(OrderStatus.pending.colorHex.replaceFirst('#', '0xFF'))),
           ),
-          const SizedBox(width: 8),
           _buildFilterChip(
             context: context,
             ref: ref,
@@ -43,7 +43,6 @@ class FilterTabs extends ConsumerWidget {
             isSelected: selectedFilter == OrderStatus.preparing,
             color: Color(int.parse(OrderStatus.preparing.colorHex.replaceFirst('#', '0xFF'))),
           ),
-          const SizedBox(width: 8),
           _buildFilterChip(
             context: context,
             ref: ref,
@@ -52,7 +51,6 @@ class FilterTabs extends ConsumerWidget {
             isSelected: selectedFilter == OrderStatus.ready,
             color: Color(int.parse(OrderStatus.ready.colorHex.replaceFirst('#', '0xFF'))),
           ),
-          const SizedBox(width: 8),
           _buildFilterChip(
             context: context,
             ref: ref,
@@ -61,7 +59,6 @@ class FilterTabs extends ConsumerWidget {
             isSelected: selectedFilter == OrderStatus.served,
             color: Color(int.parse(OrderStatus.served.colorHex.replaceFirst('#', '0xFF'))),
           ),
-          const SizedBox(width: 8),
           _buildFilterChip(
             context: context,
             ref: ref,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/responsive/adaptive_scaffold.dart';
@@ -22,6 +23,7 @@ import 'tables/presentation/screens/table_management_screen.dart';
 import 'floor_plan/presentation/screens/floor_plan_screen.dart';
 import 'delivery/presentation/screens/delivery_queue_screen.dart';
 import 'delivery/domain/services/kds_delivery_bridge_provider.dart';
+import 'promotions/providers/promotions_provider.dart';
 
 /// 개별 탭 항목 데이터 모델
 class _TabEntry {
@@ -53,6 +55,27 @@ class AppRootScreen extends ConsumerStatefulWidget {
 
 class _AppRootScreenState extends ConsumerState<AppRootScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // 앱 시작 시 만료된 프로모션 자동 비활성화
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkExpiredPromotions();
+    });
+  }
+
+  Future<void> _checkExpiredPromotions() async {
+    try {
+      final promotionService = ref.read(promotionServiceProvider);
+      final expiredCount = await promotionService.expireOldPromotions();
+      if (expiredCount > 0) {
+        debugPrint('[Promotion] Expired $expiredCount promotion(s) automatically');
+      }
+    } catch (e) {
+      debugPrint('[Promotion] Failed to expire promotions: $e');
+    }
+  }
 
   /// 전체 탭 목록 (permission이 null이면 항상 표시)
   static const _allTabs = <_TabEntry>[

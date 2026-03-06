@@ -35,6 +35,12 @@ class Sales extends Table {
   /// Open Tab 여부 (매장 식사: 추가 주문 가능 상태)
   BoolColumn get isOpenTab => boolean().withDefault(const Constant(false))();
 
+  /// 취소 사유 (status='cancelled'일 때)
+  TextColumn get cancellationReason => text().nullable()();
+
+  /// 취소 시각
+  DateTimeColumn get cancelledAt => dateTime().nullable()();
+
   BoolColumn get needsSync => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

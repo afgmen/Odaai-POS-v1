@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../database/app_database.dart';
@@ -247,36 +248,151 @@ class TableDetailModal extends ConsumerWidget {
   }
 
   void _confirmCancelOrder(BuildContext context, WidgetRef ref) {
+    String? selectedReason;
+    final TextEditingController otherReasonController = TextEditingController();
+    
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Cancel Order'),
-        content:
-            Text('Cancel order for Table ${table.tableNumber}? This cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('No'),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Cancel Order'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Cancel order for Table ${table.tableNumber}?'),
+                const SizedBox(height: 4),
+                const Text(
+                  'This cannot be undone. Please select a reason:',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                // Predefined reasons
+                _CancelReasonOption(
+                  reason: 'Customer request',
+                  selected: selectedReason == 'Customer request',
+                  onTap: () => setState(() => selectedReason = 'Customer request'),
+                ),
+                _CancelReasonOption(
+                  reason: 'Wrong order',
+                  selected: selectedReason == 'Wrong order',
+                  onTap: () => setState(() => selectedReason = 'Wrong order'),
+                ),
+                _CancelReasonOption(
+                  reason: 'Kitchen cannot fulfill',
+                  selected: selectedReason == 'Kitchen cannot fulfill',
+                  onTap: () => setState(() => selectedReason = 'Kitchen cannot fulfill'),
+                ),
+                _CancelReasonOption(
+                  reason: 'Payment issue',
+                  selected: selectedReason == 'Payment issue',
+                  onTap: () => setState(() => selectedReason = 'Payment issue'),
+                ),
+                _CancelReasonOption(
+                  reason: 'Other',
+                  selected: selectedReason == 'Other',
+                  onTap: () => setState(() => selectedReason = 'Other'),
+                ),
+                if (selectedReason == 'Other') ...[
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: otherReasonController,
+                    decoration: const InputDecoration(
+                      hintText: 'Please specify reason',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    maxLines: 2,
+                    autofocus: true,
+                  ),
+                ],
+              ],
+            ),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              Navigator.pop(context);
-              await _updateTableStatus(ref, table.id, 'AVAILABLE');
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+          actions: [
+            TextButton(
+              onPressed: () {
+                otherReasonController.dispose();
+                Navigator.pop(ctx);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () async {
+                // Validation
+                if (selectedReason == null) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please select a cancellation reason'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+                
+                if (selectedReason == 'Other' && otherReasonController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please specify the reason'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+                
+                final reason = selectedReason == 'Other' 
+                    ? otherReasonController.text.trim()
+                    : selectedReason!;
+                
+                otherReasonController.dispose();
+                Navigator.pop(ctx);
+                Navigator.pop(context);
+                
+                // Save cancellation with reason
+                await _cancelOrderWithReason(ref, table.id, reason);
+                
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
                       content: Text(
-                          'Order cancelled for Table ${table.tableNumber}')),
-                );
-              }
-            },
-            child: const Text('Yes, Cancel'),
-          ),
-        ],
+                        'Order cancelled for Table ${table.tableNumber}\nReason: $reason',
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Confirm Cancel'),
+            ),
+          ],
+        ),
       ),
     );
+  }
+  
+  Future<void> _cancelOrderWithReason(WidgetRef ref, int tableId, String reason) async {
+    final db = ref.read(databaseProvider);
+    
+    try {
+      // Get current sale for this table
+      if (table.currentSaleId != null) {
+        // Update sale status and cancellation reason
+        await (db.update(db.sales)
+          ..where((t) => t.id.equals(table.currentSaleId!)))
+          .write(SalesCompanion(
+            status: const Value('cancelled'),
+            cancellationReason: Value(reason),
+            cancelledAt: Value(DateTime.now()),
+          ));
+      }
+      
+      // Update table status
+      await _updateTableStatus(ref, tableId, 'AVAILABLE');
+    } catch (e) {
+      debugPrint('[Cancel Order] Error: $e');
+      rethrow;
+    }
   }
 
   String _formatDuration(Duration d) {
@@ -357,4 +473,54 @@ class _ActionButton extends StatelessWidget {
       ),
     );
   }
+
+
+class _CancelReasonOption extends StatelessWidget {
+  final String reason;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CancelReasonOption({
+    required this.reason,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: selected ? Colors.blue : Colors.grey.shade300,
+            width: selected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          color: selected ? Colors.blue.shade50 : null,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+              color: selected ? Colors.blue : Colors.grey,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              reason,
+              style: TextStyle(
+                color: selected ? Colors.blue.shade900 : Colors.black87,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 }

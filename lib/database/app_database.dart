@@ -134,7 +134,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration {
@@ -290,6 +290,11 @@ class AppDatabase extends _$AppDatabase {
         if (from < 22) {
           // v21 → v22: Product Modifiers (Groups, Options, Links, SaleItemModifiers)
           await _migrateProductModifiers(m);
+        }
+
+        // v22 → v23: 취소 사유 추가 (B-070: POS UAT)
+        if (from <= 22 && to >= 23) {
+          await _migrateCancellationReason(m);
         }
         }
       },
@@ -1211,6 +1216,19 @@ class AppDatabase extends _$AppDatabase {
       ''');
     } catch (e) {
       debugPrint('[Migration v15] Fix system_settings timestamps: $e');
+    }
+  }
+
+  /// v22 → v23: Sales 테이블에 취소 사유 컬럼 추가
+  Future<void> _migrateCancellationReason(Migrator m) async {
+    try {
+      // Add cancellation_reason column
+      await m.addColumn(sales, sales.cancellationReason);
+      // Add cancelled_at column
+      await m.addColumn(sales, sales.cancelledAt);
+      debugPrint('[Migration v23] ✅ Added cancellation tracking columns to sales table');
+    } catch (e) {
+      debugPrint('[Migration v23] ⚠️  Cancellation columns might already exist: $e');
     }
   }
 

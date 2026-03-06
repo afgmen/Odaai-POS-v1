@@ -2101,6 +2101,28 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _cancellationReasonMeta =
+      const VerificationMeta('cancellationReason');
+  @override
+  late final GeneratedColumn<String> cancellationReason =
+      GeneratedColumn<String>(
+        'cancellation_reason',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _cancelledAtMeta = const VerificationMeta(
+    'cancelledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> cancelledAt = GeneratedColumn<DateTime>(
+    'cancelled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _needsSyncMeta = const VerificationMeta(
     'needsSync',
   );
@@ -2148,6 +2170,8 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
     deliveryAddress,
     deliveryPhone,
     isOpenTab,
+    cancellationReason,
+    cancelledAt,
     needsSync,
     createdAt,
   ];
@@ -2287,6 +2311,24 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
         isOpenTab.isAcceptableOrUnknown(data['is_open_tab']!, _isOpenTabMeta),
       );
     }
+    if (data.containsKey('cancellation_reason')) {
+      context.handle(
+        _cancellationReasonMeta,
+        cancellationReason.isAcceptableOrUnknown(
+          data['cancellation_reason']!,
+          _cancellationReasonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cancelled_at')) {
+      context.handle(
+        _cancelledAtMeta,
+        cancelledAt.isAcceptableOrUnknown(
+          data['cancelled_at']!,
+          _cancelledAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('needs_sync')) {
       context.handle(
         _needsSyncMeta,
@@ -2380,6 +2422,14 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_open_tab'],
       )!,
+      cancellationReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cancellation_reason'],
+      ),
+      cancelledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cancelled_at'],
+      ),
       needsSync: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}needs_sync'],
@@ -2428,6 +2478,12 @@ class Sale extends DataClass implements Insertable<Sale> {
 
   /// Open Tab 여부 (매장 식사: 추가 주문 가능 상태)
   final bool isOpenTab;
+
+  /// 취소 사유 (status='cancelled'일 때)
+  final String? cancellationReason;
+
+  /// 취소 시각
+  final DateTime? cancelledAt;
   final bool needsSync;
   final DateTime createdAt;
   const Sale({
@@ -2449,6 +2505,8 @@ class Sale extends DataClass implements Insertable<Sale> {
     this.deliveryAddress,
     this.deliveryPhone,
     required this.isOpenTab,
+    this.cancellationReason,
+    this.cancelledAt,
     required this.needsSync,
     required this.createdAt,
   });
@@ -2487,6 +2545,12 @@ class Sale extends DataClass implements Insertable<Sale> {
       map['delivery_phone'] = Variable<String>(deliveryPhone);
     }
     map['is_open_tab'] = Variable<bool>(isOpenTab);
+    if (!nullToAbsent || cancellationReason != null) {
+      map['cancellation_reason'] = Variable<String>(cancellationReason);
+    }
+    if (!nullToAbsent || cancelledAt != null) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt);
+    }
     map['needs_sync'] = Variable<bool>(needsSync);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -2526,6 +2590,12 @@ class Sale extends DataClass implements Insertable<Sale> {
           ? const Value.absent()
           : Value(deliveryPhone),
       isOpenTab: Value(isOpenTab),
+      cancellationReason: cancellationReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancellationReason),
+      cancelledAt: cancelledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancelledAt),
       needsSync: Value(needsSync),
       createdAt: Value(createdAt),
     );
@@ -2555,6 +2625,10 @@ class Sale extends DataClass implements Insertable<Sale> {
       deliveryAddress: serializer.fromJson<String?>(json['deliveryAddress']),
       deliveryPhone: serializer.fromJson<String?>(json['deliveryPhone']),
       isOpenTab: serializer.fromJson<bool>(json['isOpenTab']),
+      cancellationReason: serializer.fromJson<String?>(
+        json['cancellationReason'],
+      ),
+      cancelledAt: serializer.fromJson<DateTime?>(json['cancelledAt']),
       needsSync: serializer.fromJson<bool>(json['needsSync']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -2581,6 +2655,8 @@ class Sale extends DataClass implements Insertable<Sale> {
       'deliveryAddress': serializer.toJson<String?>(deliveryAddress),
       'deliveryPhone': serializer.toJson<String?>(deliveryPhone),
       'isOpenTab': serializer.toJson<bool>(isOpenTab),
+      'cancellationReason': serializer.toJson<String?>(cancellationReason),
+      'cancelledAt': serializer.toJson<DateTime?>(cancelledAt),
       'needsSync': serializer.toJson<bool>(needsSync),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -2605,6 +2681,8 @@ class Sale extends DataClass implements Insertable<Sale> {
     Value<String?> deliveryAddress = const Value.absent(),
     Value<String?> deliveryPhone = const Value.absent(),
     bool? isOpenTab,
+    Value<String?> cancellationReason = const Value.absent(),
+    Value<DateTime?> cancelledAt = const Value.absent(),
     bool? needsSync,
     DateTime? createdAt,
   }) => Sale(
@@ -2632,6 +2710,10 @@ class Sale extends DataClass implements Insertable<Sale> {
         ? deliveryPhone.value
         : this.deliveryPhone,
     isOpenTab: isOpenTab ?? this.isOpenTab,
+    cancellationReason: cancellationReason.present
+        ? cancellationReason.value
+        : this.cancellationReason,
+    cancelledAt: cancelledAt.present ? cancelledAt.value : this.cancelledAt,
     needsSync: needsSync ?? this.needsSync,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -2671,6 +2753,12 @@ class Sale extends DataClass implements Insertable<Sale> {
           ? data.deliveryPhone.value
           : this.deliveryPhone,
       isOpenTab: data.isOpenTab.present ? data.isOpenTab.value : this.isOpenTab,
+      cancellationReason: data.cancellationReason.present
+          ? data.cancellationReason.value
+          : this.cancellationReason,
+      cancelledAt: data.cancelledAt.present
+          ? data.cancelledAt.value
+          : this.cancelledAt,
       needsSync: data.needsSync.present ? data.needsSync.value : this.needsSync,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -2697,6 +2785,8 @@ class Sale extends DataClass implements Insertable<Sale> {
           ..write('deliveryAddress: $deliveryAddress, ')
           ..write('deliveryPhone: $deliveryPhone, ')
           ..write('isOpenTab: $isOpenTab, ')
+          ..write('cancellationReason: $cancellationReason, ')
+          ..write('cancelledAt: $cancelledAt, ')
           ..write('needsSync: $needsSync, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -2704,7 +2794,7 @@ class Sale extends DataClass implements Insertable<Sale> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     saleNumber,
     saleDate,
@@ -2723,9 +2813,11 @@ class Sale extends DataClass implements Insertable<Sale> {
     deliveryAddress,
     deliveryPhone,
     isOpenTab,
+    cancellationReason,
+    cancelledAt,
     needsSync,
     createdAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2748,6 +2840,8 @@ class Sale extends DataClass implements Insertable<Sale> {
           other.deliveryAddress == this.deliveryAddress &&
           other.deliveryPhone == this.deliveryPhone &&
           other.isOpenTab == this.isOpenTab &&
+          other.cancellationReason == this.cancellationReason &&
+          other.cancelledAt == this.cancelledAt &&
           other.needsSync == this.needsSync &&
           other.createdAt == this.createdAt);
 }
@@ -2771,6 +2865,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
   final Value<String?> deliveryAddress;
   final Value<String?> deliveryPhone;
   final Value<bool> isOpenTab;
+  final Value<String?> cancellationReason;
+  final Value<DateTime?> cancelledAt;
   final Value<bool> needsSync;
   final Value<DateTime> createdAt;
   const SalesCompanion({
@@ -2792,6 +2888,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     this.deliveryAddress = const Value.absent(),
     this.deliveryPhone = const Value.absent(),
     this.isOpenTab = const Value.absent(),
+    this.cancellationReason = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
     this.needsSync = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
@@ -2814,6 +2912,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     this.deliveryAddress = const Value.absent(),
     this.deliveryPhone = const Value.absent(),
     this.isOpenTab = const Value.absent(),
+    this.cancellationReason = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
     this.needsSync = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : saleNumber = Value(saleNumber),
@@ -2837,6 +2937,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     Expression<String>? deliveryAddress,
     Expression<String>? deliveryPhone,
     Expression<bool>? isOpenTab,
+    Expression<String>? cancellationReason,
+    Expression<DateTime>? cancelledAt,
     Expression<bool>? needsSync,
     Expression<DateTime>? createdAt,
   }) {
@@ -2859,6 +2961,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
       if (deliveryAddress != null) 'delivery_address': deliveryAddress,
       if (deliveryPhone != null) 'delivery_phone': deliveryPhone,
       if (isOpenTab != null) 'is_open_tab': isOpenTab,
+      if (cancellationReason != null) 'cancellation_reason': cancellationReason,
+      if (cancelledAt != null) 'cancelled_at': cancelledAt,
       if (needsSync != null) 'needs_sync': needsSync,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -2883,6 +2987,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     Value<String?>? deliveryAddress,
     Value<String?>? deliveryPhone,
     Value<bool>? isOpenTab,
+    Value<String?>? cancellationReason,
+    Value<DateTime?>? cancelledAt,
     Value<bool>? needsSync,
     Value<DateTime>? createdAt,
   }) {
@@ -2905,6 +3011,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
       deliveryAddress: deliveryAddress ?? this.deliveryAddress,
       deliveryPhone: deliveryPhone ?? this.deliveryPhone,
       isOpenTab: isOpenTab ?? this.isOpenTab,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
       needsSync: needsSync ?? this.needsSync,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -2967,6 +3075,12 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     if (isOpenTab.present) {
       map['is_open_tab'] = Variable<bool>(isOpenTab.value);
     }
+    if (cancellationReason.present) {
+      map['cancellation_reason'] = Variable<String>(cancellationReason.value);
+    }
+    if (cancelledAt.present) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt.value);
+    }
     if (needsSync.present) {
       map['needs_sync'] = Variable<bool>(needsSync.value);
     }
@@ -2997,6 +3111,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
           ..write('deliveryAddress: $deliveryAddress, ')
           ..write('deliveryPhone: $deliveryPhone, ')
           ..write('isOpenTab: $isOpenTab, ')
+          ..write('cancellationReason: $cancellationReason, ')
+          ..write('cancelledAt: $cancelledAt, ')
           ..write('needsSync: $needsSync, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -26525,6 +26641,8 @@ typedef $$SalesTableCreateCompanionBuilder =
       Value<String?> deliveryAddress,
       Value<String?> deliveryPhone,
       Value<bool> isOpenTab,
+      Value<String?> cancellationReason,
+      Value<DateTime?> cancelledAt,
       Value<bool> needsSync,
       Value<DateTime> createdAt,
     });
@@ -26548,6 +26666,8 @@ typedef $$SalesTableUpdateCompanionBuilder =
       Value<String?> deliveryAddress,
       Value<String?> deliveryPhone,
       Value<bool> isOpenTab,
+      Value<String?> cancellationReason,
+      Value<DateTime?> cancelledAt,
       Value<bool> needsSync,
       Value<DateTime> createdAt,
     });
@@ -26712,6 +26832,16 @@ class $$SalesTableFilterComposer extends Composer<_$AppDatabase, $SalesTable> {
 
   ColumnFilters<bool> get isOpenTab => $composableBuilder(
     column: $table.isOpenTab,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -26900,6 +27030,16 @@ class $$SalesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get needsSync => $composableBuilder(
     column: $table.needsSync,
     builder: (column) => ColumnOrderings(column),
@@ -26989,6 +27129,16 @@ class $$SalesTableAnnotationComposer
 
   GeneratedColumn<bool> get isOpenTab =>
       $composableBuilder(column: $table.isOpenTab, builder: (column) => column);
+
+  GeneratedColumn<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get needsSync =>
       $composableBuilder(column: $table.needsSync, builder: (column) => column);
@@ -27123,6 +27273,8 @@ class $$SalesTableTableManager
                 Value<String?> deliveryAddress = const Value.absent(),
                 Value<String?> deliveryPhone = const Value.absent(),
                 Value<bool> isOpenTab = const Value.absent(),
+                Value<String?> cancellationReason = const Value.absent(),
+                Value<DateTime?> cancelledAt = const Value.absent(),
                 Value<bool> needsSync = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => SalesCompanion(
@@ -27144,6 +27296,8 @@ class $$SalesTableTableManager
                 deliveryAddress: deliveryAddress,
                 deliveryPhone: deliveryPhone,
                 isOpenTab: isOpenTab,
+                cancellationReason: cancellationReason,
+                cancelledAt: cancelledAt,
                 needsSync: needsSync,
                 createdAt: createdAt,
               ),
@@ -27167,6 +27321,8 @@ class $$SalesTableTableManager
                 Value<String?> deliveryAddress = const Value.absent(),
                 Value<String?> deliveryPhone = const Value.absent(),
                 Value<bool> isOpenTab = const Value.absent(),
+                Value<String?> cancellationReason = const Value.absent(),
+                Value<DateTime?> cancelledAt = const Value.absent(),
                 Value<bool> needsSync = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => SalesCompanion.insert(
@@ -27188,6 +27344,8 @@ class $$SalesTableTableManager
                 deliveryAddress: deliveryAddress,
                 deliveryPhone: deliveryPhone,
                 isOpenTab: isOpenTab,
+                cancellationReason: cancellationReason,
+                cancelledAt: cancelledAt,
                 needsSync: needsSync,
                 createdAt: createdAt,
               ),

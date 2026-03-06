@@ -241,8 +241,12 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
                       ),
                       const SizedBox(height: 6),
-                      TextField(
-                        controller: _tableNumberController,
+                      DropdownButtonFormField<String>(
+                        value: _tableNumberController.text.isEmpty ? null : _tableNumberController.text,
+                        onChanged: (value) => _tableNumberController.text = value ?? '',
+                        items: ['T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07', 'T08', 'T09', 'T10']
+                            .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                            .toList(),
                         decoration: InputDecoration(
                           hintText: 'e.g. T01',
                           prefixIcon: const Icon(Icons.table_restaurant, size: 18),

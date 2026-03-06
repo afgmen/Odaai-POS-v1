@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -31,13 +32,37 @@ class TableMergeModal extends ConsumerWidget {
             .where((t) => t.id != currentTable.id && t.status == 'OCCUPIED')
             .toList();
 
+        debugPrint('[MergeTable] Merge candidates (excluding current): ${availableTables.length}');
+        if (availableTables.isNotEmpty) {
+          debugPrint('[MergeTable] Available: ${availableTables.map((t) => t.tableNumber).join(", ")}');
+        }
+
         return AlertDialog(
           title: Text('Merge Table ${currentTable.tableNumber}'),
           content: SizedBox(
             width: double.maxFinite,
             height: 400,
             child: availableTables.isEmpty
-                ? const Center(child: Text('No other occupied tables available'))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.info_outline, size: 48, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'No other occupied tables available',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'At least 2 tables must be occupied to merge.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  )
                 : ListView.builder(
                     itemCount: availableTables.length,
                     itemBuilder: (context, index) {
@@ -52,7 +77,7 @@ class TableMergeModal extends ConsumerWidget {
                             ),
                           ),
                           title: Text('Table ${table.tableNumber}'),
-                          subtitle: Text('Capacity: ${table.seats}'),
+                          subtitle: Text('Capacity: ${table.seats} | Status: ${table.status}'),
                           trailing: const Icon(Icons.arrow_forward),
                           onTap: () => _confirmMerge(context, ref, table),
                         ),
@@ -72,9 +97,14 @@ class TableMergeModal extends ConsumerWidget {
   }
 
   Future<List<RestaurantTable>> _getOccupiedTables(AppDatabase db) async {
-    return await (db.select(db.restaurantTables)
+    final tables = await (db.select(db.restaurantTables)
           ..where((t) => t.status.equals('OCCUPIED')))
         .get();
+    
+    debugPrint('[MergeTable] Found ${tables.length} OCCUPIED tables total');
+    debugPrint('[MergeTable] Current table: ${currentTable.tableNumber} (ID: ${currentTable.id})');
+    
+    return tables;
   }
 
   void _confirmMerge(BuildContext context, WidgetRef ref, RestaurantTable targetTable) {

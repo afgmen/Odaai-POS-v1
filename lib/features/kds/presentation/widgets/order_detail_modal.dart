@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/enums/order_status.dart';
@@ -135,16 +136,18 @@ class OrderDetailModal extends ConsumerWidget {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () async {
-                            final confirm = await _showConfirmDialog(
-                              context,
-                              'Cancel this order?',
-                            );
-                            if (confirm == true) {
+                            // Show cancel reason dialog first
+                            final reason = await _showCancelReasonDialog(context);
+                            if (reason != null && reason.isNotEmpty) {
                               await service.cancelOrder(orderId);
+                              debugPrint('[KDS Cancel] Order $orderId: $reason');
                               if (context.mounted) {
                                 ref
                                     .read(showOrderDetailProvider.notifier)
                                     .state = false;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Order cancelled: $reason')),
+                                );
                               }
                             }
                           },
@@ -378,6 +381,120 @@ class OrderDetailModal extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Yes'),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  /// Show dialog to input cancel reason
+  static Future<String?> _showCancelReasonDialog(BuildContext context) async {
+    final reasonController = TextEditingController();
+    
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Reason'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Please provide a reason for cancellation:'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Enter reason',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              reasonController.dispose();
+              Navigator.pop(ctx, null);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              final reason = reasonController.text.trim();
+              if (reason.isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a reason'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                return;
+              }
+              reasonController.dispose();
+              Navigator.pop(ctx, reason);
+            },
+            child: const Text('Confirm Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  /// Show dialog to input cancel reason
+  static Future<String?> _showCancelReasonDialog(BuildContext context) async {
+    final reasonController = TextEditingController();
+    
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Reason'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Please provide a reason for cancellation:'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Enter reason',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              reasonController.dispose();
+              Navigator.pop(ctx, null);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              final reason = reasonController.text.trim();
+              if (reason.isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a reason'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                return;
+              }
+              reasonController.dispose();
+              Navigator.pop(ctx, reason);
+            },
+            child: const Text('Confirm Cancel'),
           ),
         ],
       ),

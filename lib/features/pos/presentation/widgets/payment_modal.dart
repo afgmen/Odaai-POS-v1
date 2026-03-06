@@ -566,8 +566,6 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
       final selectedCustomer = ref.read(selectedCustomerProvider);
       final pointsToUse = ref.read(pointsToUseProvider);
 
-      final selectedCustomer = ref.read(selectedCustomerProvider);
-      final pointsToUse = ref.read(pointsToUseProvider);
 
       // 현재 로그인한 직원이 없으면 에러
       if (currentEmployee == null) {

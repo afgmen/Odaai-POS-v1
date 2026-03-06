@@ -42,11 +42,17 @@ enum PaymentMethod {
 class PaymentModal extends ConsumerStatefulWidget {
   final OrderType? orderType;
   final int? tableId;
+/// 결제 모달 (BottomSheet)
+class PaymentModal extends ConsumerStatefulWidget {
+  final OrderType? orderType;
+  final int? tableId;
+  final int? saleId; // NEW: Open Tab 체크아웃 시 사용
   
   const PaymentModal({
     super.key,
     this.orderType,
     this.tableId,
+    this.saleId,
   });
 
   @override
@@ -453,6 +459,88 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                     : Text(l10n.paymentComplete, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
               ),
             ),
+
+  /// KDS 상태 체크 (Open Tab 체크아웃 시)
+  Future<bool> _checkKitchenApproval(int? saleId) async {
+    if (saleId == null) return true; // 신규 주문은 체크 스킵
+    
+    final db = ref.read(databaseProvider);
+    
+    // 1. Settings에서 "require_kitchen_approval" 확인
+    final requireApprovalResult = await db.customSelect(
+      "SELECT value FROM system_settings WHERE key = 'require_kitchen_approval'"
+    ).getSingleOrNull();
+    
+    final requireApproval = requireApprovalResult?.data['value'] == 'true';
+    
+    if (!requireApproval) return true; // 설정 OFF면 바로 허용
+    
+    // 2. 해당 Sale의 KitchenOrder 상태 조회
+    final kitchenOrderResult = await db.customSelect(
+      "SELECT status FROM kitchen_orders WHERE sale_id = ?",
+      variables: [Variable.withInt(saleId)]
+    ).getSingleOrNull();
+    
+    if (kitchenOrderResult == null) return true; // KitchenOrder 없으면 허용
+    
+    final status = kitchenOrderResult.data['status'] as String?;
+    
+    // 3. READY 또는 SERVED 상태면 허용
+    if (status == 'READY' || status == 'SERVED') {
+      return true;
+    }
+    
+    // 4. PENDING 또는 PREPARING이면 경고 모달 표시
+    if (!mounted) return false;
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning, color: Colors.orange, size: 28),
+            SizedBox(width: 12),
+            Text('Kitchen Not Ready'),
+          ],
+        ),
+        content: Text(
+          'This order is still being prepared in the kitchen (Status: ${status ?? 'UNKNOWN'}).' + '\n\n' +
+          'Are you sure you want to proceed with checkout?',
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text(
+              'Force Checkout',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+    
+    // 5. 강제 체크아웃 시 로깅
+    if (confirmed == true) {
+      final currentEmployee = ref.read(currentEmployeeProvider);
+      await db.customStatement('''
+        INSERT INTO permission_logs (employee_id, action_type, action_target, permission_granted, reason, created_at)
+        VALUES (?, 'FORCE_CHECKOUT', ?, 1, 'Kitchen status: ${status ?? 'UNKNOWN'}', CAST(strftime('%s', 'now') AS INTEGER))
+      ''', [
+        currentEmployee?.id ?? 0,
+        'sale_$saleId',
+      ]);
+    }
+    
+    return confirmed ?? false;
+  }
+
           ],
         ),
       ),
@@ -461,6 +549,13 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
 
   Future<void> _processPayment(double subtotal, double discountAmount, double total) async {
     final l10n = AppLocalizations.of(context)!;
+    
+    // ────────────────────────────────────────────────────────
+    // 🔥 NEW: KDS 상태 체크 (Open Tab 체크아웃 시)
+    // ────────────────────────────────────────────────────────
+    final approved = await _checkKitchenApproval(widget.saleId);
+    if (!approved) return; // 사용자가 취소하면 체크아웃 중단
+    
     setState(() => _isProcessing = true);
 
     try {
@@ -470,6 +565,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
       final currentEmployee = ref.read(currentEmployeeProvider);
       final selectedCustomer = ref.read(selectedCustomerProvider);
       final pointsToUse = ref.read(pointsToUseProvider);
+
 
       // 현재 로그인한 직원이 없으면 에러
       if (currentEmployee == null) {

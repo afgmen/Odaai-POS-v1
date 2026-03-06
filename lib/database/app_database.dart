@@ -1172,8 +1172,11 @@ class AppDatabase extends _$AppDatabase {
       await customStatement(
         "INSERT OR IGNORE INTO system_settings (key, value, updated_at) VALUES ('rbac_enabled', 'false', CAST(strftime('%s', 'now') AS INTEGER))"
       );
+      await customStatement(
+        "INSERT OR IGNORE INTO system_settings (key, value, updated_at) VALUES ('require_kitchen_approval', 'true', CAST(strftime('%s', 'now') AS INTEGER))"
+      );
     } catch (e) {
-      debugPrint('[Migration] RBAC settings seed skipped: $e');
+      debugPrint('[Migration] System settings seed skipped: $e');
     }
   }
 

@@ -59,8 +59,9 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                           child: TextField(
                             controller: _saleNumberCtrl,
                             decoration: InputDecoration(
-                              hintText: l10n.receiptNumberHint,
+                              hintText: '${l10n.receiptNumberHint} (or date: YYYY-MM-DD)',
                               prefixIcon: const Icon(Icons.receipt),
+                              suffixIcon: const Icon(Icons.search),
                             ),
                           ),
                         ),

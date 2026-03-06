@@ -337,9 +337,14 @@ class AppDatabase extends _$AppDatabase {
     if (result.isEmpty) {
       try {
         await m.createTable(table);
+        debugPrint('[Migration] ✅ Created table: $tableName');
       } catch (e) {
-        debugPrint('[Migration] Failed to create table $tableName: $e');
+        debugPrint('[Migration] ❌ Failed to create table $tableName: $e');
+        // Rethrow to ensure migration doesn't silently fail
+        rethrow;
       }
+    } else {
+      debugPrint('[Migration] ⏭️  Table already exists: $tableName');
     }
   }
 
@@ -1211,6 +1216,45 @@ class AppDatabase extends _$AppDatabase {
       ''');
     } catch (e) {
       debugPrint('[Migration v15] Fix system_settings timestamps: $e');
+    }
+  }
+
+  /// Ensure critical tables exist (emergency fallback)
+  /// Call this after database initialization
+  Future<void> ensureCriticalTables() async {
+    try {
+      // Check if system_settings exists
+      final result = await customSelect(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='system_settings'",
+      ).get();
+      
+      if (result.isEmpty) {
+        debugPrint('[DB Init] ⚠️  system_settings table missing! Creating now...');
+        
+        // Create the table directly
+        await customStatement('''
+          CREATE TABLE IF NOT EXISTS system_settings (
+            key TEXT NOT NULL PRIMARY KEY,
+            value TEXT NOT NULL,
+            updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER))
+          )
+        ''');
+        
+        // Insert default values
+        await customStatement(
+          "INSERT OR IGNORE INTO system_settings (key, value, updated_at) VALUES ('rbac_enabled', 'false', CAST(strftime('%s', 'now') AS INTEGER))"
+        );
+        await customStatement(
+          "INSERT OR IGNORE INTO system_settings (key, value, updated_at) VALUES ('require_kitchen_approval', 'true', CAST(strftime('%s', 'now') AS INTEGER))"
+        );
+        
+        debugPrint('[DB Init] ✅ system_settings table created successfully');
+      } else {
+        debugPrint('[DB Init] ✅ system_settings table exists');
+      }
+    } catch (e) {
+      debugPrint('[DB Init] ❌ Failed to ensure critical tables: $e');
+      // Don't rethrow - this is a fallback, not critical path
     }
   }
 

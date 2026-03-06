@@ -10,6 +10,12 @@ final databaseProvider = Provider<AppDatabase>((ref) {
   ref.onDispose(() {
     db.close();
   });
+  
+  // Ensure critical tables exist (emergency fallback)
+  db.ensureCriticalTables().catchError((e) {
+    print('[DB Provider] Failed to ensure critical tables: $e');
+  });
+  
   return db;
 });
 

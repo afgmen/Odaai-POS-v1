@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../database/app_database.dart';
@@ -51,6 +52,7 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[FloorPlan] Screen rebuilt at ${DateTime.now()}');
     final l10n = AppLocalizations.of(context)!;
     final tablesAsync = ref.watch(allTablesStreamProvider);
     final zonesAsync = ref.watch(allZonesStreamProvider);

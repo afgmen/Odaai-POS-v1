@@ -531,6 +531,23 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     final notifier = ref.read(imageUploadStateProvider.notifier);
     final file = await notifier.uploadFromCamera(productId, sku);
 
+    // Check for error state
+    final uploadState = ref.read(imageUploadStateProvider);
+    if (uploadState is ImageUploadError && mounted) {
+      String errorMessage = uploadState.message;
+      
+      // User-friendly error messages
+      if (errorMessage.contains('CameraPermissionDeniedException') || 
+          errorMessage.contains('Camera permission denied')) {
+        errorMessage = 'Camera permission denied. Please enable camera access in Settings.';
+      } else if (errorMessage.contains('ImageProcessingException')) {
+        errorMessage = errorMessage.replaceAll('ImageProcessingException: ', '');
+      }
+      
+      _showSnackBar(errorMessage, AppTheme.error);
+      return;
+    }
+
     if (file != null && mounted) {
       setState(() {
         _localImageFile = file;
@@ -553,6 +570,23 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
 
     final notifier = ref.read(imageUploadStateProvider.notifier);
     final file = await notifier.uploadFromGallery(productId, sku);
+
+    // Check for error state
+    final uploadState = ref.read(imageUploadStateProvider);
+    if (uploadState is ImageUploadError && mounted) {
+      String errorMessage = uploadState.message;
+      
+      // User-friendly error messages
+      if (errorMessage.contains('GalleryPermissionDeniedException') || 
+          errorMessage.contains('Photo library permission denied')) {
+        errorMessage = 'Photo library permission denied. Please enable photo access in Settings.';
+      } else if (errorMessage.contains('ImageProcessingException')) {
+        errorMessage = errorMessage.replaceAll('ImageProcessingException: ', '');
+      }
+      
+      _showSnackBar(errorMessage, AppTheme.error);
+      return;
+    }
 
     if (file != null && mounted) {
       setState(() {

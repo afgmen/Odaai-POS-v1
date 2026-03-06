@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import '../../../database/app_database.dart';
 import '../../../providers/database_providers.dart';
 import 'tables_dao.dart';
@@ -20,7 +21,13 @@ final tablesDaoProvider = Provider<TablesDao>((ref) {
 /// 모든 활성 테이블 스트림
 final allTablesStreamProvider = StreamProvider<List<RestaurantTable>>((ref) {
   final dao = ref.watch(tablesDaoProvider);
-  return dao.watchAllActiveTables();
+  final stream = dao.watchAllActiveTables();
+  
+  // Stream 모니터링 로그
+  return stream.map((tables) {
+    debugPrint('[TableSync] allTablesStreamProvider emitted: ${tables.length} tables at ${DateTime.now()}');
+    return tables;
+  });
 });
 
 /// 상태별 테이블 스트림

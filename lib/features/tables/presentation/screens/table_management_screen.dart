@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -40,6 +41,8 @@ class _TableManagementScreenState extends ConsumerState<TableManagementScreen>
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[Tables] TableManagementScreen rebuilt at ${DateTime.now()}');
+    
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(

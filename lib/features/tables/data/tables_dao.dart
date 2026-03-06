@@ -3,6 +3,8 @@ import '../../../database/app_database.dart';
 import '../../../database/tables/store_tables_management.dart';
 import '../../../database/tables/reservations.dart';
 
+import 'package:flutter/foundation.dart' show debugPrint;
+
 part 'tables_dao.g.dart';
 
 /// Tables DAO
@@ -106,8 +108,14 @@ class TablesDao extends DatabaseAccessor<AppDatabase> with _$TablesDaoMixin {
     int? currentSaleId,
     DateTime? occupiedAt,
     int? reservationId,
-  }) {
-    return (update(restaurantTables)..where((t) => t.id.equals(tableId)))
+  }) async {
+    // Get current status for logging
+    final currentTable = await getTableById(tableId);
+    final oldStatus = currentTable?.status ?? 'UNKNOWN';
+    
+    debugPrint('[TableSync] Updating table $tableId: $oldStatus → $status at ${DateTime.now()}');
+    
+    final result = await (update(restaurantTables)..where((t) => t.id.equals(tableId)))
         .write(
       RestaurantTablesCompanion(
         status: Value(status),
@@ -117,6 +125,10 @@ class TablesDao extends DatabaseAccessor<AppDatabase> with _$TablesDaoMixin {
         updatedAt: Value(DateTime.now()),
       ),
     ).then((count) => count > 0);
+    
+    debugPrint('[TableSync] Update result for table $tableId: ${result ? "SUCCESS" : "FAILED"}');
+    
+    return result;
   }
 
   /// 테이블 위치 업데이트 (드래그앤드롭)

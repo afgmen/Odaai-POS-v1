@@ -8,6 +8,7 @@ class TableWidget extends StatefulWidget {
   final VoidCallback onTap;
   final Function(Offset)? onDragEnd;
   final bool isDraggable;
+  final bool isSelected;
 
   const TableWidget({
     super.key,
@@ -15,6 +16,7 @@ class TableWidget extends StatefulWidget {
     required this.onTap,
     this.onDragEnd,
     this.isDraggable = true,
+    this.isSelected = false,
   });
 
   @override
@@ -118,8 +120,17 @@ class _TableWidgetState extends State<TableWidget> {
         color: status.color.withValues(alpha: 0.1),
         border: Border.all(
           color: status.color,
-          width: isDragging ? 3 : 2,
+          width: isDragging ? 3 : (widget.isSelected ? 3 : 2),
         ),
+        boxShadow: widget.isSelected
+            ? [
+                BoxShadow(
+                  color: status.color.withValues(alpha: 0.5),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                ),
+              ]
+            : null,
         borderRadius: metrics.radius,
         boxShadow: isDragging
             ? [

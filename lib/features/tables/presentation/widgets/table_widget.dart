@@ -36,9 +36,18 @@ class _TableWidgetState extends State<TableWidget> {
   @override
   void didUpdateWidget(TableWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_isDragging) {
-      _displayX = widget.table.positionX;
-      _displayY = widget.table.positionY;
+    // Only update position if:
+    // 1. Not currently dragging
+    // 2. Same table (by ID)
+    // 3. Position actually changed (avoid unnecessary setState)
+    if (!_isDragging && 
+        oldWidget.table.id == widget.table.id &&
+        (oldWidget.table.positionX != widget.table.positionX ||
+         oldWidget.table.positionY != widget.table.positionY)) {
+      setState(() {
+        _displayX = widget.table.positionX;
+        _displayY = widget.table.positionY;
+      });
     }
   }
 

@@ -9,6 +9,26 @@ import 'package:image/image.dart' as img;
 
 import '../../../../core/theme/app_theme.dart';
 
+/// Exception types for better error handling
+class CameraPermissionDeniedException implements Exception {
+  final String message = 'Camera permission denied. Please enable camera access in Settings.';
+  @override
+  String toString() => message;
+}
+
+class GalleryPermissionDeniedException implements Exception {
+  final String message = 'Photo library permission denied. Please enable photo access in Settings.';
+  @override
+  String toString() => message;
+}
+
+class ImageProcessingException implements Exception {
+  final String message;
+  ImageProcessingException(this.message);
+  @override
+  String toString() => message;
+}
+
 /// Image Service for product image management
 /// Handles upload (camera/gallery), crop, resize, and delete
 class ImageService {
@@ -24,10 +44,19 @@ class ImageService {
         imageQuality: 90,
       );
 
-      if (image == null) return null;
+      if (image == null) return null; // User cancelled
       return await _cropImage(File(image.path));
+    } on Exception catch (e) {
+      // Check for permission-related errors
+      final errorStr = e.toString().toLowerCase();
+      if (errorStr.contains('permission') || 
+          errorStr.contains('denied') || 
+          errorStr.contains('access')) {
+        throw CameraPermissionDeniedException();
+      }
+      throw ImageProcessingException('Camera upload failed. Please try again.');
     } catch (e) {
-      throw Exception('Camera upload failed: $e');
+      throw ImageProcessingException('Camera upload failed: ${e.toString()}');
     }
   }
 
@@ -41,10 +70,19 @@ class ImageService {
         imageQuality: 90,
       );
 
-      if (image == null) return null;
+      if (image == null) return null; // User cancelled
       return await _cropImage(File(image.path));
+    } on Exception catch (e) {
+      // Check for permission-related errors
+      final errorStr = e.toString().toLowerCase();
+      if (errorStr.contains('permission') || 
+          errorStr.contains('denied') || 
+          errorStr.contains('access')) {
+        throw GalleryPermissionDeniedException();
+      }
+      throw ImageProcessingException('Gallery upload failed. Please try again.');
     } catch (e) {
-      throw Exception('Gallery upload failed: $e');
+      throw ImageProcessingException('Gallery upload failed: ${e.toString()}');
     }
   }
 
@@ -86,7 +124,9 @@ class ImageService {
       final bytes = await imageFile.readAsBytes();
       final image = img.decodeImage(bytes);
 
-      if (image == null) throw Exception('Failed to decode image');
+      if (image == null) {
+        throw ImageProcessingException('Failed to decode image. The file may be corrupted.');
+      }
 
       // Resize if larger than 800x800
       img.Image resized = image;
@@ -112,7 +152,8 @@ class ImageService {
 
       return savedFile;
     } catch (e) {
-      throw Exception('Image resize/save failed: $e');
+      if (e is ImageProcessingException) rethrow;
+      throw ImageProcessingException('Image processing failed: ${e.toString()}');
     }
   }
 
@@ -127,7 +168,7 @@ class ImageService {
         await file.delete();
       }
     } catch (e) {
-      throw Exception('Image delete failed: $e');
+      throw ImageProcessingException('Image delete failed: ${e.toString()}');
     }
   }
 
@@ -159,7 +200,7 @@ class ImageService {
       await tempFile.writeAsBytes(bytes);
       return tempFile;
     } catch (e) {
-      throw Exception('Bytes to file conversion failed: $e');
+      throw ImageProcessingException('Bytes to file conversion failed: ${e.toString()}');
     }
   }
 }

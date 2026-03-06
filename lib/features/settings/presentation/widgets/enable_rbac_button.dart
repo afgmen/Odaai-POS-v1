@@ -28,13 +28,22 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
         throw Exception('Not logged in');
       }
 
-      // 1. Enable RBAC in system settings
+      // 1. Ensure system_settings table exists (migration safety net)
       await db.customStatement('''
-        INSERT OR REPLACE INTO system_settings (key, value, updated_at)
-        VALUES ('rbac_enabled', 'true', CURRENT_TIMESTAMP)
+        CREATE TABLE IF NOT EXISTS system_settings (
+          key TEXT PRIMARY KEY NOT NULL,
+          value TEXT NOT NULL,
+          updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER))
+        )
       ''');
 
-      // 2. Set current user as OWNER
+      // 2. Enable RBAC in system settings
+      await db.customStatement('''
+        INSERT OR REPLACE INTO system_settings (key, value, updated_at)
+        VALUES ('rbac_enabled', 'true', CAST(strftime('%s', 'now') AS INTEGER))
+      ''');
+
+      // 3. Set current user as OWNER
       await db.customStatement('''
         UPDATE employees
         SET default_role = 'OWNER',
@@ -43,7 +52,7 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
         WHERE id = ?
       ''', [currentSession.employeeId]);
 
-      // 2.1 Also write to RBAC mapping table (user_roles)
+      // 3.1 Also write to RBAC mapping table (user_roles)
       // PermissionService.isOwner() checks user_roles, not employees.defaultRole
       await db.customStatement(
         'DELETE FROM user_roles WHERE user_id = ?',
@@ -56,7 +65,7 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
 
       if (!mounted) return;
 
-      // 3. Show success and restart prompt
+      // 4. Show success and restart prompt
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -88,10 +97,22 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
     } catch (e) {
       if (!mounted) return;
 
+      // User-friendly error message instead of exposing raw SQL error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to enable RBAC: $e'),
+          content: const Text(
+            '앱을 재시작해주세요. 설정을 적용하는 중 문제가 발생했습니다.',
+          ),
           backgroundColor: AppTheme.error,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: '재시작',
+            textColor: Colors.white,
+            onPressed: () {
+              ref.read(authProvider.notifier).logout();
+              Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+            },
+          ),
         ),
       );
     } finally {

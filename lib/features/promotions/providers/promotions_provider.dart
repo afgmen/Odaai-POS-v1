@@ -91,6 +91,31 @@ class PromotionService {
               (p.endDate.isNull() | p.endDate.isBiggerOrEqualValue(now))))
         .get();
   }
+
+  /// 만료된 프로모션 자동 비활성화
+  /// 앱 시작 시 또는 수동으로 호출
+  Future<int> expireOldPromotions() async {
+    final now = DateTime.now();
+    
+    // endDate가 현재 시간보다 이전인 Active 프로모션 찾기
+    final expiredPromotions = await (_db.select(_db.promotions)
+          ..where((p) =>
+              p.isActive.equals(true) &
+              p.endDate.isNotNull() &
+              p.endDate.isSmallerThanValue(now)))
+        .get();
+    
+    if (expiredPromotions.isEmpty) {
+      return 0;
+    }
+    
+    // 모두 비활성화
+    for (final promo in expiredPromotions) {
+      await toggleActive(promo.id, false);
+    }
+    
+    return expiredPromotions.length;
+  }
 }
 
 /// 프로모션 서비스 Provider

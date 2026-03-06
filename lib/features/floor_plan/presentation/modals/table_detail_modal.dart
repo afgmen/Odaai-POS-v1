@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../database/app_database.dart';
@@ -247,28 +248,69 @@ class TableDetailModal extends ConsumerWidget {
   }
 
   void _confirmCancelOrder(BuildContext context, WidgetRef ref) {
+    final reasonController = TextEditingController();
+    
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Cancel Order'),
-        content:
-            Text('Cancel order for Table ${table.tableNumber}? This cannot be undone.'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Cancel order for Table ${table.tableNumber}?'),
+            const SizedBox(height: 8),
+            const Text(
+              'This cannot be undone. Please provide a reason:',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Enter cancellation reason',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+              autofocus: true,
+            ),
+          ],
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () {
+              reasonController.dispose();
+              Navigator.pop(ctx);
+            },
             child: const Text('No'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
+              final reason = reasonController.text.trim();
+              if (reason.isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a cancellation reason'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                return;
+              }
+              
+              reasonController.dispose();
               Navigator.pop(ctx);
               Navigator.pop(context);
               await _updateTableStatus(ref, table.id, 'AVAILABLE');
+              
+              // Log the cancellation reason
+              debugPrint('[Cancel] Table ${table.tableNumber}: $reason');
+              
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                       content: Text(
-                          'Order cancelled for Table ${table.tableNumber}')),
+                          'Order cancelled for Table ${table.tableNumber}\nReason: $reason')),
                 );
               }
             },

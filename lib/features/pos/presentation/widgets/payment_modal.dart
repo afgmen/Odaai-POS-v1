@@ -731,7 +731,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               discount: discountAmount,
               total: finalTotal,
               paymentMethod: _selectedMethod.name,
-              cashPaid: _cashInput,
+              cashPaid: _selectedMethod == PaymentMethod.cash ? _cashInput : 0,
               saleDate: createdSale.saleDate,
             ),
           ),

@@ -15,6 +15,7 @@ import '../../../loyalty/domain/services/loyalty_service.dart';
 import '../../providers/cart_provider.dart';
 import '../../data/models/order_type.dart';
 import '../screens/receipt_screen.dart';
+import '../../../tables/data/tables_providers.dart';
 import 'delivery_info_section.dart';
 
 /// 결제 방법 열거형
@@ -696,6 +697,18 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
 
       // ── 저장된 SaleItems 조회 (영수증용) ───────
       final savedItems = await dao.getSaleItems(createdSale.id);
+
+      // ── 테이블 상태 업데이트 (Dine-in/Open Tab 완료 시) ──────────────
+      if (widget.tableId != null) {
+        final tablesDao = ref.read(tablesDaoProvider);
+        await tablesDao.updateTableStatus(
+          tableId: widget.tableId!,
+          status: 'AVAILABLE',
+          currentSaleId: null,
+          occupiedAt: null,
+        );
+        debugPrint('[Checkout] Table ${widget.tableId} reset to AVAILABLE');
+      }
 
       if (mounted) {
         ref.read(cartProvider.notifier).clear();

@@ -35,9 +35,18 @@ class _FloorElementWidgetState extends State<FloorElementWidget> {
   @override
   void didUpdateWidget(FloorElementWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_isDragging) {
-      _displayX = widget.element.posX;
-      _displayY = widget.element.posY;
+    // Only update position if:
+    // 1. Not currently dragging
+    // 2. Same element (by ID)
+    // 3. Position actually changed
+    if (!_isDragging && 
+        oldWidget.element.id == widget.element.id &&
+        (oldWidget.element.posX != widget.element.posX ||
+         oldWidget.element.posY != widget.element.posY)) {
+      setState(() {
+        _displayX = widget.element.posX;
+        _displayY = widget.element.posY;
+      });
     }
   }
 

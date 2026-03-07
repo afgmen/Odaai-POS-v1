@@ -249,9 +249,17 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
 
   /// 상태별 예약 개수
   Future<Map<String, int>> getReservationCountByStatus() async {
-    final allReservations = await select(reservations).get();
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    // Get today's reservations only
+    final todayReservations = await (select(reservations)
+          ..where((r) => r.reservationDate.isBetweenValues(startOfDay, endOfDay)))
+        .get();
+
     final counts = <String, int>{};
-    for (final reservation in allReservations) {
+    for (final reservation in todayReservations) {
       counts[reservation.status] = (counts[reservation.status] ?? 0) + 1;
     }
     return counts;

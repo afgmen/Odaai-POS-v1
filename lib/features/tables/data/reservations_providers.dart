@@ -94,11 +94,18 @@ final showReservationDetailProvider = StateProvider<bool>((ref) => false);
 // Statistics Providers
 // ============================================================
 
-/// 상태별 예약 개수
+/// 상태별 예약 개수 (실시간 업데이트)
 final reservationCountByStatusProvider =
-    FutureProvider<Map<String, int>>((ref) {
+    StreamProvider<Map<String, int>>((ref) {
   final dao = ref.watch(reservationsDaoProvider);
-  return dao.getReservationCountByStatus();
+  // Watch today's reservations and count by status
+  return dao.watchTodayReservations().map((reservations) {
+    final counts = <String, int>{};
+    for (final reservation in reservations) {
+      counts[reservation.status] = (counts[reservation.status] ?? 0) + 1;
+    }
+    return counts;
+  });
 });
 
 /// 오늘 노쇼 개수

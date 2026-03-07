@@ -22,6 +22,7 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
   late final TextEditingController _seatsController;
   String _selectedShape = 'square';
   int? _selectedZoneId;
+  String? _tableNumberError;
 
   final List<Map<String, dynamic>> _shapes = [
     {'value': 'square', 'label': 'Square', 'icon': Icons.crop_square},
@@ -95,10 +96,17 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
                   labelText: 'Table Number *',
                   hintText: 'e.g. T-01, A1, 12',
                   prefixIcon: const Icon(Icons.table_restaurant),
+                  errorText: _tableNumberError,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
+                onChanged: (_) {
+                  // Clear error on change
+                  if (_tableNumberError != null) {
+                    setState(() => _tableNumberError = null);
+                  }
+                },
               ),
               const SizedBox(height: 16),
 
@@ -278,8 +286,14 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isProcessing = false);
         final msg = _friendlyError(e);
+        setState(() {
+          _isProcessing = false;
+          // Set error text for table number duplicate
+          if (msg.contains('already exists')) {
+            _tableNumberError = msg;
+          }
+        });
         SnackBarHelper.showError(context, msg);
       }
     }

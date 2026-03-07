@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../providers/currency_provider.dart';
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../data/models/order_type.dart';
 import '../widgets/print_options_modal.dart';
 
 /// 영수증 화면
@@ -18,6 +19,7 @@ class ReceiptScreen extends ConsumerWidget {
   final String paymentMethod;   // 'cash' | 'card' | 'qr'
   final double cashPaid;        // 현금 투입금액 (현금 결제 시만)
   final DateTime saleDate;
+  final String? orderType;      // 주문 유형 ('dineIn' | 'takeaway' | 'phoneDelivery' | 'platformDelivery')
 
   const ReceiptScreen({
     super.key,
@@ -29,6 +31,7 @@ class ReceiptScreen extends ConsumerWidget {
     required this.paymentMethod,
     this.cashPaid = 0,
     required this.saleDate,
+    this.orderType,
   });
 
   // ── 결제 방법 라벨 매핑 ──────────────────────

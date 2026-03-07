@@ -61,7 +61,22 @@ class ClosingService {
     String? notes,
   }) async {
     try {
-      // 1. 검증
+      // 1. 필수 필드 검증 (NEW)
+      if (actualCash == null) {
+        return ClosingResult(
+          success: false,
+          message: 'Please enter the actual cash count.',
+        );
+      }
+
+      if (actualCash < 0) {
+        return ClosingResult(
+          success: false,
+          message: 'Cash count cannot be negative.',
+        );
+      }
+
+      // 2. 날짜 및 마감 가능 여부 검증
       final validation = await validateClosing(date);
       if (!validation.canClose) {
         return ClosingResult(
@@ -70,16 +85,16 @@ class ClosingService {
         );
       }
 
-      // 2. 현재 직원 ID 확인
+      // 3. 현재 직원 ID 확인
       final currentSession = _authNotifier.currentSession;
       if (currentSession == null) {
         return ClosingResult(
           success: false,
-          message: 'Login required.',
+          message: 'Login required. Please sign in to perform closing.',
         );
       }
 
-      // 3. 마감 데이터 생성
+      // 4. 마감 데이터 생성
       final closingId = await _dao.createDailyClosing(
         closingDate: date,
         aggregation: validation.aggregation!,

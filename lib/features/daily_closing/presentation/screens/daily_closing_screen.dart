@@ -74,6 +74,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
         SnackBar(
           content: Text(result.message),
           backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
         ),
       );
 

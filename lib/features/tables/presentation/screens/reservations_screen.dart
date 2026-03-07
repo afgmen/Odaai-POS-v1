@@ -55,6 +55,9 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           // 캘린더
           _buildCalendar(selectedDate),
 
+          // 범례 (Legend)
+          _buildLegend(),
+
           // 상태 필터
           _buildStatusFilter(selectedStatus),
 
@@ -226,6 +229,90 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           },
         ),
       ),
+    );
+  }
+
+  /// 배지 색상 범례
+  Widget _buildLegend() {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[200]!, width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.circle, size: 12, color: Colors.grey[600]),
+          const SizedBox(width: 6),
+          Text(
+            l10n.legend ?? 'Legend',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: ReservationStatus.values.map((status) {
+                return _buildLegendItem(status);
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(ReservationStatus status) {
+    final l10n = AppLocalizations.of(context)!;
+    String label;
+
+    switch (status) {
+      case ReservationStatus.pending:
+        label = l10n.pending;
+        break;
+      case ReservationStatus.confirmed:
+        label = l10n.confirmed;
+        break;
+      case ReservationStatus.seated:
+        label = l10n.seated ?? 'Seated';
+        break;
+      case ReservationStatus.cancelled:
+        label = l10n.cancelled ?? 'Cancelled';
+        break;
+      case ReservationStatus.noShow:
+        label = l10n.noShow ?? 'No Show';
+        break;
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: status.color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey[700],
+          ),
+        ),
+      ],
     );
   }
 

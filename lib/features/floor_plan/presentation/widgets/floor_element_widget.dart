@@ -7,6 +7,7 @@ class FloorElementWidget extends StatefulWidget {
   final bool isDraggable;
   final VoidCallback? onTap;
   final Function(Offset)? onDragEnd;
+  final bool isSelected;
 
   const FloorElementWidget({
     super.key,
@@ -14,6 +15,7 @@ class FloorElementWidget extends StatefulWidget {
     this.isDraggable = true,
     this.onTap,
     this.onDragEnd,
+    this.isSelected = false,
   });
 
   @override
@@ -140,10 +142,14 @@ class _FloorElementWidgetState extends State<FloorElementWidget> {
         width: widget.element.width,
         height: widget.element.height,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: widget.isSelected
+              ? Colors.blue.withValues(alpha: 0.15)
+              : color.withValues(alpha: 0.1),
           border: Border.all(
-            color: color.withValues(alpha: _isDragging ? 0.7 : 0.4),
-            width: _isDragging ? 2 : 1,
+            color: widget.isSelected
+                ? Colors.blue
+                : color.withValues(alpha: _isDragging ? 0.7 : 0.4),
+            width: widget.isSelected ? 3 : (_isDragging ? 2 : 1),
           ),
           borderRadius: BorderRadius.circular(6),
           boxShadow: _isDragging

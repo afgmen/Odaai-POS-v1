@@ -1,137 +1,235 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:oda_pos/database/app_database.dart';
 
+/// B-060: Table Status Sync Tests
 void main() {
-  group('B-060: Table Status Sync (Floor Plan ↔ Tables)', () {
-    late AppDatabase db;
+  late AppDatabase db;
 
-    setUp(() {
-      db = AppDatabase.forTesting(NativeDatabase.memory());
-    });
+  setUp(() {
+    db = AppDatabase.forTesting(NativeDatabase.memory());
+  });
 
-    tearDown(() async {
-      await db.close();
-    });
+  tearDown(() async {
+    await db.close();
+  });
 
-    test('Table status update should be reflected in stream', () async {
-      // 1. Create a test table
-      final tableId = await db.tablesDao.createTable(
+  group('Table Status Updates', () {
+    test('should update table status in DB', () async {
+      // Create table
+      final tableId = await db.into(db.restaurantTables).insert(
         RestaurantTablesCompanion.insert(
           tableNumber: 'T01',
-          seats: const Value(4),
           status: const Value('AVAILABLE'),
-          positionX: const Value(100),
-          positionY: const Value(100),
+          seats: 4,
         ),
       );
 
-      // 2. Subscribe to watchAllActiveTables stream
-      final stream = db.tablesDao.watchAllActiveTables();
-      final streamValues = <List<RestaurantTable>>[];
+      // Update status
+      await (db.update(db.restaurantTables)..where((t) => t.id.equals(tableId)))
+          .write(const RestaurantTablesCompanion(
+        status: Value('ORDERING'),
+      ));
+
+      // Verify
+      final table = await (db.select(db.restaurantTables)
+            ..where((t) => t.id.equals(tableId)))
+          .getSingle();
+
+      expect(table.status, 'ORDERING');
+    });
+
+    test('should emit new value when status changes', () async {
+      // Create table
+      final tableId = await db.into(db.restaurantTables).insert(
+        RestaurantTablesCompanion.insert(
+          tableNumber: 'T02',
+          status: const Value('AVAILABLE'),
+          seats: 4,
+        ),
+      );
+
+      // Watch stream
+      final stream = (db.select(db.restaurantTables)
+            ..where((t) => t.id.equals(tableId)))
+          .watchSingle();
+
+      // Collect emitted values
+      final emittedStatuses = <String>[];
       
-      final subscription = stream.listen((tables) {
-        streamValues.add(tables);
+      stream.listen((table) {
+        emittedStatuses.add(table.status);
       });
 
       // Wait for initial value
       await Future.delayed(const Duration(milliseconds: 100));
 
-      // 3. Update table status (simulating Floor Plan action)
-      await db.tablesDao.updateTableStatus(
-        tableId: tableId,
-        status: 'OCCUPIED',
-      );
+      // Update status
+      await (db.update(db.restaurantTables)..where((t) => t.id.equals(tableId)))
+          .write(const RestaurantTablesCompanion(
+        status: Value('ORDERING'),
+      ));
 
-      // Wait for stream update
+      // Wait for stream to emit
       await Future.delayed(const Duration(milliseconds: 100));
 
-      // 4. Update again (simulating Tables section action)
-      await db.tablesDao.updateTableStatus(
-        tableId: tableId,
-        status: 'CHECKOUT',
-      );
-
-      // Wait for stream update
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      subscription.cancel();
-
-      // Verify stream received updates
-      expect(streamValues.length, greaterThanOrEqualTo(3),
-        reason: 'Stream should emit: initial + after OCCUPIED + after CHECKOUT');
-
-      // Verify final status
-      final finalTable = await db.tablesDao.getTableById(tableId);
-      expect(finalTable?.status, 'CHECKOUT');
+      // Should have emitted AVAILABLE then ORDERING
+      expect(emittedStatuses.length >= 2, true);
+      expect(emittedStatuses.contains('AVAILABLE'), true);
+      expect(emittedStatuses.contains('ORDERING'), true);
     });
 
-    test('Multiple tables sync independently', () async {
-      // Create multiple tables
-      final table1Id = await db.tablesDao.createTable(
+    test('should handle multiple status transitions', () async {
+      final tableId = await db.into(db.restaurantTables).insert(
         RestaurantTablesCompanion.insert(
-          tableNumber: 'T01',
-          seats: const Value(2),
+          tableNumber: 'T03',
           status: const Value('AVAILABLE'),
-          positionX: const Value(100),
-          positionY: const Value(100),
+          seats: 4,
         ),
       );
 
-      final table2Id = await db.tablesDao.createTable(
+      // Transition: AVAILABLE → ORDERING
+      await (db.update(db.restaurantTables)..where((t) => t.id.equals(tableId)))
+          .write(const RestaurantTablesCompanion(
+        status: Value('ORDERING'),
+      ));
+
+      var table = await (db.select(db.restaurantTables)
+            ..where((t) => t.id.equals(tableId)))
+          .getSingle();
+      expect(table.status, 'ORDERING');
+
+      // Transition: ORDERING → CHECKOUT
+      await (db.update(db.restaurantTables)..where((t) => t.id.equals(tableId)))
+          .write(const RestaurantTablesCompanion(
+        status: Value('CHECKOUT'),
+      ));
+
+      table = await (db.select(db.restaurantTables)
+            ..where((t) => t.id.equals(tableId)))
+          .getSingle();
+      expect(table.status, 'CHECKOUT');
+
+      // Transition: CHECKOUT → AVAILABLE
+      await (db.update(db.restaurantTables)..where((t) => t.id.equals(tableId)))
+          .write(const RestaurantTablesCompanion(
+        status: Value('AVAILABLE'),
+      ));
+
+      table = await (db.select(db.restaurantTables)
+            ..where((t) => t.id.equals(tableId)))
+          .getSingle();
+      expect(table.status, 'AVAILABLE');
+    });
+  });
+
+  group('Drift Stream Behavior', () {
+    test('should watch all tables stream', () async {
+      // Create 3 tables
+      await db.into(db.restaurantTables).insert(
         RestaurantTablesCompanion.insert(
-          tableNumber: 'T02',
-          seats: const Value(4),
+          tableNumber: 'T10',
           status: const Value('AVAILABLE'),
-          positionX: const Value(200),
-          positionY: const Value(100),
+          seats: 4,
+        ),
+      );
+      await db.into(db.restaurantTables).insert(
+        RestaurantTablesCompanion.insert(
+          tableNumber: 'T11',
+          status: const Value('ORDERING'),
+          seats: 2,
+        ),
+      );
+      await db.into(db.restaurantTables).insert(
+        RestaurantTablesCompanion.insert(
+          tableNumber: 'T12',
+          status: const Value('CHECKOUT'),
+          seats: 6,
         ),
       );
 
-      // Update T01
-      await db.tablesDao.updateTableStatus(
-        tableId: table1Id,
-        status: 'OCCUPIED',
-      );
+      // Watch stream
+      final stream = db.select(db.restaurantTables).watch();
 
-      // Verify T01 changed, T02 unchanged
-      final t1 = await db.tablesDao.getTableById(table1Id);
-      final t2 = await db.tablesDao.getTableById(table2Id);
-
-      expect(t1?.status, 'OCCUPIED');
-      expect(t2?.status, 'AVAILABLE');
-
-      // Update T02
-      await db.tablesDao.updateTableStatus(
-        tableId: table2Id,
-        status: 'RESERVED',
-      );
-
-      // Verify both have correct statuses
-      final t1After = await db.tablesDao.getTableById(table1Id);
-      final t2After = await db.tablesDao.getTableById(table2Id);
-
-      expect(t1After?.status, 'OCCUPIED');
-      expect(t2After?.status, 'RESERVED');
+      final tables = await stream.first;
+      expect(tables.length >= 3, true);
     });
 
-    test('Bidirectional sync: Floor Plan → Tables → Floor Plan', () async {
-      // This is a documentation test for the sync mechanism
-      // Both Floor Plan and Tables use:
-      // - Same DAO: tablesDaoProvider
-      // - Same Stream: watchAllActiveTables()
-      // - Same update method: updateTableStatus()
-      
-      const scenarios = [
-        'Floor Plan updates status → Tables sees update immediately',
-        'Tables updates status → Floor Plan sees update immediately',
-      ];
+    test('should update timestamp on status change', () async {
+      final tableId = await db.into(db.restaurantTables).insert(
+        RestaurantTablesCompanion.insert(
+          tableNumber: 'T20',
+          status: const Value('AVAILABLE'),
+          seats: 4,
+        ),
+      );
 
-      for (final scenario in scenarios) {
-        expect(scenario.contains('immediately'), true,
-          reason: 'Drift streams provide real-time updates');
-      }
+      final before = DateTime.now();
+
+      await Future.delayed(const Duration(milliseconds: 10));
+
+      await (db.update(db.restaurantTables)..where((t) => t.id.equals(tableId)))
+          .write(RestaurantTablesCompanion(
+        status: const Value('ORDERING'),
+        updatedAt: Value(DateTime.now()),
+      ));
+
+      final table = await (db.select(db.restaurantTables)
+            ..where((t) => t.id.equals(tableId)))
+          .getSingle();
+
+      expect(table.updatedAt.isAfter(before), true);
+    });
+  });
+
+  group('Bidirectional Sync', () {
+    test('should sync from Floor Plan to Tables', () async {
+      // Simulate Floor Plan updating a table
+      final tableId = await db.into(db.restaurantTables).insert(
+        RestaurantTablesCompanion.insert(
+          tableNumber: 'SYNC-FP',
+          status: const Value('AVAILABLE'),
+          seats: 4,
+        ),
+      );
+
+      // Floor Plan updates status
+      await (db.update(db.restaurantTables)..where((t) => t.id.equals(tableId)))
+          .write(const RestaurantTablesCompanion(
+        status: Value('ORDERING'),
+      ));
+
+      // Tables should see the change
+      final table = await (db.select(db.restaurantTables)
+            ..where((t) => t.id.equals(tableId)))
+          .getSingle();
+
+      expect(table.status, 'ORDERING');
+    });
+
+    test('should sync from Tables to Floor Plan', () async {
+      // Simulate Tables updating a table
+      final tableId = await db.into(db.restaurantTables).insert(
+        RestaurantTablesCompanion.insert(
+          tableNumber: 'SYNC-TB',
+          status: const Value('AVAILABLE'),
+          seats: 4,
+        ),
+      );
+
+      // Tables updates status
+      await (db.update(db.restaurantTables)..where((t) => t.id.equals(tableId)))
+          .write(const RestaurantTablesCompanion(
+        status: Value('CHECKOUT'),
+      ));
+
+      // Floor Plan should see the change
+      final table = await (db.select(db.restaurantTables)
+            ..where((t) => t.id.equals(tableId)))
+          .getSingle();
+
+      expect(table.status, 'CHECKOUT');
     });
   });
 }

@@ -147,65 +147,66 @@ class TableMergeModal extends ConsumerWidget {
         throw Exception('Current sale not found');
       }
 
-      // Get current sale
-      final currentSale = await (db.select(db.sales)
-            ..where((s) => s.id.equals(currentSaleId!)))
-          .getSingleOrNull();
+      debugPrint('[MergeTable] Starting merge: Table ${targetTable.tableNumber} → Table ${currentTable.tableNumber}');
 
-      if (currentSale == null) {
-        throw Exception('Current sale not found');
-      }
+      // Use transaction for atomicity
+      await db.transaction(() async {
+        // Get current sale
+        final currentSale = await (db.select(db.sales)
+              ..where((s) => s.id.equals(currentSaleId!)))
+            .getSingleOrNull();
 
-      // Find target table's sale
-      final targetSale = await (db.select(db.sales)
-            ..where((s) => s.tableId.equals(targetTable.id))
-            ..where((s) => s.status.equals('pending')))
-          .getSingleOrNull();
+        if (currentSale == null) {
+          throw Exception('Current sale not found');
+        }
 
-      if (targetSale == null) {
-        throw Exception('Target table has no active sale');
-      }
+        // Find target table's sale
+        final targetSale = await (db.select(db.sales)
+              ..where((s) => s.tableId.equals(targetTable.id))
+              ..where((s) => s.status.equals('pending')))
+            .getSingleOrNull();
 
-      // Move all sale items from target sale to current sale
-      final targetItems = await (db.select(db.saleItems)
-            ..where((si) => si.saleId.equals(targetSale.id)))
-          .get();
+        if (targetSale == null) {
+          throw Exception('Target table has no active sale');
+        }
 
-      for (var item in targetItems) {
-        await db.into(db.saleItems).insert(
-          SaleItemsCompanion.insert(
-            saleId: currentSaleId!,
-            productId: item.productId,
-            productName: item.productName,
-            sku: item.sku,
-            unitPrice: item.unitPrice,
-            quantity: item.quantity,
-            total: item.total,
-          ),
-        );
-      }
+        debugPrint('[MergeTable] Moving ${await (db.select(db.saleItems)..where((si) => si.saleId.equals(targetSale.id))).get().then((items) => items.length)} items from sale ${targetSale.id} to sale ${currentSaleId}');
 
-      // Update totals on current sale
-      final newSubtotal = currentSale.subtotal + targetSale.subtotal;
-      final newTotal = currentSale.total + targetSale.total;
-      
-      await (db.update(db.sales)..where((s) => s.id.equals(currentSaleId!)))
-          .write(SalesCompanion(
-        subtotal: drift.Value(newSubtotal),
-        total: drift.Value(newTotal),
-      ));
+        // Update all sale items to point to current sale (MOVE, not COPY)
+        final movedCount = await (db.update(db.saleItems)
+              ..where((si) => si.saleId.equals(targetSale.id)))
+            .write(SaleItemsCompanion(
+          saleId: drift.Value(currentSaleId!),
+        ));
 
-      // Mark target sale as merged
-      await (db.update(db.sales)..where((s) => s.id.equals(targetSale.id)))
-          .write(const SalesCompanion(status: drift.Value('merged')));
+        debugPrint('[MergeTable] Moved $movedCount items');
 
-      // Clear target table
-      await (db.update(db.restaurantTables)
-            ..where((t) => t.id.equals(targetTable.id)))
-          .write(const RestaurantTablesCompanion(
-        status: drift.Value('AVAILABLE'),
-        currentSaleId: drift.Value.absent(),
-      ));
+        // Update totals on current sale
+        final newSubtotal = currentSale.subtotal + targetSale.subtotal;
+        final newTotal = currentSale.total + targetSale.total;
+        
+        await (db.update(db.sales)..where((s) => s.id.equals(currentSaleId!)))
+            .write(SalesCompanion(
+          subtotal: drift.Value(newSubtotal),
+          total: drift.Value(newTotal),
+        ));
+
+        debugPrint('[MergeTable] Updated current sale totals: subtotal=$newSubtotal, total=$newTotal');
+
+        // Mark target sale as merged (no items left)
+        await (db.update(db.sales)..where((s) => s.id.equals(targetSale.id)))
+            .write(const SalesCompanion(status: drift.Value('merged')));
+
+        // Clear target table
+        await (db.update(db.restaurantTables)
+              ..where((t) => t.id.equals(targetTable.id)))
+            .write(const RestaurantTablesCompanion(
+          status: drift.Value('AVAILABLE'),
+          currentSaleId: drift.Value.absent(),
+        ));
+
+        debugPrint('[MergeTable] Merge completed successfully');
+      });
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -218,6 +219,7 @@ class TableMergeModal extends ConsumerWidget {
         );
       }
     } catch (e) {
+      debugPrint('[MergeTable] Error: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

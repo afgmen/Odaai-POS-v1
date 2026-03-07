@@ -26,6 +26,7 @@ class FloorPlanScreen extends ConsumerStatefulWidget {
 
 class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
   String? _selectedZoneFilter;
+  bool _isEditMode = false;
   late Timer _clockTimer;
   String _currentTime = '';
 
@@ -50,6 +51,45 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
     });
   }
 
+  /// Element drag end handler - save to DB
+  Future<void> _onElementDragEnd(int elementId, Offset newPosition) async {
+    debugPrint('[FloorPlan] Element $elementId dragged to: ${newPosition.dx}, ${newPosition.dy}');
+    
+    try {
+      final dao = ref.read(floorElementDaoProvider);
+      final success = await dao.updateElementPosition(
+        elementId: elementId,
+        posX: newPosition.dx,
+        posY: newPosition.dy,
+      );
+
+      if (success) {
+        debugPrint('[FloorPlan] Element position saved successfully');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Element position updated'),
+              duration: Duration(seconds: 1),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception('Failed to update element position');
+      }
+    } catch (e) {
+      debugPrint('[FloorPlan] Error saving element position: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     debugPrint('[FloorPlan] Screen rebuilt at ${DateTime.now()}');
@@ -63,6 +103,21 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
         title: Text(l10n.floorPlan),
         centerTitle: false,
         actions: [
+          // Edit mode toggle
+          IconButton(
+            icon: Icon(_isEditMode ? Icons.edit : Icons.edit_off),
+            color: _isEditMode ? Colors.blue : Colors.grey,
+            onPressed: () {
+              setState(() => _isEditMode = !_isEditMode);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(_isEditMode ? 'Edit mode enabled' : 'Edit mode disabled'),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
+            },
+            tooltip: _isEditMode ? 'Disable edit mode' : 'Enable edit mode',
+          ),
           // 디지털 시계
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -118,7 +173,8 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
                         data: (elements) =>
                             elements.map((e) => FloorElementWidget(
                                   element: e,
-                                  isDraggable: false,
+                                  isDraggable: _isEditMode,
+                                  onDragEnd: (offset) => _onElementDragEnd(e.id, offset),
                                 )),
                         loading: () => <Widget>[],
                         error: (_, _) => <Widget>[],

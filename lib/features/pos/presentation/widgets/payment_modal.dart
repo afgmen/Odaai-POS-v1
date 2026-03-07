@@ -241,23 +241,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
                       ),
                       const SizedBox(height: 6),
-                      TextField(
-                        controller: _tableNumberController,
-                        decoration: InputDecoration(
-                          hintText: 'e.g. T01',
-                          prefixIcon: const Icon(Icons.table_restaurant, size: 18),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.divider),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.divider),
-                          ),
-                        ),
-                        style: const TextStyle(fontSize: 14),
-                      ),
+                      _buildTableAutocomplete(),
                     ],
                   ),
                 ),
@@ -743,6 +727,86 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         _showPaymentError(e.toString());
       }
     }
+  }
+
+  /// Build table autocomplete widget
+  Widget _buildTableAutocomplete() {
+    final allTablesAsync = ref.watch(allTablesStreamProvider);
+
+    return allTablesAsync.when(
+      data: (tables) {
+        final tableNumbers = tables.map((t) => t.tableNumber).toList();
+
+        return Autocomplete<String>(
+          initialValue: TextEditingValue(text: _tableNumberController.text),
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            if (textEditingValue.text.isEmpty) {
+              return tableNumbers;
+            }
+            return tableNumbers.where((String option) {
+              return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+            });
+          },
+          onSelected: (String selection) {
+            _tableNumberController.text = selection;
+          },
+          fieldViewBuilder: (
+            BuildContext context,
+            TextEditingController controller,
+            FocusNode focusNode,
+            VoidCallback onFieldSubmitted,
+          ) {
+            // Sync with our main controller
+            controller.text = _tableNumberController.text;
+            controller.addListener(() {
+              _tableNumberController.text = controller.text;
+            });
+
+            return TextField(
+              controller: controller,
+              focusNode: focusNode,
+              decoration: InputDecoration(
+                hintText: 'e.g. T01',
+                prefixIcon: const Icon(Icons.table_restaurant, size: 18),
+                suffixIcon: const Icon(Icons.arrow_drop_down, size: 20),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppTheme.divider),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppTheme.divider),
+                ),
+              ),
+              style: const TextStyle(fontSize: 14),
+            );
+          },
+        );
+      },
+      loading: () => TextField(
+        controller: _tableNumberController,
+        decoration: InputDecoration(
+          hintText: 'e.g. T01',
+          prefixIcon: const Icon(Icons.table_restaurant, size: 18),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      error: (_, __) => TextField(
+        controller: _tableNumberController,
+        decoration: InputDecoration(
+          hintText: 'e.g. T01',
+          prefixIcon: const Icon(Icons.table_restaurant, size: 18),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+    );
   }
 
   void _showPaymentError(String message) {

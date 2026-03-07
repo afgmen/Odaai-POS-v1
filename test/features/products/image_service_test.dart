@@ -1,62 +1,78 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oda_pos/features/products/domain/services/image_service_io.dart';
 
+/// B-051: Camera Image Upload Crash Fix Tests
 void main() {
-  group('B-051: Camera Image Upload Crash Fix', () {
-    test('CameraPermissionDeniedException has user-friendly message', () {
+  group('Exception Types', () {
+    test('CameraPermissionDeniedException should have correct message', () {
       final exception = CameraPermissionDeniedException();
-      
       expect(
         exception.toString(),
         'Camera permission denied. Please enable camera access in Settings.',
       );
     });
 
-    test('GalleryPermissionDeniedException has user-friendly message', () {
+    test('GalleryPermissionDeniedException should have correct message', () {
       final exception = GalleryPermissionDeniedException();
-      
       expect(
         exception.toString(),
         'Photo library permission denied. Please enable photo access in Settings.',
       );
     });
 
-    test('ImageProcessingException formats message correctly', () {
-      final exception = ImageProcessingException('Camera upload failed. Please try again.');
-      
+    test('ImageProcessingException should preserve custom message', () {
+      const message = 'Custom error message';
+      final exception = ImageProcessingException(message);
+      expect(exception.toString(), message);
+    });
+
+    test('ImageProcessingException should be catchable', () {
       expect(
-        exception.toString(),
-        'Camera upload failed. Please try again.',
+        () => throw ImageProcessingException('Test error'),
+        throwsA(isA<ImageProcessingException>()),
       );
     });
 
-    // Note: Actual image picker tests require mocking platform channels
-    // and are better suited for integration tests. These unit tests verify
-    // the exception types and messages are correctly defined.
+    test('Exception messages should not expose technical details', () {
+      final exceptions = [
+        CameraPermissionDeniedException(),
+        GalleryPermissionDeniedException(),
+        ImageProcessingException('Failed to process image'),
+      ];
+
+      for (final ex in exceptions) {
+        final message = ex.toString();
+        // Should not contain "Exception" in the message itself
+        expect(message.startsWith('Exception:'), false);
+        expect(message.contains('Stack'), false);
+      }
+    });
   });
 
-  group('Permission checks', () {
-    test('iOS Info.plist should have camera permission keys', () {
-      // This is a documentation test - actual file check is in integration
-      const requiredKeys = [
-        'NSCameraUsageDescription',
-        'NSPhotoLibraryUsageDescription',
-        'NSPhotoLibraryAddUsageDescription',
-      ];
+  group('Error Message Quality', () {
+    test('CameraPermission error should guide user to Settings', () {
+      final exception = CameraPermissionDeniedException();
+      final message = exception.toString();
       
-      expect(requiredKeys.length, 3, 
-        reason: 'iOS requires 3 permission keys for camera/photo access');
+      expect(message.contains('Settings'), true);
+      expect(message.contains('permission'), true);
     });
 
-    test('Android Manifest should declare camera permissions', () {
-      // This is a documentation test - actual file check is in integration
-      const requiredPermissions = [
-        'android.permission.CAMERA',
-        'android.permission.READ_MEDIA_IMAGES',
-      ];
+    test('GalleryPermission error should guide user to Settings', () {
+      final exception = GalleryPermissionDeniedException();
+      final message = exception.toString();
       
-      expect(requiredPermissions.length, 2,
-        reason: 'Android requires CAMERA and READ_MEDIA_IMAGES permissions');
+      expect(message.contains('Settings'), true);
+      expect(message.contains('permission'), true);
+    });
+
+    test('ImageProcessing error should be user-friendly', () {
+      final exception = ImageProcessingException('Upload failed');
+      final message = exception.toString();
+      
+      // Should not contain technical jargon
+      expect(message.toLowerCase().contains('null'), false);
+      expect(message.toLowerCase().contains('exception'), false);
     });
   });
 }

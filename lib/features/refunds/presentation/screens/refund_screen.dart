@@ -44,6 +44,23 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ─── 최근 주문 목록 ─────────────────────────
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.recentOrders ?? 'Recent Orders', 
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 12),
+                    _buildRecentOrdersList(),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // ─── 영수증 검색 ─────────────────────────
             Card(
               child: Padding(
@@ -214,6 +231,61 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRecentOrdersList() {
+    final db = ref.watch(databaseProvider);
+    
+    return FutureBuilder<List<Sale>>(
+      future: (db.select(db.sales)
+            ..where((s) => s.status.equals('completed'))
+            ..orderBy([(s) => OrderingTerm.desc(s.createdAt)])
+            ..limit(10))
+          .get(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final recentSales = snapshot.data!;
+        if (recentSales.isEmpty) {
+          return const Text('No recent orders', 
+              style: TextStyle(color: AppTheme.textSecondary));
+        }
+
+        return SizedBox(
+          height: 200,
+          child: ListView.builder(
+            itemCount: recentSales.length,
+            itemBuilder: (context, index) {
+              final sale = recentSales[index];
+              final currencyFormat = NumberFormat('#,###');
+
+              return ListTile(
+                dense: true,
+                leading: const Icon(Icons.receipt, size: 20),
+                title: Text(
+                  '#${sale.saleNumber}',
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+                subtitle: Text(
+                  '₫${currencyFormat.format(sale.total.toInt())} · ${DateFormat('MM/dd HH:mm').format(sale.createdAt)}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                onTap: () {
+                  setState(() {
+                    _saleNumberCtrl.text = sale.saleNumber;
+                    _foundSale = sale;
+                  });
+                  _searchSale();
+                },
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

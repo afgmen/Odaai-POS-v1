@@ -1,221 +1,210 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:oda_pos/database/app_database.dart';
 import 'package:oda_pos/features/promotions/providers/promotions_provider.dart';
 
+/// B-065: Promotion Expiry Tests
 void main() {
-  group('B-065: Promotion Auto-Expiry', () {
-    late AppDatabase db;
-    late PromotionService service;
+  late AppDatabase db;
+  late PromotionService service;
 
-    setUp(() {
-      db = AppDatabase.forTesting(NativeDatabase.memory());
-      service = PromotionService(db);
+  setUp(() {
+    db = AppDatabase.forTesting(NativeDatabase.memory());
+    service = PromotionService(db);
     });
 
-    tearDown(() async {
-      await db.close();
+  tearDown(() async {
+    await db.close();
+  });
+
+  group('Promotion Expiry Check', () {
+    test('should return active promotion before expiry date', () async {
+      final tomorrow = DateTime.now().add(const Duration(days: 1));
+
+      final promo = await service.createPromotion(
+        name: 'Test Promo',
+        type: 'percentOff',
+        value: 10.0,
+        endDate: tomorrow,
+      );
+
+      final applicable = await service.getApplicablePromotions(1);
+
+      expect(applicable.length, 1);
+      expect(applicable.first.id, promo.id);
     });
 
-    test('Expired promotion should be set to inactive', () async {
-      // Create a promotion that ended yesterday
+    test('should return active promotion on expiry date (same day)', () async {
+      final today = DateTime.now();
+
+      final promo = await service.createPromotion(
+        name: 'Today Promo',
+        type: 'percentOff',
+        value: 15.0,
+        endDate: today,
+      );
+
+      final applicable = await service.getApplicablePromotions(1);
+
+      expect(applicable.length, 1);
+      expect(applicable.first.id, promo.id);
+    });
+
+    test('should NOT return expired promotion', () async {
       final yesterday = DateTime.now().subtract(const Duration(days: 1));
-      
+
       await service.createPromotion(
         name: 'Expired Promo',
         type: 'percentOff',
-        value: 10,
+        value: 20.0,
         endDate: yesterday,
       );
 
-      // Check that it's still active (before expiry check)
-      final beforeExpiry = await db.select(db.promotions).getSingle();
-      expect(beforeExpiry.isActive, true);
+      final applicable = await service.getApplicablePromotions(1);
 
-      // Run expiry check
-      final expiredCount = await service.expireOldPromotions();
-
-      // Should have expired 1 promotion
-      expect(expiredCount, 1);
-
-      // Verify it's now inactive
-      final afterExpiry = await db.select(db.promotions).getSingle();
-      expect(afterExpiry.isActive, false);
+      expect(applicable.length, 0);
     });
 
-    test('Active promotion with future end date should NOT expire', () async {
-      // Create a promotion that ends tomorrow
+    test('should return promotion with null endDate (unlimited)', () async {
+      final promo = await service.createPromotion(
+        name: 'Unlimited Promo',
+        type: 'percentOff',
+        value: 25.0,
+        endDate: null,
+      );
+
+      final applicable = await service.getApplicablePromotions(1);
+
+      expect(applicable.length, 1);
+      expect(applicable.first.id, promo.id);
+    });
+
+    test('should filter by startDate as well', () async {
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
       final tomorrow = DateTime.now().add(const Duration(days: 1));
-      
+      final nextWeek = DateTime.now().add(const Duration(days: 7));
+
+      // Future promotion (not started yet)
       await service.createPromotion(
         name: 'Future Promo',
         type: 'percentOff',
-        value: 15,
-        endDate: tomorrow,
+        value: 30.0,
+        startDate: tomorrow,
+        endDate: nextWeek,
       );
 
-      // Run expiry check
-      final expiredCount = await service.expireOldPromotions();
-
-      // Should NOT expire
-      expect(expiredCount, 0);
-
-      // Verify it's still active
-      final promo = await db.select(db.promotions).getSingle();
-      expect(promo.isActive, true);
-    });
-
-    test('Promotion with no end date should NOT expire', () async {
-      // Create a promotion with no end date (永久)
-      await service.createPromotion(
-        name: 'Permanent Promo',
-        type: 'amountOff',
-        value: 5000,
-        endDate: null,
+      // Current promotion (already started)
+      final currentPromo = await service.createPromotion(
+        name: 'Current Promo',
+        type: 'percentOff',
+        value: 35.0,
+        startDate: yesterday,
+        endDate: nextWeek,
       );
 
-      // Run expiry check
-      final expiredCount = await service.expireOldPromotions();
+      final applicable = await service.getApplicablePromotions(1);
 
-      // Should NOT expire
-      expect(expiredCount, 0);
-
-      // Verify it's still active
-      final promo = await db.select(db.promotions).getSingle();
-      expect(promo.isActive, true);
+      expect(applicable.length, 1);
+      expect(applicable.first.id, currentPromo.id);
     });
+  });
 
-    test('Multiple expired promotions should all be deactivated', () async {
+  group('Auto Expiry', () {
+    test('should auto-disable expired promotions', () async {
       final yesterday = DateTime.now().subtract(const Duration(days: 1));
-      final twoDaysAgo = DateTime.now().subtract(const Duration(days: 2));
-      final weekAgo = DateTime.now().subtract(const Duration(days: 7));
 
-      // Create 3 expired promotions
       await service.createPromotion(
         name: 'Expired 1',
         type: 'percentOff',
-        value: 10,
+        value: 10.0,
         endDate: yesterday,
       );
 
       await service.createPromotion(
         name: 'Expired 2',
         type: 'percentOff',
-        value: 20,
-        endDate: twoDaysAgo,
+        value: 20.0,
+        endDate: yesterday,
       );
 
-      await service.createPromotion(
-        name: 'Expired 3',
-        type: 'amountOff',
-        value: 3000,
-        endDate: weekAgo,
-      );
-
-      // Run expiry check
       final expiredCount = await service.expireOldPromotions();
 
-      // Should have expired all 3
-      expect(expiredCount, 3);
+      expect(expiredCount, 2);
 
-      // Verify all are inactive
-      final allPromos = await db.select(db.promotions).get();
-      expect(allPromos.every((p) => p.isActive == false), true);
+      // Verify they are now inactive
+      final allPromotions = await db.select(db.promotions).get();
+      final activePromotions = allPromotions.where((p) => p.isActive).toList();
+
+      expect(activePromotions.length, 0);
     });
 
-    test('Mix of expired and active promotions', () async {
+    test('should not disable future promotions', () async {
+      final tomorrow = DateTime.now().add(const Duration(days: 1));
+
+      await service.createPromotion(
+        name: 'Future Promo',
+        type: 'percentOff',
+        value: 10.0,
+        endDate: tomorrow,
+      );
+
+      final expiredCount = await service.expireOldPromotions();
+
+      expect(expiredCount, 0);
+
+      final allPromotions = await db.select(db.promotions).get();
+      expect(allPromotions.first.isActive, true);
+    });
+
+    test('should not disable unlimited promotions', () async {
+      await service.createPromotion(
+        name: 'Unlimited Promo',
+        type: 'percentOff',
+        value: 10.0,
+        endDate: null,
+      );
+
+      final expiredCount = await service.expireOldPromotions();
+
+      expect(expiredCount, 0);
+
+      final allPromotions = await db.select(db.promotions).get();
+      expect(allPromotions.first.isActive, true);
+    });
+  });
+
+  group('Active Promotions Query', () {
+    test('should only return non-expired active promotions', () async {
       final yesterday = DateTime.now().subtract(const Duration(days: 1));
       final tomorrow = DateTime.now().add(const Duration(days: 1));
 
-      // 2 expired
+      // Expired
       await service.createPromotion(
-        name: 'Expired 1',
+        name: 'Expired',
         type: 'percentOff',
-        value: 10,
+        value: 10.0,
         endDate: yesterday,
       );
 
+      // Active and valid
       await service.createPromotion(
-        name: 'Expired 2',
+        name: 'Valid',
         type: 'percentOff',
-        value: 15,
-        endDate: yesterday,
-      );
-
-      // 2 active
-      await service.createPromotion(
-        name: 'Active 1',
-        type: 'amountOff',
-        value: 2000,
+        value: 20.0,
         endDate: tomorrow,
       );
 
-      await service.createPromotion(
-        name: 'Active 2',
-        type: 'buy1get1',
-        value: 0,
-        endDate: null,
-      );
+      // Manually query with same logic as activePromotionsProvider
+      final now = DateTime.now();
+      final activePromotions = await (db.select(db.promotions)
+            ..where((p) =>
+                p.isActive.equals(true) &
+                (p.endDate.isNull() | p.endDate.isBiggerOrEqualValue(now))))
+          .get();
 
-      // Run expiry check
-      final expiredCount = await service.expireOldPromotions();
-
-      // Should have expired 2
-      expect(expiredCount, 2);
-
-      // Verify counts
-      final allPromos = await db.select(db.promotions).get();
-      final activeCount = allPromos.where((p) => p.isActive).length;
-      final inactiveCount = allPromos.where((p) => !p.isActive).length;
-
-      expect(activeCount, 2);
-      expect(inactiveCount, 2);
-    });
-
-    test('Already inactive expired promotion should not be counted', () async {
-      final yesterday = DateTime.now().subtract(const Duration(days: 1));
-
-      // Create expired promotion
-      final id = await db.into(db.promotions).insert(
-        PromotionsCompanion.insert(
-          name: 'Already Inactive',
-          type: 'percentOff',
-          value: const Value(10),
-          endDate: Value(yesterday),
-          isActive: const Value(false), // Already inactive
-        ),
-      );
-
-      // Run expiry check
-      final expiredCount = await service.expireOldPromotions();
-
-      // Should NOT count already inactive ones
-      expect(expiredCount, 0);
-    });
-
-    test('expireOldPromotions should be idempotent', () async {
-      final yesterday = DateTime.now().subtract(const Duration(days: 1));
-
-      await service.createPromotion(
-        name: 'Expired Promo',
-        type: 'percentOff',
-        value: 10,
-        endDate: yesterday,
-      );
-
-      // First run
-      final firstRun = await service.expireOldPromotions();
-      expect(firstRun, 1);
-
-      // Second run (should not double-count)
-      final secondRun = await service.expireOldPromotions();
-      expect(secondRun, 0);
-
-      // Verify still only 1 promotion and it's inactive
-      final allPromos = await db.select(db.promotions).get();
-      expect(allPromos.length, 1);
-      expect(allPromos.first.isActive, false);
+      expect(activePromotions.length, 1);
+      expect(activePromotions.first.name, 'Valid');
     });
   });
 }

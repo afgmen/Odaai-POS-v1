@@ -135,18 +135,25 @@ class OrderDetailModal extends ConsumerWidget {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () async {
-                            final confirm = await _showConfirmDialog(
-                              context,
-                              'Cancel this order?',
+                            await showDialog<String>(
+                              context: context,
+                              builder: (ctx) => CancelReasonModal(
+                                onConfirm: (reason) async {
+                                  await service.cancelOrder(orderId, reason: reason);
+                                  if (context.mounted) {
+                                    ref
+                                        .read(showOrderDetailProvider.notifier)
+                                        .state = false;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Order cancelled'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
                             );
-                            if (confirm == true) {
-                              await service.cancelOrder(orderId);
-                              if (context.mounted) {
-                                ref
-                                    .read(showOrderDetailProvider.notifier)
-                                    .state = false;
-                              }
-                            }
                           },
                           icon: const Icon(Icons.cancel),
                           label: const Text('Cancel Order'),

@@ -15000,6 +15000,17 @@ class $KitchenOrdersTable extends KitchenOrders
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _cancellationReasonMeta =
+      const VerificationMeta('cancellationReason');
+  @override
+  late final GeneratedColumn<String> cancellationReason =
+      GeneratedColumn<String>(
+        'cancellation_reason',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _cancelledAtMeta = const VerificationMeta(
     'cancelledAt',
   );
@@ -15047,6 +15058,7 @@ class $KitchenOrdersTable extends KitchenOrders
     startedAt,
     readyAt,
     servedAt,
+    cancellationReason,
     cancelledAt,
     createdAt,
     updatedAt,
@@ -15128,6 +15140,15 @@ class $KitchenOrdersTable extends KitchenOrders
         servedAt.isAcceptableOrUnknown(data['served_at']!, _servedAtMeta),
       );
     }
+    if (data.containsKey('cancellation_reason')) {
+      context.handle(
+        _cancellationReasonMeta,
+        cancellationReason.isAcceptableOrUnknown(
+          data['cancellation_reason']!,
+          _cancellationReasonMeta,
+        ),
+      );
+    }
     if (data.containsKey('cancelled_at')) {
       context.handle(
         _cancelledAtMeta,
@@ -15198,6 +15219,10 @@ class $KitchenOrdersTable extends KitchenOrders
         DriftSqlType.dateTime,
         data['${effectivePrefix}served_at'],
       ),
+      cancellationReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cancellation_reason'],
+      ),
       cancelledAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}cancelled_at'],
@@ -15232,6 +15257,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
   final DateTime? startedAt;
   final DateTime? readyAt;
   final DateTime? servedAt;
+  final String? cancellationReason;
   final DateTime? cancelledAt;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -15246,6 +15272,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     this.startedAt,
     this.readyAt,
     this.servedAt,
+    this.cancellationReason,
     this.cancelledAt,
     required this.createdAt,
     required this.updatedAt,
@@ -15272,6 +15299,9 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     }
     if (!nullToAbsent || servedAt != null) {
       map['served_at'] = Variable<DateTime>(servedAt);
+    }
+    if (!nullToAbsent || cancellationReason != null) {
+      map['cancellation_reason'] = Variable<String>(cancellationReason);
     }
     if (!nullToAbsent || cancelledAt != null) {
       map['cancelled_at'] = Variable<DateTime>(cancelledAt);
@@ -15303,6 +15333,9 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
       servedAt: servedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(servedAt),
+      cancellationReason: cancellationReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancellationReason),
       cancelledAt: cancelledAt == null && nullToAbsent
           ? const Value.absent()
           : Value(cancelledAt),
@@ -15329,6 +15362,9 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
       startedAt: serializer.fromJson<DateTime?>(json['startedAt']),
       readyAt: serializer.fromJson<DateTime?>(json['readyAt']),
       servedAt: serializer.fromJson<DateTime?>(json['servedAt']),
+      cancellationReason: serializer.fromJson<String?>(
+        json['cancellationReason'],
+      ),
       cancelledAt: serializer.fromJson<DateTime?>(json['cancelledAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -15348,6 +15384,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
       'startedAt': serializer.toJson<DateTime?>(startedAt),
       'readyAt': serializer.toJson<DateTime?>(readyAt),
       'servedAt': serializer.toJson<DateTime?>(servedAt),
+      'cancellationReason': serializer.toJson<String?>(cancellationReason),
       'cancelledAt': serializer.toJson<DateTime?>(cancelledAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -15365,6 +15402,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     Value<DateTime?> startedAt = const Value.absent(),
     Value<DateTime?> readyAt = const Value.absent(),
     Value<DateTime?> servedAt = const Value.absent(),
+    Value<String?> cancellationReason = const Value.absent(),
     Value<DateTime?> cancelledAt = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -15381,6 +15419,9 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     startedAt: startedAt.present ? startedAt.value : this.startedAt,
     readyAt: readyAt.present ? readyAt.value : this.readyAt,
     servedAt: servedAt.present ? servedAt.value : this.servedAt,
+    cancellationReason: cancellationReason.present
+        ? cancellationReason.value
+        : this.cancellationReason,
     cancelledAt: cancelledAt.present ? cancelledAt.value : this.cancelledAt,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -15401,6 +15442,9 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
       startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
       readyAt: data.readyAt.present ? data.readyAt.value : this.readyAt,
       servedAt: data.servedAt.present ? data.servedAt.value : this.servedAt,
+      cancellationReason: data.cancellationReason.present
+          ? data.cancellationReason.value
+          : this.cancellationReason,
       cancelledAt: data.cancelledAt.present
           ? data.cancelledAt.value
           : this.cancelledAt,
@@ -15422,6 +15466,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
           ..write('startedAt: $startedAt, ')
           ..write('readyAt: $readyAt, ')
           ..write('servedAt: $servedAt, ')
+          ..write('cancellationReason: $cancellationReason, ')
           ..write('cancelledAt: $cancelledAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -15441,6 +15486,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     startedAt,
     readyAt,
     servedAt,
+    cancellationReason,
     cancelledAt,
     createdAt,
     updatedAt,
@@ -15459,6 +15505,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
           other.startedAt == this.startedAt &&
           other.readyAt == this.readyAt &&
           other.servedAt == this.servedAt &&
+          other.cancellationReason == this.cancellationReason &&
           other.cancelledAt == this.cancelledAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -15475,6 +15522,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
   final Value<DateTime?> startedAt;
   final Value<DateTime?> readyAt;
   final Value<DateTime?> servedAt;
+  final Value<String?> cancellationReason;
   final Value<DateTime?> cancelledAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -15489,6 +15537,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     this.startedAt = const Value.absent(),
     this.readyAt = const Value.absent(),
     this.servedAt = const Value.absent(),
+    this.cancellationReason = const Value.absent(),
     this.cancelledAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -15504,6 +15553,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     this.startedAt = const Value.absent(),
     this.readyAt = const Value.absent(),
     this.servedAt = const Value.absent(),
+    this.cancellationReason = const Value.absent(),
     this.cancelledAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -15519,6 +15569,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     Expression<DateTime>? startedAt,
     Expression<DateTime>? readyAt,
     Expression<DateTime>? servedAt,
+    Expression<String>? cancellationReason,
     Expression<DateTime>? cancelledAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -15535,6 +15586,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
       if (startedAt != null) 'started_at': startedAt,
       if (readyAt != null) 'ready_at': readyAt,
       if (servedAt != null) 'served_at': servedAt,
+      if (cancellationReason != null) 'cancellation_reason': cancellationReason,
       if (cancelledAt != null) 'cancelled_at': cancelledAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -15552,6 +15604,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     Value<DateTime?>? startedAt,
     Value<DateTime?>? readyAt,
     Value<DateTime?>? servedAt,
+    Value<String?>? cancellationReason,
     Value<DateTime?>? cancelledAt,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -15567,6 +15620,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
       startedAt: startedAt ?? this.startedAt,
       readyAt: readyAt ?? this.readyAt,
       servedAt: servedAt ?? this.servedAt,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
       cancelledAt: cancelledAt ?? this.cancelledAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -15606,6 +15660,9 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     if (servedAt.present) {
       map['served_at'] = Variable<DateTime>(servedAt.value);
     }
+    if (cancellationReason.present) {
+      map['cancellation_reason'] = Variable<String>(cancellationReason.value);
+    }
     if (cancelledAt.present) {
       map['cancelled_at'] = Variable<DateTime>(cancelledAt.value);
     }
@@ -15631,6 +15688,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
           ..write('startedAt: $startedAt, ')
           ..write('readyAt: $readyAt, ')
           ..write('servedAt: $servedAt, ')
+          ..write('cancellationReason: $cancellationReason, ')
           ..write('cancelledAt: $cancelledAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -34682,6 +34740,7 @@ typedef $$KitchenOrdersTableCreateCompanionBuilder =
       Value<DateTime?> startedAt,
       Value<DateTime?> readyAt,
       Value<DateTime?> servedAt,
+      Value<String?> cancellationReason,
       Value<DateTime?> cancelledAt,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -34698,6 +34757,7 @@ typedef $$KitchenOrdersTableUpdateCompanionBuilder =
       Value<DateTime?> startedAt,
       Value<DateTime?> readyAt,
       Value<DateTime?> servedAt,
+      Value<String?> cancellationReason,
       Value<DateTime?> cancelledAt,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -34802,6 +34862,11 @@ class $$KitchenOrdersTableFilterComposer
 
   ColumnFilters<DateTime> get servedAt => $composableBuilder(
     column: $table.servedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -34923,6 +34988,11 @@ class $$KitchenOrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get cancelledAt => $composableBuilder(
     column: $table.cancelledAt,
     builder: (column) => ColumnOrderings(column),
@@ -35001,6 +35071,11 @@ class $$KitchenOrdersTableAnnotationComposer
 
   GeneratedColumn<DateTime> get servedAt =>
       $composableBuilder(column: $table.servedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get cancelledAt => $composableBuilder(
     column: $table.cancelledAt,
@@ -35100,6 +35175,7 @@ class $$KitchenOrdersTableTableManager
                 Value<DateTime?> startedAt = const Value.absent(),
                 Value<DateTime?> readyAt = const Value.absent(),
                 Value<DateTime?> servedAt = const Value.absent(),
+                Value<String?> cancellationReason = const Value.absent(),
                 Value<DateTime?> cancelledAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -35114,6 +35190,7 @@ class $$KitchenOrdersTableTableManager
                 startedAt: startedAt,
                 readyAt: readyAt,
                 servedAt: servedAt,
+                cancellationReason: cancellationReason,
                 cancelledAt: cancelledAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -35130,6 +35207,7 @@ class $$KitchenOrdersTableTableManager
                 Value<DateTime?> startedAt = const Value.absent(),
                 Value<DateTime?> readyAt = const Value.absent(),
                 Value<DateTime?> servedAt = const Value.absent(),
+                Value<String?> cancellationReason = const Value.absent(),
                 Value<DateTime?> cancelledAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -35144,6 +35222,7 @@ class $$KitchenOrdersTableTableManager
                 startedAt: startedAt,
                 readyAt: readyAt,
                 servedAt: servedAt,
+                cancellationReason: cancellationReason,
                 cancelledAt: cancelledAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

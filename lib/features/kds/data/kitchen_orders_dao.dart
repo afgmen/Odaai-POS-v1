@@ -262,8 +262,15 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// 주문 취소
-  Future<bool> cancelOrder(int id) {
-    return updateOrderStatus(id, 'CANCELLED');
+  Future<bool> cancelOrder(int id, {String? reason}) {
+    return (update(kitchenOrders)..where((t) => t.id.equals(id)))
+        .write(KitchenOrdersCompanion(
+          status: const Value('CANCELLED'),
+          cancellationReason: Value(reason),
+          cancelledAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+        ))
+        .then((count) => count > 0);
   }
 
   // ============================================================

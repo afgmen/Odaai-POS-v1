@@ -26,6 +26,7 @@ class KitchenOrders extends Table {
   DateTimeColumn get startedAt => dateTime().nullable()(); // 조리 시작
   DateTimeColumn get readyAt => dateTime().nullable()();   // 완료
   DateTimeColumn get servedAt => dateTime().nullable()();  // 서빙
+  TextColumn get cancellationReason => text().nullable()(); // 취소 사유
   DateTimeColumn get cancelledAt => dateTime().nullable()(); // 취소
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();

@@ -121,10 +121,30 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
     ));
   }
 
-  Future<void> refundSale(int saleId, int employeeId) async {
+  Future<void> refundSale(int saleId, int employeeId, {String? reason}) async {
     await transaction(() async {
+      // Get sale details for refund record
+      final sale = await (select(sales)..where((s) => s.id.equals(saleId))).getSingleOrNull();
+      if (sale == null) {
+        throw Exception('Sale not found');
+      }
+
+      // ✅ CRITICAL FIX 2: Update sale status to refunded
       await updateSaleStatus(saleId, 'refunded');
 
+      // ✅ Create refund record with reason
+      await into(db.refunds).insert(
+        RefundsCompanion.insert(
+          originalSaleId: saleId,
+          originalSaleNumber: sale.saleNumber,
+          refundAmount: sale.total,
+          refundType: 'full',
+          reason: Value(reason), // ✅ Store reason
+          employeeId: Value(employeeId),
+        ),
+      );
+
+      // Restock items
       final items = await getSaleItems(saleId);
       final productsDao = ProductsDao(db);
 

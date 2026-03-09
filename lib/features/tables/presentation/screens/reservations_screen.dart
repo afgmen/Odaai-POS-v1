@@ -88,6 +88,11 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
   /// 통계 표시
   Widget _buildStatistics(BuildContext context, Map<String, int> counts) {
     final l10n = AppLocalizations.of(context)!;
+    final selectedDate = ref.watch(selectedDateProvider);
+    final isPastDate = selectedDate.isBefore(
+      DateTime.now().subtract(const Duration(days: 1)),
+    );
+    
     final confirmedCount = counts['CONFIRMED'] ?? 0;
     final pendingCount = counts['PENDING'] ?? 0;
 
@@ -95,6 +100,31 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
+          // Phase 2-B: Past date indicator
+          if (isPastDate)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.history, size: 14, color: Colors.grey.shade600),
+                  const SizedBox(width: 4),
+                  Text(
+                    '과거',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (isPastDate) const SizedBox(width: 8),
           _buildStatBadge(l10n.confirmed, confirmedCount, Colors.green),
           const SizedBox(width: 8),
           _buildStatBadge(l10n.pending, pendingCount, Colors.orange),

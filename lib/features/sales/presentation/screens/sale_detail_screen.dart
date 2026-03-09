@@ -319,7 +319,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
 
     try {
       final dao = ref.read(salesDaoProvider);
-      await dao.refundSale(widget.saleId, 1); // employeeId: 1 (기본 관리자)
+      await dao.refundSale(widget.saleId, 1, reason: refundReason); // employeeId: 1 (기본 관리자)
 
       // 주문 목록 갱신을 위해 provider invalidate
       ref.invalidate(salesListProvider);

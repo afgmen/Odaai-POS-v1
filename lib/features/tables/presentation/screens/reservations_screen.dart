@@ -254,26 +254,40 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                   markerColor = ReservationStatus.cancelled.color;
                 }
                 
+                // Phase 2-A: 툴팁 메시지 생성
+                final statusCounts = <String, int>{};
+                for (final r in reservations) {
+                  statusCounts[r.status] = (statusCounts[r.status] ?? 0) + 1;
+                }
+                final tooltipLines = statusCounts.entries.map((e) {
+                  final status = ReservationStatus.fromString(e.key);
+                  return '${e.value}개 ${status.localizationKey}';
+                }).join('\n');
+                
                 return Positioned(
                   bottom: 1,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: markerColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '$count',
-                        style: const TextStyle(
+                  child: Tooltip(
+                    message: '$count개 예약\n$tooltipLines',
+                    preferBelow: false,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: markerColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(
                           color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$count',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -599,61 +613,98 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
     }
   }
 
-  /// 범례 (B-081)
+  /// 범례 (B-081 - Phase 2 개선)
   Widget _buildLegend(AppLocalizations l10n) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         border: Border(
           bottom: BorderSide(color: Colors.grey.shade300, width: 1),
         ),
       ),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 8,
-        alignment: WrapAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _LegendItem(
-            color: ReservationStatus.confirmed.color,
-            label: l10n.reservationConfirmed,
+          // 활성 상태
+          Row(
+            children: [
+              Text(
+                '활성: ',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 4),
+              _LegendItem(
+                color: ReservationStatus.confirmed.color,
+                label: l10n.reservationConfirmed,
+              ),
+              const SizedBox(width: 12),
+              _LegendItem(
+                color: ReservationStatus.pending.color,
+                label: l10n.reservationPending,
+              ),
+              const SizedBox(width: 12),
+              _LegendItem(
+                color: ReservationStatus.seated.color,
+                label: l10n.reservationSeated,
+              ),
+            ],
           ),
-          _LegendItem(
-            color: ReservationStatus.pending.color,
-            label: l10n.reservationPending,
-          ),
-          _LegendItem(
-            color: ReservationStatus.seated.color,
-            label: l10n.reservationSeated,
-          ),
-          _LegendItem(
-            color: ReservationStatus.noShow.color,
-            label: l10n.reservationNoShow,
-          ),
-          _LegendItem(
-            color: ReservationStatus.cancelled.color,
-            label: l10n.reservationCancelled,
+          const SizedBox(height: 4),
+          // 비활성 상태
+          Row(
+            children: [
+              Text(
+                '완료: ',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 4),
+              _LegendItem(
+                color: ReservationStatus.noShow.color,
+                label: l10n.reservationNoShow,
+              ),
+              const SizedBox(width: 12),
+              _LegendItem(
+                color: ReservationStatus.cancelled.color,
+                label: l10n.reservationCancelled,
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  /// 범례 아이템
+  /// 범례 아이템 (컴팩트 디자인)
   Widget _LegendItem({required Color color, required String label}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 12,
-          height: 12,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
             border: Border.all(
-              color: color.withValues(alpha: 0.3),
+              color: Colors.white,
               width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 2,
+                spreadRadius: 0.5,
+              ),
+            ],
           ),
         ),
         const SizedBox(width: 4),

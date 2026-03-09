@@ -128,6 +128,7 @@ part 'app_database.g.dart';
     FloorElementDao,
     CategoriesDao,
     ModifierDao,
+    PromotionsDao, // B-082
   ],
 )
 class AppDatabase extends _$AppDatabase {

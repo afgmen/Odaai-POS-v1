@@ -25158,46 +25158,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ProductModifierLinksTable(this);
   late final $SaleItemModifiersTable saleItemModifiers =
       $SaleItemModifiersTable(this);
-  late final ProductsDao productsDao = ProductsDao(this as AppDatabase);
-  late final SalesDao salesDao = SalesDao(this as AppDatabase);
-  late final SyncDao syncDao = SyncDao(this as AppDatabase);
-  late final CustomersDao customersDao = CustomersDao(this as AppDatabase);
-  late final EmployeesDao employeesDao = EmployeesDao(this as AppDatabase);
-  late final LoyaltyDao loyaltyDao = LoyaltyDao(this as AppDatabase);
-  late final BackupDao backupDao = BackupDao(this as AppDatabase);
-  late final AttendanceDao attendanceDao = AttendanceDao(this as AppDatabase);
-  late final KitchenOrdersDao kitchenOrdersDao = KitchenOrdersDao(
-    this as AppDatabase,
-  );
-  late final TablesDao tablesDao = TablesDao(this as AppDatabase);
-  late final ReservationsDao reservationsDao = ReservationsDao(
-    this as AppDatabase,
-  );
-  late final PermissionLogsDao permissionLogsDao = PermissionLogsDao(
-    this as AppDatabase,
-  );
-  late final DailyClosingDao dailyClosingDao = DailyClosingDao(
-    this as AppDatabase,
-  );
-  late final PermissionsDao permissionsDao = PermissionsDao(
-    this as AppDatabase,
-  );
-  late final RolePermissionsDao rolePermissionsDao = RolePermissionsDao(
-    this as AppDatabase,
-  );
-  late final UserRolesDao userRolesDao = UserRolesDao(this as AppDatabase);
-  late final StoreAssignmentsDao storeAssignmentsDao = StoreAssignmentsDao(
-    this as AppDatabase,
-  );
-  late final DeliveryOrdersDao deliveryOrdersDao = DeliveryOrdersDao(
-    this as AppDatabase,
-  );
-  late final FloorZoneDao floorZoneDao = FloorZoneDao(this as AppDatabase);
-  late final FloorElementDao floorElementDao = FloorElementDao(
-    this as AppDatabase,
-  );
-  late final CategoriesDao categoriesDao = CategoriesDao(this as AppDatabase);
-  late final ModifierDao modifierDao = ModifierDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();

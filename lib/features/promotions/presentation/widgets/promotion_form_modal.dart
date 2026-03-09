@@ -24,7 +24,8 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
   late TextEditingController _valueController;
 
   String _selectedType = 'buy1get1';
-  Product? _selectedProduct;
+  bool _applyToAllProducts = true; // B-082
+  Set<int> _selectedProductIds = {}; // B-082
   DateTime? _startDate;
   DateTime? _endDate;
 
@@ -142,10 +143,15 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
                 const SizedBox(height: 20),
               ],
 
-              // 적용 상품 선택
-              _ProductSelector(
-                selectedProduct: _selectedProduct,
-                onChanged: (product) => setState(() => _selectedProduct = product),
+              // 적용 상품 선택 (B-082: 다중 선택)
+              _ProductMultiSelector(
+                applyToAllProducts: _applyToAllProducts,
+                selectedProductIds: _selectedProductIds,
+                onApplyToAllChanged: (value) => setState(() {
+                  _applyToAllProducts = value;
+                  if (value) _selectedProductIds.clear();
+                }),
+                onSelectedProductsChanged: (ids) => setState(() => _selectedProductIds = ids),
               ),
               const SizedBox(height: 20),
 
@@ -192,31 +198,52 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
   Future<void> _savePromotion() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final service = ref.read(promotionServiceProvider);
+    // B-082: Validation - 특정 제품 선택 시 최소 1개 필요
+    if (!_applyToAllProducts && _selectedProductIds.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.promotionNeedProducts ?? '최소 1개의 제품을 선택해야 합니다'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+      return;
+    }
+
+    final db = ref.read(databaseProvider);
     final name = _nameController.text.trim();
     final value = double.tryParse(_valueController.text.trim()) ?? 0.0;
 
     try {
       if (_isEdit) {
-        // 수정
-        final updated = widget.promotion!.copyWith(
-          name: name,
-          type: _selectedType,
-          value: value,
-          productId: Value(_selectedProduct?.id),
-          startDate: Value(_startDate),
-          endDate: Value(_endDate),
+        // B-082: 수정 (제품 연결 포함)
+        await db.promotionsDao.updatePromotionWithProducts(
+          promotionId: widget.promotion!.id,
+          promotion: PromotionsCompanion(
+            name: Value(name),
+            type: Value(_selectedType),
+            value: Value(value),
+            applyToAllProducts: Value(_applyToAllProducts),
+            startDate: Value(_startDate),
+            endDate: Value(_endDate),
+            updatedAt: Value(DateTime.now()),
+          ),
+          applyToAll: _applyToAllProducts,
+          productIds: _selectedProductIds.toList(),
         );
-        await service.updatePromotion(updated);
       } else {
-        // 신규 추가
-        await service.createPromotion(
-          name: name,
-          type: _selectedType,
-          value: value,
-          productId: _selectedProduct?.id,
-          startDate: _startDate,
-          endDate: _endDate,
+        // B-082: 신규 추가 (제품 연결 포함)
+        await db.promotionsDao.createPromotionWithProducts(
+          promotion: PromotionsCompanion.insert(
+            name: name,
+            type: _selectedType,
+            value: value,
+            applyToAllProducts: Value(_applyToAllProducts),
+            startDate: Value(_startDate),
+            endDate: Value(_endDate),
+          ),
+          applyToAll: _applyToAllProducts,
+          productIds: _selectedProductIds.toList(),
         );
       }
 
@@ -234,14 +261,18 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
   }
 }
 
-/// 상품 선택 위젯
-class _ProductSelector extends ConsumerWidget {
-  final Product? selectedProduct;
-  final ValueChanged<Product?> onChanged;
+/// B-082: 다중 상품 선택 위젯
+class _ProductMultiSelector extends ConsumerWidget {
+  final bool applyToAllProducts;
+  final Set<int> selectedProductIds;
+  final ValueChanged<bool> onApplyToAllChanged;
+  final ValueChanged<Set<int>> onSelectedProductsChanged;
 
-  const _ProductSelector({
-    required this.selectedProduct,
-    required this.onChanged,
+  const _ProductMultiSelector({
+    required this.applyToAllProducts,
+    required this.selectedProductIds,
+    required this.onApplyToAllChanged,
+    required this.onSelectedProductsChanged,
   });
 
   @override
@@ -251,21 +282,82 @@ class _ProductSelector extends ConsumerWidget {
 
     return productsAsync.when(
       data: (products) {
-        return DropdownButtonFormField<Product?>(
-          initialValue: selectedProduct,
-          decoration: InputDecoration(
-            labelText: l10n.targetProduct,
-            hintText: l10n.allProducts,
-          ),
-          items: [
-            DropdownMenuItem<Product?>(value: null, child: Text(l10n.allProducts)),
-            ...products.map((p) => DropdownMenuItem(value: p, child: Text(p.name))),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // "모든 제품에 적용" 체크박스
+            CheckboxListTile(
+              title: Text(
+                l10n.allProducts,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(l10n.promotionApplyToAllDesc ?? '모든 제품에 자동 적용됩니다'),
+              value: applyToAllProducts,
+              onChanged: (value) => onApplyToAllChanged(value ?? true),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+            
+            // 특정 제품 선택 (applyToAllProducts == false일 때만)
+            if (!applyToAllProducts) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.promotionSelectProducts ?? '적용할 제품을 선택하세요:',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              // 제품 목록 (체크박스)
+              Container(
+                constraints: const BoxConstraints(maxHeight: 200),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ListView(
+                  shrinkWrap: true,
+                  children: products.map((product) {
+                    final isSelected = selectedProductIds.contains(product.id);
+                    return CheckboxListTile(
+                      title: Text(product.name),
+                      value: isSelected,
+                      onChanged: (checked) {
+                        final newSet = Set<int>.from(selectedProductIds);
+                        if (checked == true) {
+                          newSet.add(product.id);
+                        } else {
+                          newSet.remove(product.id);
+                        }
+                        onSelectedProductsChanged(newSet);
+                      },
+                      dense: true,
+                    );
+                  }).toList(),
+                ),
+              ),
+              
+              // 선택된 제품 개수 표시
+              if (selectedProductIds.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '${selectedProductIds.length}개 제품 선택됨',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
           ],
-          onChanged: onChanged,
         );
       },
-      loading: () => const CircularProgressIndicator(),
-      error: (_, _) => Text(l10n.productLoadFailed),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => Text(l10n.productLoadFailed),
     );
   }
 }

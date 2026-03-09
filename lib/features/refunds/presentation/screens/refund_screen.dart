@@ -57,12 +57,14 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                       children: [
                         Expanded(
                           child: Autocomplete<Sale>(
-                            optionsBuilder: (textEditingValue) {
+                            optionsBuilder: (textEditingValue) async {
                               final query = textEditingValue.text.trim();
                               if (query.isEmpty) {
                                 return const Iterable<Sale>.empty();
                               }
-                              return _searchCandidates(query);
+                              final salesDao = ref.read(salesDaoProvider);
+                              final results = await salesDao.searchSales(query: query, limit: 20);
+                              return results;
                             },
                             displayStringForOption: (option) => option.saleNumber,
                             onSelected: (selection) async {
@@ -264,13 +266,6 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
         ),
       ),
     );
-  }
-
-  Iterable<Sale> _searchCandidates(String query) {
-    // Autocomplete는 sync API라 현재는 최근 검색 결과 캐시 없이 텍스트 기반 fallback 사용
-    return _foundSale != null && _foundSale!.saleNumber.toLowerCase().contains(query.toLowerCase())
-        ? [_foundSale!]
-        : const <Sale>[];
   }
 
   Future<void> _searchSale() async {

@@ -56,64 +56,66 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                     Row(
                       children: [
                         Expanded(
-                        Autocomplete<Sale>(
-                          optionsBuilder: (textEditingValue) async {
-                            final query = textEditingValue.text.trim();
-                            if (query.isEmpty) return [];
-                            final db = ref.read(databaseProvider);
-                            final results = await db.salesDao.searchSales(query: query, limit: 20);
-                            return results;
-                          },
-                          displayStringForOption: (option) => option.saleNumber,
-                          onSelected: (selection) {
-                            setState(() {
+                          child: Autocomplete<Sale>(
+                            optionsBuilder: (textEditingValue) {
+                              final query = textEditingValue.text.trim();
+                              if (query.isEmpty) {
+                                return const Iterable<Sale>.empty();
+                              }
+                              return _searchCandidates(query);
+                            },
+                            displayStringForOption: (option) => option.saleNumber,
+                            onSelected: (selection) async {
                               _saleNumberCtrl.text = selection.saleNumber;
-                              _foundSale = selection;
-                              // 조회 및 UI 초기화 시뮬레이션
-                              // await _searchSale(); // Remove this to avoid double DB call
-                            });
-                          },
-                          fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                            textEditingController.text = _saleNumberCtrl.text;
-                            textEditingController.selection = _saleNumberCtrl.selection;
-                            textEditingController.addListener(() {
-                              _saleNumberCtrl.value = textEditingController.value;
-                            });
-                            return TextField(
-                              controller: textEditingController,
-                              focusNode: focusNode,
-                              onSubmitted: (_) => onFieldSubmitted(),
-                              decoration: InputDecoration(
-                                hintText: l10n.receiptNumberHint,
-                                prefixIcon: const Icon(Icons.receipt),
-                              ),
-                              style: const TextStyle(fontSize: 14),
-                            );
-                          },
-                          optionsViewBuilder: (context, onSelected, options) {
-                            return Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(8),
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxHeight: 200, minWidth: 200),
-                                child: ListView.builder(
-                                  padding: EdgeInsets.zero,
-                                  itemCount: options.length,
-                                  shrinkWrap: true,
-                                  itemBuilder: (context, index) {
-                                    final sale = options.elementAt(index);
-                                    return ListTile(
-                                      title: Text(sale.saleNumber),
-                                      subtitle: Text('${sale.customerName ?? '-'} ' '${sale.total?.toStringAsFixed(0) ?? '-'} ₫'),
-                                      onTap: () => onSelected(sale),
-                                      dense: true,
-                                    );
-                                  },
+                              await _searchSaleBySale(selection);
+                            },
+                            fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                              textEditingController.value = _saleNumberCtrl.value;
+                              textEditingController.addListener(() {
+                                _saleNumberCtrl.value = textEditingController.value;
+                              });
+                              return TextField(
+                                controller: textEditingController,
+                                focusNode: focusNode,
+                                onSubmitted: (_) => onFieldSubmitted(),
+                                decoration: InputDecoration(
+                                  hintText: l10n.receiptNumberHint,
+                                  prefixIcon: const Icon(Icons.receipt),
                                 ),
-                              ),
-                            );
-                          },
-                        );                          onPressed: _searchSale,
+                              );
+                            },
+                            optionsViewBuilder: (context, onSelected, options) {
+                              final optionList = options.toList();
+                              return Align(
+                                alignment: Alignment.topLeft,
+                                child: Material(
+                                  elevation: 4,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(maxHeight: 220, minWidth: 280),
+                                    child: ListView.builder(
+                                      padding: EdgeInsets.zero,
+                                      itemCount: optionList.length,
+                                      shrinkWrap: true,
+                                      itemBuilder: (context, index) {
+                                        final sale = optionList[index];
+                                        return ListTile(
+                                          dense: true,
+                                          title: Text(sale.saleNumber),
+                                          subtitle: Text('${sale.customerName ?? '-'} · ₫${sale.total.toStringAsFixed(0)}'),
+                                          onTap: () => onSelected(sale),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _searchSale,
                           child: Text(l10n.search),
                         ),
                       ],
@@ -264,26 +266,43 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
     );
   }
 
+  Iterable<Sale> _searchCandidates(String query) {
+    // Autocomplete는 sync API라 현재는 최근 검색 결과 캐시 없이 텍스트 기반 fallback 사용
+    return _foundSale != null && _foundSale!.saleNumber.toLowerCase().contains(query.toLowerCase())
+        ? [_foundSale!]
+        : const <Sale>[];
+  }
+
   Future<void> _searchSale() async {
     final l10n = AppLocalizations.of(context)!;
     final query = _saleNumberCtrl.text.trim();
     if (query.isEmpty) return;
 
-    final db = ref.read(databaseProvider);
-    // 영수증 번호 또는 ID로 검색
-    final sale = await (db.select(db.sales)
-          ..where((s) => s.saleNumber.equals(query)))
-        .getSingleOrNull();
+    final salesDao = ref.read(salesDaoProvider);
+    final results = await salesDao.searchSales(query: query, limit: 20);
+    final sale = results.isNotEmpty
+        ? results.firstWhere(
+            (s) => s.saleNumber == query,
+            orElse: () => results.first,
+          )
+        : null;
 
-    if (sale == null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.receiptNotFound)),
-      );
+    if (sale == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.receiptNotFound)),
+        );
+      }
       return;
     }
 
+    await _searchSaleBySale(sale);
+  }
+
+  Future<void> _searchSaleBySale(Sale sale) async {
+    final db = ref.read(databaseProvider);
     final items = await (db.select(db.saleItems)
-          ..where((si) => si.saleId.equals(sale!.id)))
+          ..where((si) => si.saleId.equals(sale.id)))
         .get();
 
     setState(() {
@@ -327,8 +346,9 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
 
     // 재고 복구
     if (_saleItems != null) {
+      final productsDao = ref.read(productsDaoProvider);
       for (final item in _saleItems!) {
-        await db.productsDao.updateStock(productId: item.productId, quantity: item.quantity, type: 'in', reason: 'refund_stock_restore');
+        await productsDao.updateStock(productId: item.productId, quantity: item.quantity, type: 'in', reason: 'refund_stock_restore');
       }
     }
 
@@ -350,7 +370,6 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
     if (!confirm) return;
 
     final dao = ref.read(refundsDaoProvider);
-    final db = ref.read(databaseProvider);
 
     // 환불 기록 생성
     final refundId = await dao.createRefund(RefundsCompanion.insert(
@@ -374,7 +393,8 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
         unitPrice: item.unitPrice,
         total: item.unitPrice * entry.value,
       ));
-      await db.productsDao.updateStock(productId: item.productId, quantity: entry.value, type: 'in', reason: 'partial_refund_stock_restore');
+      final productsDao = ref.read(productsDaoProvider);
+      await productsDao.updateStock(productId: item.productId, quantity: entry.value, type: 'in', reason: 'partial_refund_stock_restore');
     }
     await dao.insertRefundItems(refundItemsList);
 

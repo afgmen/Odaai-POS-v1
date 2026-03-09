@@ -35,6 +35,7 @@ import 'tables/floor_plan_config.dart';
 import 'tables/employees.dart';
 import 'tables/products.dart';
 import 'tables/promotions.dart';
+import 'tables/promotion_products.dart';
 import 'tables/sales.dart';
 import 'tables/sync_queue.dart';
 import 'tables/point_transactions.dart';
@@ -71,6 +72,7 @@ part 'app_database.g.dart';
     Customers,
     SyncQueue,
     Promotions,
+    PromotionProducts, // B-082: 프로모션-제품 연결
     CashDrawerLogs,
     Refunds,
     RefundItems,

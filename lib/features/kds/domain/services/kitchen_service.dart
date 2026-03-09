@@ -85,7 +85,7 @@ class KitchenService {
   }
 
   /// 주문 취소
-  Future<bool> cancelOrder(int orderId) async {
+  Future<bool> cancelOrder(int orderId, {String? reason}) async {
     final order = await _repository.getOrder(orderId);
     if (order == null) return false;
 
@@ -95,7 +95,7 @@ class KitchenService {
       return false;
     }
 
-    return await _repository.cancelOrder(orderId);
+    return await _repository.cancelOrder(orderId, reason: reason);
   }
 
   // ============================================================

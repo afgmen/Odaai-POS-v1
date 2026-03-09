@@ -7,6 +7,7 @@ import '../../domain/services/kitchen_service_provider.dart';
 import '../../data/kitchen_orders_providers.dart';
 import '../providers/kds_screen_provider.dart';
 import '../../../../database/app_database.dart';
+import '../../../pos/presentation/modals/cancel_reason_modal.dart';
 
 /// 주문 상세 모달
 class OrderDetailModal extends ConsumerWidget {
@@ -135,17 +136,17 @@ class OrderDetailModal extends ConsumerWidget {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () async {
-                            final confirm = await _showConfirmDialog(
-                              context,
-                              'Cancel this order?',
+                            final reason = await _promptCancelReason(context);
+                            if (reason == null) return;
+
+                            final cancelled = await service.cancelOrder(
+                              orderId,
+                              reason: reason,
                             );
-                            if (confirm == true) {
-                              await service.cancelOrder(orderId);
-                              if (context.mounted) {
-                                ref
-                                    .read(showOrderDetailProvider.notifier)
-                                    .state = false;
-                              }
+                            if (cancelled && context.mounted) {
+                              ref
+                                  .read(showOrderDetailProvider.notifier)
+                                  .state = false;
                             }
                           },
                           icon: const Icon(Icons.cancel),
@@ -364,23 +365,16 @@ class OrderDetailModal extends ConsumerWidget {
     }
   }
 
-  Future<bool?> _showConfirmDialog(BuildContext context, String message) {
-    return showDialog<bool>(
+  Future<String?> _promptCancelReason(BuildContext context) async {
+    String? selectedReason;
+    await showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Yes'),
-          ),
-        ],
+      builder: (ctx) => CancelReasonModal(
+        onConfirm: (reason) {
+          selectedReason = reason;
+        },
       ),
     );
+    return selectedReason;
   }
 }

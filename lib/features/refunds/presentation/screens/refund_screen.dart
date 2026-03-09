@@ -61,7 +61,7 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                             final query = textEditingValue.text.trim();
                             if (query.isEmpty) return [];
                             final db = ref.read(databaseProvider);
-                            final results = await db.refundsDao.searchSales(query: query, limit: 20);
+                            final results = await db.salesDao.searchSales(query: query, limit: 20);
                             return results;
                           },
                           displayStringForOption: (option) => option.saleNumber,

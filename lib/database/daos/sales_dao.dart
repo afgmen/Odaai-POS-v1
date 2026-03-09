@@ -89,6 +89,19 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
     return getSalesByDateRange(startOfDay, endOfDay);
   }
 
+  Future<List<Sale>> searchSales({required String query, int limit = 20}) async {
+    final q = query.trim().toLowerCase();
+    return (select(sales)
+      ..where((s) =>
+        s.saleNumber.lower().like('%$q%') |
+        s.customerName.lower().like('%$q%')
+      )
+      ..where((s) => s.status.equals('completed'))
+      ..orderBy([(s) => OrderingTerm(expression: s.saleDate, mode: OrderingMode.desc)])
+      ..limit(limit)
+    ).get();
+  }
+
   Stream<List<Sale>> watchTodaySales() {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);

@@ -16,6 +16,7 @@ import '../../providers/cart_provider.dart';
 import '../../data/models/order_type.dart';
 import '../screens/receipt_screen.dart';
 import '../../../tables/data/tables_providers.dart';
+import '../../../../database/tables/store_tables_management.dart';
 import 'delivery_info_section.dart';
 
 /// 결제 방법 열거형
@@ -64,6 +65,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
   PaymentMethod _selectedMethod = PaymentMethod.cash;
   double _cashInput = 0;
   bool _isProcessing = false;
+  bool _tableAutocompleteInitialized = false;
   late final TextEditingController _cashController;
   late final TextEditingController _tableNumberController;
   late final TextEditingController _specialInstructionsController;
@@ -111,6 +113,11 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     final finalTotal = total - pointsToUse;
     final change = _selectedMethod == PaymentMethod.cash ? (_cashInput - finalTotal) : 0.0;
     final isCashValid = _selectedMethod != PaymentMethod.cash || _cashInput >= finalTotal;
+    final activeTablesAsync = ref.watch(allTablesStreamProvider);
+    final availableTables = activeTablesAsync.maybeWhen(
+      data: (tables) => tables,
+      orElse: () => [],
+    );
 
     return Container(
       decoration: const BoxDecoration(
@@ -241,22 +248,89 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
                       ),
                       const SizedBox(height: 6),
-                      TextField(
-                        controller: _tableNumberController,
-                        decoration: InputDecoration(
-                          hintText: 'e.g. T01',
-                          prefixIcon: const Icon(Icons.table_restaurant, size: 18),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.divider),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.divider),
-                          ),
-                        ),
-                        style: const TextStyle(fontSize: 14),
+                      Autocomplete<RestaurantTable>(
+                        optionsBuilder: (textEditingValue) {
+                          final query = textEditingValue.text.trim().toLowerCase();
+                          if (availableTables.isEmpty) return const Iterable<RestaurantTable>.empty();
+                          if (query.isEmpty) return availableTables;
+                          return availableTables.where((table) {
+                            final tableNumber = table.tableNumber.toLowerCase();
+                            return tableNumber.contains(query);
+                          });
+                        },
+                        displayStringForOption: (option) => option.tableNumber,
+                        onSelected: (selection) {
+                          setState(() {
+                            _tableNumberController.text = selection.tableNumber;
+                            _tableNumberController.selection = TextSelection.collapsed(
+                              offset: _tableNumberController.text.length,
+                            );
+                          });
+                        },
+                        fieldViewBuilder: (
+                          context,
+                          textEditingController,
+                          focusNode,
+                          onFieldSubmitted,
+                        ) {
+                          if (!_tableAutocompleteInitialized) {
+                            _tableAutocompleteInitialized = true;
+                            textEditingController.text = _tableNumberController.text;
+                            textEditingController.selection = _tableNumberController.selection;
+                            textEditingController.addListener(() {
+                              _tableNumberController.value = textEditingController.value;
+                            });
+                          }
+                          return TextField(
+                            controller: textEditingController,
+                            focusNode: focusNode,
+                            onSubmitted: (_) => onFieldSubmitted(),
+                            decoration: InputDecoration(
+                              hintText: 'e.g. T01',
+                              prefixIcon: const Icon(Icons.table_restaurant, size: 18),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: AppTheme.divider),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: AppTheme.divider),
+                              ),
+                            ),
+                            style: const TextStyle(fontSize: 14),
+                          );
+                        },
+                        optionsViewBuilder: (context, onSelected, options) {
+                          final optionList = options.toList();
+                          if (optionList.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Material(
+                              elevation: 4,
+                              borderRadius: BorderRadius.circular(8),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxHeight: 240, minWidth: 200),
+                                child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  itemCount: optionList.length,
+                                  shrinkWrap: true,
+                                  itemBuilder: (context, index) {
+                                    final table = optionList[index];
+                                    return ListTile(
+                                      dense: true,
+                                      title: Text(table.tableNumber),
+                                      subtitle: Text(table.status),
+                                      onTap: () => onSelected(table),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

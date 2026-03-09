@@ -85,7 +85,7 @@ class _AppRootScreenState extends ConsumerState<AppRootScreen> {
       icon: Icons.map_outlined,
       selectedIcon: Icons.map,
       label: _labelFloorPlan,
-      requiredPermission: 'pos.open',
+      requiredPermission: null, // Phase 1: Always show for all users
     ),
     _TabEntry(
       screen: PosMainScreen(),
@@ -184,7 +184,7 @@ class _AppRootScreenState extends ConsumerState<AppRootScreen> {
       selectedIcon: Icons.delivery_dining,
       label: _labelDelivery,
       // Delivery is accessible to anyone who can open the POS
-      requiredPermission: 'pos.open',
+      requiredPermission: null, // Phase 1: Always show for all users
     ),
     _TabEntry(
       screen: SettingsScreen(),

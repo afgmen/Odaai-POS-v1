@@ -9,6 +9,7 @@ import '../widgets/delivery_order_detail_modal.dart';
 import '../widgets/delivery_stats_header.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'manual_delivery_form_screen.dart';
+import '../../../auth/providers/rbac_providers.dart';
 
 /// Main delivery management screen.
 ///

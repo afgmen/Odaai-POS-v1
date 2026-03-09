@@ -56,17 +56,64 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: TextField(
-                            controller: _saleNumberCtrl,
-                            decoration: InputDecoration(
-                              hintText: l10n.receiptNumberHint,
-                              prefixIcon: const Icon(Icons.receipt),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: _searchSale,
+                        Autocomplete<Sale>(
+                          optionsBuilder: (textEditingValue) async {
+                            final query = textEditingValue.text.trim();
+                            if (query.isEmpty) return [];
+                            final db = ref.read(databaseProvider);
+                            final results = await db.refundsDao.searchSales(query: query, limit: 20);
+                            return results;
+                          },
+                          displayStringForOption: (option) => option.saleNumber,
+                          onSelected: (selection) {
+                            setState(() {
+                              _saleNumberCtrl.text = selection.saleNumber;
+                              _foundSale = selection;
+                              // 조회 및 UI 초기화 시뮬레이션
+                              // await _searchSale(); // Remove this to avoid double DB call
+                            });
+                          },
+                          fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                            textEditingController.text = _saleNumberCtrl.text;
+                            textEditingController.selection = _saleNumberCtrl.selection;
+                            textEditingController.addListener(() {
+                              _saleNumberCtrl.value = textEditingController.value;
+                            });
+                            return TextField(
+                              controller: textEditingController,
+                              focusNode: focusNode,
+                              onSubmitted: (_) => onFieldSubmitted(),
+                              decoration: InputDecoration(
+                                hintText: l10n.receiptNumberHint,
+                                prefixIcon: const Icon(Icons.receipt),
+                              ),
+                              style: const TextStyle(fontSize: 14),
+                            );
+                          },
+                          optionsViewBuilder: (context, onSelected, options) {
+                            return Material(
+                              elevation: 4,
+                              borderRadius: BorderRadius.circular(8),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxHeight: 200, minWidth: 200),
+                                child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  itemCount: options.length,
+                                  shrinkWrap: true,
+                                  itemBuilder: (context, index) {
+                                    final sale = options.elementAt(index);
+                                    return ListTile(
+                                      title: Text(sale.saleNumber),
+                                      subtitle: Text('${sale.customerName ?? '-'} ' '${sale.total?.toStringAsFixed(0) ?? '-'} ₫'),
+                                      onTap: () => onSelected(sale),
+                                      dense: true,
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        );                          onPressed: _searchSale,
                           child: Text(l10n.search),
                         ),
                       ],

@@ -1224,6 +1224,7 @@ class AppDatabase extends _$AppDatabase {
         ['pos.discount', 'pos', 'Apply discounts', 0],
         ['pos.price.override', 'pos', 'Override prices', 0],
         ['pos.cash.drawer.open', 'pos', 'Open cash drawer manually', 0],
+        ['pos.delivery.create', 'pos', 'Create manual delivery orders', 0],
 
         // Orders Module
         ['order.create', 'order', 'Create orders', 0],
@@ -1307,7 +1308,7 @@ class AppDatabase extends _$AppDatabase {
       // 역할별 허용 권한 목록 정의 (null = 모든 권한)
       const Set<String>? ownerPermissions = null;
       const areaManagerPermissions = {
-        'pos.open', 'pos.refund', 'pos.discount', 'pos.price.override', 'pos.cash.drawer.open',
+        'pos.open', 'pos.refund', 'pos.discount', 'pos.price.override', 'pos.cash.drawer.open', 'pos.delivery.create',
         'order.create', 'order.cancel', 'order.view',
         'inventory.view', 'inventory.edit', 'inventory.adjust', 'inventory.writeoff',
         'revenue.dashboard.view', 'revenue.daily.view', 'revenue.weekly.view',
@@ -1315,14 +1316,14 @@ class AppDatabase extends _$AppDatabase {
         'staff.view', 'staff.manage', 'staff.role.assign',
       };
       const storeManagerPermissions = {
-        'pos.open', 'pos.refund', 'pos.discount', 'pos.cash.drawer.open',
+        'pos.open', 'pos.refund', 'pos.discount', 'pos.cash.drawer.open', 'pos.delivery.create',
         'order.create', 'order.cancel', 'order.view',
         'inventory.view', 'inventory.edit', 'inventory.adjust',
         'revenue.dashboard.view', 'revenue.daily.view', 'revenue.weekly.view',
         'staff.view',
       };
       const staffPermissions = {
-        'pos.open',
+        'pos.open', 'pos.delivery.create',
         'order.create', 'order.view',
         'inventory.view',
       };

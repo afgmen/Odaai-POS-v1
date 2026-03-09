@@ -27,6 +27,12 @@ class DeliveryQueueScreen extends ConsumerWidget {
     final newCount = ref.watch(newOrderCountProvider);
     final activeCount = ref.watch(activeOrderCountProvider);
     final wsStatus = ref.watch(wsConnectionStatusProvider);
+    
+    // Phase 1-B: Check permission for manual delivery creation
+    final canCreateDeliveryAsync = ref.watch(hasPermissionProvider((
+      permission: 'pos.delivery.create',
+      storeId: null,
+    )));
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -59,14 +65,23 @@ class DeliveryQueueScreen extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: l10n.deliveryManualOrderCreate,
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => const ManualDeliveryFormScreen(),
-          ),
-        ),
-        child: const Icon(Icons.add),
+      // Phase 1-B/C: Conditionally show FAB based on permission
+      floatingActionButton: canCreateDeliveryAsync.when(
+        data: (canCreate) {
+          if (!canCreate) return null; // Phase 1-C: Hide if no permission
+          
+          return FloatingActionButton(
+            tooltip: l10n.deliveryManualOrderCreate,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const ManualDeliveryFormScreen(),
+              ),
+            ),
+            child: const Icon(Icons.add),
+          );
+        },
+        loading: () => null, // Hide while checking permission
+        error: (_, __) => null, // Hide on error
       ),
       body: Column(
         children: [

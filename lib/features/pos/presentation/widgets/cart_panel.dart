@@ -579,7 +579,7 @@ class _CheckoutButton extends ConsumerWidget {
     final btnLabel = isEmpty
         ? l10n.addProductsPlease
         : isDineInWithTable
-            ? '주방전송'
+            ? 'Send to Kitchen'
             : '${l10n.checkout} ${priceFormatter.format(total)}';
     final btnIcon = isDineInWithTable ? Icons.restaurant_menu : null;
 

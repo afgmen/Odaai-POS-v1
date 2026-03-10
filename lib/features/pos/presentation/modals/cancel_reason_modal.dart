@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 
-/// 취소 사유 선택 모달
+/// Cancel reason selection modal
 class CancelReasonModal extends StatefulWidget {
   final Function(String reason) onConfirm;
 
@@ -16,10 +16,10 @@ class _CancelReasonModalState extends State<CancelReasonModal> {
   final _customReasonController = TextEditingController();
 
   static const List<String> _predefinedReasons = [
-    '고객 요청',
-    '재고 소진',
-    '주방 오류',
-    '기타',
+    'Customer Request',
+    'Out of Stock',
+    'Kitchen Error',
+    'Other',
   ];
 
   @override
@@ -32,7 +32,7 @@ class _CancelReasonModalState extends State<CancelReasonModal> {
     if (_selectedReason == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('취소 사유를 선택해주세요'),
+          content: Text('Please select a cancellation reason'),
           backgroundColor: Colors.red,
         ),
       );
@@ -40,18 +40,18 @@ class _CancelReasonModalState extends State<CancelReasonModal> {
     }
 
     String finalReason = _selectedReason!;
-    if (_selectedReason == '기타') {
+    if (_selectedReason == 'Other') {
       final custom = _customReasonController.text.trim();
       if (custom.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('기타 사유를 입력해주세요'),
+            content: Text('Please enter a reason'),
             backgroundColor: Colors.red,
           ),
         );
         return;
       }
-      finalReason = '기타: $custom';
+      finalReason = 'Other: $custom';
     }
 
     widget.onConfirm(finalReason);
@@ -61,14 +61,14 @@ class _CancelReasonModalState extends State<CancelReasonModal> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('주문 취소 사유'),
+      title: const Text('Cancel Order — Reason'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '취소 사유를 선택해주세요',
+              'Please select a cancellation reason',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 16),
@@ -81,14 +81,14 @@ class _CancelReasonModalState extends State<CancelReasonModal> {
                   },
                   contentPadding: EdgeInsets.zero,
                 )),
-            if (_selectedReason == '기타') ...[
+            if (_selectedReason == 'Other') ...[
               const SizedBox(height: 12),
               TextField(
                 controller: _customReasonController,
                 decoration: const InputDecoration(
-                  labelText: '상세 사유 입력',
+                  labelText: 'Enter reason',
                   border: OutlineInputBorder(),
-                  hintText: '예: 메뉴 변경 요청',
+                  hintText: 'e.g. Menu change request',
                 ),
                 maxLines: 2,
                 autofocus: true,
@@ -100,7 +100,7 @@ class _CancelReasonModalState extends State<CancelReasonModal> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: _confirm,
@@ -108,7 +108,7 @@ class _CancelReasonModalState extends State<CancelReasonModal> {
             backgroundColor: AppTheme.error,
             foregroundColor: Colors.white,
           ),
-          child: const Text('확인'),
+          child: const Text('Confirm'),
         ),
       ],
     );

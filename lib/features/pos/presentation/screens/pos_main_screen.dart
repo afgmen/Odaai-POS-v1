@@ -663,7 +663,7 @@ Future<void> _handleSendToKitchen(BuildContext context, WidgetRef ref) async {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('Table $tableNumber 주방전송 완료'),
+          content: Text('Table $tableNumber — Sent to Kitchen'),
           backgroundColor: Colors.blue,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -677,7 +677,7 @@ Future<void> _handleSendToKitchen(BuildContext context, WidgetRef ref) async {
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: Text('주방전송 실패: $e'),
+            content: Text('Send to Kitchen failed: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -117,7 +117,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                   Icon(Icons.history, size: 14, color: Colors.grey.shade600),
                   const SizedBox(width: 4),
                   Text(
-                    '과거',
+                    'Past',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade700,
@@ -630,7 +630,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           Row(
             children: [
               Text(
-                '활성: ',
+                'Active: ',
                 style: TextStyle(
                   fontSize: 10,
                   color: Colors.grey.shade600,
@@ -659,7 +659,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           Row(
             children: [
               Text(
-                '완료: ',
+                'Done: ',
                 style: TextStyle(
                   fontSize: 10,
                   color: Colors.grey.shade600,

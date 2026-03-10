@@ -101,12 +101,12 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            '앱을 재시작해주세요. 설정을 적용하는 중 문제가 발생했습니다.',
+            'Please restart the app. An error occurred while applying settings.',
           ),
           backgroundColor: AppTheme.error,
           duration: const Duration(seconds: 5),
           action: SnackBarAction(
-            label: '재시작',
+            label: 'Restart',
             textColor: Colors.white,
             onPressed: () {
               ref.read(authProvider.notifier).logout();

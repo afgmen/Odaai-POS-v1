@@ -203,7 +203,7 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.promotionNeedProducts ?? '최소 1개의 제품을 선택해야 합니다'),
+          content: const Text('Please select at least one product'),
           backgroundColor: AppTheme.error,
         ),
       );
@@ -291,7 +291,7 @@ class _ProductMultiSelector extends ConsumerWidget {
                 l10n.allProducts,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-              subtitle: Text(l10n.promotionApplyToAllDesc ?? '모든 제품에 자동 적용됩니다'),
+              subtitle: const Text('Automatically applied to all products'),
               value: applyToAllProducts,
               onChanged: (value) => onApplyToAllChanged(value ?? true),
               dense: true,
@@ -302,7 +302,7 @@ class _ProductMultiSelector extends ConsumerWidget {
             if (!applyToAllProducts) ...[
               const SizedBox(height: 8),
               Text(
-                l10n.promotionSelectProducts ?? '적용할 제품을 선택하세요:',
+                'Select products to apply:',
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey.shade700,

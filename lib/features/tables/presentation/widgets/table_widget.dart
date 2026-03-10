@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../domain/enums/table_status.dart';
 
@@ -8,6 +9,8 @@ class TableWidget extends StatefulWidget {
   final VoidCallback onTap;
   final Function(Offset)? onDragEnd;
   final bool isDraggable;
+  /// 현재 선택된 상태 여부 — true면 primary 색상 하이라이트
+  final bool isSelected;
 
   const TableWidget({
     super.key,
@@ -15,6 +18,7 @@ class TableWidget extends StatefulWidget {
     required this.onTap,
     this.onDragEnd,
     this.isDraggable = true,
+    this.isSelected = false,
   });
 
   @override
@@ -111,25 +115,37 @@ class _TableWidgetState extends State<TableWidget> {
 
   Widget _buildTableCard(TableStatus status, {bool isDragging = false}) {
     final metrics = _shapeMetrics();
+    final isSelected = widget.isSelected;
     return Container(
       width: metrics.w,
       height: metrics.h,
       decoration: BoxDecoration(
-        color: status.color.withValues(alpha: 0.1),
+        color: isSelected
+            ? AppTheme.primary.withValues(alpha: 0.10)
+            : status.color.withValues(alpha: 0.1),
         border: Border.all(
-          color: status.color,
-          width: isDragging ? 3 : 2,
+          color: isSelected ? AppTheme.primary : status.color,
+          width: isSelected ? 2.5 : (isDragging ? 3 : 2),
         ),
         borderRadius: metrics.radius,
-        boxShadow: isDragging
+        boxShadow: isSelected
             ? [
                 BoxShadow(
-                  color: status.color.withValues(alpha: 0.3),
+                  color: AppTheme.primary.withValues(alpha: 0.25),
                   blurRadius: 8,
-                  offset: const Offset(0, 4),
+                  spreadRadius: 1,
+                  offset: const Offset(0, 2),
                 )
               ]
-            : null,
+            : isDragging
+                ? [
+                    BoxShadow(
+                      color: status.color.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
+                : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

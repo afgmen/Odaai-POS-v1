@@ -83,6 +83,8 @@ class _FloorPlanDesignerTab extends ConsumerStatefulWidget {
 }
 
 class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
+  int? _selectedTableId; // 선택된 테이블 ID (하이라이트용)
+
   /// InteractiveViewer의 현재 변환(스케일·이동)을 추적
   final TransformationController _transformationController =
       TransformationController();
@@ -183,8 +185,16 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
                             data: (tables) => tables.map((table) =>
                                 TableWidget(
                                   table: table,
-                                  onTap: () =>
-                                      _showTableDetail(context, ref, table),
+                                  isSelected: _selectedTableId == table.id,
+                                  onTap: () {
+                                    setState(() {
+                                      // 이미 선택된 테이블 탭 → 선택 해제
+                                      _selectedTableId = _selectedTableId == table.id
+                                          ? null
+                                          : table.id;
+                                    });
+                                    _showTableDetail(context, ref, table);
+                                  },
                                   onDragEnd: (offset) => _handleTableDragEnd(
                                       context, ref, table, offset),
                                 )),
@@ -413,7 +423,10 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
       context: context,
       builder: (ctx) => AddTableModal(existingTable: table),
     );
-    
+    // 모달 닫히면 선택 해제
+    if (mounted) {
+      setState(() => _selectedTableId = null);
+    }
     if (result == true && context.mounted) {
       // Table list will auto-refresh via stream provider
     }

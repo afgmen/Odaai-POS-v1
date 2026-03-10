@@ -826,7 +826,7 @@ class _BackupRestoreCard extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+        SnackBarHelper.showSanitizedError(context, e);
       }
     }
   }
@@ -928,7 +928,7 @@ class _BackupRestoreCard extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context).pop(); // Close loading dialog
-        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+        SnackBarHelper.showSanitizedError(context, e);
       }
     }
   }

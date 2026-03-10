@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../database/daos/products_dao.dart';
 import '../../../../providers/database_providers.dart';
 import '../../data/api/unsplash_api_client.dart';
@@ -66,7 +67,7 @@ class ImageUploadStateNotifier extends StateNotifier<ImageUploadState> {
       state = ImageUploadState.success(savedFile.path);
       return savedFile;
     } catch (e) {
-      state = ImageUploadState.error(e.toString());
+      state = ImageUploadState.error(SnackBarHelper.sanitizeError(e));
       return null;
     }
   }
@@ -90,7 +91,7 @@ class ImageUploadStateNotifier extends StateNotifier<ImageUploadState> {
       state = ImageUploadState.success(savedFile.path);
       return savedFile;
     } catch (e) {
-      state = ImageUploadState.error(e.toString());
+      state = ImageUploadState.error(SnackBarHelper.sanitizeError(e));
       return null;
     }
   }
@@ -102,7 +103,7 @@ class ImageUploadStateNotifier extends StateNotifier<ImageUploadState> {
       await _productsDao.updateProductImageUrl(productId, null);
       state = const ImageUploadState.idle();
     } catch (e) {
-      state = ImageUploadState.error(e.toString());
+      state = ImageUploadState.error(SnackBarHelper.sanitizeError(e));
     }
   }
 

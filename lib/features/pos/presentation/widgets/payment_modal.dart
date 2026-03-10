@@ -16,7 +16,6 @@ import '../../providers/cart_provider.dart';
 import '../../data/models/order_type.dart';
 import '../screens/receipt_screen.dart';
 import '../../../tables/data/tables_providers.dart';
-import '../../../../database/tables/store_tables_management.dart';
 import 'delivery_info_section.dart';
 
 /// 결제 방법 열거형
@@ -40,10 +39,6 @@ enum PaymentMethod {
   }
 }
 
-/// 결제 모달 (BottomSheet)
-class PaymentModal extends ConsumerStatefulWidget {
-  final OrderType? orderType;
-  final int? tableId;
 /// 결제 모달 (BottomSheet)
 class PaymentModal extends ConsumerStatefulWidget {
   final OrderType? orderType;
@@ -76,6 +71,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
   @override
   void initState() {
     super.initState();
+    _selectedOrderType = widget.orderType ?? OrderType.dineIn;
     _cashController = TextEditingController();
     _tableNumberController = TextEditingController();
     _specialInstructionsController = TextEditingController();
@@ -84,9 +80,11 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     _deliveryAddressController = TextEditingController();
   }
   
+  late OrderType _selectedOrderType;
+
   bool get _isDeliveryOrder =>
-      widget.orderType == OrderType.phoneDelivery ||
-      widget.orderType == OrderType.platformDelivery;
+      _selectedOrderType == OrderType.phoneDelivery ||
+      _selectedOrderType == OrderType.platformDelivery;
 
   @override
   void dispose() {
@@ -114,7 +112,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     final change = _selectedMethod == PaymentMethod.cash ? (_cashInput - finalTotal) : 0.0;
     final isCashValid = _selectedMethod != PaymentMethod.cash || _cashInput >= finalTotal;
     final activeTablesAsync = ref.watch(allTablesStreamProvider);
-    final availableTables = activeTablesAsync.maybeWhen(
+    final availableTables = activeTablesAsync.maybeWhen<List<RestaurantTable>>(
       data: (tables) => tables,
       orElse: () => [],
     );
@@ -233,6 +231,44 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                 ),
               ),
             ],
+            const SizedBox(height: 20),
+
+            // ─── 주문 유형 선택 (B-074) ────
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Order Type',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<OrderType>(
+                  segments: const [
+                    ButtonSegment<OrderType>(
+                      value: OrderType.dineIn,
+                      icon: Icon(Icons.restaurant),
+                      label: Text('Dine-in'),
+                    ),
+                    ButtonSegment<OrderType>(
+                      value: OrderType.takeaway,
+                      icon: Icon(Icons.shopping_bag),
+                      label: Text('Takeout'),
+                    ),
+                    ButtonSegment<OrderType>(
+                      value: OrderType.phoneDelivery,
+                      icon: Icon(Icons.delivery_dining),
+                      label: Text('Delivery'),
+                    ),
+                  ],
+                  selected: {_selectedOrderType},
+                  onSelectionChanged: (selection) {
+                    setState(() {
+                      _selectedOrderType = selection.first;
+                    });
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
 
             // ─── 테이블 번호 & 특이사항 입력 (KDS 연동용) ────
@@ -534,6 +570,11 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                     : Text(l10n.paymentComplete, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
 
   /// KDS 상태 체크 (Open Tab 체크아웃 시)
   Future<bool> _checkKitchenApproval(int? saleId) async {
@@ -614,12 +655,6 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     }
     
     return confirmed ?? false;
-  }
-
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _processPayment(double subtotal, double discountAmount, double total) async {

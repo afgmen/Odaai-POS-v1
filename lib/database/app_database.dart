@@ -136,6 +136,21 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
+  // DAO getters
+  late final salesDao = SalesDao(this);
+  late final customersDao = CustomersDao(this);
+  late final employeesDao = EmployeesDao(this);
+  late final kitchenOrdersDao = KitchenOrdersDao(this);
+  late final modifierDao = ModifierDao(this);
+  late final categoriesDao = CategoriesDao(this);
+  late final deliveryOrdersDao = DeliveryOrdersDao(this);
+  late final permissionsDao = PermissionsDao(this);
+  late final permissionLogsDao = PermissionLogsDao(this);
+  late final rolePermissionsDao = RolePermissionsDao(this);
+  late final userRolesDao = UserRolesDao(this);
+  late final storeAssignmentsDao = StoreAssignmentsDao(this);
+  late final promotionsDao = PromotionsDao(this);
+
   @override
   int get schemaVersion => 23;
 

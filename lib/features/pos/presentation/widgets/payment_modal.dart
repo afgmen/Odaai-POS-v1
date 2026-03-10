@@ -731,6 +731,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         deliveryAddress: _isDeliveryOrder && _deliveryAddressController.text.trim().isNotEmpty
             ? Value(_deliveryAddressController.text.trim())
             : const Value.absent(),
+        orderType: Value(_selectedOrderType.dbValue),
         needsSync: const Value(true),
       );
 
@@ -842,6 +843,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               paymentMethod: _selectedMethod.name,
               cashPaid: _selectedMethod == PaymentMethod.cash ? _cashInput : 0,
               saleDate: createdSale.saleDate,
+              orderType: _selectedOrderType.dbValue,
             ),
           ),
         );

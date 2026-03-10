@@ -26,6 +26,7 @@ import '../features/tables/data/reservations_dao.dart';
 import '../features/auth/data/permission_logs_dao.dart';
 import '../features/daily_closing/data/daily_closing_dao.dart';
 import '../features/delivery/data/delivery_orders_dao.dart';
+import '../features/promotions/data/promotions_dao.dart';
 import '../features/floor_plan/data/floor_zone_dao.dart';
 import '../features/floor_plan/data/floor_element_dao.dart';
 import 'tables/delivery_orders.dart';
@@ -150,6 +151,7 @@ class AppDatabase extends _$AppDatabase {
   late final userRolesDao = UserRolesDao(this);
   late final storeAssignmentsDao = StoreAssignmentsDao(this);
   late final promotionsDao = PromotionsDao(this);
+  late final dailyClosingDao = DailyClosingDao(this);
 
   @override
   int get schemaVersion => 23;

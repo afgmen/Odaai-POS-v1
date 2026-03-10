@@ -106,10 +106,26 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
         notesController.clear();
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.message),
-          backgroundColor: Colors.red,
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red, size: 26),
+              SizedBox(width: 10),
+              Text('Closing Failed'),
+            ],
+          ),
+          content: Text(
+            result.message,
+            style: const TextStyle(fontSize: 14, height: 1.5),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('OK'),
+            ),
+          ],
         ),
       );
     }

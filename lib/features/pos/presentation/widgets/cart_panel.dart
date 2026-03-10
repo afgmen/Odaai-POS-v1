@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,10 +6,12 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/currency_provider.dart';
+import '../../../../providers/database_providers.dart';
 import '../../data/models/order_type.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/auto_promotion_provider.dart';
 import '../../../customers/providers/customers_provider.dart';
+import '../modals/cancel_reason_modal.dart';
 
 /// 장바구니 패널 (하단 또는 우측 사이드)
 class CartPanel extends ConsumerWidget {
@@ -25,12 +28,16 @@ class CartPanel extends ConsumerWidget {
   /// 테이블 ID (dineIn 시)
   final int? tableId;
 
+  /// 기존 Sale ID (Open Tab 주문 취소 시 사유 저장용)
+  final int? existingSaleId;
+
   const CartPanel({
     super.key,
     required this.onCheckout,
     this.isSidePanel = false,
     this.orderType,
     this.tableId,
+    this.existingSaleId,
   });
 
   @override
@@ -162,32 +169,60 @@ class CartPanel extends ConsumerWidget {
 
   /// 장바구니 헤더 공통 빌더
   Widget _buildHeader(WidgetRef ref, bool isEmpty, AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.shopping_cart_outlined, color: AppTheme.textPrimary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                l10n.cart,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
-              ),
-            ],
-          ),
-          if (!isEmpty)
-            TextButton(
-              onPressed: () => ref.read(cartProvider.notifier).clear(),
-              child: Text(
-                l10n.clearCart,
-                style: const TextStyle(fontSize: 13, color: AppTheme.error),
-              ),
+    return Builder(
+      builder: (context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.shopping_cart_outlined, color: AppTheme.textPrimary, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.cart,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                ),
+              ],
             ),
-        ],
+            if (!isEmpty)
+              TextButton(
+                onPressed: () => _handleClearCart(context, ref),
+                child: Text(
+                  l10n.clearCart,
+                  style: const TextStyle(fontSize: 13, color: AppTheme.error),
+                ),
+              ),
+          ],
+        ),
       ),
     );
+  }
+
+  /// Clear Cart 처리:
+  /// - Open Tab 주문(existingSaleId != null): 취소 사유 모달 → DB 저장 → 카트 비우기
+  /// - 일반 카트: 바로 비우기
+  Future<void> _handleClearCart(BuildContext context, WidgetRef ref) async {
+    if (existingSaleId != null) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => CancelReasonModal(
+          onConfirm: (reason) async {
+            final db = ref.read(databaseProvider);
+            await (db.update(db.sales)
+                  ..where((s) => s.id.equals(existingSaleId!)))
+                .write(SalesCompanion(
+              status: const Value('cancelled'),
+              cancellationReason: Value(reason),
+              cancelledAt: Value(DateTime.now()),
+            ));
+            ref.read(cartProvider.notifier).clear();
+          },
+        ),
+      );
+    } else {
+      ref.read(cartProvider.notifier).clear();
+    }
   }
 
   /// 금액 요약 + 할인 + 결제 버튼 공통 빌더

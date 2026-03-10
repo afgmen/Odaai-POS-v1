@@ -115,6 +115,7 @@ class _PosMainScreenState extends ConsumerState<PosMainScreen> {
                     isSidePanel: true,
                     orderType: _selectedOrderType,
                     tableId: widget.tableId,
+                    existingSaleId: widget.existingSaleId,
                   ),
                 ),
               ],
@@ -145,6 +146,7 @@ class _PosMainScreenState extends ConsumerState<PosMainScreen> {
                   isSidePanel: false,
                   orderType: _selectedOrderType,
                   tableId: widget.tableId,
+                  existingSaleId: widget.existingSaleId,
                 ),
               ],
             );

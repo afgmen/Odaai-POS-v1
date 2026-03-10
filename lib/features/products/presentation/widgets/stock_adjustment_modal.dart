@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/database_providers.dart';
@@ -272,7 +273,7 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        _showSnackBar(e.toString(), AppTheme.error);
+        _showSnackBar(SnackBarHelper.sanitizeError(e), AppTheme.error);
       }
     }
   }

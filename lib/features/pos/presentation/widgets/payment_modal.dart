@@ -43,10 +43,6 @@ enum PaymentMethod {
 class PaymentModal extends ConsumerStatefulWidget {
   final OrderType? orderType;
   final int? tableId;
-/// 결제 모달 (BottomSheet)
-class PaymentModal extends ConsumerStatefulWidget {
-  final OrderType? orderType;
-  final int? tableId;
   final int? saleId; // NEW: Open Tab 체크아웃 시 사용
   
   const PaymentModal({
@@ -64,6 +60,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
   PaymentMethod _selectedMethod = PaymentMethod.cash;
   double _cashInput = 0;
   bool _isProcessing = false;
+  bool _tableAutocompleteInitialized = false;
   late final TextEditingController _cashController;
   late final TextEditingController _tableNumberController;
   late final TextEditingController _specialInstructionsController;
@@ -74,6 +71,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
   @override
   void initState() {
     super.initState();
+    _selectedOrderType = widget.orderType ?? OrderType.dineIn;
     _cashController = TextEditingController();
     _tableNumberController = TextEditingController();
     _specialInstructionsController = TextEditingController();
@@ -82,9 +80,11 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     _deliveryAddressController = TextEditingController();
   }
   
+  late OrderType _selectedOrderType;
+
   bool get _isDeliveryOrder =>
-      widget.orderType == OrderType.phoneDelivery ||
-      widget.orderType == OrderType.platformDelivery;
+      _selectedOrderType == OrderType.phoneDelivery ||
+      _selectedOrderType == OrderType.platformDelivery;
 
   @override
   void dispose() {
@@ -111,6 +111,11 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     final finalTotal = total - pointsToUse;
     final change = _selectedMethod == PaymentMethod.cash ? (_cashInput - finalTotal) : 0.0;
     final isCashValid = _selectedMethod != PaymentMethod.cash || _cashInput >= finalTotal;
+    final activeTablesAsync = ref.watch(allTablesStreamProvider);
+    final availableTables = activeTablesAsync.maybeWhen<List<RestaurantTable>>(
+      data: (tables) => tables,
+      orElse: () => [],
+    );
 
     return Container(
       decoration: const BoxDecoration(
@@ -228,6 +233,44 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             ],
             const SizedBox(height: 20),
 
+            // ─── 주문 유형 선택 (B-074) ────
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Order Type',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<OrderType>(
+                  segments: const [
+                    ButtonSegment<OrderType>(
+                      value: OrderType.dineIn,
+                      icon: Icon(Icons.restaurant),
+                      label: Text('Dine-in'),
+                    ),
+                    ButtonSegment<OrderType>(
+                      value: OrderType.takeaway,
+                      icon: Icon(Icons.shopping_bag),
+                      label: Text('Takeout'),
+                    ),
+                    ButtonSegment<OrderType>(
+                      value: OrderType.phoneDelivery,
+                      icon: Icon(Icons.delivery_dining),
+                      label: Text('Delivery'),
+                    ),
+                  ],
+                  selected: {_selectedOrderType},
+                  onSelectionChanged: (selection) {
+                    setState(() {
+                      _selectedOrderType = selection.first;
+                    });
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
             // ─── 테이블 번호 & 특이사항 입력 (KDS 연동용) ────
             Row(
               children: [
@@ -241,22 +284,89 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
                       ),
                       const SizedBox(height: 6),
-                      TextField(
-                        controller: _tableNumberController,
-                        decoration: InputDecoration(
-                          hintText: 'e.g. T01',
-                          prefixIcon: const Icon(Icons.table_restaurant, size: 18),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.divider),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.divider),
-                          ),
-                        ),
-                        style: const TextStyle(fontSize: 14),
+                      Autocomplete<RestaurantTable>(
+                        optionsBuilder: (textEditingValue) {
+                          final query = textEditingValue.text.trim().toLowerCase();
+                          if (availableTables.isEmpty) return const Iterable<RestaurantTable>.empty();
+                          if (query.isEmpty) return availableTables;
+                          return availableTables.where((table) {
+                            final tableNumber = table.tableNumber.toLowerCase();
+                            return tableNumber.contains(query);
+                          });
+                        },
+                        displayStringForOption: (option) => option.tableNumber,
+                        onSelected: (selection) {
+                          setState(() {
+                            _tableNumberController.text = selection.tableNumber;
+                            _tableNumberController.selection = TextSelection.collapsed(
+                              offset: _tableNumberController.text.length,
+                            );
+                          });
+                        },
+                        fieldViewBuilder: (
+                          context,
+                          textEditingController,
+                          focusNode,
+                          onFieldSubmitted,
+                        ) {
+                          if (!_tableAutocompleteInitialized) {
+                            _tableAutocompleteInitialized = true;
+                            textEditingController.text = _tableNumberController.text;
+                            textEditingController.selection = _tableNumberController.selection;
+                            textEditingController.addListener(() {
+                              _tableNumberController.value = textEditingController.value;
+                            });
+                          }
+                          return TextField(
+                            controller: textEditingController,
+                            focusNode: focusNode,
+                            onSubmitted: (_) => onFieldSubmitted(),
+                            decoration: InputDecoration(
+                              hintText: 'e.g. T01',
+                              prefixIcon: const Icon(Icons.table_restaurant, size: 18),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: AppTheme.divider),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: AppTheme.divider),
+                              ),
+                            ),
+                            style: const TextStyle(fontSize: 14),
+                          );
+                        },
+                        optionsViewBuilder: (context, onSelected, options) {
+                          final optionList = options.toList();
+                          if (optionList.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Material(
+                              elevation: 4,
+                              borderRadius: BorderRadius.circular(8),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxHeight: 240, minWidth: 200),
+                                child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  itemCount: optionList.length,
+                                  shrinkWrap: true,
+                                  itemBuilder: (context, index) {
+                                    final table = optionList[index];
+                                    return ListTile(
+                                      dense: true,
+                                      title: Text(table.tableNumber),
+                                      subtitle: Text(table.status),
+                                      onTap: () => onSelected(table),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -460,6 +570,11 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                     : Text(l10n.paymentComplete, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
 
   /// KDS 상태 체크 (Open Tab 체크아웃 시)
   Future<bool> _checkKitchenApproval(int? saleId) async {
@@ -542,12 +657,6 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     return confirmed ?? false;
   }
 
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _processPayment(double subtotal, double discountAmount, double total) async {
     final l10n = AppLocalizations.of(context)!;
     
@@ -622,6 +731,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         deliveryAddress: _isDeliveryOrder && _deliveryAddressController.text.trim().isNotEmpty
             ? Value(_deliveryAddressController.text.trim())
             : const Value.absent(),
+        orderType: Value(_selectedOrderType.dbValue),
         needsSync: const Value(true),
       );
 
@@ -733,6 +843,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               paymentMethod: _selectedMethod.name,
               cashPaid: _selectedMethod == PaymentMethod.cash ? _cashInput : 0,
               saleDate: createdSale.saleDate,
+              orderType: _selectedOrderType.dbValue,
             ),
           ),
         );

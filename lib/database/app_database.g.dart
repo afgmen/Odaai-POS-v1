@@ -2101,6 +2101,28 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _cancellationReasonMeta =
+      const VerificationMeta('cancellationReason');
+  @override
+  late final GeneratedColumn<String> cancellationReason =
+      GeneratedColumn<String>(
+        'cancellation_reason',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _cancelledAtMeta = const VerificationMeta(
+    'cancelledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> cancelledAt = GeneratedColumn<DateTime>(
+    'cancelled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _needsSyncMeta = const VerificationMeta(
     'needsSync',
   );
@@ -2148,6 +2170,8 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
     deliveryAddress,
     deliveryPhone,
     isOpenTab,
+    cancellationReason,
+    cancelledAt,
     needsSync,
     createdAt,
   ];
@@ -2287,6 +2311,24 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
         isOpenTab.isAcceptableOrUnknown(data['is_open_tab']!, _isOpenTabMeta),
       );
     }
+    if (data.containsKey('cancellation_reason')) {
+      context.handle(
+        _cancellationReasonMeta,
+        cancellationReason.isAcceptableOrUnknown(
+          data['cancellation_reason']!,
+          _cancellationReasonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cancelled_at')) {
+      context.handle(
+        _cancelledAtMeta,
+        cancelledAt.isAcceptableOrUnknown(
+          data['cancelled_at']!,
+          _cancelledAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('needs_sync')) {
       context.handle(
         _needsSyncMeta,
@@ -2380,6 +2422,14 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_open_tab'],
       )!,
+      cancellationReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cancellation_reason'],
+      ),
+      cancelledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cancelled_at'],
+      ),
       needsSync: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}needs_sync'],
@@ -2428,6 +2478,12 @@ class Sale extends DataClass implements Insertable<Sale> {
 
   /// Open Tab 여부 (매장 식사: 추가 주문 가능 상태)
   final bool isOpenTab;
+
+  /// 취소 사유 (취소 시)
+  final String? cancellationReason;
+
+  /// 취소 시각 (취소 시)
+  final DateTime? cancelledAt;
   final bool needsSync;
   final DateTime createdAt;
   const Sale({
@@ -2449,6 +2505,8 @@ class Sale extends DataClass implements Insertable<Sale> {
     this.deliveryAddress,
     this.deliveryPhone,
     required this.isOpenTab,
+    this.cancellationReason,
+    this.cancelledAt,
     required this.needsSync,
     required this.createdAt,
   });
@@ -2487,6 +2545,12 @@ class Sale extends DataClass implements Insertable<Sale> {
       map['delivery_phone'] = Variable<String>(deliveryPhone);
     }
     map['is_open_tab'] = Variable<bool>(isOpenTab);
+    if (!nullToAbsent || cancellationReason != null) {
+      map['cancellation_reason'] = Variable<String>(cancellationReason);
+    }
+    if (!nullToAbsent || cancelledAt != null) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt);
+    }
     map['needs_sync'] = Variable<bool>(needsSync);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -2526,6 +2590,12 @@ class Sale extends DataClass implements Insertable<Sale> {
           ? const Value.absent()
           : Value(deliveryPhone),
       isOpenTab: Value(isOpenTab),
+      cancellationReason: cancellationReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancellationReason),
+      cancelledAt: cancelledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancelledAt),
       needsSync: Value(needsSync),
       createdAt: Value(createdAt),
     );
@@ -2555,6 +2625,10 @@ class Sale extends DataClass implements Insertable<Sale> {
       deliveryAddress: serializer.fromJson<String?>(json['deliveryAddress']),
       deliveryPhone: serializer.fromJson<String?>(json['deliveryPhone']),
       isOpenTab: serializer.fromJson<bool>(json['isOpenTab']),
+      cancellationReason: serializer.fromJson<String?>(
+        json['cancellationReason'],
+      ),
+      cancelledAt: serializer.fromJson<DateTime?>(json['cancelledAt']),
       needsSync: serializer.fromJson<bool>(json['needsSync']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -2581,6 +2655,8 @@ class Sale extends DataClass implements Insertable<Sale> {
       'deliveryAddress': serializer.toJson<String?>(deliveryAddress),
       'deliveryPhone': serializer.toJson<String?>(deliveryPhone),
       'isOpenTab': serializer.toJson<bool>(isOpenTab),
+      'cancellationReason': serializer.toJson<String?>(cancellationReason),
+      'cancelledAt': serializer.toJson<DateTime?>(cancelledAt),
       'needsSync': serializer.toJson<bool>(needsSync),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -2605,6 +2681,8 @@ class Sale extends DataClass implements Insertable<Sale> {
     Value<String?> deliveryAddress = const Value.absent(),
     Value<String?> deliveryPhone = const Value.absent(),
     bool? isOpenTab,
+    Value<String?> cancellationReason = const Value.absent(),
+    Value<DateTime?> cancelledAt = const Value.absent(),
     bool? needsSync,
     DateTime? createdAt,
   }) => Sale(
@@ -2632,6 +2710,10 @@ class Sale extends DataClass implements Insertable<Sale> {
         ? deliveryPhone.value
         : this.deliveryPhone,
     isOpenTab: isOpenTab ?? this.isOpenTab,
+    cancellationReason: cancellationReason.present
+        ? cancellationReason.value
+        : this.cancellationReason,
+    cancelledAt: cancelledAt.present ? cancelledAt.value : this.cancelledAt,
     needsSync: needsSync ?? this.needsSync,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -2671,6 +2753,12 @@ class Sale extends DataClass implements Insertable<Sale> {
           ? data.deliveryPhone.value
           : this.deliveryPhone,
       isOpenTab: data.isOpenTab.present ? data.isOpenTab.value : this.isOpenTab,
+      cancellationReason: data.cancellationReason.present
+          ? data.cancellationReason.value
+          : this.cancellationReason,
+      cancelledAt: data.cancelledAt.present
+          ? data.cancelledAt.value
+          : this.cancelledAt,
       needsSync: data.needsSync.present ? data.needsSync.value : this.needsSync,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -2697,6 +2785,8 @@ class Sale extends DataClass implements Insertable<Sale> {
           ..write('deliveryAddress: $deliveryAddress, ')
           ..write('deliveryPhone: $deliveryPhone, ')
           ..write('isOpenTab: $isOpenTab, ')
+          ..write('cancellationReason: $cancellationReason, ')
+          ..write('cancelledAt: $cancelledAt, ')
           ..write('needsSync: $needsSync, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -2704,7 +2794,7 @@ class Sale extends DataClass implements Insertable<Sale> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     saleNumber,
     saleDate,
@@ -2723,9 +2813,11 @@ class Sale extends DataClass implements Insertable<Sale> {
     deliveryAddress,
     deliveryPhone,
     isOpenTab,
+    cancellationReason,
+    cancelledAt,
     needsSync,
     createdAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2748,6 +2840,8 @@ class Sale extends DataClass implements Insertable<Sale> {
           other.deliveryAddress == this.deliveryAddress &&
           other.deliveryPhone == this.deliveryPhone &&
           other.isOpenTab == this.isOpenTab &&
+          other.cancellationReason == this.cancellationReason &&
+          other.cancelledAt == this.cancelledAt &&
           other.needsSync == this.needsSync &&
           other.createdAt == this.createdAt);
 }
@@ -2771,6 +2865,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
   final Value<String?> deliveryAddress;
   final Value<String?> deliveryPhone;
   final Value<bool> isOpenTab;
+  final Value<String?> cancellationReason;
+  final Value<DateTime?> cancelledAt;
   final Value<bool> needsSync;
   final Value<DateTime> createdAt;
   const SalesCompanion({
@@ -2792,6 +2888,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     this.deliveryAddress = const Value.absent(),
     this.deliveryPhone = const Value.absent(),
     this.isOpenTab = const Value.absent(),
+    this.cancellationReason = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
     this.needsSync = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
@@ -2814,6 +2912,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     this.deliveryAddress = const Value.absent(),
     this.deliveryPhone = const Value.absent(),
     this.isOpenTab = const Value.absent(),
+    this.cancellationReason = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
     this.needsSync = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : saleNumber = Value(saleNumber),
@@ -2837,6 +2937,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     Expression<String>? deliveryAddress,
     Expression<String>? deliveryPhone,
     Expression<bool>? isOpenTab,
+    Expression<String>? cancellationReason,
+    Expression<DateTime>? cancelledAt,
     Expression<bool>? needsSync,
     Expression<DateTime>? createdAt,
   }) {
@@ -2859,6 +2961,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
       if (deliveryAddress != null) 'delivery_address': deliveryAddress,
       if (deliveryPhone != null) 'delivery_phone': deliveryPhone,
       if (isOpenTab != null) 'is_open_tab': isOpenTab,
+      if (cancellationReason != null) 'cancellation_reason': cancellationReason,
+      if (cancelledAt != null) 'cancelled_at': cancelledAt,
       if (needsSync != null) 'needs_sync': needsSync,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -2883,6 +2987,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     Value<String?>? deliveryAddress,
     Value<String?>? deliveryPhone,
     Value<bool>? isOpenTab,
+    Value<String?>? cancellationReason,
+    Value<DateTime?>? cancelledAt,
     Value<bool>? needsSync,
     Value<DateTime>? createdAt,
   }) {
@@ -2905,6 +3011,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
       deliveryAddress: deliveryAddress ?? this.deliveryAddress,
       deliveryPhone: deliveryPhone ?? this.deliveryPhone,
       isOpenTab: isOpenTab ?? this.isOpenTab,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
       needsSync: needsSync ?? this.needsSync,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -2967,6 +3075,12 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     if (isOpenTab.present) {
       map['is_open_tab'] = Variable<bool>(isOpenTab.value);
     }
+    if (cancellationReason.present) {
+      map['cancellation_reason'] = Variable<String>(cancellationReason.value);
+    }
+    if (cancelledAt.present) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt.value);
+    }
     if (needsSync.present) {
       map['needs_sync'] = Variable<bool>(needsSync.value);
     }
@@ -2997,6 +3111,8 @@ class SalesCompanion extends UpdateCompanion<Sale> {
           ..write('deliveryAddress: $deliveryAddress, ')
           ..write('deliveryPhone: $deliveryPhone, ')
           ..write('isOpenTab: $isOpenTab, ')
+          ..write('cancellationReason: $cancellationReason, ')
+          ..write('cancelledAt: $cancelledAt, ')
           ..write('needsSync: $needsSync, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -5930,6 +6046,20 @@ class $PromotionsTable extends Promotions
       'REFERENCES products (id)',
     ),
   );
+  static const VerificationMeta _applyToAllProductsMeta =
+      const VerificationMeta('applyToAllProducts');
+  @override
+  late final GeneratedColumn<bool> applyToAllProducts = GeneratedColumn<bool>(
+    'apply_to_all_products',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("apply_to_all_products" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   static const VerificationMeta _startDateMeta = const VerificationMeta(
     'startDate',
   );
@@ -5998,6 +6128,7 @@ class $PromotionsTable extends Promotions
     type,
     value,
     productId,
+    applyToAllProducts,
     startDate,
     endDate,
     isActive,
@@ -6045,6 +6176,15 @@ class $PromotionsTable extends Promotions
       context.handle(
         _productIdMeta,
         productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    }
+    if (data.containsKey('apply_to_all_products')) {
+      context.handle(
+        _applyToAllProductsMeta,
+        applyToAllProducts.isAcceptableOrUnknown(
+          data['apply_to_all_products']!,
+          _applyToAllProductsMeta,
+        ),
       );
     }
     if (data.containsKey('start_date')) {
@@ -6106,6 +6246,10 @@ class $PromotionsTable extends Promotions
         DriftSqlType.int,
         data['${effectivePrefix}product_id'],
       ),
+      applyToAllProducts: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}apply_to_all_products'],
+      )!,
       startDate: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}start_date'],
@@ -6141,6 +6285,7 @@ class Promotion extends DataClass implements Insertable<Promotion> {
   final String type;
   final double value;
   final int? productId;
+  final bool applyToAllProducts;
   final DateTime? startDate;
   final DateTime? endDate;
   final bool isActive;
@@ -6152,6 +6297,7 @@ class Promotion extends DataClass implements Insertable<Promotion> {
     required this.type,
     required this.value,
     this.productId,
+    required this.applyToAllProducts,
     this.startDate,
     this.endDate,
     required this.isActive,
@@ -6168,6 +6314,7 @@ class Promotion extends DataClass implements Insertable<Promotion> {
     if (!nullToAbsent || productId != null) {
       map['product_id'] = Variable<int>(productId);
     }
+    map['apply_to_all_products'] = Variable<bool>(applyToAllProducts);
     if (!nullToAbsent || startDate != null) {
       map['start_date'] = Variable<DateTime>(startDate);
     }
@@ -6189,6 +6336,7 @@ class Promotion extends DataClass implements Insertable<Promotion> {
       productId: productId == null && nullToAbsent
           ? const Value.absent()
           : Value(productId),
+      applyToAllProducts: Value(applyToAllProducts),
       startDate: startDate == null && nullToAbsent
           ? const Value.absent()
           : Value(startDate),
@@ -6212,6 +6360,7 @@ class Promotion extends DataClass implements Insertable<Promotion> {
       type: serializer.fromJson<String>(json['type']),
       value: serializer.fromJson<double>(json['value']),
       productId: serializer.fromJson<int?>(json['productId']),
+      applyToAllProducts: serializer.fromJson<bool>(json['applyToAllProducts']),
       startDate: serializer.fromJson<DateTime?>(json['startDate']),
       endDate: serializer.fromJson<DateTime?>(json['endDate']),
       isActive: serializer.fromJson<bool>(json['isActive']),
@@ -6228,6 +6377,7 @@ class Promotion extends DataClass implements Insertable<Promotion> {
       'type': serializer.toJson<String>(type),
       'value': serializer.toJson<double>(value),
       'productId': serializer.toJson<int?>(productId),
+      'applyToAllProducts': serializer.toJson<bool>(applyToAllProducts),
       'startDate': serializer.toJson<DateTime?>(startDate),
       'endDate': serializer.toJson<DateTime?>(endDate),
       'isActive': serializer.toJson<bool>(isActive),
@@ -6242,6 +6392,7 @@ class Promotion extends DataClass implements Insertable<Promotion> {
     String? type,
     double? value,
     Value<int?> productId = const Value.absent(),
+    bool? applyToAllProducts,
     Value<DateTime?> startDate = const Value.absent(),
     Value<DateTime?> endDate = const Value.absent(),
     bool? isActive,
@@ -6253,6 +6404,7 @@ class Promotion extends DataClass implements Insertable<Promotion> {
     type: type ?? this.type,
     value: value ?? this.value,
     productId: productId.present ? productId.value : this.productId,
+    applyToAllProducts: applyToAllProducts ?? this.applyToAllProducts,
     startDate: startDate.present ? startDate.value : this.startDate,
     endDate: endDate.present ? endDate.value : this.endDate,
     isActive: isActive ?? this.isActive,
@@ -6266,6 +6418,9 @@ class Promotion extends DataClass implements Insertable<Promotion> {
       type: data.type.present ? data.type.value : this.type,
       value: data.value.present ? data.value.value : this.value,
       productId: data.productId.present ? data.productId.value : this.productId,
+      applyToAllProducts: data.applyToAllProducts.present
+          ? data.applyToAllProducts.value
+          : this.applyToAllProducts,
       startDate: data.startDate.present ? data.startDate.value : this.startDate,
       endDate: data.endDate.present ? data.endDate.value : this.endDate,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
@@ -6282,6 +6437,7 @@ class Promotion extends DataClass implements Insertable<Promotion> {
           ..write('type: $type, ')
           ..write('value: $value, ')
           ..write('productId: $productId, ')
+          ..write('applyToAllProducts: $applyToAllProducts, ')
           ..write('startDate: $startDate, ')
           ..write('endDate: $endDate, ')
           ..write('isActive: $isActive, ')
@@ -6298,6 +6454,7 @@ class Promotion extends DataClass implements Insertable<Promotion> {
     type,
     value,
     productId,
+    applyToAllProducts,
     startDate,
     endDate,
     isActive,
@@ -6313,6 +6470,7 @@ class Promotion extends DataClass implements Insertable<Promotion> {
           other.type == this.type &&
           other.value == this.value &&
           other.productId == this.productId &&
+          other.applyToAllProducts == this.applyToAllProducts &&
           other.startDate == this.startDate &&
           other.endDate == this.endDate &&
           other.isActive == this.isActive &&
@@ -6326,6 +6484,7 @@ class PromotionsCompanion extends UpdateCompanion<Promotion> {
   final Value<String> type;
   final Value<double> value;
   final Value<int?> productId;
+  final Value<bool> applyToAllProducts;
   final Value<DateTime?> startDate;
   final Value<DateTime?> endDate;
   final Value<bool> isActive;
@@ -6337,6 +6496,7 @@ class PromotionsCompanion extends UpdateCompanion<Promotion> {
     this.type = const Value.absent(),
     this.value = const Value.absent(),
     this.productId = const Value.absent(),
+    this.applyToAllProducts = const Value.absent(),
     this.startDate = const Value.absent(),
     this.endDate = const Value.absent(),
     this.isActive = const Value.absent(),
@@ -6349,6 +6509,7 @@ class PromotionsCompanion extends UpdateCompanion<Promotion> {
     required String type,
     this.value = const Value.absent(),
     this.productId = const Value.absent(),
+    this.applyToAllProducts = const Value.absent(),
     this.startDate = const Value.absent(),
     this.endDate = const Value.absent(),
     this.isActive = const Value.absent(),
@@ -6362,6 +6523,7 @@ class PromotionsCompanion extends UpdateCompanion<Promotion> {
     Expression<String>? type,
     Expression<double>? value,
     Expression<int>? productId,
+    Expression<bool>? applyToAllProducts,
     Expression<DateTime>? startDate,
     Expression<DateTime>? endDate,
     Expression<bool>? isActive,
@@ -6374,6 +6536,8 @@ class PromotionsCompanion extends UpdateCompanion<Promotion> {
       if (type != null) 'type': type,
       if (value != null) 'value': value,
       if (productId != null) 'product_id': productId,
+      if (applyToAllProducts != null)
+        'apply_to_all_products': applyToAllProducts,
       if (startDate != null) 'start_date': startDate,
       if (endDate != null) 'end_date': endDate,
       if (isActive != null) 'is_active': isActive,
@@ -6388,6 +6552,7 @@ class PromotionsCompanion extends UpdateCompanion<Promotion> {
     Value<String>? type,
     Value<double>? value,
     Value<int?>? productId,
+    Value<bool>? applyToAllProducts,
     Value<DateTime?>? startDate,
     Value<DateTime?>? endDate,
     Value<bool>? isActive,
@@ -6400,6 +6565,7 @@ class PromotionsCompanion extends UpdateCompanion<Promotion> {
       type: type ?? this.type,
       value: value ?? this.value,
       productId: productId ?? this.productId,
+      applyToAllProducts: applyToAllProducts ?? this.applyToAllProducts,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       isActive: isActive ?? this.isActive,
@@ -6425,6 +6591,9 @@ class PromotionsCompanion extends UpdateCompanion<Promotion> {
     }
     if (productId.present) {
       map['product_id'] = Variable<int>(productId.value);
+    }
+    if (applyToAllProducts.present) {
+      map['apply_to_all_products'] = Variable<bool>(applyToAllProducts.value);
     }
     if (startDate.present) {
       map['start_date'] = Variable<DateTime>(startDate.value);
@@ -6452,11 +6621,296 @@ class PromotionsCompanion extends UpdateCompanion<Promotion> {
           ..write('type: $type, ')
           ..write('value: $value, ')
           ..write('productId: $productId, ')
+          ..write('applyToAllProducts: $applyToAllProducts, ')
           ..write('startDate: $startDate, ')
           ..write('endDate: $endDate, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PromotionProductsTable extends PromotionProducts
+    with TableInfo<$PromotionProductsTable, PromotionProduct> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PromotionProductsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _promotionIdMeta = const VerificationMeta(
+    'promotionId',
+  );
+  @override
+  late final GeneratedColumn<int> promotionId = GeneratedColumn<int>(
+    'promotion_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES promotions (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _productIdMeta = const VerificationMeta(
+    'productId',
+  );
+  @override
+  late final GeneratedColumn<int> productId = GeneratedColumn<int>(
+    'product_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES products (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [promotionId, productId, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'promotion_products';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PromotionProduct> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('promotion_id')) {
+      context.handle(
+        _promotionIdMeta,
+        promotionId.isAcceptableOrUnknown(
+          data['promotion_id']!,
+          _promotionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_promotionIdMeta);
+    }
+    if (data.containsKey('product_id')) {
+      context.handle(
+        _productIdMeta,
+        productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_productIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {promotionId, productId};
+  @override
+  PromotionProduct map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PromotionProduct(
+      promotionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}promotion_id'],
+      )!,
+      productId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}product_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PromotionProductsTable createAlias(String alias) {
+    return $PromotionProductsTable(attachedDatabase, alias);
+  }
+}
+
+class PromotionProduct extends DataClass
+    implements Insertable<PromotionProduct> {
+  /// 프로모션 ID (외래키)
+  final int promotionId;
+
+  /// 제품 ID (외래키)
+  final int productId;
+
+  /// 생성 시간
+  final DateTime createdAt;
+  const PromotionProduct({
+    required this.promotionId,
+    required this.productId,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['promotion_id'] = Variable<int>(promotionId);
+    map['product_id'] = Variable<int>(productId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  PromotionProductsCompanion toCompanion(bool nullToAbsent) {
+    return PromotionProductsCompanion(
+      promotionId: Value(promotionId),
+      productId: Value(productId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PromotionProduct.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PromotionProduct(
+      promotionId: serializer.fromJson<int>(json['promotionId']),
+      productId: serializer.fromJson<int>(json['productId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'promotionId': serializer.toJson<int>(promotionId),
+      'productId': serializer.toJson<int>(productId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  PromotionProduct copyWith({
+    int? promotionId,
+    int? productId,
+    DateTime? createdAt,
+  }) => PromotionProduct(
+    promotionId: promotionId ?? this.promotionId,
+    productId: productId ?? this.productId,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PromotionProduct copyWithCompanion(PromotionProductsCompanion data) {
+    return PromotionProduct(
+      promotionId: data.promotionId.present
+          ? data.promotionId.value
+          : this.promotionId,
+      productId: data.productId.present ? data.productId.value : this.productId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PromotionProduct(')
+          ..write('promotionId: $promotionId, ')
+          ..write('productId: $productId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(promotionId, productId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PromotionProduct &&
+          other.promotionId == this.promotionId &&
+          other.productId == this.productId &&
+          other.createdAt == this.createdAt);
+}
+
+class PromotionProductsCompanion extends UpdateCompanion<PromotionProduct> {
+  final Value<int> promotionId;
+  final Value<int> productId;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const PromotionProductsCompanion({
+    this.promotionId = const Value.absent(),
+    this.productId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PromotionProductsCompanion.insert({
+    required int promotionId,
+    required int productId,
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : promotionId = Value(promotionId),
+       productId = Value(productId);
+  static Insertable<PromotionProduct> custom({
+    Expression<int>? promotionId,
+    Expression<int>? productId,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (promotionId != null) 'promotion_id': promotionId,
+      if (productId != null) 'product_id': productId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PromotionProductsCompanion copyWith({
+    Value<int>? promotionId,
+    Value<int>? productId,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return PromotionProductsCompanion(
+      promotionId: promotionId ?? this.promotionId,
+      productId: productId ?? this.productId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (promotionId.present) {
+      map['promotion_id'] = Variable<int>(promotionId.value);
+    }
+    if (productId.present) {
+      map['product_id'] = Variable<int>(productId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PromotionProductsCompanion(')
+          ..write('promotionId: $promotionId, ')
+          ..write('productId: $productId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -24655,6 +25109,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CustomersTable customers = $CustomersTable(this);
   late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
   late final $PromotionsTable promotions = $PromotionsTable(this);
+  late final $PromotionProductsTable promotionProducts =
+      $PromotionProductsTable(this);
   late final $CashDrawerLogsTable cashDrawerLogs = $CashDrawerLogsTable(this);
   late final $RefundsTable refunds = $RefundsTable(this);
   late final $RefundItemsTable refundItems = $RefundItemsTable(this);
@@ -24702,46 +25158,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ProductModifierLinksTable(this);
   late final $SaleItemModifiersTable saleItemModifiers =
       $SaleItemModifiersTable(this);
-  late final ProductsDao productsDao = ProductsDao(this as AppDatabase);
-  late final SalesDao salesDao = SalesDao(this as AppDatabase);
-  late final SyncDao syncDao = SyncDao(this as AppDatabase);
-  late final CustomersDao customersDao = CustomersDao(this as AppDatabase);
-  late final EmployeesDao employeesDao = EmployeesDao(this as AppDatabase);
-  late final LoyaltyDao loyaltyDao = LoyaltyDao(this as AppDatabase);
-  late final BackupDao backupDao = BackupDao(this as AppDatabase);
-  late final AttendanceDao attendanceDao = AttendanceDao(this as AppDatabase);
-  late final KitchenOrdersDao kitchenOrdersDao = KitchenOrdersDao(
-    this as AppDatabase,
-  );
-  late final TablesDao tablesDao = TablesDao(this as AppDatabase);
-  late final ReservationsDao reservationsDao = ReservationsDao(
-    this as AppDatabase,
-  );
-  late final PermissionLogsDao permissionLogsDao = PermissionLogsDao(
-    this as AppDatabase,
-  );
-  late final DailyClosingDao dailyClosingDao = DailyClosingDao(
-    this as AppDatabase,
-  );
-  late final PermissionsDao permissionsDao = PermissionsDao(
-    this as AppDatabase,
-  );
-  late final RolePermissionsDao rolePermissionsDao = RolePermissionsDao(
-    this as AppDatabase,
-  );
-  late final UserRolesDao userRolesDao = UserRolesDao(this as AppDatabase);
-  late final StoreAssignmentsDao storeAssignmentsDao = StoreAssignmentsDao(
-    this as AppDatabase,
-  );
-  late final DeliveryOrdersDao deliveryOrdersDao = DeliveryOrdersDao(
-    this as AppDatabase,
-  );
-  late final FloorZoneDao floorZoneDao = FloorZoneDao(this as AppDatabase);
-  late final FloorElementDao floorElementDao = FloorElementDao(
-    this as AppDatabase,
-  );
-  late final CategoriesDao categoriesDao = CategoriesDao(this as AppDatabase);
-  late final ModifierDao modifierDao = ModifierDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -24756,6 +25172,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     customers,
     syncQueue,
     promotions,
+    promotionProducts,
     cashDrawerLogs,
     refunds,
     refundItems,
@@ -24789,6 +25206,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'promotions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('promotion_products', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'products',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('promotion_products', kind: UpdateKind.delete)],
+    ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'sales',
@@ -25282,6 +25713,30 @@ final class $$ProductsTableReferences
     );
   }
 
+  static MultiTypedResultKey<$PromotionProductsTable, List<PromotionProduct>>
+  _promotionProductsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.promotionProducts,
+        aliasName: $_aliasNameGenerator(
+          db.products.id,
+          db.promotionProducts.productId,
+        ),
+      );
+
+  $$PromotionProductsTableProcessedTableManager get promotionProductsRefs {
+    final manager = $$PromotionProductsTableTableManager(
+      $_db,
+      $_db.promotionProducts,
+    ).filter((f) => f.productId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _promotionProductsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<
     $ProductModifierLinksTable,
     List<ProductModifierLink>
@@ -25479,6 +25934,31 @@ class $$ProductsTableFilterComposer
           }) => $$PromotionsTableFilterComposer(
             $db: $db,
             $table: $db.promotions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> promotionProductsRefs(
+    Expression<bool> Function($$PromotionProductsTableFilterComposer f) f,
+  ) {
+    final $$PromotionProductsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.promotionProducts,
+      getReferencedColumn: (t) => t.productId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PromotionProductsTableFilterComposer(
+            $db: $db,
+            $table: $db.promotionProducts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -25766,6 +26246,32 @@ class $$ProductsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> promotionProductsRefs<T extends Object>(
+    Expression<T> Function($$PromotionProductsTableAnnotationComposer a) f,
+  ) {
+    final $$PromotionProductsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.promotionProducts,
+          getReferencedColumn: (t) => t.productId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PromotionProductsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.promotionProducts,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> productModifierLinksRefs<T extends Object>(
     Expression<T> Function($$ProductModifierLinksTableAnnotationComposer a) f,
   ) {
@@ -25811,6 +26317,7 @@ class $$ProductsTableTableManager
             bool stockMovementsRefs,
             bool saleItemsRefs,
             bool promotionsRefs,
+            bool promotionProductsRefs,
             bool productModifierLinksRefs,
           })
         > {
@@ -25907,6 +26414,7 @@ class $$ProductsTableTableManager
                 stockMovementsRefs = false,
                 saleItemsRefs = false,
                 promotionsRefs = false,
+                promotionProductsRefs = false,
                 productModifierLinksRefs = false,
               }) {
                 return PrefetchHooks(
@@ -25915,6 +26423,7 @@ class $$ProductsTableTableManager
                     if (stockMovementsRefs) db.stockMovements,
                     if (saleItemsRefs) db.saleItems,
                     if (promotionsRefs) db.promotions,
+                    if (promotionProductsRefs) db.promotionProducts,
                     if (productModifierLinksRefs) db.productModifierLinks,
                   ],
                   addJoins:
@@ -26014,6 +26523,27 @@ class $$ProductsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (promotionProductsRefs)
+                        await $_getPrefetchedData<
+                          Product,
+                          $ProductsTable,
+                          PromotionProduct
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductsTableReferences
+                              ._promotionProductsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).promotionProductsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.productId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (productModifierLinksRefs)
                         await $_getPrefetchedData<
                           Product,
@@ -26060,6 +26590,7 @@ typedef $$ProductsTableProcessedTableManager =
         bool stockMovementsRefs,
         bool saleItemsRefs,
         bool promotionsRefs,
+        bool promotionProductsRefs,
         bool productModifierLinksRefs,
       })
     >;
@@ -26525,6 +27056,8 @@ typedef $$SalesTableCreateCompanionBuilder =
       Value<String?> deliveryAddress,
       Value<String?> deliveryPhone,
       Value<bool> isOpenTab,
+      Value<String?> cancellationReason,
+      Value<DateTime?> cancelledAt,
       Value<bool> needsSync,
       Value<DateTime> createdAt,
     });
@@ -26548,6 +27081,8 @@ typedef $$SalesTableUpdateCompanionBuilder =
       Value<String?> deliveryAddress,
       Value<String?> deliveryPhone,
       Value<bool> isOpenTab,
+      Value<String?> cancellationReason,
+      Value<DateTime?> cancelledAt,
       Value<bool> needsSync,
       Value<DateTime> createdAt,
     });
@@ -26712,6 +27247,16 @@ class $$SalesTableFilterComposer extends Composer<_$AppDatabase, $SalesTable> {
 
   ColumnFilters<bool> get isOpenTab => $composableBuilder(
     column: $table.isOpenTab,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -26900,6 +27445,16 @@ class $$SalesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get needsSync => $composableBuilder(
     column: $table.needsSync,
     builder: (column) => ColumnOrderings(column),
@@ -26989,6 +27544,16 @@ class $$SalesTableAnnotationComposer
 
   GeneratedColumn<bool> get isOpenTab =>
       $composableBuilder(column: $table.isOpenTab, builder: (column) => column);
+
+  GeneratedColumn<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get needsSync =>
       $composableBuilder(column: $table.needsSync, builder: (column) => column);
@@ -27123,6 +27688,8 @@ class $$SalesTableTableManager
                 Value<String?> deliveryAddress = const Value.absent(),
                 Value<String?> deliveryPhone = const Value.absent(),
                 Value<bool> isOpenTab = const Value.absent(),
+                Value<String?> cancellationReason = const Value.absent(),
+                Value<DateTime?> cancelledAt = const Value.absent(),
                 Value<bool> needsSync = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => SalesCompanion(
@@ -27144,6 +27711,8 @@ class $$SalesTableTableManager
                 deliveryAddress: deliveryAddress,
                 deliveryPhone: deliveryPhone,
                 isOpenTab: isOpenTab,
+                cancellationReason: cancellationReason,
+                cancelledAt: cancelledAt,
                 needsSync: needsSync,
                 createdAt: createdAt,
               ),
@@ -27167,6 +27736,8 @@ class $$SalesTableTableManager
                 Value<String?> deliveryAddress = const Value.absent(),
                 Value<String?> deliveryPhone = const Value.absent(),
                 Value<bool> isOpenTab = const Value.absent(),
+                Value<String?> cancellationReason = const Value.absent(),
+                Value<DateTime?> cancelledAt = const Value.absent(),
                 Value<bool> needsSync = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => SalesCompanion.insert(
@@ -27188,6 +27759,8 @@ class $$SalesTableTableManager
                 deliveryAddress: deliveryAddress,
                 deliveryPhone: deliveryPhone,
                 isOpenTab: isOpenTab,
+                cancellationReason: cancellationReason,
+                cancelledAt: cancelledAt,
                 needsSync: needsSync,
                 createdAt: createdAt,
               ),
@@ -29575,6 +30148,7 @@ typedef $$PromotionsTableCreateCompanionBuilder =
       required String type,
       Value<double> value,
       Value<int?> productId,
+      Value<bool> applyToAllProducts,
       Value<DateTime?> startDate,
       Value<DateTime?> endDate,
       Value<bool> isActive,
@@ -29588,6 +30162,7 @@ typedef $$PromotionsTableUpdateCompanionBuilder =
       Value<String> type,
       Value<double> value,
       Value<int?> productId,
+      Value<bool> applyToAllProducts,
       Value<DateTime?> startDate,
       Value<DateTime?> endDate,
       Value<bool> isActive,
@@ -29615,6 +30190,30 @@ final class $$PromotionsTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$PromotionProductsTable, List<PromotionProduct>>
+  _promotionProductsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.promotionProducts,
+        aliasName: $_aliasNameGenerator(
+          db.promotions.id,
+          db.promotionProducts.promotionId,
+        ),
+      );
+
+  $$PromotionProductsTableProcessedTableManager get promotionProductsRefs {
+    final manager = $$PromotionProductsTableTableManager(
+      $_db,
+      $_db.promotionProducts,
+    ).filter((f) => f.promotionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _promotionProductsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -29645,6 +30244,11 @@ class $$PromotionsTableFilterComposer
 
   ColumnFilters<double> get value => $composableBuilder(
     column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get applyToAllProducts => $composableBuilder(
+    column: $table.applyToAllProducts,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -29695,6 +30299,31 @@ class $$PromotionsTableFilterComposer
     );
     return composer;
   }
+
+  Expression<bool> promotionProductsRefs(
+    Expression<bool> Function($$PromotionProductsTableFilterComposer f) f,
+  ) {
+    final $$PromotionProductsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.promotionProducts,
+      getReferencedColumn: (t) => t.promotionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PromotionProductsTableFilterComposer(
+            $db: $db,
+            $table: $db.promotionProducts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PromotionsTableOrderingComposer
@@ -29723,6 +30352,11 @@ class $$PromotionsTableOrderingComposer
 
   ColumnOrderings<double> get value => $composableBuilder(
     column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get applyToAllProducts => $composableBuilder(
+    column: $table.applyToAllProducts,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -29796,6 +30430,11 @@ class $$PromotionsTableAnnotationComposer
   GeneratedColumn<double> get value =>
       $composableBuilder(column: $table.value, builder: (column) => column);
 
+  GeneratedColumn<bool> get applyToAllProducts => $composableBuilder(
+    column: $table.applyToAllProducts,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get startDate =>
       $composableBuilder(column: $table.startDate, builder: (column) => column);
 
@@ -29833,6 +30472,32 @@ class $$PromotionsTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> promotionProductsRefs<T extends Object>(
+    Expression<T> Function($$PromotionProductsTableAnnotationComposer a) f,
+  ) {
+    final $$PromotionProductsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.promotionProducts,
+          getReferencedColumn: (t) => t.promotionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PromotionProductsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.promotionProducts,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$PromotionsTableTableManager
@@ -29848,7 +30513,7 @@ class $$PromotionsTableTableManager
           $$PromotionsTableUpdateCompanionBuilder,
           (Promotion, $$PromotionsTableReferences),
           Promotion,
-          PrefetchHooks Function({bool productId})
+          PrefetchHooks Function({bool productId, bool promotionProductsRefs})
         > {
   $$PromotionsTableTableManager(_$AppDatabase db, $PromotionsTable table)
     : super(
@@ -29868,6 +30533,7 @@ class $$PromotionsTableTableManager
                 Value<String> type = const Value.absent(),
                 Value<double> value = const Value.absent(),
                 Value<int?> productId = const Value.absent(),
+                Value<bool> applyToAllProducts = const Value.absent(),
                 Value<DateTime?> startDate = const Value.absent(),
                 Value<DateTime?> endDate = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
@@ -29879,6 +30545,7 @@ class $$PromotionsTableTableManager
                 type: type,
                 value: value,
                 productId: productId,
+                applyToAllProducts: applyToAllProducts,
                 startDate: startDate,
                 endDate: endDate,
                 isActive: isActive,
@@ -29892,6 +30559,7 @@ class $$PromotionsTableTableManager
                 required String type,
                 Value<double> value = const Value.absent(),
                 Value<int?> productId = const Value.absent(),
+                Value<bool> applyToAllProducts = const Value.absent(),
                 Value<DateTime?> startDate = const Value.absent(),
                 Value<DateTime?> endDate = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
@@ -29903,6 +30571,7 @@ class $$PromotionsTableTableManager
                 type: type,
                 value: value,
                 productId: productId,
+                applyToAllProducts: applyToAllProducts,
                 startDate: startDate,
                 endDate: endDate,
                 isActive: isActive,
@@ -29917,7 +30586,406 @@ class $$PromotionsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({productId = false}) {
+          prefetchHooksCallback:
+              ({productId = false, promotionProductsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (promotionProductsRefs) db.promotionProducts,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (productId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.productId,
+                                    referencedTable: $$PromotionsTableReferences
+                                        ._productIdTable(db),
+                                    referencedColumn:
+                                        $$PromotionsTableReferences
+                                            ._productIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (promotionProductsRefs)
+                        await $_getPrefetchedData<
+                          Promotion,
+                          $PromotionsTable,
+                          PromotionProduct
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PromotionsTableReferences
+                              ._promotionProductsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PromotionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).promotionProductsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.promotionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$PromotionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PromotionsTable,
+      Promotion,
+      $$PromotionsTableFilterComposer,
+      $$PromotionsTableOrderingComposer,
+      $$PromotionsTableAnnotationComposer,
+      $$PromotionsTableCreateCompanionBuilder,
+      $$PromotionsTableUpdateCompanionBuilder,
+      (Promotion, $$PromotionsTableReferences),
+      Promotion,
+      PrefetchHooks Function({bool productId, bool promotionProductsRefs})
+    >;
+typedef $$PromotionProductsTableCreateCompanionBuilder =
+    PromotionProductsCompanion Function({
+      required int promotionId,
+      required int productId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$PromotionProductsTableUpdateCompanionBuilder =
+    PromotionProductsCompanion Function({
+      Value<int> promotionId,
+      Value<int> productId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+final class $$PromotionProductsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $PromotionProductsTable,
+          PromotionProduct
+        > {
+  $$PromotionProductsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $PromotionsTable _promotionIdTable(_$AppDatabase db) =>
+      db.promotions.createAlias(
+        $_aliasNameGenerator(
+          db.promotionProducts.promotionId,
+          db.promotions.id,
+        ),
+      );
+
+  $$PromotionsTableProcessedTableManager get promotionId {
+    final $_column = $_itemColumn<int>('promotion_id')!;
+
+    final manager = $$PromotionsTableTableManager(
+      $_db,
+      $_db.promotions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_promotionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ProductsTable _productIdTable(_$AppDatabase db) =>
+      db.products.createAlias(
+        $_aliasNameGenerator(db.promotionProducts.productId, db.products.id),
+      );
+
+  $$ProductsTableProcessedTableManager get productId {
+    final $_column = $_itemColumn<int>('product_id')!;
+
+    final manager = $$ProductsTableTableManager(
+      $_db,
+      $_db.products,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PromotionProductsTableFilterComposer
+    extends Composer<_$AppDatabase, $PromotionProductsTable> {
+  $$PromotionProductsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PromotionsTableFilterComposer get promotionId {
+    final $$PromotionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.promotionId,
+      referencedTable: $db.promotions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PromotionsTableFilterComposer(
+            $db: $db,
+            $table: $db.promotions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductsTableFilterComposer get productId {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableFilterComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PromotionProductsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PromotionProductsTable> {
+  $$PromotionProductsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PromotionsTableOrderingComposer get promotionId {
+    final $$PromotionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.promotionId,
+      referencedTable: $db.promotions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PromotionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.promotions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductsTableOrderingComposer get productId {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableOrderingComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PromotionProductsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PromotionProductsTable> {
+  $$PromotionProductsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$PromotionsTableAnnotationComposer get promotionId {
+    final $$PromotionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.promotionId,
+      referencedTable: $db.promotions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PromotionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.promotions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductsTableAnnotationComposer get productId {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PromotionProductsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PromotionProductsTable,
+          PromotionProduct,
+          $$PromotionProductsTableFilterComposer,
+          $$PromotionProductsTableOrderingComposer,
+          $$PromotionProductsTableAnnotationComposer,
+          $$PromotionProductsTableCreateCompanionBuilder,
+          $$PromotionProductsTableUpdateCompanionBuilder,
+          (PromotionProduct, $$PromotionProductsTableReferences),
+          PromotionProduct,
+          PrefetchHooks Function({bool promotionId, bool productId})
+        > {
+  $$PromotionProductsTableTableManager(
+    _$AppDatabase db,
+    $PromotionProductsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PromotionProductsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PromotionProductsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PromotionProductsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> promotionId = const Value.absent(),
+                Value<int> productId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PromotionProductsCompanion(
+                promotionId: promotionId,
+                productId: productId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int promotionId,
+                required int productId,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PromotionProductsCompanion.insert(
+                promotionId: promotionId,
+                productId: productId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PromotionProductsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({promotionId = false, productId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -29937,16 +31005,33 @@ class $$PromotionsTableTableManager
                       dynamic
                     >
                   >(state) {
+                    if (promotionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.promotionId,
+                                referencedTable:
+                                    $$PromotionProductsTableReferences
+                                        ._promotionIdTable(db),
+                                referencedColumn:
+                                    $$PromotionProductsTableReferences
+                                        ._promotionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
                     if (productId) {
                       state =
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.productId,
-                                referencedTable: $$PromotionsTableReferences
-                                    ._productIdTable(db),
-                                referencedColumn: $$PromotionsTableReferences
-                                    ._productIdTable(db)
-                                    .id,
+                                referencedTable:
+                                    $$PromotionProductsTableReferences
+                                        ._productIdTable(db),
+                                referencedColumn:
+                                    $$PromotionProductsTableReferences
+                                        ._productIdTable(db)
+                                        .id,
                               )
                               as T;
                     }
@@ -29962,19 +31047,19 @@ class $$PromotionsTableTableManager
       );
 }
 
-typedef $$PromotionsTableProcessedTableManager =
+typedef $$PromotionProductsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $PromotionsTable,
-      Promotion,
-      $$PromotionsTableFilterComposer,
-      $$PromotionsTableOrderingComposer,
-      $$PromotionsTableAnnotationComposer,
-      $$PromotionsTableCreateCompanionBuilder,
-      $$PromotionsTableUpdateCompanionBuilder,
-      (Promotion, $$PromotionsTableReferences),
-      Promotion,
-      PrefetchHooks Function({bool productId})
+      $PromotionProductsTable,
+      PromotionProduct,
+      $$PromotionProductsTableFilterComposer,
+      $$PromotionProductsTableOrderingComposer,
+      $$PromotionProductsTableAnnotationComposer,
+      $$PromotionProductsTableCreateCompanionBuilder,
+      $$PromotionProductsTableUpdateCompanionBuilder,
+      (PromotionProduct, $$PromotionProductsTableReferences),
+      PromotionProduct,
+      PrefetchHooks Function({bool promotionId, bool productId})
     >;
 typedef $$CashDrawerLogsTableCreateCompanionBuilder =
     CashDrawerLogsCompanion Function({
@@ -40718,6 +41803,8 @@ class $AppDatabaseManager {
       $$SyncQueueTableTableManager(_db, _db.syncQueue);
   $$PromotionsTableTableManager get promotions =>
       $$PromotionsTableTableManager(_db, _db.promotions);
+  $$PromotionProductsTableTableManager get promotionProducts =>
+      $$PromotionProductsTableTableManager(_db, _db.promotionProducts);
   $$CashDrawerLogsTableTableManager get cashDrawerLogs =>
       $$CashDrawerLogsTableTableManager(_db, _db.cashDrawerLogs);
   $$RefundsTableTableManager get refunds =>

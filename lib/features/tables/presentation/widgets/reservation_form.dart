@@ -298,7 +298,11 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
             customerName: customerName,
             customerPhone: customerPhone,
             partySize: partySize,
-            reservationDate: _selectedDate,
+            reservationDate: DateTime.utc(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+            ),
             reservationTime: reservationTime,
             status: drift.Value(_selectedStatus),
             specialRequests: drift.Value(specialRequests.isEmpty ? null : specialRequests),
@@ -322,7 +326,11 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
           customerName: customerName,
           customerPhone: customerPhone,
           partySize: partySize,
-          reservationDate: _selectedDate,
+          reservationDate: DateTime.utc(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+            ),
           reservationTime: reservationTime,
           specialRequests: specialRequests.isEmpty ? null : specialRequests,
         );

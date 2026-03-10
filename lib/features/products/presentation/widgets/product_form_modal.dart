@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
@@ -306,7 +307,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        _showSnackBar(l10n.errorPrefix(e.toString()), AppTheme.error);
+        _showSnackBar(SnackBarHelper.sanitizeError(e), AppTheme.error);
       }
     }
   }
@@ -574,17 +575,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     // Check for error state
     final uploadState = ref.read(imageUploadStateProvider);
     if (uploadState is ImageUploadError && mounted) {
-      String errorMessage = uploadState.message;
-      
-      // User-friendly error messages
-      if (errorMessage.contains('GalleryPermissionDeniedException') || 
-          errorMessage.contains('Photo library permission denied')) {
-        errorMessage = 'Photo library permission denied. Please enable photo access in Settings.';
-      } else if (errorMessage.contains('ImageProcessingException')) {
-        errorMessage = errorMessage.replaceAll('ImageProcessingException: ', '');
-      }
-      
-      _showSnackBar(errorMessage, AppTheme.error);
+      _showSnackBar(uploadState.message, AppTheme.error);
       return;
     }
 

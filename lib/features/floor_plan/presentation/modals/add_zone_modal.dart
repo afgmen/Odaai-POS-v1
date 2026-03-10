@@ -488,7 +488,7 @@ class _AddZoneModalState extends ConsumerState<AddZoneModal> {
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+        SnackBarHelper.showSanitizedError(context, e);
       }
     }
   }
@@ -530,7 +530,7 @@ class _AddZoneModalState extends ConsumerState<AddZoneModal> {
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+        SnackBarHelper.showSanitizedError(context, e);
       }
     }
   }

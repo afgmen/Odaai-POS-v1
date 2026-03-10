@@ -94,8 +94,8 @@ class KitchenOrdersRepository {
   }
 
   /// 주문 취소
-  Future<bool> cancelOrder(int orderId) {
-    return _dao.cancelOrder(orderId);
+  Future<bool> cancelOrder(int orderId, {String? reason}) {
+    return _dao.cancelOrder(orderId, cancellationReason: reason);
   }
 
   /// 긴급 주문으로 변경

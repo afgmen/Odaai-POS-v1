@@ -37,7 +37,7 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
 
   /// 날짜별 예약 목록 조회
   Future<List<Reservation>> getReservationsByDate(DateTime date) {
-    final startOfDay = DateTime(date.year, date.month, date.day);
+    final startOfDay = DateTime.utc(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     return (select(reservations)
@@ -118,7 +118,7 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
 
   /// 날짜별 예약 실시간 스트림
   Stream<List<Reservation>> watchReservationsByDate(DateTime date) {
-    final startOfDay = DateTime(date.year, date.month, date.day);
+    final startOfDay = DateTime.utc(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     return (select(reservations)
@@ -257,10 +257,37 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
     return counts;
   }
 
+
+  /// 특정 날짜의 상태별 예약 개수 (Stream - B-079 수정)
+  /// 
+  /// 선택된 날짜의 예약만 카운팅하여 실시간으로 반환합니다.
+  /// SQL GROUP BY를 사용하여 성능 최적화.
+  Stream<Map<String, int>> watchReservationCountByStatusForDate(DateTime date) {
+    final startOfDay = DateTime.utc(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    final query = selectOnly(reservations)
+      ..addColumns([reservations.status, reservations.id.count()])
+      ..where(reservations.reservationDate.isBetweenValues(startOfDay, endOfDay))
+      ..groupBy([reservations.status]);
+
+    return query.watch().map((rows) {
+      final counts = <String, int>{};
+      for (final row in rows) {
+        final status = row.read(reservations.status);
+        final count = row.read(reservations.id.count()) ?? 0;
+        if (status != null) {
+          counts[status] = count;
+        }
+      }
+      return counts;
+    });
+  }
+
   /// 오늘 노쇼 개수
   Future<int> getTodayNoShowCount() async {
     final today = DateTime.now();
-    final startOfDay = DateTime(today.year, today.month, today.day);
+    final startOfDay = DateTime.utc(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     final query = selectOnly(reservations)
@@ -277,7 +304,7 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
   /// 오늘 확정된 예약 개수
   Future<int> getTodayConfirmedCount() async {
     final today = DateTime.now();
-    final startOfDay = DateTime(today.year, today.month, today.day);
+    final startOfDay = DateTime.utc(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     final query = selectOnly(reservations)
@@ -293,7 +320,7 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
 
   /// 날짜별 예약 개수
   Future<int> getReservationCountByDate(DateTime date) async {
-    final startOfDay = DateTime(date.year, date.month, date.day);
+    final startOfDay = DateTime.utc(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     final query = selectOnly(reservations)
@@ -328,7 +355,7 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
     required String time,
     int? excludeReservationId,
   }) async {
-    final startOfDay = DateTime(date.year, date.month, date.day);
+    final startOfDay = DateTime.utc(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     var query = select(reservations)
@@ -353,7 +380,7 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
     required DateTime date,
     int? excludeReservationId,
   }) async {
-    final startOfDay = DateTime(date.year, date.month, date.day);
+    final startOfDay = DateTime.utc(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     var query = select(reservations)

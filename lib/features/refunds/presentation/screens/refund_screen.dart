@@ -56,12 +56,63 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: TextField(
-                            controller: _saleNumberCtrl,
-                            decoration: InputDecoration(
-                              hintText: l10n.receiptNumberHint,
-                              prefixIcon: const Icon(Icons.receipt),
-                            ),
+                          child: Autocomplete<Sale>(
+                            optionsBuilder: (textEditingValue) async {
+                              final query = textEditingValue.text.trim();
+                              if (query.isEmpty) {
+                                return const Iterable<Sale>.empty();
+                              }
+                              final salesDao = ref.read(salesDaoProvider);
+                              final results = await salesDao.searchSales(query: query, limit: 20);
+                              return results;
+                            },
+                            displayStringForOption: (option) => option.saleNumber,
+                            onSelected: (selection) async {
+                              _saleNumberCtrl.text = selection.saleNumber;
+                              await _searchSaleBySale(selection);
+                            },
+                            fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                              textEditingController.value = _saleNumberCtrl.value;
+                              textEditingController.addListener(() {
+                                _saleNumberCtrl.value = textEditingController.value;
+                              });
+                              return TextField(
+                                controller: textEditingController,
+                                focusNode: focusNode,
+                                onSubmitted: (_) => onFieldSubmitted(),
+                                decoration: InputDecoration(
+                                  hintText: l10n.receiptNumberHint,
+                                  prefixIcon: const Icon(Icons.receipt),
+                                ),
+                              );
+                            },
+                            optionsViewBuilder: (context, onSelected, options) {
+                              final optionList = options.toList();
+                              return Align(
+                                alignment: Alignment.topLeft,
+                                child: Material(
+                                  elevation: 4,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(maxHeight: 220, minWidth: 280),
+                                    child: ListView.builder(
+                                      padding: EdgeInsets.zero,
+                                      itemCount: optionList.length,
+                                      shrinkWrap: true,
+                                      itemBuilder: (context, index) {
+                                        final sale = optionList[index];
+                                        return ListTile(
+                                          dense: true,
+                                          title: Text(sale.saleNumber),
+                                          subtitle: Text('${sale.customerName ?? '-'} · ₫${sale.total.toStringAsFixed(0)}'),
+                                          onTap: () => onSelected(sale),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -222,21 +273,31 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
     final query = _saleNumberCtrl.text.trim();
     if (query.isEmpty) return;
 
-    final db = ref.read(databaseProvider);
-    // 영수증 번호 또는 ID로 검색
-    final sale = await (db.select(db.sales)
-          ..where((s) => s.saleNumber.equals(query)))
-        .getSingleOrNull();
+    final salesDao = ref.read(salesDaoProvider);
+    final results = await salesDao.searchSales(query: query, limit: 20);
+    final sale = results.isNotEmpty
+        ? results.firstWhere(
+            (s) => s.saleNumber == query,
+            orElse: () => results.first,
+          )
+        : null;
 
-    if (sale == null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.receiptNotFound)),
-      );
+    if (sale == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.receiptNotFound)),
+        );
+      }
       return;
     }
 
+    await _searchSaleBySale(sale);
+  }
+
+  Future<void> _searchSaleBySale(Sale sale) async {
+    final db = ref.read(databaseProvider);
     final items = await (db.select(db.saleItems)
-          ..where((si) => si.saleId.equals(sale!.id)))
+          ..where((si) => si.saleId.equals(sale.id)))
         .get();
 
     setState(() {
@@ -280,8 +341,9 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
 
     // 재고 복구
     if (_saleItems != null) {
+      final productsDao = ref.read(productsDaoProvider);
       for (final item in _saleItems!) {
-        await db.productsDao.updateStock(productId: item.productId, quantity: item.quantity, type: 'in', reason: 'refund_stock_restore');
+        await productsDao.updateStock(productId: item.productId, quantity: item.quantity, type: 'in', reason: 'refund_stock_restore');
       }
     }
 
@@ -303,7 +365,6 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
     if (!confirm) return;
 
     final dao = ref.read(refundsDaoProvider);
-    final db = ref.read(databaseProvider);
 
     // 환불 기록 생성
     final refundId = await dao.createRefund(RefundsCompanion.insert(
@@ -327,7 +388,8 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
         unitPrice: item.unitPrice,
         total: item.unitPrice * entry.value,
       ));
-      await db.productsDao.updateStock(productId: item.productId, quantity: entry.value, type: 'in', reason: 'partial_refund_stock_restore');
+      final productsDao = ref.read(productsDaoProvider);
+      await productsDao.updateStock(productId: item.productId, quantity: entry.value, type: 'in', reason: 'partial_refund_stock_restore');
     }
     await dao.insertRefundItems(refundItemsList);
 

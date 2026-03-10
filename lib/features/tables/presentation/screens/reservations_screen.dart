@@ -55,6 +55,9 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           // 캘린더
           _buildCalendar(selectedDate),
 
+          // 범례 (B-081)
+          _buildLegend(l10n),
+
           // 상태 필터
           _buildStatusFilter(selectedStatus),
 
@@ -88,6 +91,11 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
   /// 통계 표시
   Widget _buildStatistics(BuildContext context, Map<String, int> counts) {
     final l10n = AppLocalizations.of(context)!;
+    final selectedDate = ref.watch(selectedDateProvider);
+    final isPastDate = selectedDate.isBefore(
+      DateTime.now().subtract(const Duration(days: 1)),
+    );
+    
     final confirmedCount = counts['CONFIRMED'] ?? 0;
     final pendingCount = counts['PENDING'] ?? 0;
 
@@ -95,6 +103,31 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
+          // Phase 2-B: Past date indicator
+          if (isPastDate)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.history, size: 14, color: Colors.grey.shade600),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Past',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (isPastDate) const SizedBox(width: 8),
           _buildStatBadge(l10n.confirmed, confirmedCount, Colors.green),
           const SizedBox(width: 8),
           _buildStatBadge(l10n.pending, pendingCount, Colors.orange),
@@ -194,33 +227,72 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
         ),
         calendarBuilders: CalendarBuilders(
           markerBuilder: (context, date, events) {
-            return FutureBuilder<int>(
-              future: ref.read(reservationsDaoProvider).getReservationCountByDate(date),
+            // B-081: 상태별 색상 마커
+            return FutureBuilder<List<Reservation>>(
+              future: ref.read(reservationsDaoProvider).getReservationsByDate(date),
               builder: (context, snapshot) {
-                if (snapshot.hasData && snapshot.data! > 0) {
-                  return Positioned(
-                    bottom: 1,
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                
+                final reservations = snapshot.data!;
+                final count = reservations.length;
+                
+                // 우선순위 기반 색상 결정
+                Color markerColor = Colors.grey.shade400;
+                
+                // 우선순위: NO_SHOW > PENDING > CONFIRMED > SEATED > CANCELLED
+                if (reservations.any((r) => r.status == 'NO_SHOW')) {
+                  markerColor = ReservationStatus.noShow.color;
+                } else if (reservations.any((r) => r.status == 'PENDING')) {
+                  markerColor = ReservationStatus.pending.color;
+                } else if (reservations.any((r) => r.status == 'CONFIRMED')) {
+                  markerColor = ReservationStatus.confirmed.color;
+                } else if (reservations.any((r) => r.status == 'SEATED')) {
+                  markerColor = ReservationStatus.seated.color;
+                } else if (reservations.any((r) => r.status == 'CANCELLED')) {
+                  markerColor = ReservationStatus.cancelled.color;
+                }
+                
+                // Phase 2-A: 툴팁 메시지 생성
+                final statusCounts = <String, int>{};
+                for (final r in reservations) {
+                  statusCounts[r.status] = (statusCounts[r.status] ?? 0) + 1;
+                }
+                final tooltipLines = statusCounts.entries.map((e) {
+                  final status = ReservationStatus.fromString(e.key);
+                  return '${e.value}개 ${status.localizationKey}';
+                }).join('\n');
+                
+                return Positioned(
+                  bottom: 1,
+                  child: Tooltip(
+                    message: '$count개 예약\n$tooltipLines',
+                    preferBelow: false,
                     child: Container(
                       width: 16,
                       height: 16,
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: markerColor,
                         shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 1.5,
+                        ),
                       ),
                       child: Center(
                         child: Text(
-                          '${snapshot.data}',
+                          '$count',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
+                            fontSize: 9,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
-                  );
-                }
-                return const SizedBox.shrink();
+                  ),
+                );
               },
             );
           },
@@ -539,5 +611,112 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
         );
       }
     }
+  }
+
+  /// 범례 (B-081 - Phase 2 개선)
+  Widget _buildLegend(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 활성 상태
+          Row(
+            children: [
+              Text(
+                'Active: ',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 4),
+              _LegendItem(
+                color: ReservationStatus.confirmed.color,
+                label: l10n.reservationConfirmed,
+              ),
+              const SizedBox(width: 12),
+              _LegendItem(
+                color: ReservationStatus.pending.color,
+                label: l10n.reservationPending,
+              ),
+              const SizedBox(width: 12),
+              _LegendItem(
+                color: ReservationStatus.seated.color,
+                label: l10n.reservationSeated,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // 비활성 상태
+          Row(
+            children: [
+              Text(
+                'Done: ',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 4),
+              _LegendItem(
+                color: ReservationStatus.noShow.color,
+                label: l10n.reservationNoShow,
+              ),
+              const SizedBox(width: 12),
+              _LegendItem(
+                color: ReservationStatus.cancelled.color,
+                label: l10n.reservationCancelled,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 범례 아이템 (컴팩트 디자인)
+  Widget _LegendItem({required Color color, required String label}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 2,
+                spreadRadius: 0.5,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey.shade700,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../pos/presentation/modals/cancel_reason_modal.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../tables/domain/enums/table_status.dart';
 import '../../../tables/data/tables_providers.dart';
@@ -246,37 +247,49 @@ class TableDetailModal extends ConsumerWidget {
     );
   }
 
-  void _confirmCancelOrder(BuildContext context, WidgetRef ref) {
-    showDialog(
+  void _confirmCancelOrder(BuildContext context, WidgetRef ref) async {
+    // Show cancel reason modal
+    await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Cancel Order'),
-        content:
-            Text('Cancel order for Table ${table.tableNumber}? This cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('No'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              Navigator.pop(context);
-              await _updateTableStatus(ref, table.id, 'AVAILABLE');
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(
-                          'Order cancelled for Table ${table.tableNumber}')),
-                );
-              }
-            },
-            child: const Text('Yes, Cancel'),
-          ),
-        ],
+      builder: (ctx) => CancelReasonModal(
+        onConfirm: (reason) async {
+          // Save cancellation reason to DB
+          await _saveCancellation(ref, reason);
+          
+          // Update table status
+          await _updateTableStatus(ref, table.id, 'AVAILABLE');
+          
+          if (context.mounted) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Order cancelled for Table ${table.tableNumber}'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        },
       ),
     );
+  }
+
+  Future<void> _saveCancellation(WidgetRef ref, String reason) async {
+    final db = ref.read(databaseProvider);
+    if (table.currentSaleId == null) return;
+
+    try {
+      await (db.update(db.sales)..where((s) => s.id.equals(table.currentSaleId!)))
+          .write(
+        SalesCompanion(
+          status: const Value('cancelled'),
+          cancellationReason: Value(reason),
+          cancelledAt: Value(DateTime.now()),
+        ),
+      );
+      debugPrint('[Cancel] Sale ${table.currentSaleId} cancelled: $reason');
+    } catch (e) {
+      debugPrint('[Cancel] Error saving cancellation: $e');
+    }
   }
 
   String _formatDuration(Duration d) {

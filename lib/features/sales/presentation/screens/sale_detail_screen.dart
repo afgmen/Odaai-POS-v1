@@ -243,6 +243,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
 
   // ── 환불 확인 다이얼로그 ──────────────────────────
   Future<void> _showRefundConfirmation() async {
+    String? refundReason;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => Dialog(
@@ -263,6 +264,20 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
                 'Hoàn toàn bộ ₫${_fmt(_sale!.total)} cho đơn ${_sale!.saleNumber}?',
                 style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              // ✅ CRITICAL FIX 1: Add TextField for refund reason
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Refund Reason',
+                  hintText: 'Enter reason for refund (optional)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                maxLines: 2,
+                onChanged: (val) => refundReason = val.trim().isEmpty ? null : val.trim(),
               ),
               const SizedBox(height: 20),
               Row(
@@ -304,7 +319,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
 
     try {
       final dao = ref.read(salesDaoProvider);
-      await dao.refundSale(widget.saleId, 1); // employeeId: 1 (기본 관리자)
+      await dao.refundSale(widget.saleId, 1, reason: refundReason); // employeeId: 1 (기본 관리자)
 
       // 주문 목록 갱신을 위해 provider invalidate
       ref.invalidate(salesListProvider);

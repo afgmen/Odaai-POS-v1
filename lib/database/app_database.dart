@@ -26,6 +26,7 @@ import '../features/tables/data/reservations_dao.dart';
 import '../features/auth/data/permission_logs_dao.dart';
 import '../features/daily_closing/data/daily_closing_dao.dart';
 import '../features/delivery/data/delivery_orders_dao.dart';
+import '../features/promotions/data/promotions_dao.dart';
 import '../features/floor_plan/data/floor_zone_dao.dart';
 import '../features/floor_plan/data/floor_element_dao.dart';
 import 'tables/delivery_orders.dart';
@@ -35,6 +36,7 @@ import 'tables/floor_plan_config.dart';
 import 'tables/employees.dart';
 import 'tables/products.dart';
 import 'tables/promotions.dart';
+import 'tables/promotion_products.dart';
 import 'tables/sales.dart';
 import 'tables/sync_queue.dart';
 import 'tables/point_transactions.dart';
@@ -71,6 +73,7 @@ part 'app_database.g.dart';
     Customers,
     SyncQueue,
     Promotions,
+    PromotionProducts, // B-082: 프로모션-제품 연결
     CashDrawerLogs,
     Refunds,
     RefundItems,
@@ -126,6 +129,7 @@ part 'app_database.g.dart';
     FloorElementDao,
     CategoriesDao,
     ModifierDao,
+    PromotionsDao, // B-082
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -133,8 +137,24 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
+  // DAO getters
+  late final salesDao = SalesDao(this);
+  late final customersDao = CustomersDao(this);
+  late final employeesDao = EmployeesDao(this);
+  late final kitchenOrdersDao = KitchenOrdersDao(this);
+  late final modifierDao = ModifierDao(this);
+  late final categoriesDao = CategoriesDao(this);
+  late final deliveryOrdersDao = DeliveryOrdersDao(this);
+  late final permissionsDao = PermissionsDao(this);
+  late final permissionLogsDao = PermissionLogsDao(this);
+  late final rolePermissionsDao = RolePermissionsDao(this);
+  late final userRolesDao = UserRolesDao(this);
+  late final storeAssignmentsDao = StoreAssignmentsDao(this);
+  late final promotionsDao = PromotionsDao(this);
+  late final dailyClosingDao = DailyClosingDao(this);
+
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration {
@@ -1224,6 +1244,7 @@ class AppDatabase extends _$AppDatabase {
         ['pos.discount', 'pos', 'Apply discounts', 0],
         ['pos.price.override', 'pos', 'Override prices', 0],
         ['pos.cash.drawer.open', 'pos', 'Open cash drawer manually', 0],
+        ['pos.delivery.create', 'pos', 'Create manual delivery orders', 0],
 
         // Orders Module
         ['order.create', 'order', 'Create orders', 0],
@@ -1307,7 +1328,7 @@ class AppDatabase extends _$AppDatabase {
       // 역할별 허용 권한 목록 정의 (null = 모든 권한)
       const Set<String>? ownerPermissions = null;
       const areaManagerPermissions = {
-        'pos.open', 'pos.refund', 'pos.discount', 'pos.price.override', 'pos.cash.drawer.open',
+        'pos.open', 'pos.refund', 'pos.discount', 'pos.price.override', 'pos.cash.drawer.open', 'pos.delivery.create',
         'order.create', 'order.cancel', 'order.view',
         'inventory.view', 'inventory.edit', 'inventory.adjust', 'inventory.writeoff',
         'revenue.dashboard.view', 'revenue.daily.view', 'revenue.weekly.view',
@@ -1315,14 +1336,14 @@ class AppDatabase extends _$AppDatabase {
         'staff.view', 'staff.manage', 'staff.role.assign',
       };
       const storeManagerPermissions = {
-        'pos.open', 'pos.refund', 'pos.discount', 'pos.cash.drawer.open',
+        'pos.open', 'pos.refund', 'pos.discount', 'pos.cash.drawer.open', 'pos.delivery.create',
         'order.create', 'order.cancel', 'order.view',
         'inventory.view', 'inventory.edit', 'inventory.adjust',
         'revenue.dashboard.view', 'revenue.daily.view', 'revenue.weekly.view',
         'staff.view',
       };
       const staffPermissions = {
-        'pos.open',
+        'pos.open', 'pos.delivery.create',
         'order.create', 'order.view',
         'inventory.view',
       };

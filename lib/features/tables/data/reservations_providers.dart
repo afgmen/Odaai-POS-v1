@@ -94,11 +94,12 @@ final showReservationDetailProvider = StateProvider<bool>((ref) => false);
 // Statistics Providers
 // ============================================================
 
-/// 상태별 예약 개수
+/// 상태별 예약 개수 (선택된 날짜 기준 - B-079 수정)
 final reservationCountByStatusProvider =
-    FutureProvider<Map<String, int>>((ref) {
+    StreamProvider<Map<String, int>>((ref) {
   final dao = ref.watch(reservationsDaoProvider);
-  return dao.getReservationCountByStatus();
+  final selectedDate = ref.watch(selectedDateProvider);
+  return dao.watchReservationCountByStatusForDate(selectedDate);
 });
 
 /// 오늘 노쇼 개수

@@ -262,8 +262,31 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// 주문 취소
-  Future<bool> cancelOrder(int id) {
-    return updateOrderStatus(id, 'CANCELLED');
+  Future<bool> cancelOrder(int id, {String? cancellationReason}) async {
+    final order = await getOrderById(id);
+    if (order == null) return false;
+
+    final now = DateTime.now();
+    final result = await (update(kitchenOrders)..where((t) => t.id.equals(id))).write(
+      KitchenOrdersCompanion(
+        status: const Value('CANCELLED'),
+        cancelledAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    ).then((count) => count > 0);
+
+    if (result) {
+      await _syncTableStatus(id, 'CANCELLED');
+      await (update(sales)..where((s) => s.id.equals(order.saleId))).write(
+        SalesCompanion(
+          status: const Value('cancelled'),
+          cancellationReason: Value(cancellationReason),
+          cancelledAt: Value(now),
+        ),
+      );
+    }
+
+    return result;
   }
 
   // ============================================================

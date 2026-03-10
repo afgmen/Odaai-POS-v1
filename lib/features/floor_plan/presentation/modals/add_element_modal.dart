@@ -204,7 +204,7 @@ class _AddElementModalState extends ConsumerState<AddElementModal> {
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+        SnackBarHelper.showSanitizedError(context, e);
       }
     }
   }
@@ -246,7 +246,7 @@ class _AddElementModalState extends ConsumerState<AddElementModal> {
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+        SnackBarHelper.showSanitizedError(context, e);
       }
     }
   }

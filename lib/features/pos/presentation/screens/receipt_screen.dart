@@ -18,6 +18,7 @@ class ReceiptScreen extends ConsumerWidget {
   final String paymentMethod;   // 'cash' | 'card' | 'qr'
   final double cashPaid;        // 현금 투입금액 (현금 결제 시만)
   final DateTime saleDate;
+  final String? orderType;
 
   const ReceiptScreen({
     super.key,
@@ -29,6 +30,7 @@ class ReceiptScreen extends ConsumerWidget {
     required this.paymentMethod,
     this.cashPaid = 0,
     required this.saleDate,
+    this.orderType,
   });
 
   // ── 결제 방법 라벨 매핑 ──────────────────────
@@ -38,6 +40,13 @@ class ReceiptScreen extends ConsumerWidget {
         'qr' => 'QR',
         'transfer' => l10n.transfer,
         _ => paymentMethod,
+      };
+
+  String _getOrderTypeLabel() => switch (orderType) {
+        'dineIn' => 'Dine-in',
+        'takeaway' => 'Takeout',
+        'phoneDelivery' || 'platformDelivery' => 'Delivery',
+        _ => 'Dine-in',
       };
 
   String get _paymentIcon => switch (paymentMethod) {
@@ -135,6 +144,23 @@ class ReceiptScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
+                  ),
+                ),
+
+                // ── 주문 유형 ──────────────────────────
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.receipt_long, size: 16, color: AppTheme.textSecondary),
+                      const SizedBox(width: 6),
+                      Text(
+                        _getOrderTypeLabel(),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                      ),
+                    ],
                   ),
                 ),
 

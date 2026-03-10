@@ -30,6 +30,7 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
   ];
 
   bool _isProcessing = false;
+  String? _tableNumberError; // 인라인 에러 메시지 (중복 등)
 
   @override
   void initState() {
@@ -91,12 +92,32 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
               // Table Number
               TextField(
                 controller: _tableNumberController,
+                onChanged: (_) {
+                  if (_tableNumberError != null) {
+                    setState(() => _tableNumberError = null);
+                  }
+                },
                 decoration: InputDecoration(
                   labelText: 'Table Number *',
                   hintText: 'e.g. T-01, A1, 12',
                   prefixIcon: const Icon(Icons.table_restaurant),
+                  errorText: _tableNumberError,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: _tableNumberError != null ? AppTheme.error : Colors.grey.shade400,
+                      width: _tableNumberError != null ? 2 : 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: _tableNumberError != null ? AppTheme.error : AppTheme.primary,
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -232,8 +253,11 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
     final tableNumber = _tableNumberController.text.trim();
     final seatsStr = _seatsController.text.trim();
 
+    // 인라인 에러 초기화
+    setState(() => _tableNumberError = null);
+
     if (tableNumber.isEmpty) {
-      SnackBarHelper.showError(context, 'Please enter table number');
+      setState(() => _tableNumberError = 'Please enter table number');
       return;
     }
 
@@ -247,6 +271,24 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
 
     try {
       final tablesDao = ref.read(tablesDaoProvider);
+
+      // 저장 전 중복 이름 사전 체크
+      final existing = await tablesDao.getTableByNumber(tableNumber);
+      final isDuplicate = existing != null &&
+          (!_isEditMode || existing.id != widget.existingTable!.id);
+      if (isDuplicate) {
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+            _tableNumberError = '"$tableNumber" is already in use';
+          });
+          SnackBarHelper.showError(
+            context,
+            'Table number "$tableNumber" already exists. Please use a different number.',
+          );
+        }
+        return;
+      }
 
       if (_isEditMode) {
         // Update existing table
@@ -278,7 +320,16 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isProcessing = false);
+        final raw = e.toString();
+        final isDuplicate = raw.contains('UNIQUE') &&
+            (raw.contains('table_number') || raw.contains('restaurant_tables'));
+        setState(() {
+          _isProcessing = false;
+          if (isDuplicate) {
+            _tableNumberError =
+                '"${_tableNumberController.text.trim()}" is already in use';
+          }
+        });
         final msg = _friendlyError(e);
         SnackBarHelper.showError(context, msg);
       }
@@ -288,7 +339,8 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
   /// SQLite 에러를 사용자 친화적인 메시지로 변환
   String _friendlyError(Object e) {
     final raw = e.toString();
-    if (raw.contains('UNIQUE') && raw.contains('table_number')) {
+    if (raw.contains('UNIQUE') &&
+        (raw.contains('table_number') || raw.contains('restaurant_tables'))) {
       return 'Table number "${_tableNumberController.text.trim()}" already exists. Please use a different number.';
     }
     if (raw.contains('UNIQUE')) {
@@ -334,7 +386,7 @@ class _AddTableModalState extends ConsumerState<AddTableModal> {
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
+        SnackBarHelper.showSanitizedError(context, e);
       }
     }
   }

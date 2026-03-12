@@ -44,6 +44,13 @@ final activeOrdersWithItemsStreamProvider =
   return dao.watchActiveOrdersWithItems();
 });
 
+/// B-095: 전체 주문 + 메뉴 아이템 스트림 (SERVED/CANCELLED 포함)
+final allOrdersWithItemsStreamProvider =
+    StreamProvider<List<KitchenOrderWithItems>>((ref) {
+  final dao = ref.watch(kitchenOrdersDaoProvider);
+  return dao.watchAllOrdersWithItems();
+});
+
 /// PENDING 주문 스트림
 final pendingOrdersStreamProvider =
     StreamProvider<List<KitchenOrder>>((ref) {

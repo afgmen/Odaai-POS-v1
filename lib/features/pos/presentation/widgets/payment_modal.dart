@@ -126,14 +126,20 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
           topRight: Radius.circular(20),
         ),
       ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      child: ConstrainedBox(
+        // B-096: Delivery 폼 추가 시 모달이 화면 밖으로 밀리지 않도록 최대 높이 제한
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.92,
         ),
-        child: Column(
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -573,7 +579,8 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             ),
           ],
         ),
-      ),
+        ), // SingleChildScrollView
+      ), // ConstrainedBox
     );
   }
 
@@ -685,6 +692,59 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
 
     try {
       final cart = ref.read(cartProvider);
+
+      // B-102: cart 전체 아이템 재고 일괄 검증
+      if (cart.isNotEmpty) {
+        final productsDao = ref.read(productsDaoProvider);
+        final List<String> insufficientItems = [];
+
+        for (final cartItem in cart) {
+          final product = await productsDao.getProductById(cartItem.product.id);
+          // B-102: stock >= 0이면 재고 추적 대상으로 간주
+          if (product != null &&
+              product.stock >= 0 &&
+              product.stock < cartItem.quantity) {
+            insufficientItems.add(
+              '${product.name} (재고: ${product.stock}, 주문: ${cartItem.quantity})',
+            );
+          }
+        }
+
+        if (insufficientItems.isNotEmpty) {
+          setState(() => _isProcessing = false);
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Insufficient Stock'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('The following items have insufficient stock:'),
+                    const SizedBox(height: 8),
+                    ...insufficientItems.map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text('• $item',
+                            style: const TextStyle(fontSize: 13)),
+                      ),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('확인'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return;
+        }
+      }
+
       final dao = ref.read(salesDaoProvider);
       final db = ref.read(databaseProvider);
       final currentEmployee = ref.read(currentEmployeeProvider);
@@ -870,7 +930,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               subtotal: subtotal,
               discount: discountAmount,
               total: finalTotal,
-              paymentMethod: _selectedMethod.name,
+              paymentMethod: _selectedMethod.name.toUpperCase(),
               cashPaid: _selectedMethod == PaymentMethod.cash ? _cashInput : 0,
               saleDate: createdSale.saleDate,
               orderType: _selectedOrderType.dbValue,

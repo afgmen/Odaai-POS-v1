@@ -8,9 +8,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/currency_provider.dart';
 import '../../../../providers/locale_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
-import '../../../auth/providers/rbac_providers.dart';
+
 import 'security_settings_screen.dart';
-import '../widgets/enable_rbac_button.dart';
+
 import '../widgets/delivery_server_settings.dart';
 import '../../../delivery/presentation/screens/delivery_platform_settings_screen.dart';
 import '../../providers/store_settings_provider.dart';
@@ -29,7 +29,7 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final currentLang = ref.watch(currentLanguageProvider);
     final currentCurrency = ref.watch(currencyProvider);
-    final rbacEnabled = ref.watch(rbacSettingProvider);
+
     final storeSettings = ref.watch(storeSettingsProvider);
 
     return Scaffold(
@@ -41,20 +41,6 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ─── RBAC Enable Button (Show if RBAC is not enabled) ──
-          rbacEnabled.when(
-            data: (enabled) => !enabled
-                ? Column(
-                    children: [
-                      const EnableRbacButton(),
-                      const SizedBox(height: 24),
-                    ],
-                  )
-                : const SizedBox.shrink(),
-            loading: () => const SizedBox.shrink(),
-            error: (_, _) => const SizedBox.shrink(),
-          ),
-
           // ─── Original sections below ──
           // ─── 언어 & 통화 섹션 ─────────────────────────
           _SectionHeader(title: l10n.localeSettings, icon: Icons.language),

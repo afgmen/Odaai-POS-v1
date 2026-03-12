@@ -61,11 +61,39 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
     final l10n = AppLocalizations.of(context)!;
     final closingService = ref.read(closingServiceProvider);
 
-    final result = await closingService.performClosing(
-      date: selectedDate,
-      actualCash: actualCash,
-      notes: notesController.text.isEmpty ? null : notesController.text,
-    );
+    ClosingResult result;
+    try {
+      result = await closingService.performClosing(
+        date: selectedDate,
+        actualCash: actualCash,
+        notes: notesController.text.isEmpty ? null : notesController.text,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red, size: 26),
+              SizedBox(width: 10),
+              Text('Closing Failed'),
+            ],
+          ),
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+            style: const TextStyle(fontSize: 14, height: 1.5),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
     if (!mounted) return;
 
@@ -274,50 +302,58 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
 
             aggregationAsync.when(
               data: (aggregation) {
-                if (aggregation == null || aggregation.totalTransactions == 0) {
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.receipt_long,
-                              size: 64,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.noSalesForDate,
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }
+                final hasNoSales = aggregation == null || aggregation.totalTransactions == 0;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ClosingSummaryCard(
-                      aggregation: aggregation,
-                      tutorialKey: DailyClosingTutorialKeys.summaryCard,
-                    ),
-                    const SizedBox(height: 16),
+                    // 매출 없음 경고 배너 (버튼은 여전히 표시)
+                    if (hasNoSales) ...[
+                      Card(
+                        color: Colors.orange.shade50,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.orange.shade200),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Icon(Icons.warning_amber_rounded,
+                                  color: Colors.orange.shade700, size: 28),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.noSalesForDate,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.orange.shade800,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'You can still perform closing to record this date.',
+                                      style: TextStyle(
+                                        color: Colors.orange.shade700,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
 
-                    PaymentBreakdownWidget(
-                      aggregation: aggregation,
-                      tutorialKey: DailyClosingTutorialKeys.paymentBreakdown,
-                    ),
-                    const SizedBox(height: 16),
-
-                    _buildCashManagement(aggregation),
-                    const SizedBox(height: 16),
+                    // 매출 있을 때만 요약 카드/결제 내역/현금 관리 표시
+                    if (!hasNoSales) ..._buildSalesWidgets(aggregation),
 
                     _buildNotesSection(),
                     const SizedBox(height: 24),
@@ -357,6 +393,25 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
         ),
       ),
     );
+  }
+
+  /// 매출 있을 때만 표시할 위젯 목록 (aggregation non-null 보장)
+  List<Widget> _buildSalesWidgets(SalesAggregation? aggregation) {
+    if (aggregation == null) return [];
+    return [
+      ClosingSummaryCard(
+        aggregation: aggregation,
+        tutorialKey: DailyClosingTutorialKeys.summaryCard,
+      ),
+      const SizedBox(height: 16),
+      PaymentBreakdownWidget(
+        aggregation: aggregation,
+        tutorialKey: DailyClosingTutorialKeys.paymentBreakdown,
+      ),
+      const SizedBox(height: 16),
+      _buildCashManagement(aggregation),
+      const SizedBox(height: 16),
+    ];
   }
 
   Widget _buildCashManagement(SalesAggregation aggregation) {

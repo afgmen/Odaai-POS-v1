@@ -666,7 +666,21 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     // ────────────────────────────────────────────────────────
     final approved = await _checkKitchenApproval(widget.saleId);
     if (!approved) return; // 사용자가 취소하면 체크아웃 중단
-    
+
+    // ── 빈 카트 가드: saleId 없이 cart도 비어있으면 결제 차단 ──
+    final cart = ref.read(cartProvider);
+    if (cart.isEmpty && widget.saleId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.cartEmpty),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isProcessing = true);
 
     try {

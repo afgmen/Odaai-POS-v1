@@ -54,6 +54,7 @@ class BillRequestScreen extends ConsumerWidget {
                 sale: sale,
                 items: items,
                 tableNumber: tableNumber,
+                tableId: tableId,
               );
             },
           );
@@ -67,11 +68,13 @@ class _BillContent extends StatelessWidget {
   final Sale sale;
   final List<SaleItem> items;
   final String tableNumber;
+  final int tableId;
 
   const _BillContent({
     required this.sale,
     required this.items,
     required this.tableNumber,
+    required this.tableId,
   });
 
   List<Widget> _buildGroupedItems(List<SaleItem> items) {
@@ -177,7 +180,7 @@ class _BillContent extends StatelessWidget {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (_) => PaymentModal(saleId: sale.id),
+                  builder: (_) => PaymentModal(saleId: sale.id, tableId: tableId),
                 );
               },
               icon: const Icon(Icons.payment, size: 24),

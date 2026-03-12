@@ -29,7 +29,7 @@ class TableMergeModal extends ConsumerWidget {
         }
 
         final availableTables = snapshot.data!
-            .where((t) => t.id != currentTable.id && t.status == 'OCCUPIED')
+            .where((t) => t.id != currentTable.id && ['ORDERING', 'PREPARING', 'SERVED', 'CHECKOUT'].contains(t.status))
             .toList();
 
         debugPrint('[MergeTable] Merge candidates (excluding current): ${availableTables.length}');
@@ -98,10 +98,10 @@ class TableMergeModal extends ConsumerWidget {
 
   Future<List<RestaurantTable>> _getOccupiedTables(AppDatabase db) async {
     final tables = await (db.select(db.restaurantTables)
-          ..where((t) => t.status.equals('OCCUPIED')))
+          ..where((t) => t.status.isIn(['ORDERING', 'PREPARING', 'SERVED', 'CHECKOUT'])))
         .get();
     
-    debugPrint('[MergeTable] Found ${tables.length} OCCUPIED tables total');
+    debugPrint('[MergeTable] Found ${tables.length} active tables total');
     debugPrint('[MergeTable] Current table: ${currentTable.tableNumber} (ID: ${currentTable.id})');
     
     return tables;

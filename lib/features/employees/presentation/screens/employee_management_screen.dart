@@ -8,9 +8,8 @@ import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/domain/permission_modules.dart';
 import '../../../auth/providers/auth_provider.dart';
-import '../../../auth/providers/rbac_providers.dart';
+
 import '../widgets/employee_form_modal.dart';
-import '../widgets/quick_set_owner_button.dart';
 
 /// 직원 관리 화면
 class EmployeeManagementScreen extends ConsumerWidget {
@@ -114,43 +113,6 @@ class _EmployeeManagementContent extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // RBAC Setup Banner (show if RBAC not enabled)
-                Consumer(
-                  builder: (context, ref, child) {
-                    final rbacEnabled = ref.watch(rbacSettingProvider);
-                    return rbacEnabled.when(
-                      data: (enabled) => !enabled
-                          ? Container(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppTheme.primary, width: 2),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.info_outline, color: AppTheme.primary, size: 24),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      '💡 Tip: Click "Set as OWNER" button on any employee card below to enable RBAC security',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: AppTheme.textPrimary,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, _) => const SizedBox.shrink(),
-                    );
-                  },
-                ),
                 // Employee Grid
                 Expanded(
                   child: GridView.builder(
@@ -231,8 +193,6 @@ class _EmployeeCard extends ConsumerWidget {
     final roleLabel = _getRoleLabel(l10n, employee.role);
     final roleColor = _getRoleColor(employee.role);
     final hasPin = employee.pinHash != null;
-    final rbacEnabled = ref.watch(rbacSettingProvider);
-
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.cardWhite,
@@ -386,15 +346,6 @@ class _EmployeeCard extends ConsumerWidget {
               },
             ),
           ],
-        ),
-        const SizedBox(height: 12),
-        // Set as OWNER button (show if RBAC not enabled)
-        rbacEnabled.when(
-          data: (enabled) => !enabled
-              ? QuickSetOwnerButton(employee: employee)
-              : const SizedBox.shrink(),
-          loading: () => const SizedBox.shrink(),
-          error: (_, _) => const SizedBox.shrink(),
         ),
       ],
     ),

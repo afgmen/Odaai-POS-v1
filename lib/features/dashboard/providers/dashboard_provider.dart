@@ -41,43 +41,49 @@ final dashboardFilterProvider =
   return (from: from, to: to);
 }
 
-// ── 기간별 매출 합계 ───────────────────────────────
-final totalSalesProvider = FutureProvider<double>((ref) async {
+// ── B-103: 기간별 매출 합계 — StreamProvider (결제 즉시 반영) ──
+final totalSalesProvider = StreamProvider<double>((ref) {
   final dao = ref.watch(salesDaoProvider);
   final filter = ref.watch(dashboardFilterProvider);
   final range = _dateRange(filter);
-  return await dao.getTotalSales(range.from, range.to);
+  return dao.watchTotalSales(range.from, range.to);
 });
 
-// ── 기간별 주문 수 (SQL COUNT 최적화) ──────────────
-final orderCountProvider = FutureProvider<int>((ref) async {
+// ── B-103: 기간별 주문 수 — StreamProvider ─────────
+final orderCountProvider = StreamProvider<int>((ref) {
   final dao = ref.watch(salesDaoProvider);
   final filter = ref.watch(dashboardFilterProvider);
   final range = _dateRange(filter);
-  return await dao.getOrderCount(range.from, range.to);
+  return dao.watchOrderCount(range.from, range.to);
 });
 
-// ── 평균 주문금액 ──────────────────────────────────
-final avgOrderProvider = FutureProvider<double>((ref) async {
-  final total = await ref.watch(totalSalesProvider.future);
-  final count = await ref.watch(orderCountProvider.future);
-  return count > 0 ? total / count : 0;
+// ── 평균 주문금액 (파생 스트림) ────────────────────
+final avgOrderProvider = StreamProvider<double>((ref) {
+  // combine total + count streams
+  final totalAsync = ref.watch(totalSalesProvider);
+  final countAsync = ref.watch(orderCountProvider);
+
+  final total = totalAsync.valueOrNull ?? 0;
+  final count = countAsync.valueOrNull ?? 0;
+
+  return Stream.value(count > 0 ? total / count : 0);
 });
 
-// ── 결제 방법별 매출 분석 (SQL GROUP BY 최적화) ─────
+// ── B-103: 결제 방법별 매출 분석 — StreamProvider ──
 final paymentBreakdownProvider =
-    FutureProvider<List<PaymentStat>>((ref) async {
+    StreamProvider<List<PaymentStat>>((ref) {
   final dao = ref.watch(salesDaoProvider);
   final filter = ref.watch(dashboardFilterProvider);
   final range = _dateRange(filter);
-  final breakdown = await dao.getPaymentBreakdown(range.from, range.to);
-
-  return breakdown
-      .map((e) => PaymentStat(method: e.method, total: e.total))
-      .toList();
+  return dao.watchPaymentBreakdown(range.from, range.to).map(
+        (list) => list
+            .map((e) => PaymentStat(method: e.method, total: e.total))
+            .toList(),
+      );
 });
 
-// ── 상품별 매출 순위 (Top 5) ───────────────────────
+// ── 상품별 매출 순위 (Top 5) — 집계 쿼리라 FutureProvider 유지 ──
+// invalidate는 payment_modal에서 결제 완료 시 수행
 final topSellingProvider =
     FutureProvider<List<ProductSalesStats>>((ref) async {
   final dao = ref.watch(salesDaoProvider);

@@ -27,27 +27,27 @@ enum DateFilter {
 /// 현재 날짜 필터 상태
 final selectedDateFilterProvider = StateProvider<DateFilter>((ref) => DateFilter.today);
 
-/// 날짜 필터에 맞는 주문 목록
-final salesListProvider = FutureProvider<List<Sale>>((ref) async {
-  final dao = ref.watch(salesDaoProvider);
-  final filter = ref.watch(selectedDateFilterProvider);
-
+// ── 날짜 범위 계산 헬퍼 ────────────────────────────
+({DateTime from, DateTime to}) _salesDateRange(DateFilter filter) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
+  final to = now.add(const Duration(days: 1));
 
-  final DateTime from;
-  final DateTime to = now.add(const Duration(days: 1)); // 오늘 끝
+  final from = switch (filter) {
+    DateFilter.today => today,
+    DateFilter.week => today.subtract(const Duration(days: 6)),
+    DateFilter.month => DateTime(now.year, now.month, 1),
+    DateFilter.all => DateTime(2000, 1, 1),
+  };
 
-  switch (filter) {
-    case DateFilter.today:
-      from = today;
-    case DateFilter.week:
-      from = today.subtract(const Duration(days: 6));
-    case DateFilter.month:
-      from = DateTime(now.year, now.month, 1);
-    case DateFilter.all:
-      from = DateTime(2000, 1, 1); // 실질적 전체
-  }
+  return (from: from, to: to);
+}
 
-  return await dao.getSalesByDateRange(from, to);
+/// B-103: 날짜 필터에 맞는 주문 목록 — FutureProvider → StreamProvider
+/// 결제/환불 즉시 UI에 반영됨
+final salesListProvider = StreamProvider<List<Sale>>((ref) {
+  final dao = ref.watch(salesDaoProvider);
+  final filter = ref.watch(selectedDateFilterProvider);
+  final range = _salesDateRange(filter);
+  return dao.watchSalesByDateRange(range.from, range.to);
 });

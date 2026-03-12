@@ -17,6 +17,10 @@ import '../../data/models/order_type.dart';
 import '../screens/receipt_screen.dart';
 import '../../../cash_drawer/providers/cash_drawer_provider.dart';
 import '../../../tables/data/tables_providers.dart';
+import '../../../dashboard/providers/dashboard_provider.dart';
+import '../../../daily_closing/providers/daily_closing_provider.dart';
+import '../../../reports/providers/reports_provider.dart';
+import '../../../sales/providers/sales_provider.dart';
 import 'delivery_info_section.dart';
 
 /// 결제 방법 열거형
@@ -919,6 +923,27 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         // 고객 선택 및 포인트 사용 초기화
         ref.read(selectedCustomerProvider.notifier).state = null;
         ref.read(pointsToUseProvider.notifier).state = 0;
+
+        // B-103: FutureProvider 계열 강제 갱신
+        // (StreamProvider들은 DB 변경 감지로 자동 갱신)
+        // Dashboard
+        ref.invalidate(topSellingProvider);
+        ref.invalidate(inventoryValueProvider);
+        ref.invalidate(lowStockProvider);
+        ref.invalidate(canCloseTodayProvider);
+        // Daily Closing (집계 쿼리 — FutureProvider 유지)
+        ref.invalidate(salesAggregationProvider);
+        // Reports (FutureProvider 전체 갱신)
+        ref.invalidate(reportTotalSalesProvider);
+        ref.invalidate(reportOrderCountProvider);
+        ref.invalidate(reportAvgOrderProvider);
+        ref.invalidate(reportGrowthProvider);
+        ref.invalidate(dailySalesChartProvider);
+        ref.invalidate(paymentPieChartProvider);
+        ref.invalidate(topProductsBarChartProvider);
+        ref.invalidate(hourlySalesProvider);
+        // Sales list (StreamProvider이지만 invalidate도 허용)
+        ref.invalidate(salesListProvider);
 
         // 결제 모달 닫고 영수증 화면으로 전이
         Navigator.of(context).pop();

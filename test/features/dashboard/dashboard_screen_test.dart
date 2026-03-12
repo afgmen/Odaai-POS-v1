@@ -12,9 +12,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            totalSalesProvider.overrideWith((ref) async => 0.0),
-            orderCountProvider.overrideWith((ref) async => 0),
-            avgOrderProvider.overrideWith((ref) async => 0.0),
+            totalSalesProvider.overrideWith((ref) => Stream.value(0.0)),
+            orderCountProvider.overrideWith((ref) => Stream.value(0)),
+            avgOrderProvider.overrideWith((ref) => Stream.value(0.0)),
             topSellingProvider.overrideWith((ref) async => []),
             inventoryValueProvider.overrideWith((ref) async => 0.0),
           ],
@@ -37,9 +37,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            totalSalesProvider.overrideWith((ref) async => 100000.0),
-            orderCountProvider.overrideWith((ref) async => 25),
-            avgOrderProvider.overrideWith((ref) async => 4000.0),
+            totalSalesProvider.overrideWith((ref) => Stream.value(100000.0)),
+            orderCountProvider.overrideWith((ref) => Stream.value(25)),
+            avgOrderProvider.overrideWith((ref) => Stream.value(4000.0)),
             topSellingProvider.overrideWith((ref) async => []),
             inventoryValueProvider.overrideWith((ref) async => 5000000.0),
           ],
@@ -64,9 +64,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            totalSalesProvider.overrideWith((ref) async => testSales),
-            orderCountProvider.overrideWith((ref) async => 30),
-            avgOrderProvider.overrideWith((ref) async => 5000.0),
+            totalSalesProvider.overrideWith((ref) => Stream.value(testSales)),
+            orderCountProvider.overrideWith((ref) => Stream.value(30)),
+            avgOrderProvider.overrideWith((ref) => Stream.value(5000.0)),
             topSellingProvider.overrideWith((ref) async => []),
             inventoryValueProvider.overrideWith((ref) async => 0.0),
           ],
@@ -90,9 +90,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            totalSalesProvider.overrideWith((ref) async => 200000.0),
-            orderCountProvider.overrideWith((ref) async => testOrderCount),
-            avgOrderProvider.overrideWith((ref) async => 4761.0),
+            totalSalesProvider.overrideWith((ref) => Stream.value(200000.0)),
+            orderCountProvider.overrideWith((ref) => Stream.value(testOrderCount)),
+            avgOrderProvider.overrideWith((ref) => Stream.value(4761.0)),
             topSellingProvider.overrideWith((ref) async => []),
             inventoryValueProvider.overrideWith((ref) async => 1000000.0),
           ],
@@ -129,9 +129,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            totalSalesProvider.overrideWith((ref) async => 520000.0),
-            orderCountProvider.overrideWith((ref) async => 95),
-            avgOrderProvider.overrideWith((ref) async => 5473.0),
+            totalSalesProvider.overrideWith((ref) => Stream.value(520000.0)),
+            orderCountProvider.overrideWith((ref) => Stream.value(95)),
+            avgOrderProvider.overrideWith((ref) => Stream.value(5473.0)),
             topSellingProvider.overrideWith((ref) async => testProducts),
             inventoryValueProvider.overrideWith((ref) async => 2000000.0),
           ],
@@ -153,9 +153,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            totalSalesProvider.overrideWith((ref) async => 0.0),
-            orderCountProvider.overrideWith((ref) async => 0),
-            avgOrderProvider.overrideWith((ref) async => 0.0),
+            totalSalesProvider.overrideWith((ref) => Stream.value(0.0)),
+            orderCountProvider.overrideWith((ref) => Stream.value(0)),
+            avgOrderProvider.overrideWith((ref) => Stream.value(0.0)),
             topSellingProvider.overrideWith((ref) async => []),
             inventoryValueProvider.overrideWith((ref) async => 0.0),
           ],
@@ -177,18 +177,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            totalSalesProvider.overrideWith((ref) async {
-              await Future.delayed(const Duration(milliseconds: 100));
-              return 100000.0;
-            }),
-            orderCountProvider.overrideWith((ref) async {
-              await Future.delayed(const Duration(milliseconds: 100));
-              return 20;
-            }),
-            avgOrderProvider.overrideWith((ref) async {
-              await Future.delayed(const Duration(milliseconds: 100));
-              return 5000.0;
-            }),
+            totalSalesProvider.overrideWith((ref) => Stream.fromFuture(
+                  Future.delayed(const Duration(milliseconds: 100), () => 100000.0),
+                )),
+            orderCountProvider.overrideWith((ref) => Stream.fromFuture(
+                  Future.delayed(const Duration(milliseconds: 100), () => 20),
+                )),
+            avgOrderProvider.overrideWith((ref) => Stream.fromFuture(
+                  Future.delayed(const Duration(milliseconds: 100), () => 5000.0),
+                )),
             topSellingProvider.overrideWith((ref) async {
               await Future.delayed(const Duration(milliseconds: 100));
               return [];
@@ -216,9 +213,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            totalSalesProvider.overrideWith((ref) async => 100000.0),
-            orderCountProvider.overrideWith((ref) async => 25),
-            avgOrderProvider.overrideWith((ref) async => 4000.0),
+            totalSalesProvider.overrideWith((ref) => Stream.value(100000.0)),
+            orderCountProvider.overrideWith((ref) => Stream.value(25)),
+            avgOrderProvider.overrideWith((ref) => Stream.value(4000.0)),
             topSellingProvider.overrideWith((ref) async => []),
             inventoryValueProvider.overrideWith((ref) async => 0.0),
           ],

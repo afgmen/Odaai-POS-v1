@@ -475,7 +475,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                       child: OutlinedButton(
                         onPressed: () {
                           setState(() => _cashInput = amount.toDouble());
-                          _cashController.text = priceFormatter.format(amount.toDouble());
+                          _cashController.text = priceFormatter.format(amount.toDouble(), includeSymbol: false);
                         },
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 8),

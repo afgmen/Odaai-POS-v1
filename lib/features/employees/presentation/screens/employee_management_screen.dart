@@ -403,12 +403,14 @@ class _EmployeeCard extends ConsumerWidget {
   }
 
   String _getRoleLabel(AppLocalizations l10n, String role) {
-    switch (role) {
-      case 'admin':
+    switch (role.toUpperCase()) {
+      case 'OWNER':
+        return 'Owner';
+      case 'ADMIN':
         return l10n.roleAdmin;
-      case 'manager':
+      case 'MANAGER':
         return l10n.roleManager;
-      case 'cashier':
+      case 'CASHIER':
         return l10n.roleCashier;
       default:
         return role.toUpperCase();
@@ -416,12 +418,14 @@ class _EmployeeCard extends ConsumerWidget {
   }
 
   Color _getRoleColor(String role) {
-    switch (role) {
-      case 'admin':
+    switch (role.toUpperCase()) {
+      case 'OWNER':
+        return const Color(0xFFEF4444); // Red — distinctive for owner
+      case 'ADMIN':
         return AppTheme.primary;
-      case 'manager':
+      case 'MANAGER':
         return const Color(0xFF8B5CF6);
-      case 'cashier':
+      case 'CASHIER':
         return AppTheme.success;
       default:
         return AppTheme.textSecondary;

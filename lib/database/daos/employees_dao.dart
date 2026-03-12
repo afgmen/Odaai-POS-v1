@@ -26,6 +26,11 @@ class EmployeesDao extends DatabaseAccessor<AppDatabase>
     return (select(employees)..where((e) => e.isActive.equals(true))).get();
   }
 
+  /// 활성 직원 스트림 (실시간 반영 — 직원 추가/수정 즉시 반영)
+  Stream<List<Employee>> watchActiveEmployees() {
+    return (select(employees)..where((e) => e.isActive.equals(true))).watch();
+  }
+
   /// 직원 생성
   Future<int> createEmployee(EmployeesCompanion entry) {
     return into(employees).insert(entry);

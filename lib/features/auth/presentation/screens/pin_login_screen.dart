@@ -259,8 +259,8 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
 // Private Providers (화면 전용)
 // ============================================================
 
-/// 활성 직원 목록 Provider
-final _activeEmployeesProvider = FutureProvider<List<Employee>>((ref) async {
+/// 활성 직원 목록 Provider (StreamProvider — 직원 추가/수정 즉시 반영)
+final _activeEmployeesProvider = StreamProvider<List<Employee>>((ref) {
   final employeesDao = ref.watch(employeesDaoProvider);
-  return await employeesDao.getAllEmployees();
+  return employeesDao.watchActiveEmployees();
 });

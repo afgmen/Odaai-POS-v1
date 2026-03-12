@@ -129,9 +129,10 @@ class _EmployeeFormModalState extends ConsumerState<EmployeeFormModal> {
                     prefixIcon: const Icon(Icons.work_outline),
                   ),
                   items: [
-                    DropdownMenuItem(value: 'cashier', child: Text(l10n.roleCashier)),
-                    DropdownMenuItem(value: 'manager', child: Text(l10n.roleManager)),
+                    const DropdownMenuItem(value: 'OWNER', child: Text('Owner')),
                     DropdownMenuItem(value: 'admin', child: Text(l10n.roleAdmin)),
+                    DropdownMenuItem(value: 'manager', child: Text(l10n.roleManager)),
+                    DropdownMenuItem(value: 'cashier', child: Text(l10n.roleCashier)),
                   ],
                   onChanged: (value) {
                     setState(() => _selectedRole = value!);

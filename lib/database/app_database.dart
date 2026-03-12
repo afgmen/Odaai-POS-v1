@@ -617,7 +617,7 @@ class AppDatabase extends _$AppDatabase {
         username: 'admin',
         name: 'Administrator',
         passwordHash: '', // 레거시 필드 (미사용) — 평문 저장 금지
-        role: const Value('MANAGER'),
+        role: const Value('OWNER'),
         pinHash: const Value('e1c30c7b89e49eb8db1d46b4f3e5a73a909036bb4e607f344e4d5e680f085a4d'),
       ),
     );

@@ -15,6 +15,7 @@ import '../../../loyalty/domain/services/loyalty_service.dart';
 import '../../providers/cart_provider.dart';
 import '../../data/models/order_type.dart';
 import '../screens/receipt_screen.dart';
+import '../../../cash_drawer/providers/cash_drawer_provider.dart';
 import '../../../tables/data/tables_providers.dart';
 import 'delivery_info_section.dart';
 
@@ -665,7 +666,21 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     // ────────────────────────────────────────────────────────
     final approved = await _checkKitchenApproval(widget.saleId);
     if (!approved) return; // 사용자가 취소하면 체크아웃 중단
-    
+
+    // ── 빈 카트 가드: saleId 없이 cart도 비어있으면 결제 차단 ──
+    final cart = ref.read(cartProvider);
+    if (cart.isEmpty && widget.saleId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.cartEmpty),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isProcessing = true);
 
     try {
@@ -715,7 +730,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
       // ── Sales 레코드 구성 (delivery 정보 포함) ──────────────────
       final saleCompanion = SalesCompanion.insert(
         saleNumber: saleNumber,
-        paymentMethod: _selectedMethod.name, // 'cash' | 'card' | 'qr' | 'transfer'
+        paymentMethod: _selectedMethod.name.toUpperCase(), // 'CASH' | 'CARD' | 'QR' | 'TRANSFER'
         subtotal: Value(subtotal),
         discount: Value(discountAmount),
         total: Value(finalTotal),
@@ -777,6 +792,21 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             await db.modifierDao.saveSaleItemModifiers(saleItem.id, modifierCompanions);
           }
         }
+      }
+
+      // ── Cash Drawer 매출 기록 (현금 결제 시) ──
+      if (_selectedMethod == PaymentMethod.cash) {
+        final cashDao = ref.read(cashDrawerDaoProvider);
+        final currentBalance = await cashDao.getCurrentDrawerBalance();
+        await cashDao.logCashDrawer(
+          CashDrawerLogsCompanion.insert(
+            type: 'sale',
+            amount: finalTotal,
+            balanceBefore: currentBalance,
+            balanceAfter: currentBalance + finalTotal,
+            note: Value('Sale #$saleNumber'),
+          ),
+        );
       }
 
       // ── 포인트 사용 및 적립 처리 ──────────────

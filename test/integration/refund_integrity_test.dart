@@ -207,11 +207,9 @@ void main() {
     });
 
     // ── B-8  Daily closing and refunds ────────────────────────────────────
-    test('B-8a: aggregateSalesForDate includes refunded sales (current behaviour)', () async {
-      // Document the ACTUAL behaviour: the SQL does not filter by status,
-      // so refunded sales are still counted in the aggregation total.
-      // This test will fail (and become a regression signal) if the DAO is
-      // later updated to exclude refunded sales.
+    test('B-8a: aggregateSalesForDate excludes refunded sales (B-066 fix)', () async {
+      // B-066: aggregateSalesForDate now filters WHERE status = 'completed',
+      // so refunded sales are excluded from the aggregation total.
       final db = _openDb();
       addTearDown(db.close);
 
@@ -219,13 +217,13 @@ void main() {
       await _insertProduct(db, price: 30000);
       final sale = await _insertSale(db, productId: 1, unitPrice: 30000, saleDate: today);
 
-      // Full refund the sale
+      // Full refund the sale (status becomes 'refunded')
       await db.salesDao.refundSale(sale.id, 1);
 
       final agg = await db.dailyClosingDao.aggregateSalesForDate(today);
-      // The aggregation still includes this sale because status is not filtered
-      expect(agg!.totalTransactions, 1);
-      expect(agg.totalSales, closeTo(30000, 0.01));
+      // After B-066 fix: refunded sale is excluded (only 'completed' are counted)
+      expect(agg!.totalTransactions, 0);
+      expect(agg.totalSales, closeTo(0, 0.01));
     });
 
     test('B-8b: only completed (not refunded) sale contributes to getTotalSales()', () async {

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../providers/database_providers.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../auth/providers/rbac_providers.dart';
 
 /// Quick Enable RBAC Button (For Settings Screen)
 /// This button enables RBAC and sets the current user as OWNER
@@ -65,7 +66,12 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
 
       if (!mounted) return;
 
-      // 4. Show success and restart prompt
+      // 4. Invalidate RBAC cache so fresh DB read occurs on next check
+      ref.read(permissionServiceProvider).clearCache();
+      // Invalidate rbacSettingProvider so it re-reads from DB
+      ref.invalidate(rbacSettingProvider);
+
+      // 5. Show success and re-login prompt
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -79,17 +85,20 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
           ),
           content: const Text(
             'RBAC has been enabled and you are now set as OWNER.\n\n'
-            'Please restart the app to see the Security Settings section.',
+            'You will be logged out. Please log in again to apply the new security settings.',
           ),
           actions: [
             FilledButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(ctx);
-                // Force logout to trigger restart
-                ref.read(authProvider.notifier).logout();
-                Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                // Clear cache before logout to ensure fresh state on re-login
+                ref.read(permissionServiceProvider).clearCache();
+                await ref.read(authProvider.notifier).logout();
+                if (ctx.mounted) {
+                  Navigator.of(ctx).pushNamedAndRemoveUntil('/', (route) => false);
+                }
               },
-              child: const Text('Restart Now'),
+              child: const Text('Log Out & Apply'),
             ),
           ],
         ),
@@ -101,14 +110,15 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Please restart the app. An error occurred while applying settings.',
+            'An error occurred while applying settings. Please log out and log in again.',
           ),
           backgroundColor: AppTheme.error,
           duration: const Duration(seconds: 5),
           action: SnackBarAction(
-            label: 'Restart',
+            label: 'Log Out',
             textColor: Colors.white,
             onPressed: () {
+              ref.read(permissionServiceProvider).clearCache();
               ref.read(authProvider.notifier).logout();
               Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
             },

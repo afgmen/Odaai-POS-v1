@@ -35,6 +35,7 @@ class DailyClosingDao extends DatabaseAccessor<AppDatabase>
         COALESCE(AVG(total), 0.0) as average_transaction
       FROM sales
       WHERE sale_date >= ? AND sale_date < ?
+        AND status = 'completed'
       ''',
       variables: [
         Variable.withString('CASH'),
@@ -74,6 +75,7 @@ class DailyClosingDao extends DatabaseAccessor<AppDatabase>
         SUM(total) as total_sales
       FROM sales
       WHERE sale_date >= ? AND sale_date < ?
+        AND status = 'completed'
       GROUP BY DATE(sale_date, 'unixepoch', 'localtime')
       ORDER BY sale_date DESC
       ''',

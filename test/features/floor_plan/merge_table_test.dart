@@ -3,8 +3,13 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:oda_pos/database/app_database.dart';
 
+/// B-091: Merge Table - active status filter
+/// OCCUPIED was never used in production; real statuses are
+/// ORDERING / PREPARING / SERVED / CHECKOUT.
 void main() {
-  group('B-062: Merge Table Logic', () {
+  const activeStatuses = ['ORDERING', 'PREPARING', 'SERVED', 'CHECKOUT'];
+
+  group('B-091: Merge Table — active-status filter', () {
     late AppDatabase db;
 
     setUp(() {
@@ -15,187 +20,113 @@ void main() {
       await db.close();
     });
 
-    test('Should find other OCCUPIED tables for merging', () async {
-      // Create 3 tables: 2 OCCUPIED, 1 AVAILABLE
-      final table1 = await db.tablesDao.createTable(
-        RestaurantTablesCompanion.insert(
-          tableNumber: 'T01',
-          seats: const Value(4),
-          status: const Value('OCCUPIED'),
-          currentSaleId: const Value(1),
-          positionX: const Value(100),
-          positionY: const Value(100),
-        ),
-      );
+    // ── helper ──────────────────────────────────────────────────────────
+    Future<int> makeTable(String number, String status, {int? saleId}) =>
+        db.tablesDao.createTable(
+          RestaurantTablesCompanion.insert(
+            tableNumber: number,
+            seats: const Value(4),
+            status: Value(status),
+            currentSaleId: Value(saleId),
+            positionX: const Value(100),
+            positionY: const Value(100),
+          ),
+        );
 
-      final table2 = await db.tablesDao.createTable(
-        RestaurantTablesCompanion.insert(
-          tableNumber: 'T02',
-          seats: const Value(2),
-          status: const Value('OCCUPIED'),
-          currentSaleId: const Value(2),
-          positionX: const Value(200),
-          positionY: const Value(100),
-        ),
-      );
+    // ── B-091 core fix: OCCUPIED tables are no longer visible ──────────
+    test('OCCUPIED status returns 0 active tables (old bug reproduced)', () async {
+      await makeTable('T01', 'OCCUPIED', saleId: 1);
+      await makeTable('T02', 'OCCUPIED', saleId: 2);
 
-      await db.tablesDao.createTable(
-        RestaurantTablesCompanion.insert(
-          tableNumber: 'T03',
-          seats: const Value(6),
-          status: const Value('AVAILABLE'),
-          positionX: const Value(300),
-          positionY: const Value(100),
-        ),
-      );
-
-      // Query OCCUPIED tables
-      final occupiedTables = await (db.select(db.restaurantTables)
-            ..where((t) => t.status.equals('OCCUPIED')))
+      final active = await (db.select(db.restaurantTables)
+            ..where((t) => t.status.isIn(activeStatuses)))
           .get();
 
-      // Should find 2 OCCUPIED tables
-      expect(occupiedTables.length, 2);
-      expect(occupiedTables.map((t) => t.id), containsAll([table1, table2]));
+      // With old code (.equals('OCCUPIED')) this would return 2;
+      // with new code it returns 0 because real tables use ORDERING/etc.
+      expect(active.length, 0,
+          reason: 'OCCUPIED is not a valid production status');
     });
 
-    test('Should exclude current table from merge candidates', () async {
-      final table1 = await db.tablesDao.createTable(
-        RestaurantTablesCompanion.insert(
-          tableNumber: 'T01',
-          seats: const Value(4),
-          status: const Value('OCCUPIED'),
-          currentSaleId: const Value(1),
-          positionX: const Value(100),
-          positionY: const Value(100),
-        ),
-      );
+    test('ORDERING tables are found as active', () async {
+      final id1 = await makeTable('T01', 'ORDERING', saleId: 1);
+      final id2 = await makeTable('T02', 'PREPARING', saleId: 2);
+      await makeTable('T03', 'AVAILABLE');
 
-      final table2 = await db.tablesDao.createTable(
-        RestaurantTablesCompanion.insert(
-          tableNumber: 'T02',
-          seats: const Value(2),
-          status: const Value('OCCUPIED'),
-          currentSaleId: const Value(2),
-          positionX: const Value(200),
-          positionY: const Value(100),
-        ),
-      );
-
-      // Get all OCCUPIED tables
-      final allOccupied = await (db.select(db.restaurantTables)
-            ..where((t) => t.status.equals('OCCUPIED')))
+      final active = await (db.select(db.restaurantTables)
+            ..where((t) => t.status.isIn(activeStatuses)))
           .get();
 
-      // Filter out current table (T01)
-      final mergeCandidates = allOccupied
-          .where((t) => t.id != table1)
-          .toList();
-
-      // Should only find T02
-      expect(mergeCandidates.length, 1);
-      expect(mergeCandidates.first.id, table2);
-      expect(mergeCandidates.first.tableNumber, 'T02');
+      expect(active.length, 2);
+      expect(active.map((t) => t.id), containsAll([id1, id2]));
     });
 
-    test('Should return empty list when only 1 OCCUPIED table exists', () async {
-      // Only 1 OCCUPIED table
-      await db.tablesDao.createTable(
-        RestaurantTablesCompanion.insert(
-          tableNumber: 'T01',
-          seats: const Value(4),
-          status: const Value('OCCUPIED'),
-          currentSaleId: const Value(1),
-          positionX: const Value(100),
-          positionY: const Value(100),
-        ),
-      );
+    test('All four active statuses are found', () async {
+      for (var i = 0; i < activeStatuses.length; i++) {
+        await makeTable('T0${i + 1}', activeStatuses[i], saleId: i + 1);
+      }
+      await makeTable('T05', 'AVAILABLE'); // should NOT appear
 
-      // 2 AVAILABLE tables
-      await db.tablesDao.createTable(
-        RestaurantTablesCompanion.insert(
-          tableNumber: 'T02',
-          seats: const Value(2),
-          status: const Value('AVAILABLE'),
-          positionX: const Value(200),
-          positionY: const Value(100),
-        ),
-      );
-
-      final occupiedTables = await (db.select(db.restaurantTables)
-            ..where((t) => t.status.equals('OCCUPIED')))
+      final active = await (db.select(db.restaurantTables)
+            ..where((t) => t.status.isIn(activeStatuses)))
           .get();
 
-      // Should find only 1 OCCUPIED
-      expect(occupiedTables.length, 1);
-
-      // After excluding current table, should be empty
-      final mergeCandidates = occupiedTables
-          .where((t) => t.id != occupiedTables.first.id)
-          .toList();
-      expect(mergeCandidates.length, 0);
+      expect(active.length, 4);
     });
 
-    test('Should find 3 merge candidates when 4 OCCUPIED tables exist', () async {
-      // Create 4 OCCUPIED tables
-      final table1 = await db.tablesDao.createTable(
-        RestaurantTablesCompanion.insert(
-          tableNumber: 'T01',
-          seats: const Value(4),
-          status: const Value('OCCUPIED'),
-          currentSaleId: const Value(1),
-          positionX: const Value(100),
-          positionY: const Value(100),
-        ),
-      );
+    test('Current table excluded from merge candidates', () async {
+      final current = await makeTable('T01', 'ORDERING', saleId: 1);
+      final other = await makeTable('T02', 'SERVED', saleId: 2);
 
-      await db.tablesDao.createTable(
-        RestaurantTablesCompanion.insert(
-          tableNumber: 'T02',
-          seats: const Value(2),
-          status: const Value('OCCUPIED'),
-          currentSaleId: const Value(2),
-          positionX: const Value(200),
-          positionY: const Value(100),
-        ),
-      );
-
-      await db.tablesDao.createTable(
-        RestaurantTablesCompanion.insert(
-          tableNumber: 'T03',
-          seats: const Value(6),
-          status: const Value('OCCUPIED'),
-          currentSaleId: const Value(3),
-          positionX: const Value(300),
-          positionY: const Value(100),
-        ),
-      );
-
-      await db.tablesDao.createTable(
-        RestaurantTablesCompanion.insert(
-          tableNumber: 'T04',
-          seats: const Value(8),
-          status: const Value('OCCUPIED'),
-          currentSaleId: const Value(4),
-          positionX: const Value(400),
-          positionY: const Value(100),
-        ),
-      );
-
-      // Get all OCCUPIED
-      final allOccupied = await (db.select(db.restaurantTables)
-            ..where((t) => t.status.equals('OCCUPIED')))
+      final allActive = await (db.select(db.restaurantTables)
+            ..where((t) => t.status.isIn(activeStatuses)))
           .get();
 
-      // Exclude current (T01)
-      final mergeCandidates = allOccupied
-          .where((t) => t.id != table1)
-          .toList();
+      final candidates = allActive.where((t) => t.id != current).toList();
 
-      // Should find 3 candidates (T02, T03, T04)
-      expect(mergeCandidates.length, 3);
-      expect(mergeCandidates.map((t) => t.tableNumber), 
-             containsAll(['T02', 'T03', 'T04']));
+      expect(candidates.length, 1);
+      expect(candidates.first.id, other);
+    });
+
+    test('Returns empty list when only current table is active', () async {
+      final current = await makeTable('T01', 'CHECKOUT', saleId: 1);
+      await makeTable('T02', 'AVAILABLE');
+
+      final allActive = await (db.select(db.restaurantTables)
+            ..where((t) => t.status.isIn(activeStatuses)))
+          .get();
+
+      final candidates = allActive.where((t) => t.id != current).toList();
+
+      expect(candidates.length, 0);
+    });
+
+    test('Finds 3 candidates when 4 active tables exist', () async {
+      final current = await makeTable('T01', 'ORDERING', saleId: 1);
+      await makeTable('T02', 'PREPARING', saleId: 2);
+      await makeTable('T03', 'SERVED', saleId: 3);
+      await makeTable('T04', 'CHECKOUT', saleId: 4);
+
+      final allActive = await (db.select(db.restaurantTables)
+            ..where((t) => t.status.isIn(activeStatuses)))
+          .get();
+
+      final candidates = allActive.where((t) => t.id != current).toList();
+
+      expect(candidates.length, 3);
+      expect(candidates.map((t) => t.tableNumber),
+          containsAll(['T02', 'T03', 'T04']));
+    });
+
+    test('AVAILABLE / CLEANING tables are NOT merge candidates', () async {
+      await makeTable('T01', 'AVAILABLE');
+      await makeTable('T02', 'CLEANING');
+
+      final active = await (db.select(db.restaurantTables)
+            ..where((t) => t.status.isIn(activeStatuses)))
+          .get();
+
+      expect(active.length, 0);
     });
   });
 }

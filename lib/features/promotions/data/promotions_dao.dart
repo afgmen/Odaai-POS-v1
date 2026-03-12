@@ -1,5 +1,8 @@
 import 'package:drift/drift.dart';
 import '../../../database/app_database.dart';
+import '../../../database/tables/promotions.dart';
+import '../../../database/tables/promotion_products.dart';
+import '../../../database/tables/products.dart';
 
 part 'promotions_dao.g.dart';
 

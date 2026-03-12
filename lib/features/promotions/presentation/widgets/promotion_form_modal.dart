@@ -237,7 +237,7 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
           promotion: PromotionsCompanion.insert(
             name: name,
             type: _selectedType,
-            value: value,
+            value: Value(value),
             applyToAllProducts: Value(_applyToAllProducts),
             startDate: Value(_startDate),
             endDate: Value(_endDate),

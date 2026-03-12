@@ -1,8 +1,10 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../providers/database_providers.dart';
 import '../../../pos/presentation/modals/cancel_reason_modal.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../tables/domain/enums/table_status.dart';

@@ -177,7 +177,7 @@ class _BillContent extends StatelessWidget {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (_) => PaymentModal(saleId: saleId),
+                  builder: (_) => PaymentModal(saleId: sale.id),
                 );
               },
               icon: const Icon(Icons.payment, size: 24),

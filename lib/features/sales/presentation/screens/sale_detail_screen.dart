@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
 import '../../../sales/providers/sales_provider.dart';
+import '../../../dashboard/providers/dashboard_provider.dart';
 
 /// 주문 상세 화면 (주문번호 + 상품 목록 + 환불 버튼)
 class SaleDetailScreen extends ConsumerStatefulWidget {
@@ -321,8 +322,9 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
       final dao = ref.read(salesDaoProvider);
       await dao.refundSale(widget.saleId, 1, reason: refundReason); // employeeId: 1 (기본 관리자)
 
-      // 주문 목록 갱신을 위해 provider invalidate
+      // B-098: 주문 목록 + 대시보드 Total Sales 강제 갱신
       ref.invalidate(salesListProvider);
+      ref.invalidate(totalSalesProvider);
 
       // 로컬 상태 갱신
       await _load();

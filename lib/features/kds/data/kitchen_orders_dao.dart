@@ -182,6 +182,22 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
     });
   }
 
+  /// B-095: 전체 주문 + 메뉴 아이템 스트림 (SERVED/CANCELLED 포함)
+  Stream<List<KitchenOrderWithItems>> watchAllOrdersWithItems() {
+    return watchAllOrders().asyncMap((orders) async {
+      final result = <KitchenOrderWithItems>[];
+
+      for (final order in orders) {
+        final items = await (select(saleItems)
+              ..where((t) => t.saleId.equals(order.saleId)))
+            .get();
+        result.add(KitchenOrderWithItems(order: order, items: items));
+      }
+
+      return result;
+    });
+  }
+
   // ============================================================
   // UPDATE - 상태 변경
   // ============================================================

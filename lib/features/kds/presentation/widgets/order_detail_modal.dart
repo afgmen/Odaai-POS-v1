@@ -5,6 +5,7 @@ import '../../domain/enums/order_status.dart';
 import '../../domain/enums/order_priority.dart';
 import '../../domain/services/kitchen_service_provider.dart';
 import '../../data/kitchen_orders_providers.dart';
+import '../../data/models/kitchen_order_with_items.dart';
 import '../providers/kds_screen_provider.dart';
 import '../../../../database/app_database.dart';
 import '../../../pos/presentation/modals/cancel_reason_modal.dart';
@@ -23,14 +24,16 @@ class OrderDetailModal extends ConsumerWidget {
     final dao = ref.watch(kitchenOrdersDaoProvider);
     final service = ref.watch(kitchenServiceProvider);
 
-    return FutureBuilder<KitchenOrder?>(
-      future: dao.getOrderById(orderId),
+    return FutureBuilder<KitchenOrderWithItems?>(
+      // B-097: getOrderWithItems로 아이템 목록도 함께 로드
+      future: dao.getOrderWithItems(orderId),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data == null) {
           return const SizedBox.shrink();
         }
 
-        final order = snapshot.data!;
+        final order = snapshot.data!.order;
+        final orderItems = snapshot.data!.items;
         final status = OrderStatus.fromString(order.status);
         final priority = OrderPriority.fromString(order.priority);
 
@@ -95,6 +98,76 @@ class OrderDetailModal extends ConsumerWidget {
                       if (order.specialInstructions != null &&
                           order.specialInstructions!.isNotEmpty)
                         _buildInfoRow('Special Request', order.specialInstructions!),
+
+                      const Divider(height: 32),
+
+                      // B-097: 주문 아이템 목록 (10개 이상도 스크롤 가능)
+                      Row(
+                        children: [
+                          const Icon(Icons.restaurant_menu, size: 18, color: Colors.grey),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Order Items (${orderItems.length})',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if (orderItems.isEmpty)
+                        const Text(
+                          'No items',
+                          style: TextStyle(color: Colors.grey),
+                        )
+                      else
+                        Container(
+                          constraints: const BoxConstraints(maxHeight: 400),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade200),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: orderItems.length,
+                            separatorBuilder: (_, __) =>
+                                Divider(height: 1, color: Colors.grey.shade200),
+                            itemBuilder: (context, index) {
+                              final item = orderItems[index];
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        item.productName,
+                                        style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade100,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        'x${item.quantity}',
+                                        style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
 
                       const Divider(height: 32),
 

@@ -228,21 +228,48 @@ class _PromotionCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: promotion.isActive ? AppTheme.success : AppTheme.textDisabled,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          promotion.isActive ? l10n.active : l10n.inactive,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                      // B-100: UI에서 만료 여부 판단 (DB isActive 값과 별개)
+                      Builder(builder: (context) {
+                        final now = DateTime.now();
+                        final isExpired = promotion.endDate != null &&
+                            promotion.endDate!.isBefore(now);
+                        if (isExpired) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade700,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'Expired',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          );
+                        }
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: promotion.isActive
+                                ? AppTheme.success
+                                : AppTheme.textDisabled,
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        ),
-                      ),
+                          child: Text(
+                            promotion.isActive ? l10n.active : l10n.inactive,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        );
+                      }),
                     ],
                   ),
                   const SizedBox(height: 4),

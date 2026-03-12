@@ -7,7 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/database_providers.dart';
-import '../../providers/promotions_provider.dart';
+// promotions_provider removed — activeProductsProvider is in database_providers
 
 class PromotionFormModal extends ConsumerStatefulWidget {
   final Promotion? promotion;
@@ -28,6 +28,7 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
   Set<int> _selectedProductIds = {}; // B-082
   DateTime? _startDate;
   DateTime? _endDate;
+  bool _loadingProducts = false; // B-099
 
   bool get _isEdit => widget.promotion != null;
 
@@ -39,8 +40,35 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
       text: widget.promotion?.value.toString() ?? '',
     );
     _selectedType = widget.promotion?.type ?? 'buy1get1';
+    _applyToAllProducts = widget.promotion?.applyToAllProducts ?? true;
     _startDate = widget.promotion?.startDate;
     _endDate = widget.promotion?.endDate;
+
+    // B-099: 편집 모드에서 기존 선택 상품 ID 로드
+    if (_isEdit) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadExistingProductIds();
+      });
+    }
+  }
+
+  /// B-099: 기존 프로모션에 연결된 상품 ID 로드
+  Future<void> _loadExistingProductIds() async {
+    if (!_isEdit || widget.promotion == null) return;
+    setState(() => _loadingProducts = true);
+    try {
+      final db = ref.read(databaseProvider);
+      final products =
+          await db.promotionsDao.getPromotionProducts(widget.promotion!.id);
+      if (mounted) {
+        setState(() {
+          _selectedProductIds = products.map((p) => p.id).toSet();
+          _loadingProducts = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingProducts = false);
+    }
   }
 
   @override
@@ -61,10 +89,19 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
         padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
+          // B-099: Column → Flexible 구조로 변경
+          // 스크롤 영역(폼 필드) + 고정 영역(저장 버튼)으로 분리
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ── 스크롤 가능한 폼 영역 ──────────────────────────────
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
               // 헤더
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -176,20 +213,30 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
                 ],
               ),
               const SizedBox(height: 24),
+                    ], // inner Column children
+                  ), // inner Column
+                ), // SingleChildScrollView
+              ), // Flexible
 
-              // 저장 버튼
-              ElevatedButton(
-                onPressed: _savePromotion,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                child: Text(_isEdit ? l10n.edit : l10n.add, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              ),
-            ],
-          ),
+              // ── 고정 저장 버튼 (항상 화면 하단에 표시) ──────────────
+              const SizedBox(height: 16),
+              _loadingProducts
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: _savePromotion,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(_isEdit ? l10n.edit : l10n.add,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+            ], // outer Column children
+          ), // outer Column / Form
         ),
       ),
     );
@@ -200,7 +247,6 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
 
     // B-082: Validation - 특정 제품 선택 시 최소 1개 필요
     if (!_applyToAllProducts && _selectedProductIds.isEmpty) {
-      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please select at least one product'),

@@ -8,21 +8,33 @@ import '../../data/models/menu_item_summary.dart';
 final selectedFilterProvider =
     StateProvider<OrderStatus?>((ref) => null);
 
-/// 필터링된 주문 목록 Provider (메뉴 아이템 포함)
+/// B-095: 필터링된 주문 목록 Provider (메뉴 아이템 포함)
+/// - 필터 없음 / PENDING / PREPARING / READY → 활성 주문 스트림
+/// - SERVED / CANCELLED → 전체 주문 스트림 (SERVED/CANCELLED 포함)
 final filteredOrdersProvider =
-    StreamProvider<List<KitchenOrderWithItems>>((ref) async* {
+    StreamProvider<List<KitchenOrderWithItems>>((ref) {
   final selectedFilter = ref.watch(selectedFilterProvider);
-  final ordersWithItems = await ref.watch(activeOrdersWithItemsStreamProvider.future);
+
+  // SERVED / CANCELLED 필터는 전체 주문 스트림에서 가져와야 함
+  final isHistoryFilter = selectedFilter == OrderStatus.served ||
+      selectedFilter == OrderStatus.cancelled;
+
+  // 올바른 스트림을 직접 watch (async*+await future 대신 DAO stream 직접 반환)
+  final dao = ref.watch(kitchenOrdersDaoProvider);
 
   if (selectedFilter == null) {
-    // 필터 없음 = 활성 주문 전체
-    yield ordersWithItems;
-  } else {
-    // 특정 상태 필터
-    final filtered = ordersWithItems
+    // 필터 없음 = 활성 주문 전체 (PENDING/PREPARING/READY)
+    return dao.watchActiveOrdersWithItems();
+  } else if (isHistoryFilter) {
+    // SERVED/CANCELLED: 전체 주문에서 해당 상태만 필터
+    return dao.watchAllOrdersWithItems().map((orders) => orders
         .where((item) => item.order.status == selectedFilter.value)
-        .toList();
-    yield filtered;
+        .toList());
+  } else {
+    // PENDING/PREPARING/READY: 활성 주문에서 해당 상태만 필터
+    return dao.watchActiveOrdersWithItems().map((orders) => orders
+        .where((item) => item.order.status == selectedFilter.value)
+        .toList());
   }
 });
 

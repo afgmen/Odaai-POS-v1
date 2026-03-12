@@ -162,9 +162,10 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
   Future<void> _generatePdf(int closingId) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final closingAsync = await ref.read(
-        closingByDateProvider(selectedDate).future,
-      );
+      // B-103: PDF 생성용 단건 읽기 — DAO 직접 호출
+      final closingAsync = await ref
+          .read(dailyClosingDaoProvider)
+          .getClosingByDate(selectedDate);
 
       if (closingAsync == null) {
         throw Exception(l10n.loadingClosingData);

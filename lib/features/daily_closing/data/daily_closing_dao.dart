@@ -140,6 +140,43 @@ class DailyClosingDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
+  /// B-103: 특정 날짜 마감 실시간 스트림
+  Stream<DailyClosing?> watchClosingByDate(DateTime date) {
+    final targetDate = DateTime(date.year, date.month, date.day);
+    return (select(dailyClosings)
+          ..where((c) => c.closingDate.equals(targetDate)))
+        .watchSingleOrNull();
+  }
+
+  /// B-103: 최근 마감 목록 실시간 스트림
+  Stream<List<DailyClosing>> watchRecentClosings({int limit = 30}) {
+    return (select(dailyClosings)
+          ..orderBy([(c) => OrderingTerm.desc(c.closingDate)])
+          ..limit(limit))
+        .watch();
+  }
+
+    /// B-103: 최근 마감 목록 실시간 스트림
+  Stream<List<ClosingWithEmployee>> watchClosingsWithEmployee({
+    int limit = 30,
+  }) {
+    // JOIN이 필요하므로 customSelectStream 사용
+    return (select(dailyClosings)
+          ..orderBy([(c) => OrderingTerm.desc(c.closingDate)])
+          ..limit(limit))
+        .watch()
+        .asyncMap((closings) async {
+      final result = <ClosingWithEmployee>[];
+      for (final closing in closings) {
+        final employee = await (select(employees)
+              ..where((e) => e.id.equals(closing.closedByEmployeeId)))
+            .getSingleOrNull();
+        result.add(ClosingWithEmployee(closing: closing, employee: employee));
+      }
+      return result;
+    });
+  }
+
   /// 마감 존재 여부 확인
   Future<bool> hasClosingForDate(DateTime date) async {
     final closing = await getClosingByDate(date);

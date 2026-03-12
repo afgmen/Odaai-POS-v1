@@ -112,6 +112,16 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
         .watch();
   }
 
+  /// B-103: 날짜 범위 기반 실시간 스트림 (FutureProvider → StreamProvider 전환용)
+  Stream<List<Sale>> watchSalesByDateRange(DateTime from, DateTime to) {
+    return (select(sales)
+          ..where((s) =>
+              s.saleDate.isBiggerOrEqualValue(from) &
+              s.saleDate.isSmallerOrEqualValue(to))
+          ..orderBy([(s) => OrderingTerm.desc(s.saleDate)]))
+        .watch();
+  }
+
   /// Watch open tab for a specific table (Phase 1: Open Tab support)
   /// Returns the active open-tab Sale for the given tableId, or null.
   Stream<Sale?> watchOpenTabByTableId(int tableId) {
@@ -246,6 +256,50 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
   }
 
   // ==================== STATISTICS ====================
+
+  /// B-103: 총 매출 실시간 스트림 (결제/환불 즉시 반영)
+  Stream<double> watchTotalSales(DateTime from, DateTime to) {
+    final query = selectOnly(sales)
+      ..addColumns([sales.total.sum()])
+      ..where(
+        sales.saleDate.isBiggerOrEqualValue(from) &
+            sales.saleDate.isSmallerOrEqualValue(to) &
+            sales.status.equals('completed'),
+      );
+    return query.watch().map((rows) => rows.first.read(sales.total.sum()) ?? 0);
+  }
+
+  /// B-103: 주문 건수 실시간 스트림
+  Stream<int> watchOrderCount(DateTime from, DateTime to) {
+    final query = selectOnly(sales)
+      ..addColumns([sales.id.count()])
+      ..where(
+        sales.saleDate.isBiggerOrEqualValue(from) &
+            sales.saleDate.isSmallerOrEqualValue(to) &
+            sales.status.equals('completed'),
+      );
+    return query.watch().map((rows) => rows.first.read(sales.id.count()) ?? 0);
+  }
+
+  /// B-103: 결제 방법별 매출 실시간 스트림
+  Stream<List<PaymentMethodTotal>> watchPaymentBreakdown(DateTime from, DateTime to) {
+    final query = selectOnly(sales)
+      ..addColumns([sales.paymentMethod, sales.total.sum()])
+      ..where(
+        sales.saleDate.isBiggerOrEqualValue(from) &
+            sales.saleDate.isSmallerOrEqualValue(to) &
+            sales.status.equals('completed'),
+      )
+      ..groupBy([sales.paymentMethod])
+      ..orderBy([OrderingTerm.desc(sales.total.sum())]);
+
+    return query.watch().map((rows) => rows
+        .map((row) => PaymentMethodTotal(
+              method: row.read(sales.paymentMethod)!,
+              total: row.read(sales.total.sum()) ?? 0,
+            ))
+        .toList());
+  }
 
   Future<double> getTotalSales(DateTime from, DateTime to) async {
     final query = selectOnly(sales)

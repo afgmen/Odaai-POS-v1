@@ -1,0 +1,89 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:  # 수동 실행 가능
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.38.9'
+        channel: 'stable'
+        cache: true
+
+    - name: Cache pub dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.pub-cache
+          .dart_tool
+        key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pub-
+
+    - name: Get dependencies
+      run: flutter pub get
+
+    - name: Cache build_runner output
+      uses: actions/cache@v3
+      with:
+        path: |
+          lib/**/*.g.dart
+          lib/**/*.freezed.dart
+        key: ${{ runner.os }}-build-runner-${{ hashFiles('**/pubspec.lock', 'lib/**/*.dart') }}
+        restore-keys: |
+          ${{ runner.os }}-build-runner-
+
+    - name: Run build_runner
+      run: flutter pub run build_runner build --delete-conflicting-outputs
+
+    - name: Run tests
+      run: flutter test --reporter compact
+
+    - name: Build Debug APK
+      run: flutter build apk --debug --verbose
+      env:
+        GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2 -Xmx2g
+
+    - name: Build Release APK
+      run: flutter build apk --release
+
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-apk
+        path: build/app/outputs/flutter-apk/app-debug.apk
+
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-apk
+        path: build/app/outputs/flutter-apk/app-release.apk
+
+    - name: Create Release (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          build/app/outputs/flutter-apk/app-debug.apk
+          build/app/outputs/flutter-apk/app-release.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -34,11 +34,11 @@ class ReceiptScreen extends ConsumerWidget {
   });
 
   // ── 결제 방법 라벨 매핑 ──────────────────────
-  String _getPaymentLabel(AppLocalizations l10n) => switch (paymentMethod) {
-        'cash' => l10n.cash,
-        'card' => l10n.card,
-        'qr' => 'QR',
-        'transfer' => l10n.transfer,
+  String _getPaymentLabel(AppLocalizations l10n) => switch (paymentMethod.toUpperCase()) {
+        'CASH' => l10n.cash,
+        'CARD' => l10n.card,
+        'QR' => 'QR',
+        'TRANSFER' => l10n.transfer,
         _ => paymentMethod,
       };
 
@@ -49,17 +49,17 @@ class ReceiptScreen extends ConsumerWidget {
         _ => 'Dine-in',
       };
 
-  String get _paymentIcon => switch (paymentMethod) {
-        'cash' => '💵',
-        'card' => '💳',
-        'qr' => '📱',
+  String get _paymentIcon => switch (paymentMethod.toUpperCase()) {
+        'CASH' => '💵',
+        'CARD' => '💳',
+        'QR' => '📱',
         _ => '💰',
       };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final change = paymentMethod == 'cash' ? (cashPaid - total) : 0.0;
+    final change = paymentMethod.toUpperCase() == 'CASH' ? (cashPaid - total) : 0.0;
     final priceFormatter = ref.watch(priceFormatterProvider);
 
     return Scaffold(
@@ -271,7 +271,7 @@ class ReceiptScreen extends ConsumerWidget {
                         ],
                       ),
                       // 현금 결제 시 투입금액 + 거스름돈
-                      if (paymentMethod == 'cash') ...[
+                      if (paymentMethod.toUpperCase() == 'CASH') ...[
                         const SizedBox(height: 6),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

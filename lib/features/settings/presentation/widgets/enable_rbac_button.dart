@@ -85,7 +85,7 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
           ),
           content: const Text(
             'RBAC has been enabled and you are now set as OWNER.\n\n'
-            'Please log out and log in again to see the Security Settings section.',
+            'You will be logged out. Please log in again to apply the new security settings.',
           ),
           actions: [
             FilledButton(
@@ -98,7 +98,7 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
                   Navigator.of(ctx).pushNamedAndRemoveUntil('/', (route) => false);
                 }
               },
-              child: const Text('Log Out Now'),
+              child: const Text('Log Out & Apply'),
             ),
           ],
         ),

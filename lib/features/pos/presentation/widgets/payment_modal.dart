@@ -476,16 +476,19 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 6),
-              // 빠른 금액 버튼
+              // 빠른 금액 버튼 (클릭 시 누적 합산, 4종: 10k/50k/100k/500k)
               Row(
-                children: [10000, 50000, 100000].map((amount) {
+                children: [10000, 50000, 100000, 500000].map((amount) {
+                  final isLast = amount == 500000;
                   return Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(right: amount == 100000 ? 0 : 6),
+                      padding: EdgeInsets.only(right: isLast ? 0 : 6),
                       child: OutlinedButton(
                         onPressed: () {
-                          setState(() => _cashInput = amount.toDouble());
-                          _cashController.text = priceFormatter.format(amount.toDouble(), includeSymbol: false);
+                          // 누적: 기존 금액에 더함
+                          final newAmount = _cashInput + amount;
+                          setState(() => _cashInput = newAmount);
+                          _cashController.text = priceFormatter.format(newAmount, includeSymbol: false);
                         },
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -493,24 +496,39 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                           side: const BorderSide(color: AppTheme.divider),
                           foregroundColor: AppTheme.textPrimary,
                         ),
-                        child: Text(priceFormatter.format(amount.toDouble()), style: const TextStyle(fontSize: 13)),
+                        child: Text(
+                          // 짧게 표시: 10K / 50K / 100K / 500K
+                          amount >= 1000 ? '${(amount ~/ 1000)}K' : '$amount',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ),
                   );
                 }).toList(),
               ),
               const SizedBox(height: 8),
-              // 현금 금액 입력
+              // 현금 금액 입력 (숫자 패드 강제 표시)
               TextField(
                 controller: _cashController,
-                keyboardType: const TextInputType.numberWithOptions(),
+                keyboardType: TextInputType.number,
+                // POS 특성상 숫자 패드만 표시
+                inputFormatters: [],
                 decoration: InputDecoration(
                   prefixText: priceFormatter.currency.symbol,
                   prefixStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.primary),
                   hintText: l10n.enterAmount,
+                  suffixIcon: _cashInput > 0
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () {
+                            setState(() => _cashInput = 0);
+                            _cashController.clear();
+                          },
+                        )
+                      : null,
                 ),
                 onChanged: (value) {
-                  final cleaned = value.replaceAll(',', '');
+                  final cleaned = value.replaceAll(',', '').replaceAll('.', '');
                   setState(() => _cashInput = double.tryParse(cleaned) ?? 0);
                 },
               ),

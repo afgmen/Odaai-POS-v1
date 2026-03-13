@@ -48,13 +48,15 @@ enum PaymentMethod {
 class PaymentModal extends ConsumerStatefulWidget {
   final OrderType? orderType;
   final int? tableId;
-  final int? saleId; // NEW: Open Tab 체크아웃 시 사용
-  
+  final int? saleId; // Open Tab 체크아웃 시 사용
+  final double? billTotal; // BillRequestScreen에서 전달되는 실제 청구 금액
+
   const PaymentModal({
     super.key,
     this.orderType,
     this.tableId,
     this.saleId,
+    this.billTotal,
   });
 
   @override
@@ -105,9 +107,13 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final subtotal = ref.watch(cartSubtotalProvider);
-    final allDiscount = ref.watch(cartAllDiscountProvider);
-    final total = ref.watch(cartTotalProvider);
+    final cartSubtotal = ref.watch(cartSubtotalProvider);
+    final cartDiscount = ref.watch(cartAllDiscountProvider);
+    final cartTotal = ref.watch(cartTotalProvider);
+    // BillRequestScreen에서 기존 Sale의 금액을 직접 전달받는 경우 해당 금액 사용
+    final subtotal = widget.billTotal ?? cartSubtotal;
+    final allDiscount = widget.billTotal != null ? 0.0 : cartDiscount;
+    final total = widget.billTotal ?? cartTotal;
     final selectedCustomer = ref.watch(selectedCustomerProvider);
     final pointsToUse = ref.watch(pointsToUseProvider);
     final priceFormatter = ref.watch(priceFormatterProvider);
@@ -761,17 +767,6 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         throw Exception(l10n.noEmployeeLoggedIn);
       }
 
-      // ── 매출 번호 생성 (SO-YYYYMMDD-XXXXX) ──
-      // millisecondsSinceEpoch % 100000 은 100초 내 충돌 위험이 있으므로
-      // microsecond + 랜덤 조합으로 충돌 방지
-      final now = DateTime.now();
-      final dateStr = '${now.year}'
-          '${now.month.toString().padLeft(2, '0')}'
-          '${now.day.toString().padLeft(2, '0')}';
-      final microSeq = now.microsecondsSinceEpoch % 1000000;
-      final seqStr = microSeq.toString().padLeft(6, '0');
-      final saleNumber = 'SO-$dateStr-$seqStr';
-
       // ── 포인트 사용 처리 ──────────────────────
       double finalTotal = total;
       int usedPoints = 0;
@@ -791,72 +786,93 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         }
       }
 
-      // ── Sales 레코드 구성 (delivery 정보 포함) ──────────────────
-      final saleCompanion = SalesCompanion.insert(
-        saleNumber: saleNumber,
-        paymentMethod: _selectedMethod.name.toUpperCase(), // 'CASH' | 'CARD' | 'QR' | 'TRANSFER'
-        subtotal: Value(subtotal),
-        discount: Value(discountAmount),
-        total: Value(finalTotal),
-        tax: Value(ref.read(cartTaxAmountProvider)),
-        customerId: Value(selectedCustomer?.id),
-        employeeId: Value(currentEmployee.id),
-        customerName: _isDeliveryOrder && _customerNameController.text.trim().isNotEmpty
-            ? Value(_customerNameController.text.trim())
-            : const Value.absent(),
-        deliveryPhone: _isDeliveryOrder && _deliveryPhoneController.text.trim().isNotEmpty
-            ? Value(_deliveryPhoneController.text.trim())
-            : const Value.absent(),
-        deliveryAddress: _isDeliveryOrder && _deliveryAddressController.text.trim().isNotEmpty
-            ? Value(_deliveryAddressController.text.trim())
-            : const Value.absent(),
-        orderType: Value(_selectedOrderType.dbValue),
-        needsSync: const Value(true),
-      );
+      // ── Sale 처리: 기존 Open Tab 완료 OR 신규 Sale 생성 ──────────
+      late Sale createdSale;
 
-      // ── SaleItems 레코드 구성 (장바구니 → DB) ─
-      final saleItemsList = cart.map((item) {
-        return SaleItemsCompanion.insert(
-          saleId: 0, // 플레이스홀더 — createSale 내부에서 실제 ID로 교체
-          productId: item.product.id,
-          productName: item.product.name,
-          sku: item.product.sku,
-          unitPrice: item.product.price,
-          quantity: item.quantity,
-          total: item.subtotal,
+      if (widget.saleId != null) {
+        // ─── Bill checkout: 기존 Open Tab Sale을 completed로 마킹 ───
+        await (db.update(db.sales)..where((s) => s.id.equals(widget.saleId!)))
+            .write(SalesCompanion(
+          status: const Value('completed'),
+          paymentMethod: Value(_selectedMethod.name.toUpperCase()),
+          total: Value(finalTotal),
+        ));
+        createdSale = await dao.getSaleById(widget.saleId!);
+        debugPrint('[Payment] Bill checkout: Sale ${widget.saleId} marked completed, table ${widget.tableId} will be reset');
+      } else {
+        // ─── 신규 Sale 생성 (장바구니 기반) ───────────────────────
+        // 매출 번호 생성 (SO-YYYYMMDD-XXXXX)
+        final now = DateTime.now();
+        final dateStr = '${now.year}'
+            '${now.month.toString().padLeft(2, '0')}'
+            '${now.day.toString().padLeft(2, '0')}';
+        final microSeq = now.microsecondsSinceEpoch % 1000000;
+        final seqStr = microSeq.toString().padLeft(6, '0');
+
+        final saleCompanion = SalesCompanion.insert(
+          saleNumber: 'SO-$dateStr-$seqStr',
+          paymentMethod: _selectedMethod.name.toUpperCase(),
+          subtotal: Value(subtotal),
+          discount: Value(discountAmount),
+          total: Value(finalTotal),
+          tax: Value(ref.read(cartTaxAmountProvider)),
+          customerId: Value(selectedCustomer?.id),
+          employeeId: Value(currentEmployee.id),
+          customerName: _isDeliveryOrder && _customerNameController.text.trim().isNotEmpty
+              ? Value(_customerNameController.text.trim())
+              : const Value.absent(),
+          deliveryPhone: _isDeliveryOrder && _deliveryPhoneController.text.trim().isNotEmpty
+              ? Value(_deliveryPhoneController.text.trim())
+              : const Value.absent(),
+          deliveryAddress: _isDeliveryOrder && _deliveryAddressController.text.trim().isNotEmpty
+              ? Value(_deliveryAddressController.text.trim())
+              : const Value.absent(),
+          orderType: Value(_selectedOrderType.dbValue),
+          needsSync: const Value(true),
         );
-      }).toList();
 
-      // ── DB 저장 (트랜잭션: 판매 기록 + 재고 차감) ─
-      final createdSale = await dao.createSale(
-        sale: saleCompanion,
-        items: saleItemsList,
-        tableNumber: _tableNumberController.text.trim().isNotEmpty ? _tableNumberController.text.trim() : null,
-        specialInstructions: _specialInstructionsController.text.trim().isNotEmpty ? _specialInstructionsController.text.trim() : null,
-        createKitchenOrder: true,
-      );
+        final saleItemsList = cart.map((item) {
+          return SaleItemsCompanion.insert(
+            saleId: 0,
+            productId: item.product.id,
+            productName: item.product.name,
+            sku: item.product.sku,
+            unitPrice: item.product.price,
+            quantity: item.quantity,
+            total: item.subtotal,
+          );
+        }).toList();
 
-      // ── Save Sale Item Modifiers ──────────────────
-      final saleItemsFromDb = await dao.getSaleItems(createdSale.id);
-      for (int i = 0; i < cart.length; i++) {
-        final cartItem = cart[i];
-        if (cartItem.modifiers.isNotEmpty && i < saleItemsFromDb.length) {
-          final saleItem = saleItemsFromDb[i];
-          final modifierCompanions = cartItem.modifiers.map((mod) {
-            return SaleItemModifiersCompanion.insert(
-              saleItemId: saleItem.id,
-              modifierOptionId: Value(mod.optionId),
-              modifierName: mod.groupName,
-              optionName: mod.optionName,
-              priceAdjustment: mod.priceAdjustment,
-            );
-          }).toList();
-          
-          if (modifierCompanions.isNotEmpty) {
-            await db.modifierDao.saveSaleItemModifiers(saleItem.id, modifierCompanions);
+        createdSale = await dao.createSale(
+          sale: saleCompanion,
+          items: saleItemsList,
+          tableNumber: _tableNumberController.text.trim().isNotEmpty ? _tableNumberController.text.trim() : null,
+          specialInstructions: _specialInstructionsController.text.trim().isNotEmpty ? _specialInstructionsController.text.trim() : null,
+          createKitchenOrder: true,
+        );
+
+        // Save Sale Item Modifiers
+        final saleItemsFromDb = await dao.getSaleItems(createdSale.id);
+        for (int i = 0; i < cart.length; i++) {
+          final cartItem = cart[i];
+          if (cartItem.modifiers.isNotEmpty && i < saleItemsFromDb.length) {
+            final saleItem = saleItemsFromDb[i];
+            final modifierCompanions = cartItem.modifiers.map((mod) {
+              return SaleItemModifiersCompanion.insert(
+                saleItemId: saleItem.id,
+                modifierOptionId: Value(mod.optionId),
+                modifierName: mod.groupName,
+                optionName: mod.optionName,
+                priceAdjustment: mod.priceAdjustment,
+              );
+            }).toList();
+
+            if (modifierCompanions.isNotEmpty) {
+              await db.modifierDao.saveSaleItemModifiers(saleItem.id, modifierCompanions);
+            }
           }
         }
-      }
+      } // end of else (new sale) branch
 
       // ── Cash Drawer 매출 기록 (현금 결제 시) ──
       if (_selectedMethod == PaymentMethod.cash) {
@@ -868,7 +884,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             amount: finalTotal,
             balanceBefore: currentBalance,
             balanceAfter: currentBalance + finalTotal,
-            note: Value('Sale #$saleNumber'),
+            note: Value('Sale #${createdSale.saleNumber}'),
           ),
         );
       }
@@ -950,7 +966,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => ReceiptScreen(
-              saleNumber: saleNumber,
+              saleNumber: createdSale.saleNumber,
               items: savedItems,
               subtotal: subtotal,
               discount: discountAmount,

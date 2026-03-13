@@ -5,6 +5,7 @@ import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/database_providers.dart';
 import '../widgets/payment_modal.dart';
+import '../../data/models/order_type.dart';
 
 /// BillRequestScreen — 라운드별 아이템 목록 + 할인 + 세금 + 결제
 /// Phase 3: TableDetailModal [청구서 요청] 에서 진입
@@ -180,7 +181,12 @@ class _BillContent extends StatelessWidget {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (_) => PaymentModal(saleId: sale.id, tableId: tableId),
+                  builder: (_) => PaymentModal(
+                    saleId: sale.id,
+                    tableId: tableId,
+                    orderType: OrderType.fromDb(sale.orderType),
+                    billTotal: sale.total,
+                  ),
                 );
               },
               icon: const Icon(Icons.payment, size: 24),

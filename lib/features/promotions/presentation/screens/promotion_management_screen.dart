@@ -8,11 +8,28 @@ import '../../../../l10n/app_localizations.dart';
 import '../../providers/promotions_provider.dart';
 import '../widgets/promotion_form_modal.dart';
 
-class PromotionManagementScreen extends ConsumerWidget {
+class PromotionManagementScreen extends ConsumerStatefulWidget {
   const PromotionManagementScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PromotionManagementScreen> createState() =>
+      _PromotionManagementScreenState();
+}
+
+class _PromotionManagementScreenState
+    extends ConsumerState<PromotionManagementScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // 화면 진입 시 만료된 프로모션 자동 비활성화 (앱 시작 이후 만료된 경우 처리)
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final service = ref.read(promotionServiceProvider);
+      await service.expireOldPromotions();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final promotionsAsync = ref.watch(allPromotionsProvider);
 

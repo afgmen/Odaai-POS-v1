@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:drift/drift.dart';
 
 import '../../../database/app_database.dart';
 import '../../../providers/database_providers.dart';
@@ -21,16 +20,11 @@ final applicablePromotionsProvider = StreamProvider<Map<int, List<Promotion>>>((
 
   for (final item in cart) {
     final productId = item.product.id;
-    final now = DateTime.now();
 
     // 해당 상품에 적용 가능한 활성 프로모션 조회
-    final promotions = await (db.select(db.promotions)
-          ..where((p) =>
-              p.isActive.equals(true) &
-              (p.productId.isNull() | p.productId.equals(productId)) &
-              (p.startDate.isNull() | p.startDate.isSmallerOrEqualValue(now)) &
-              (p.endDate.isNull() | p.endDate.isBiggerOrEqualValue(now))))
-        .get();
+    // promotionsDao.getApplicablePromotions: applyToAllProducts=true 또는
+    // promotion_products 테이블에 해당 상품이 등록된 프로모션만 반환
+    final promotions = await db.promotionsDao.getApplicablePromotions(productId);
 
     if (promotions.isNotEmpty) {
       promoMap[productId] = promotions;

@@ -186,6 +186,7 @@ class _BillContent extends StatelessWidget {
                     tableId: tableId,
                     orderType: OrderType.fromDb(sale.orderType),
                     billTotal: sale.total,
+                    billDiscount: sale.discount,
                   ),
                 );
               },

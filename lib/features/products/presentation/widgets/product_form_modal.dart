@@ -295,6 +295,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           minStock: Value(int.tryParse(_minStockCtrl.text) ?? 0),
           categoryId: _selectedCategoryId != null ? Value(_selectedCategoryId) : const Value.absent(),
           category: categoryText != null ? Value(categoryText) : const Value.absent(),
+          imageUrl: _imageUrl != null ? Value(_imageUrl) : const Value.absent(),
         );
         await dao.createProduct(companion);
         if (mounted) {

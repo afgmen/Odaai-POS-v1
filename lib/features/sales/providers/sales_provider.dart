@@ -27,6 +27,9 @@ enum DateFilter {
 /// 현재 날짜 필터 상태
 final selectedDateFilterProvider = StateProvider<DateFilter>((ref) => DateFilter.today);
 
+/// 주문 내역 검색어 상태
+final salesSearchQueryProvider = StateProvider<String>((ref) => '');
+
 // ── 날짜 범위 계산 헬퍼 ────────────────────────────
 ({DateTime from, DateTime to}) _salesDateRange(DateFilter filter) {
   final now = DateTime.now();
@@ -50,4 +53,17 @@ final salesListProvider = StreamProvider<List<Sale>>((ref) {
   final filter = ref.watch(selectedDateFilterProvider);
   final range = _salesDateRange(filter);
   return dao.watchSalesByDateRange(range.from, range.to);
+});
+
+/// 검색어 필터 적용된 주문 목록
+final filteredSalesListProvider = Provider<AsyncValue<List<Sale>>>((ref) {
+  final salesAsync = ref.watch(salesListProvider);
+  final query = ref.watch(salesSearchQueryProvider).trim().toLowerCase();
+
+  return salesAsync.whenData((sales) {
+    if (query.isEmpty) return sales;
+    return sales
+        .where((s) => s.saleNumber.toLowerCase().contains(query))
+        .toList();
+  });
 });

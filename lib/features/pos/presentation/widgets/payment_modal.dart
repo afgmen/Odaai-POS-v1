@@ -50,6 +50,7 @@ class PaymentModal extends ConsumerStatefulWidget {
   final int? tableId;
   final int? saleId; // Open Tab 체크아웃 시 사용
   final double? billTotal; // BillRequestScreen에서 전달되는 실제 청구 금액
+  final double billDiscount; // BillRequestScreen에서 전달되는 기존 할인 금액
 
   const PaymentModal({
     super.key,
@@ -57,6 +58,7 @@ class PaymentModal extends ConsumerStatefulWidget {
     this.tableId,
     this.saleId,
     this.billTotal,
+    this.billDiscount = 0,
   });
 
   @override
@@ -112,7 +114,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     final cartTotal = ref.watch(cartTotalProvider);
     // BillRequestScreen에서 기존 Sale의 금액을 직접 전달받는 경우 해당 금액 사용
     final subtotal = widget.billTotal ?? cartSubtotal;
-    final allDiscount = widget.billTotal != null ? 0.0 : cartDiscount;
+    final allDiscount = widget.billTotal != null ? widget.billDiscount : cartDiscount;
     final total = widget.billTotal ?? cartTotal;
     final selectedCustomer = ref.watch(selectedCustomerProvider);
     final pointsToUse = ref.watch(pointsToUseProvider);
@@ -288,7 +290,8 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             ),
             const SizedBox(height: 20),
 
-            // ─── 테이블 번호 & 특이사항 입력 (KDS 연동용) ────
+            // ─── 테이블 번호 & 특이사항 입력 (KDS 연동용, delivery 제외) ────
+            if (!_isDeliveryOrder) ...[
             Row(
               children: [
                 Expanded(
@@ -422,6 +425,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               ],
             ),
             const SizedBox(height: 20),
+            ], // end if (!_isDeliveryOrder)
 
             // ─── 배달 정보 입력 (phoneDelivery, platformDelivery만 표시) ────
             if (_isDeliveryOrder) ...[

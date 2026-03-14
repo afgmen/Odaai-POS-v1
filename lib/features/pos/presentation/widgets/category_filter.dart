@@ -33,7 +33,10 @@ class CategoryFilter extends ConsumerWidget {
                   label: l10n.categoryAll,
                   icon: Icons.apps_outlined,
                   isSelected: selectedCategoryId == null,
-                  onTap: () => ref.read(selectedCategoryProvider.notifier).state = null,
+                  onTap: () {
+                    ref.read(selectedCategoryProvider.notifier).state = null;
+                    ref.read(searchQueryProvider.notifier).state = '';
+                  },
                 ),
                 const Divider(height: 1, color: AppTheme.divider),
                 // ─── Category list ─────────────
@@ -45,7 +48,10 @@ class CategoryFilter extends ConsumerWidget {
                         label: _getLocalizedCategory(category.name, l10n),
                         icon: _getCategoryIcon(category.name),
                         isSelected: isActive,
-                        onTap: () => ref.read(selectedCategoryProvider.notifier).state = category.id,
+                        onTap: () {
+                          ref.read(selectedCategoryProvider.notifier).state = category.id;
+                          ref.read(searchQueryProvider.notifier).state = '';
+                        },
                       ),
                       if (category != categories.last)
                         const Divider(height: 1, color: AppTheme.divider),

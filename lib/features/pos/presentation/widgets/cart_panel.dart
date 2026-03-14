@@ -1094,21 +1094,27 @@ class _AutoPromotionsSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 4),
-        ...appliedPromos.map((promo) {
-          return Padding(
+        // 동일 프로모션 이름별로 합산하여 표시 (#12-Medium)
+        ...() {
+          final consolidated = <String, double>{};
+          for (final promo in appliedPromos) {
+            consolidated[promo.promotionName] =
+                (consolidated[promo.promotionName] ?? 0) + promo.discountAmount;
+          }
+          return consolidated.entries.map((entry) => Padding(
             padding: const EdgeInsets.only(left: 18, top: 2),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Flexible(
                   child: Text(
-                    promo.promotionName,
+                    entry.key,
                     style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Text(
-                  '-${priceFormatter.format(promo.discountAmount)}',
+                  '-${priceFormatter.format(entry.value)}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -1117,8 +1123,8 @@ class _AutoPromotionsSection extends ConsumerWidget {
                 ),
               ],
             ),
-          );
-        }),
+          ));
+        }(),
       ],
     );
   }

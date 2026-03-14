@@ -150,7 +150,7 @@ class OrderCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    ...orderWithItems.items.map((item) => Padding(
+                    ...orderWithItems.items.take(3).map((item) => Padding(
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -176,6 +176,18 @@ class OrderCard extends StatelessWidget {
                             ],
                           ),
                         )),
+                    if (orderWithItems.items.length > 3)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          '+${orderWithItems.items.length - 3} more items',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

@@ -80,9 +80,9 @@ class _TableWidgetState extends State<TableWidget> {
           final metrics = _shapeMetrics();
           setState(() {
             _displayX = (_displayX + details.delta.dx)
-                .clamp(0, 2000 - metrics.w);
+                .clamp(0.0, 1000.0 - metrics.w);
             _displayY = (_displayY + details.delta.dy)
-                .clamp(0, 2000 - metrics.h);
+                .clamp(0.0, 700.0 - metrics.h);
           });
         },
         onPanEnd: (_) {

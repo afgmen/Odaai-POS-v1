@@ -1,0 +1,37 @@
+plugins = []
+redirects = []
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "/Users/JINLee/Documents/AI-coding/Odaai-POS/oda_pos"
+publishOrigin = "default"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[[headers]]
+for = "/*"
+
+[headers.values]
+Cross-Origin-Opener-Policy = "same-origin"
+Cross-Origin-Embedder-Policy = "require-corp"
+
+[[headers]]
+for = "/*.wasm"
+
+[headers.values]
+Content-Type = "application/wasm"

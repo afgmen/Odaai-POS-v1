@@ -261,13 +261,13 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                 }
                 final tooltipLines = statusCounts.entries.map((e) {
                   final status = ReservationStatus.fromString(e.key);
-                  return '${e.value}개 ${status.localizationKey}';
+                  return '${e.value} ${status.localizationKey}';
                 }).join('\n');
-                
+
                 return Positioned(
                   bottom: 1,
                   child: Tooltip(
-                    message: '$count개 예약\n$tooltipLines',
+                    message: '$count reservations\n$tooltipLines',
                     preferBelow: false,
                     child: Container(
                       width: 16,

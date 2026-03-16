@@ -245,6 +245,7 @@ class OrderDetailModal extends ConsumerWidget {
                         service,
                         order,
                         status,
+                        isDelivery: order.orderType == 'phoneDelivery' || order.orderType == 'platformDelivery',
                       ),
                     ),
                   ],
@@ -374,8 +375,9 @@ class OrderDetailModal extends ConsumerWidget {
     WidgetRef ref,
     dynamic service,
     KitchenOrder order,
-    OrderStatus status,
-  ) {
+    OrderStatus status, {
+    bool isDelivery = false,
+  }) {
     switch (status) {
       case OrderStatus.pending:
         return ElevatedButton.icon(
@@ -414,7 +416,7 @@ class OrderDetailModal extends ConsumerWidget {
             }
           },
           icon: const Icon(Icons.done_all),
-          label: const Text('Mark Served'),
+          label: Text(isDelivery ? 'Mark Delivered' : 'Mark Served'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.purple,
             foregroundColor: Colors.white,

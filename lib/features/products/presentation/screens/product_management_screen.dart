@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -921,40 +922,52 @@ class _ProductImage extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: imageUrl != null
-            ? FutureBuilder<File?>(
-                future: _getImageFile(imageUrl!),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    );
-                  }
-
-                  if (snapshot.hasData && snapshot.data != null && snapshot.data!.existsSync()) {
-                    return Image.file(
-                      snapshot.data!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(
-                          Icons.broken_image,
-                          color: AppTheme.textDisabled,
-                          size: 24,
+            ? (kIsWeb && imageUrl!.startsWith('data:'))
+                ? Image.network(
+                    imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.broken_image,
+                        color: AppTheme.textDisabled,
+                        size: 24,
+                      );
+                    },
+                  )
+                : FutureBuilder<File?>(
+                    future: _getImageFile(imageUrl!),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         );
-                      },
-                    );
-                  }
+                      }
 
-                  return const Icon(
-                    Icons.image_not_supported,
-                    color: AppTheme.textDisabled,
-                    size: 24,
-                  );
-                },
-              )
+                      if (snapshot.hasData && snapshot.data != null && snapshot.data!.existsSync()) {
+                        return Image.file(
+                          snapshot.data!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.broken_image,
+                              color: AppTheme.textDisabled,
+                              size: 24,
+                            );
+                          },
+                        );
+                      }
+
+                      return const Icon(
+                        Icons.image_not_supported,
+                        color: AppTheme.textDisabled,
+                        size: 24,
+                      );
+                    },
+                  )
             : const Icon(
                 Icons.image_not_supported,
                 color: AppTheme.textDisabled,

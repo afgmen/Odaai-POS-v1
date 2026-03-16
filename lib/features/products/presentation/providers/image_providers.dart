@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/snackbar_helper.dart';
@@ -52,20 +53,28 @@ class ImageUploadStateNotifier extends StateNotifier<ImageUploadState> {
   Future<File?> uploadFromCamera(int productId, String sku) async {
     state = const ImageUploadState.loading();
     try {
-      final file = await _imageService.uploadFromCamera();
+      // Use dynamic to handle platform-specific return types:
+      // Web: uploadFromCamera() -> String? (data URL)
+      // IO:  uploadFromCamera() -> File?
+      final dynamic file = await _imageService.uploadFromCamera();
       if (file == null) {
         state = const ImageUploadState.idle();
         return null;
       }
 
-      final savedFile = await _imageService.resizeAndSaveImage(file, sku);
-      await _productsDao.updateProductImageUrl(
-        productId,
-        'product_images/$sku.jpg',
-      );
+      final dynamic savedFile = await _imageService.resizeAndSaveImage(file, sku);
 
-      state = ImageUploadState.success(savedFile.path);
-      return savedFile;
+      if (kIsWeb) {
+        final String dataUrl = savedFile as String;
+        await _productsDao.updateProductImageUrl(productId, dataUrl);
+        state = ImageUploadState.success(dataUrl);
+        return null; // No File on web
+      } else {
+        final File saved = savedFile as File;
+        await _productsDao.updateProductImageUrl(productId, 'product_images/$sku.jpg');
+        state = ImageUploadState.success(saved.path);
+        return saved;
+      }
     } catch (e) {
       state = ImageUploadState.error(SnackBarHelper.sanitizeError(e));
       return null;
@@ -76,20 +85,25 @@ class ImageUploadStateNotifier extends StateNotifier<ImageUploadState> {
   Future<File?> uploadFromGallery(int productId, String sku) async {
     state = const ImageUploadState.loading();
     try {
-      final file = await _imageService.uploadFromGallery();
+      final dynamic file = await _imageService.uploadFromGallery();
       if (file == null) {
         state = const ImageUploadState.idle();
         return null;
       }
 
-      final savedFile = await _imageService.resizeAndSaveImage(file, sku);
-      await _productsDao.updateProductImageUrl(
-        productId,
-        'product_images/$sku.jpg',
-      );
+      final dynamic savedFile = await _imageService.resizeAndSaveImage(file, sku);
 
-      state = ImageUploadState.success(savedFile.path);
-      return savedFile;
+      if (kIsWeb) {
+        final String dataUrl = savedFile as String;
+        await _productsDao.updateProductImageUrl(productId, dataUrl);
+        state = ImageUploadState.success(dataUrl);
+        return null; // No File on web
+      } else {
+        final File saved = savedFile as File;
+        await _productsDao.updateProductImageUrl(productId, 'product_images/$sku.jpg');
+        state = ImageUploadState.success(saved.path);
+        return saved;
+      }
     } catch (e) {
       state = ImageUploadState.error(SnackBarHelper.sanitizeError(e));
       return null;

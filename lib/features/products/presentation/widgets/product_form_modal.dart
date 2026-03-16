@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:drift/drift.dart' hide Column;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -49,6 +50,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
   // ── 이미지 상태 ─────────────────────────
   String? _imageUrl;
   File? _localImageFile;
+  String? _webDataUrl; // Web: base64 data URL
 
   bool get _isEditMode => widget.existingProduct != null;
 
@@ -68,11 +70,16 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     // Load existing image if in edit mode
     _imageUrl = p?.imageUrl;
     if (_imageUrl != null) {
-      _loadLocalImage();
+      if (kIsWeb && _imageUrl!.startsWith('data:')) {
+        _webDataUrl = _imageUrl;
+      } else if (!kIsWeb) {
+        _loadLocalImage();
+      }
     }
   }
 
   Future<void> _loadLocalImage() async {
+    if (kIsWeb) return; // Web uses data URLs stored in _webDataUrl
     if (_imageUrl == null || widget.existingProduct == null) return;
 
     final directory = await getApplicationDocumentsDirectory();
@@ -395,15 +402,23 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppTheme.divider),
           ),
-          child: _localImageFile != null
+          child: (kIsWeb && _webDataUrl != null)
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    _localImageFile!,
+                  child: Image.network(
+                    _webDataUrl!,
                     fit: BoxFit.cover,
                   ),
                 )
-              : Center(
+              : _localImageFile != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        _localImageFile!,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -489,7 +504,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           ),
 
         // Delete button (if image exists)
-        if (_localImageFile != null && imageState is! ImageUploadLoading)
+        if ((_localImageFile != null || (kIsWeb && _webDataUrl != null)) && imageState is! ImageUploadLoading)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: TextButton.icon(
@@ -550,6 +565,18 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
       return;
     }
 
+    if (kIsWeb) {
+      final uploadState = ref.read(imageUploadStateProvider);
+      if (uploadState is ImageUploadSuccess && mounted) {
+        setState(() {
+          _webDataUrl = uploadState.imagePath;
+          _imageUrl = uploadState.imagePath;
+        });
+        _showSnackBar(l10n.imageUploaded, AppTheme.success);
+      }
+      return;
+    }
+
     if (file != null && mounted) {
       setState(() {
         _localImageFile = file;
@@ -577,6 +604,18 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     final uploadState = ref.read(imageUploadStateProvider);
     if (uploadState is ImageUploadError && mounted) {
       _showSnackBar(uploadState.message, AppTheme.error);
+      return;
+    }
+
+    if (kIsWeb) {
+      final uploadState = ref.read(imageUploadStateProvider);
+      if (uploadState is ImageUploadSuccess && mounted) {
+        setState(() {
+          _webDataUrl = uploadState.imagePath;
+          _imageUrl = uploadState.imagePath;
+        });
+        _showSnackBar(l10n.imageUploaded, AppTheme.success);
+      }
       return;
     }
 
@@ -625,6 +664,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     if (mounted) {
       setState(() {
         _localImageFile = null;
+        _webDataUrl = null;
         _imageUrl = null;
       });
       _showSnackBar(l10n.imageDeleted, AppTheme.success);
@@ -673,16 +713,25 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
         final dao = ref.read(productsDaoProvider);
         await dao.updateProductImageUrl(
           productId,
-          'product_images/$sku.jpg',
+          kIsWeb ? imagePath : 'product_images/$sku.jpg',
         );
       }
 
       // Update local state
-      setState(() {
-        _localImageFile = File(imagePath);
-        _imageUrl = 'product_images/$sku.jpg';
-        _isProcessing = false;
-      });
+      if (kIsWeb) {
+        // imagePath is a data URL on web
+        setState(() {
+          _webDataUrl = imagePath;
+          _imageUrl = imagePath;
+          _isProcessing = false;
+        });
+      } else {
+        setState(() {
+          _localImageFile = File(imagePath);
+          _imageUrl = 'product_images/$sku.jpg';
+          _isProcessing = false;
+        });
+      }
 
       _showSnackBar(l10n.imageSetByAi, AppTheme.success);
     } catch (e) {

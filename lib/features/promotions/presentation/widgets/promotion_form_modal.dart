@@ -390,7 +390,7 @@ class _ProductMultiSelector extends ConsumerWidget {
               if (selectedProductIds.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
-                  '${selectedProductIds.length}개 제품 선택됨',
+                  '${selectedProductIds.length} product(s) selected',
                   style: TextStyle(
                     fontSize: 12,
                     color: AppTheme.primary,

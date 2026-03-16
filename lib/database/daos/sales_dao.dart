@@ -113,11 +113,13 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
   }
 
   /// B-103: 날짜 범위 기반 실시간 스트림 (FutureProvider → StreamProvider 전환용)
+  /// completed / refunded 상태만 표시 (open, pending, split 등 미결제 제외)
   Stream<List<Sale>> watchSalesByDateRange(DateTime from, DateTime to) {
     return (select(sales)
           ..where((s) =>
               s.saleDate.isBiggerOrEqualValue(from) &
-              s.saleDate.isSmallerOrEqualValue(to))
+              s.saleDate.isSmallerOrEqualValue(to) &
+              s.status.isIn(['completed', 'refunded']))
           ..orderBy([(s) => OrderingTerm.desc(s.saleDate)]))
         .watch();
   }

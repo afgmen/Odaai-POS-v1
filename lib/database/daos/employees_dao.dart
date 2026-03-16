@@ -58,12 +58,14 @@ class EmployeesDao extends DatabaseAccessor<AppDatabase>
       return false;
     }
 
-    // PIN 해시 생성
-    final hashedPin = PinHasher.hashPin(plainPin);
+    // 직원별 고유 salt 생성 후 해시
+    final salt = PinHasher.generateSalt();
+    final hashedPin = PinHasher.hashPin(plainPin, salt: salt);
 
     // 업데이트
     final updates = EmployeesCompanion(
       pinHash: Value(hashedPin),
+      pinSalt: Value(salt),
       pinChangedAt: Value(DateTime.now()),
     );
 
@@ -82,7 +84,8 @@ class EmployeesDao extends DatabaseAccessor<AppDatabase>
       return false;
     }
 
-    return PinHasher.verifyPin(plainPin, employee.pinHash!);
+    // pinSalt가 있으면 per-user salt 사용, 없으면 레거시 전역 salt로 검증
+    return PinHasher.verifyPin(plainPin, employee.pinHash!, salt: employee.pinSalt);
   }
 
   /// 세션 생성

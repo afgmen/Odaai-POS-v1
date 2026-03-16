@@ -154,7 +154,7 @@ class AppDatabase extends _$AppDatabase {
   late final dailyClosingDao = DailyClosingDao(this);
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration {
@@ -310,6 +310,12 @@ class AppDatabase extends _$AppDatabase {
         if (from < 22) {
           // v21 → v22: Product Modifiers (Groups, Options, Links, SaleItemModifiers)
           await _migrateProductModifiers(m);
+        }
+        if (from < 24) {
+          // v23 → v24: 직원별 PIN salt 추가 (보안 강화)
+          // 기존 직원은 pinSalt=NULL → 레거시 전역 salt로 계속 로그인 가능
+          // 다음 PIN 변경 시 자동으로 per-user salt 적용됨
+          await _safeAddColumn('employees', 'pin_salt', 'TEXT NULL');
         }
         }
       },

@@ -836,21 +836,24 @@ class _EmployeeInfo extends ConsumerWidget {
             child: Text(l10n.cancel, style: const TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               // 장바구니 초기화
               ref.read(cartProvider.notifier).clear();
               // 할인 초기화
               ref.read(discountValueProvider.notifier).state = 0;
               ref.read(promotionProductIdProvider.notifier).state = null;
-              // 현재 직원 초기화는 로그아웃 시 자동 처리됨
-              // (Provider는 읽기 전용이므로 직접 변경 불가)
+
+              // 세션 삭제 및 감사 로그 기록
+              await ref.read(authProvider.notifier).logout();
 
               // PIN 로그인 화면으로 이동
-              Navigator.of(ctx).pop();
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const PinLoginScreen()),
-                (route) => false,
-              );
+              if (context.mounted) Navigator.of(ctx).pop();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const PinLoginScreen()),
+                  (route) => false,
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.error,

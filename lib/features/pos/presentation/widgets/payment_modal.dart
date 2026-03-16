@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:drift/drift.dart' hide Column;
 import '../../providers/tax_provider.dart';
 import 'package:flutter/material.dart';
@@ -252,7 +253,8 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             ],
             const SizedBox(height: 20),
 
-            // ─── 주문 유형 선택 (B-074) ────
+            // ─── 주문 유형 선택 (B-074) — BillRequestScreen에서 열면 숨김 ────
+            if (widget.billTotal == null) ...[
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -289,9 +291,10 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               ],
             ),
             const SizedBox(height: 20),
+            ], // end if (widget.billTotal == null) for Order Type
 
-            // ─── 테이블 번호 & 특이사항 입력 (KDS 연동용, delivery 제외) ────
-            if (!_isDeliveryOrder) ...[
+            // ─── 테이블 번호 & 특이사항 입력 (KDS 연동용, delivery 제외, BillRequestScreen 제외) ────
+            if (widget.billTotal == null && !_isDeliveryOrder) ...[
             Row(
               children: [
                 Expanded(
@@ -427,8 +430,8 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             const SizedBox(height: 20),
             ], // end if (!_isDeliveryOrder)
 
-            // ─── 배달 정보 입력 (phoneDelivery, platformDelivery만 표시) ────
-            if (_isDeliveryOrder) ...[
+            // ─── 배달 정보 입력 (phoneDelivery, platformDelivery만 표시, BillRequestScreen 제외) ────
+            if (widget.billTotal == null && _isDeliveryOrder) ...[
               DeliveryInfoSection(
                 customerNameController: _customerNameController,
                 deliveryPhoneController: _deliveryPhoneController,
@@ -488,14 +491,14 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               const SizedBox(height: 6),
               // 빠른 금액 버튼
               Row(
-                children: [10000, 50000, 100000].map((amount) {
+                children: [10000, 50000, 100000, 500000].map((amount) {
                   return Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(right: amount == 100000 ? 0 : 6),
+                      padding: EdgeInsets.only(right: amount == 500000 ? 0 : 6),
                       child: OutlinedButton(
                         onPressed: () {
-                          setState(() => _cashInput = amount.toDouble());
-                          _cashController.text = priceFormatter.format(amount.toDouble(), includeSymbol: false);
+                          setState(() => _cashInput += amount.toDouble());
+                          _cashController.text = priceFormatter.format(_cashInput, includeSymbol: false);
                         },
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -719,7 +722,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               product.stock >= 0 &&
               product.stock < cartItem.quantity) {
             insufficientItems.add(
-              '${product.name} (재고: ${product.stock}, 주문: ${cartItem.quantity})',
+              '${product.name} (stock: ${product.stock}, ordered: ${cartItem.quantity})',
             );
           }
         }
@@ -749,7 +752,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(ctx).pop(),
-                    child: const Text('확인'),
+                    child: const Text('OK'),
                   ),
                 ],
               ),
@@ -792,7 +795,9 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
 
       // ── Sale 처리: 기존 Open Tab 완료 OR 신규 Sale 생성 ──────────
       late Sale createdSale;
+      late List<SaleItem> savedItems;
 
+      await db.transaction(() async {
       if (widget.saleId != null) {
         // ─── Bill checkout: 기존 Open Tab Sale을 completed로 마킹 ───
         await (db.update(db.sales)..where((s) => s.id.equals(widget.saleId!)))
@@ -810,8 +815,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         final dateStr = '${now.year}'
             '${now.month.toString().padLeft(2, '0')}'
             '${now.day.toString().padLeft(2, '0')}';
-        final microSeq = now.microsecondsSinceEpoch % 1000000;
-        final seqStr = microSeq.toString().padLeft(6, '0');
+        final seqStr = (Random.secure().nextInt(900000) + 100000).toString();
 
         final saleCompanion = SalesCompanion.insert(
           saleNumber: 'SO-$dateStr-$seqStr',
@@ -920,7 +924,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
       }
 
       // ── 저장된 SaleItems 조회 (영수증용) ───────
-      final savedItems = await dao.getSaleItems(createdSale.id);
+      savedItems = await dao.getSaleItems(createdSale.id);
 
       // ── 테이블 상태 업데이트 (Dine-in/Open Tab 완료 시) ──────────────
       if (widget.tableId != null) {
@@ -933,6 +937,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         );
         debugPrint('[Checkout] Table ${widget.tableId} reset to AVAILABLE');
       }
+      }); // end transaction
 
       if (mounted) {
         ref.read(cartProvider.notifier).clear();

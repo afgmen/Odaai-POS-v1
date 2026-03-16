@@ -9,6 +9,7 @@ class Employees extends Table {
   // 권한 시스템 필드 (레거시)
   TextColumn get role => text().withDefault(const Constant('CASHIER'))(); // 'MANAGER' | 'CASHIER' | 'KITCHEN'
   TextColumn get pinHash => text().nullable()(); // SHA-256 해시된 PIN
+  TextColumn get pinSalt => text().nullable()(); // 직원별 고유 salt (null이면 레거시 전역 salt 사용)
   DateTimeColumn get pinChangedAt => dateTime().nullable()(); // PIN 변경 시간
   DateTimeColumn get lastLoginAt => dateTime().nullable()(); // 최종 로그인 시간
   TextColumn get sessionToken => text().nullable()(); // 세션 토큰 (UUID)

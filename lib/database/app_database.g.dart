@@ -3750,6 +3750,17 @@ class $EmployeesTable extends Employees
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _pinSaltMeta = const VerificationMeta(
+    'pinSalt',
+  );
+  @override
+  late final GeneratedColumn<String> pinSalt = GeneratedColumn<String>(
+    'pin_salt',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _pinChangedAtMeta = const VerificationMeta(
     'pinChangedAt',
   );
@@ -3877,6 +3888,7 @@ class $EmployeesTable extends Employees
     passwordHash,
     role,
     pinHash,
+    pinSalt,
     pinChangedAt,
     lastLoginAt,
     sessionToken,
@@ -3940,6 +3952,12 @@ class $EmployeesTable extends Employees
       context.handle(
         _pinHashMeta,
         pinHash.isAcceptableOrUnknown(data['pin_hash']!, _pinHashMeta),
+      );
+    }
+    if (data.containsKey('pin_salt')) {
+      context.handle(
+        _pinSaltMeta,
+        pinSalt.isAcceptableOrUnknown(data['pin_salt']!, _pinSaltMeta),
       );
     }
     if (data.containsKey('pin_changed_at')) {
@@ -4053,6 +4071,10 @@ class $EmployeesTable extends Employees
         DriftSqlType.string,
         data['${effectivePrefix}pin_hash'],
       ),
+      pinSalt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pin_salt'],
+      ),
       pinChangedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}pin_changed_at'],
@@ -4109,6 +4131,7 @@ class Employee extends DataClass implements Insertable<Employee> {
   final String passwordHash;
   final String role;
   final String? pinHash;
+  final String? pinSalt;
   final DateTime? pinChangedAt;
   final DateTime? lastLoginAt;
   final String? sessionToken;
@@ -4126,6 +4149,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     required this.passwordHash,
     required this.role,
     this.pinHash,
+    this.pinSalt,
     this.pinChangedAt,
     this.lastLoginAt,
     this.sessionToken,
@@ -4147,6 +4171,9 @@ class Employee extends DataClass implements Insertable<Employee> {
     map['role'] = Variable<String>(role);
     if (!nullToAbsent || pinHash != null) {
       map['pin_hash'] = Variable<String>(pinHash);
+    }
+    if (!nullToAbsent || pinSalt != null) {
+      map['pin_salt'] = Variable<String>(pinSalt);
     }
     if (!nullToAbsent || pinChangedAt != null) {
       map['pin_changed_at'] = Variable<DateTime>(pinChangedAt);
@@ -4181,6 +4208,9 @@ class Employee extends DataClass implements Insertable<Employee> {
       pinHash: pinHash == null && nullToAbsent
           ? const Value.absent()
           : Value(pinHash),
+      pinSalt: pinSalt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pinSalt),
       pinChangedAt: pinChangedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(pinChangedAt),
@@ -4216,6 +4246,7 @@ class Employee extends DataClass implements Insertable<Employee> {
       passwordHash: serializer.fromJson<String>(json['passwordHash']),
       role: serializer.fromJson<String>(json['role']),
       pinHash: serializer.fromJson<String?>(json['pinHash']),
+      pinSalt: serializer.fromJson<String?>(json['pinSalt']),
       pinChangedAt: serializer.fromJson<DateTime?>(json['pinChangedAt']),
       lastLoginAt: serializer.fromJson<DateTime?>(json['lastLoginAt']),
       sessionToken: serializer.fromJson<String?>(json['sessionToken']),
@@ -4240,6 +4271,7 @@ class Employee extends DataClass implements Insertable<Employee> {
       'passwordHash': serializer.toJson<String>(passwordHash),
       'role': serializer.toJson<String>(role),
       'pinHash': serializer.toJson<String?>(pinHash),
+      'pinSalt': serializer.toJson<String?>(pinSalt),
       'pinChangedAt': serializer.toJson<DateTime?>(pinChangedAt),
       'lastLoginAt': serializer.toJson<DateTime?>(lastLoginAt),
       'sessionToken': serializer.toJson<String?>(sessionToken),
@@ -4260,6 +4292,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     String? passwordHash,
     String? role,
     Value<String?> pinHash = const Value.absent(),
+    Value<String?> pinSalt = const Value.absent(),
     Value<DateTime?> pinChangedAt = const Value.absent(),
     Value<DateTime?> lastLoginAt = const Value.absent(),
     Value<String?> sessionToken = const Value.absent(),
@@ -4277,6 +4310,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     passwordHash: passwordHash ?? this.passwordHash,
     role: role ?? this.role,
     pinHash: pinHash.present ? pinHash.value : this.pinHash,
+    pinSalt: pinSalt.present ? pinSalt.value : this.pinSalt,
     pinChangedAt: pinChangedAt.present ? pinChangedAt.value : this.pinChangedAt,
     lastLoginAt: lastLoginAt.present ? lastLoginAt.value : this.lastLoginAt,
     sessionToken: sessionToken.present ? sessionToken.value : this.sessionToken,
@@ -4302,6 +4336,7 @@ class Employee extends DataClass implements Insertable<Employee> {
           : this.passwordHash,
       role: data.role.present ? data.role.value : this.role,
       pinHash: data.pinHash.present ? data.pinHash.value : this.pinHash,
+      pinSalt: data.pinSalt.present ? data.pinSalt.value : this.pinSalt,
       pinChangedAt: data.pinChangedAt.present
           ? data.pinChangedAt.value
           : this.pinChangedAt,
@@ -4338,6 +4373,7 @@ class Employee extends DataClass implements Insertable<Employee> {
           ..write('passwordHash: $passwordHash, ')
           ..write('role: $role, ')
           ..write('pinHash: $pinHash, ')
+          ..write('pinSalt: $pinSalt, ')
           ..write('pinChangedAt: $pinChangedAt, ')
           ..write('lastLoginAt: $lastLoginAt, ')
           ..write('sessionToken: $sessionToken, ')
@@ -4360,6 +4396,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     passwordHash,
     role,
     pinHash,
+    pinSalt,
     pinChangedAt,
     lastLoginAt,
     sessionToken,
@@ -4381,6 +4418,7 @@ class Employee extends DataClass implements Insertable<Employee> {
           other.passwordHash == this.passwordHash &&
           other.role == this.role &&
           other.pinHash == this.pinHash &&
+          other.pinSalt == this.pinSalt &&
           other.pinChangedAt == this.pinChangedAt &&
           other.lastLoginAt == this.lastLoginAt &&
           other.sessionToken == this.sessionToken &&
@@ -4400,6 +4438,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
   final Value<String> passwordHash;
   final Value<String> role;
   final Value<String?> pinHash;
+  final Value<String?> pinSalt;
   final Value<DateTime?> pinChangedAt;
   final Value<DateTime?> lastLoginAt;
   final Value<String?> sessionToken;
@@ -4417,6 +4456,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
     this.passwordHash = const Value.absent(),
     this.role = const Value.absent(),
     this.pinHash = const Value.absent(),
+    this.pinSalt = const Value.absent(),
     this.pinChangedAt = const Value.absent(),
     this.lastLoginAt = const Value.absent(),
     this.sessionToken = const Value.absent(),
@@ -4435,6 +4475,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
     required String passwordHash,
     this.role = const Value.absent(),
     this.pinHash = const Value.absent(),
+    this.pinSalt = const Value.absent(),
     this.pinChangedAt = const Value.absent(),
     this.lastLoginAt = const Value.absent(),
     this.sessionToken = const Value.absent(),
@@ -4455,6 +4496,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
     Expression<String>? passwordHash,
     Expression<String>? role,
     Expression<String>? pinHash,
+    Expression<String>? pinSalt,
     Expression<DateTime>? pinChangedAt,
     Expression<DateTime>? lastLoginAt,
     Expression<String>? sessionToken,
@@ -4473,6 +4515,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
       if (passwordHash != null) 'password_hash': passwordHash,
       if (role != null) 'role': role,
       if (pinHash != null) 'pin_hash': pinHash,
+      if (pinSalt != null) 'pin_salt': pinSalt,
       if (pinChangedAt != null) 'pin_changed_at': pinChangedAt,
       if (lastLoginAt != null) 'last_login_at': lastLoginAt,
       if (sessionToken != null) 'session_token': sessionToken,
@@ -4493,6 +4536,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
     Value<String>? passwordHash,
     Value<String>? role,
     Value<String?>? pinHash,
+    Value<String?>? pinSalt,
     Value<DateTime?>? pinChangedAt,
     Value<DateTime?>? lastLoginAt,
     Value<String?>? sessionToken,
@@ -4511,6 +4555,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
       passwordHash: passwordHash ?? this.passwordHash,
       role: role ?? this.role,
       pinHash: pinHash ?? this.pinHash,
+      pinSalt: pinSalt ?? this.pinSalt,
       pinChangedAt: pinChangedAt ?? this.pinChangedAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       sessionToken: sessionToken ?? this.sessionToken,
@@ -4544,6 +4589,9 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
     }
     if (pinHash.present) {
       map['pin_hash'] = Variable<String>(pinHash.value);
+    }
+    if (pinSalt.present) {
+      map['pin_salt'] = Variable<String>(pinSalt.value);
     }
     if (pinChangedAt.present) {
       map['pin_changed_at'] = Variable<DateTime>(pinChangedAt.value);
@@ -4587,6 +4635,7 @@ class EmployeesCompanion extends UpdateCompanion<Employee> {
           ..write('passwordHash: $passwordHash, ')
           ..write('role: $role, ')
           ..write('pinHash: $pinHash, ')
+          ..write('pinSalt: $pinSalt, ')
           ..write('pinChangedAt: $pinChangedAt, ')
           ..write('lastLoginAt: $lastLoginAt, ')
           ..write('sessionToken: $sessionToken, ')
@@ -28512,6 +28561,7 @@ typedef $$EmployeesTableCreateCompanionBuilder =
       required String passwordHash,
       Value<String> role,
       Value<String?> pinHash,
+      Value<String?> pinSalt,
       Value<DateTime?> pinChangedAt,
       Value<DateTime?> lastLoginAt,
       Value<String?> sessionToken,
@@ -28531,6 +28581,7 @@ typedef $$EmployeesTableUpdateCompanionBuilder =
       Value<String> passwordHash,
       Value<String> role,
       Value<String?> pinHash,
+      Value<String?> pinSalt,
       Value<DateTime?> pinChangedAt,
       Value<DateTime?> lastLoginAt,
       Value<String?> sessionToken,
@@ -28713,6 +28764,11 @@ class $$EmployeesTableFilterComposer
 
   ColumnFilters<String> get pinHash => $composableBuilder(
     column: $table.pinHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pinSalt => $composableBuilder(
+    column: $table.pinSalt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -28956,6 +29012,11 @@ class $$EmployeesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get pinSalt => $composableBuilder(
+    column: $table.pinSalt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get pinChangedAt => $composableBuilder(
     column: $table.pinChangedAt,
     builder: (column) => ColumnOrderings(column),
@@ -29035,6 +29096,9 @@ class $$EmployeesTableAnnotationComposer
 
   GeneratedColumn<String> get pinHash =>
       $composableBuilder(column: $table.pinHash, builder: (column) => column);
+
+  GeneratedColumn<String> get pinSalt =>
+      $composableBuilder(column: $table.pinSalt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get pinChangedAt => $composableBuilder(
     column: $table.pinChangedAt,
@@ -29273,6 +29337,7 @@ class $$EmployeesTableTableManager
                 Value<String> passwordHash = const Value.absent(),
                 Value<String> role = const Value.absent(),
                 Value<String?> pinHash = const Value.absent(),
+                Value<String?> pinSalt = const Value.absent(),
                 Value<DateTime?> pinChangedAt = const Value.absent(),
                 Value<DateTime?> lastLoginAt = const Value.absent(),
                 Value<String?> sessionToken = const Value.absent(),
@@ -29290,6 +29355,7 @@ class $$EmployeesTableTableManager
                 passwordHash: passwordHash,
                 role: role,
                 pinHash: pinHash,
+                pinSalt: pinSalt,
                 pinChangedAt: pinChangedAt,
                 lastLoginAt: lastLoginAt,
                 sessionToken: sessionToken,
@@ -29309,6 +29375,7 @@ class $$EmployeesTableTableManager
                 required String passwordHash,
                 Value<String> role = const Value.absent(),
                 Value<String?> pinHash = const Value.absent(),
+                Value<String?> pinSalt = const Value.absent(),
                 Value<DateTime?> pinChangedAt = const Value.absent(),
                 Value<DateTime?> lastLoginAt = const Value.absent(),
                 Value<String?> sessionToken = const Value.absent(),
@@ -29326,6 +29393,7 @@ class $$EmployeesTableTableManager
                 passwordHash: passwordHash,
                 role: role,
                 pinHash: pinHash,
+                pinSalt: pinSalt,
                 pinChangedAt: pinChangedAt,
                 lastLoginAt: lastLoginAt,
                 sessionToken: sessionToken,

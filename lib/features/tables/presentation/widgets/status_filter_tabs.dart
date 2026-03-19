@@ -52,7 +52,7 @@ class StatusFilterTabs extends ConsumerWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: _buildFilterTab(
                     context: context,
-                    label: _getLocalizedStatusLabel(l10n, status.value),
+                    label: _getLocalizedStatusLabel(l10n, status),
                     status: status.value,
                     count: counts[status.value] ?? 0,
                     isSelected: selectedStatus == status.value,
@@ -129,22 +129,16 @@ class StatusFilterTabs extends ConsumerWidget {
     );
   }
 
-  String _getLocalizedStatusLabel(AppLocalizations l10n, String statusValue) {
-    switch (statusValue) {
-      case 'available':
+  String _getLocalizedStatusLabel(AppLocalizations l10n, TableStatus status) {
+    switch (status) {
+      case TableStatus.available:
         return l10n.emptyTables;
-      case 'occupied':
-        return l10n.occupiedTables;
-      case 'reserved':
+      case TableStatus.reserved:
         return l10n.tableReserved;
-      case 'seated':
-        return l10n.tableSeated;
-      case 'payment_complete':
-        return l10n.tablePaymentComplete;
-      case 'cleaning':
+      case TableStatus.cleaning:
         return l10n.tableCleaning;
       default:
-        return statusValue;
+        return status.label;
     }
   }
 }

@@ -184,6 +184,7 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
                           ...filteredTablesAsync.when(
                             data: (tables) => tables.map((table) =>
                                 TableWidget(
+                                  key: ValueKey(table.id),
                                   table: table,
                                   isSelected: _selectedTableId == table.id,
                                   onTap: () {

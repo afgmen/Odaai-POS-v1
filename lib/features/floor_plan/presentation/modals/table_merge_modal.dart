@@ -156,10 +156,10 @@ class TableMergeModal extends ConsumerWidget {
         throw Exception('Current sale not found');
       }
 
-      // Find target table's sale
+      // Find target table's sale (status is 'open' for active sales - issue #2)
       final targetSale = await (db.select(db.sales)
             ..where((s) => s.tableId.equals(targetTable.id))
-            ..where((s) => s.status.equals('pending')))
+            ..where((s) => s.status.isIn(['open', 'pending'])))
           .getSingleOrNull();
 
       if (targetSale == null) {

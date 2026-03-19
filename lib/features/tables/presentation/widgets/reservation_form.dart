@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/reservations_providers.dart';
+import '../../data/tables_providers.dart';
 import '../../domain/enums/reservation_status.dart';
 
 /// 예약 추가/수정 폼
@@ -27,6 +28,7 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
   late DateTime _selectedDate;
   late TimeOfDay _selectedTime;
   late String _selectedStatus;
+  int? _selectedTableId;
 
   @override
   void initState() {
@@ -42,6 +44,7 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
       _selectedDate = reservation.reservationDate;
       _selectedTime = _parseTimeOfDay(reservation.reservationTime);
       _selectedStatus = reservation.status;
+      _selectedTableId = reservation.tableId;
     } else {
       // 추가 모드
       _customerNameController = TextEditingController();
@@ -51,6 +54,7 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
       _selectedDate = DateTime.now();
       _selectedTime = TimeOfDay.now();
       _selectedStatus = ReservationStatus.pending.value;
+      _selectedTableId = null;
     }
   }
 
@@ -221,6 +225,10 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
               ),
             if (isEditMode) const SizedBox(height: 16),
 
+            // 테이블 선택
+            _buildTableSelector(context, l10n),
+            const SizedBox(height: 16),
+
             // 특이사항
             TextFormField(
               controller: _specialRequestsController,
@@ -246,6 +254,44 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTableSelector(BuildContext context, AppLocalizations l10n) {
+    final tablesAsync = ref.watch(allTablesStreamProvider);
+
+    return tablesAsync.when(
+      data: (tables) {
+        final availableTables = tables
+            .where((t) => t.status == 'AVAILABLE' || t.id == _selectedTableId)
+            .toList();
+
+        return DropdownButtonFormField<int?>(
+          value: _selectedTableId,
+          decoration: const InputDecoration(
+            labelText: 'Table (Optional)',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.table_restaurant),
+          ),
+          items: [
+            const DropdownMenuItem<int?>(
+              value: null,
+              child: Text('No table assigned'),
+            ),
+            ...availableTables.map((table) => DropdownMenuItem<int?>(
+                  value: table.id,
+                  child: Text('Table ${table.tableNumber} (${table.seats} seats)'),
+                )),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _selectedTableId = value;
+            });
+          },
+        );
+      },
+      loading: () => const LinearProgressIndicator(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 
@@ -305,6 +351,7 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
             ),
             reservationTime: reservationTime,
             status: drift.Value(_selectedStatus),
+            tableId: drift.Value(_selectedTableId),
             specialRequests: drift.Value(specialRequests.isEmpty ? null : specialRequests),
           ),
         );
@@ -333,6 +380,8 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
             ),
           reservationTime: reservationTime,
           specialRequests: specialRequests.isEmpty ? null : specialRequests,
+          tableId: _selectedTableId,
+          clearTableId: _selectedTableId == null,
         );
 
         // 상태 변경

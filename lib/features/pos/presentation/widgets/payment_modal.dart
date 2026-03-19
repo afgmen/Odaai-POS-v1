@@ -140,17 +140,20 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         ),
       ),
       child: ConstrainedBox(
-        // B-096: Delivery 폼 추가 시 모달이 화면 밖으로 밀리지 않도록 최대 높이 제한
+        // 키보드 높이와 상태바를 고려한 동적 최대 높이 (issue #16)
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.92,
+          maxHeight: MediaQuery.of(context).size.height
+              - MediaQuery.of(context).viewInsets.bottom
+              - MediaQuery.of(context).padding.top
+              - 20,
         ),
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: EdgeInsets.only(
+          padding: const EdgeInsets.only(
             left: 20,
             right: 20,
             top: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            bottom: 24,
           ),
           child: Column(
           mainAxisSize: MainAxisSize.min,

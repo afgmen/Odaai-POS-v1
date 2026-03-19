@@ -32,10 +32,11 @@ class TablesDao extends DatabaseAccessor<AppDatabase> with _$TablesDaoMixin {
         .getSingleOrNull();
   }
 
-  /// 테이블 번호로 조회
+  /// 테이블 번호로 조회 (활성 테이블만 - issue #2)
   Future<RestaurantTable?> getTableByNumber(String tableNumber) {
     return (select(restaurantTables)
-          ..where((t) => t.tableNumber.equals(tableNumber)))
+          ..where((t) =>
+              t.tableNumber.equals(tableNumber) & t.isActive.equals(true)))
         .getSingleOrNull();
   }
 

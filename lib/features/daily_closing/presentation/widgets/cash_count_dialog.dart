@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../providers/currency_provider.dart';
 import '../../domain/constants/closing_constants.dart';
 
-class CashCountDialog extends StatefulWidget {
+class CashCountDialog extends ConsumerStatefulWidget {
   final double expectedCash;
 
   const CashCountDialog({
@@ -13,10 +14,10 @@ class CashCountDialog extends StatefulWidget {
   });
 
   @override
-  State<CashCountDialog> createState() => _CashCountDialogState();
+  ConsumerState<CashCountDialog> createState() => _CashCountDialogState();
 }
 
-class _CashCountDialogState extends State<CashCountDialog> {
+class _CashCountDialogState extends ConsumerState<CashCountDialog> {
   final cashController = TextEditingController();
   double? actualCash;
 
@@ -38,8 +39,7 @@ class _CashCountDialogState extends State<CashCountDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final currencyFormat =
-        NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return AlertDialog(
       title: Text(l10n.cashCount),
@@ -65,7 +65,7 @@ class _CashCountDialogState extends State<CashCountDialog> {
                     ),
                   ),
                   Text(
-                    currencyFormat.format(widget.expectedCash),
+                    priceFormatter.format(widget.expectedCash),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -134,7 +134,7 @@ class _CashCountDialogState extends State<CashCountDialog> {
                           ),
                         ),
                         Text(
-                          currencyFormat.format(difference),
+                          priceFormatter.format(difference),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

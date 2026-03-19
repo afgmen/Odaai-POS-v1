@@ -198,6 +198,8 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
     DateTime? reservationDate,
     String? reservationTime,
     String? specialRequests,
+    int? tableId,
+    bool clearTableId = false,
   }) {
     return (update(reservations)..where((r) => r.id.equals(reservationId)))
         .write(
@@ -217,6 +219,11 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
             ? Value(reservationTime)
             : const Value.absent(),
         specialRequests: Value(specialRequests),
+        tableId: clearTableId
+            ? const Value(null)
+            : tableId != null
+                ? Value(tableId)
+                : const Value.absent(),
         updatedAt: Value(DateTime.now()),
       ),
     ).then((count) => count > 0);

@@ -82,19 +82,26 @@ class ClosingService {
       );
     }
 
-    // 5. 해당 날짜에 매출이 있는지 확인
+    // 5. 매출 집계 (매출 없어도 마감 허용 - issue #13)
     final aggregation = await _dao.aggregateSalesForDate(date);
-    if (aggregation == null || aggregation.totalTransactions == 0) {
-      return ClosingValidationResult(
-        canClose: false,
-        reason: 'No sales found for this date.',
-        failCode: ClosingFailCode.noSales,
-      );
-    }
+    final finalAggregation = aggregation ??
+        SalesAggregation(
+          totalTransactions: 0,
+          totalSales: 0,
+          totalTax: 0,
+          totalDiscount: 0,
+          cashSales: 0,
+          cardSales: 0,
+          qrSales: 0,
+          transferSales: 0,
+          averageTransaction: 0,
+        );
 
     return ClosingValidationResult(
       canClose: true,
-      aggregation: aggregation,
+      aggregation: finalAggregation,
+      failCode: finalAggregation.totalTransactions == 0 ? ClosingFailCode.noSales : null,
+      reason: finalAggregation.totalTransactions == 0 ? 'No sales for this date.' : null,
     );
   }
 

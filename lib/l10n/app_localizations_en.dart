@@ -2012,6 +2012,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alreadyClosed => 'This date has already been closed';
 
   @override
+  // B-106: 같은 날 추가 마감 허용 안내 메시지
+  String get additionalClosingAllowed => 'Additional closing allowed';
+
+  @override
   String get cannotCloseFutureDate => 'Cannot close future dates';
 
   @override

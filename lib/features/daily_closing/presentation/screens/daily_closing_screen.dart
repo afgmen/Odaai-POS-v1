@@ -123,6 +123,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
         ),
       );
 
+      // B-105: 마감 직후 closingId로 바로 PDF 생성
       if (shouldGeneratePdf == true && result.closingId != null) {
         await _generatePdf(result.closingId!);
       }
@@ -162,18 +163,17 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
   Future<void> _generatePdf(int closingId) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      // B-103: PDF 생성용 단건 읽기 — DAO 직접 호출
-      final closingAsync = await ref
-          .read(dailyClosingDaoProvider)
-          .getClosingByDate(selectedDate);
+      // B-105: closingId로 직접 마감 데이터 조회 (날짜 기반 대신)
+      final dao = ref.read(dailyClosingDaoProvider);
+      final closing = await dao.getClosingById(closingId);
 
-      if (closingAsync == null) {
+      if (closing == null) {
         throw Exception(l10n.loadingClosingData);
       }
 
       final pdfService = ref.read(pdfExportServiceProvider);
       final file = await pdfService.generateClosingReport(
-        closingAsync,
+        closing,
         null,
       );
 
@@ -270,23 +270,24 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
             ),
             const SizedBox(height: 16),
 
+            // B-106: 같은 날 여러 교대 종료 허용 — 기존 마감이 있어도 알림만 표시
             closingAsync.when(
               data: (closing) {
                 if (closing != null) {
                   return Card(
-                    color: Colors.orange.shade50,
+                    color: Colors.blue.shade50,
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Row(
                         children: [
-                          Icon(Icons.info, color: Colors.orange.shade700),
+                          Icon(Icons.info_outline, color: Colors.blue.shade700),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              '${l10n.alreadyClosed} (${DateFormat('yyyy-MM-dd HH:mm').format(closing.closedAt)})',
+                              '${l10n.alreadyClosed} (${DateFormat('yyyy-MM-dd HH:mm').format(closing.closedAt)}) — ${l10n.additionalClosingAllowed}',
                               style: TextStyle(
-                                color: Colors.orange.shade700,
-                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade700,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -537,7 +538,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
 
   Widget _buildActionButtons(DailyClosing? closing) {
     final l10n = AppLocalizations.of(context)!;
-    final canClose = closing == null;
+    // B-106: 같은 날 여러 교대 종료 허용 — 항상 마감 버튼 활성화
 
     return Row(
       children: [
@@ -545,7 +546,8 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
           child: OutlinedButton.icon(
             icon: const Icon(Icons.picture_as_pdf),
             label: Text('PDF ${l10n.save}'),
-            onPressed: canClose
+            // B-105: 마감 기록 있을 때만 PDF 생성 가능
+            onPressed: closing == null
                 ? null
                 : () async {
                     await _generatePdf(closing.id);
@@ -559,7 +561,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
             key: DailyClosingTutorialKeys.performClosingButton,
             icon: const Icon(Icons.lock),
             label: Text(l10n.performClosing),
-            onPressed: canClose ? _performClosing : null,
+            onPressed: _performClosing,
           ),
         ),
       ],

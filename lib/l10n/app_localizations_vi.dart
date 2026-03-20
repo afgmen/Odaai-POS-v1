@@ -2016,6 +2016,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get alreadyClosed => 'Ngày này đã được đóng quỹ';
 
   @override
+  // B-106: 같은 날 추가 마감 허용 안내 메시지
+  String get additionalClosingAllowed => 'Có thể đóng quỹ thêm';
+
+  @override
   String get cannotCloseFutureDate => 'Không thể đóng quỹ cho ngày tương lai';
 
   @override

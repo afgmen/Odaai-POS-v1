@@ -3812,6 +3812,12 @@ abstract class AppLocalizations {
   /// **'This date has already been closed'**
   String get alreadyClosed;
 
+  /// B-106: Additional closing allowed message.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional closing allowed'**
+  String get additionalClosingAllowed;
+
   /// No description provided for @cannotCloseFutureDate.
   ///
   /// In en, this message translates to:

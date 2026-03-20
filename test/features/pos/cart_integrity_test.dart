@@ -25,6 +25,7 @@ Product _product(int id, String name, double price, {String? category}) {
     createdAt: now,
     updatedAt: now,
     category: category,
+    vatRate: 10.0, // B-118: required field added
   );
 }
 

@@ -64,6 +64,10 @@
   "paymentAmount": "Số tiền thanh toán",
   "itemCount": "{count} món",
   "appliedProducts": "Chọn sản phẩm",
+  "selectPromotion": "Chọn khuyến mãi",
+  "noActivePromotions": "Không có khuyến mãi đang hoạt động",
+  "clearPromotion": "Xóa khuyến mãi",
+  "manualPromotion": "Khuyến mãi thủ công",
 
   "productName": "Tên sản phẩm",
   "productPrice": "Giá",
@@ -342,6 +346,7 @@
 
   "refundManagement": "Hoàn tiền/Trả hàng",
   "searchByReceipt": "Tìm theo số hóa đơn",
+  "recentCompletedOrders": "Đơn hàng hoàn thành gần đây",
   "receiptNumberHint": "Nhập số hóa đơn (VD: ODA-20250207-001)",
   "refundedStatus": "Đã hoàn tiền",
   "paidStatus": "Đã thanh toán",
@@ -548,6 +553,8 @@
   "enterQuantity": "Nhập số lượng",
   "reasonOptional": "Lý do (tùy chọn)",
   "reasonHint": "VD: Nhập hàng mới, Hao hụt, v.v.",
+  "stockSource": "Nguồn nhập (tùy chọn)",
+  "stockSourceHint": "VD: Tên nhà cung cấp, Số đơn đặt hàng",
   "stockAfterAdjust": "Tồn kho sau điều chỉnh",
   "adjustComplete": "Hoàn tất",
   "stockAdjusted": "Đã điều chỉnh tồn kho ({change})",

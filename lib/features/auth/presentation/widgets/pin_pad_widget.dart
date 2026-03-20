@@ -115,13 +115,16 @@ class PinPadWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           // Row 4: Backspace, 0, Submit
+          // B-114: 백스페이스 버튼 강조 표시
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildActionButton(
                 context,
-                icon: Icons.backspace_outlined,
-                onPressed: _onBackspace,
+                icon: Icons.backspace_rounded,
+                onPressed: pin.isNotEmpty ? _onBackspace : null,
+                color: pin.isNotEmpty ? Colors.orange.shade400 : Colors.grey.shade200,
+                highlighted: pin.isNotEmpty,
               ),
               _buildNumberButton(context, '0'),
               _buildActionButton(
@@ -169,6 +172,7 @@ class PinPadWidget extends StatelessWidget {
     required IconData icon,
     required VoidCallback? onPressed,
     Color? color,
+    bool highlighted = false,
   }) {
     return InkWell(
       onTap: onPressed,
@@ -180,13 +184,18 @@ class PinPadWidget extends StatelessWidget {
           shape: BoxShape.circle,
           color: color ?? Colors.grey.shade100,
           border: Border.all(
-            color: color ?? Colors.grey.shade300,
+            color: highlighted ? (color ?? Colors.grey.shade300) : Colors.grey.shade300,
+            width: highlighted ? 2 : 1,
           ),
+          boxShadow: highlighted
+              ? [BoxShadow(color: (color ?? Colors.orange).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))]
+              : null,
         ),
         child: Center(
           child: Icon(
             icon,
             size: 28,
+            // B-114: 활성 시 흰색, 비활성 시 회색
             color: onPressed != null ? Colors.white : Colors.grey.shade400,
           ),
         ),

@@ -196,6 +196,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appliedProducts => 'Chọn sản phẩm';
 
   @override
+  String get selectPromotion => 'Chọn khuyến mãi';
+
+  @override
+  String get noActivePromotions => 'Không có khuyến mãi đang hoạt động';
+
+  @override
+  String get clearPromotion => 'Xóa khuyến mãi';
+
+  @override
+  String get manualPromotion => 'Khuyến mãi thủ công';
+
+  @override
   String get productName => 'Tên sản phẩm';
 
   @override
@@ -936,6 +948,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get searchByReceipt => 'Tìm theo số hóa đơn';
 
   @override
+  String get recentCompletedOrders => 'Đơn hàng hoàn thành gần đây';
+
+  @override
   String get receiptNumberHint => 'Nhập số hóa đơn (VD: ODA-20250207-001)';
 
   @override
@@ -1522,6 +1537,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get reasonHint => 'VD: Nhập hàng mới, Hao hụt, v.v.';
 
   @override
+  String get stockSource => 'Nguồn nhập (tùy chọn)';
+
+  @override
+  String get stockSourceHint => 'VD: Tên nhà cung cấp, Số đơn đặt hàng';
+
+  @override
   String get stockAfterAdjust => 'Tồn kho sau điều chỉnh';
 
   @override
@@ -2016,8 +2037,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get alreadyClosed => 'Ngày này đã được đóng quỹ';
 
   @override
-  // B-106: 같은 날 추가 마감 허용 안내 메시지
-  String get additionalClosingAllowed => 'Có thể đóng quỹ thêm';
+  String get additionalClosingAllowed => 'Có thể đóng ca thêm';
 
   @override
   String get cannotCloseFutureDate => 'Không thể đóng quỹ cho ngày tương lai';

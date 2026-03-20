@@ -25,18 +25,22 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
   bool _isProcessing = false;
   late final TextEditingController _quantityController;
   late final TextEditingController _reasonController;
+  // B-115: 입고 출처 필드
+  late final TextEditingController _sourceController;
 
   @override
   void initState() {
     super.initState();
     _quantityController = TextEditingController();
     _reasonController = TextEditingController();
+    _sourceController = TextEditingController();
   }
 
   @override
   void dispose() {
     _quantityController.dispose();
     _reasonController.dispose();
+    _sourceController.dispose();
     super.dispose();
   }
 
@@ -172,6 +176,23 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
             ),
             const SizedBox(height: 14),
 
+            // B-115: 입고 출처 (입고 모드일 때만 표시)
+            if (_isIn) ...[
+              Text(
+                l10n.stockSource,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _sourceController,
+                decoration: InputDecoration(
+                  hintText: l10n.stockSourceHint,
+                  prefixIcon: const Icon(Icons.local_shipping_outlined, size: 20),
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+
             // ─── 사유 ───────────────────────────
             Text(
               l10n.reasonOptional,
@@ -260,11 +281,19 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
     setState(() => _isProcessing = true);
     try {
       final dao = ref.read(productsDaoProvider);
+      // B-115: 출처 정보를 reason에 포함
+      final source = _sourceController.text.trim();
+      final reason = _reasonController.text.trim();
+      final combinedReason = [
+        if (_isIn && source.isNotEmpty) 'Source: $source',
+        if (reason.isNotEmpty) reason,
+      ].join(' | ');
+
       await dao.updateStock(
         productId: widget.product.id,
         quantity: _isIn ? _quantity : -_quantity,
         type: _isIn ? 'in' : 'out',
-        reason: _reasonController.text.trim().isEmpty ? null : _reasonController.text.trim(),
+        reason: combinedReason.isEmpty ? null : combinedReason,
       );
       if (mounted) {
         Navigator.of(context).pop();

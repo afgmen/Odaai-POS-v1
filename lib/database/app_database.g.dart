@@ -531,6 +531,18 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _vatRateMeta = const VerificationMeta(
+    'vatRate',
+  );
+  @override
+  late final GeneratedColumn<double> vatRate = GeneratedColumn<double>(
+    'vat_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(10.0),
+  );
   static const VerificationMeta _isActiveMeta = const VerificationMeta(
     'isActive',
   );
@@ -598,6 +610,7 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     category,
     categoryId,
     imageUrl,
+    vatRate,
     isActive,
     needsSync,
     createdAt,
@@ -682,6 +695,12 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
         imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
       );
     }
+    if (data.containsKey('vat_rate')) {
+      context.handle(
+        _vatRateMeta,
+        vatRate.isAcceptableOrUnknown(data['vat_rate']!, _vatRateMeta),
+      );
+    }
     if (data.containsKey('is_active')) {
       context.handle(
         _isActiveMeta,
@@ -759,6 +778,10 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
         DriftSqlType.string,
         data['${effectivePrefix}image_url'],
       ),
+      vatRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}vat_rate'],
+      )!,
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
@@ -796,6 +819,7 @@ class Product extends DataClass implements Insertable<Product> {
   final String? category;
   final int? categoryId;
   final String? imageUrl;
+  final double vatRate;
   final bool isActive;
   final bool needsSync;
   final DateTime createdAt;
@@ -812,6 +836,7 @@ class Product extends DataClass implements Insertable<Product> {
     this.category,
     this.categoryId,
     this.imageUrl,
+    required this.vatRate,
     required this.isActive,
     required this.needsSync,
     required this.createdAt,
@@ -839,6 +864,7 @@ class Product extends DataClass implements Insertable<Product> {
     if (!nullToAbsent || imageUrl != null) {
       map['image_url'] = Variable<String>(imageUrl);
     }
+    map['vat_rate'] = Variable<double>(vatRate);
     map['is_active'] = Variable<bool>(isActive);
     map['needs_sync'] = Variable<bool>(needsSync);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -867,6 +893,7 @@ class Product extends DataClass implements Insertable<Product> {
       imageUrl: imageUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(imageUrl),
+      vatRate: Value(vatRate),
       isActive: Value(isActive),
       needsSync: Value(needsSync),
       createdAt: Value(createdAt),
@@ -891,6 +918,7 @@ class Product extends DataClass implements Insertable<Product> {
       category: serializer.fromJson<String?>(json['category']),
       categoryId: serializer.fromJson<int?>(json['categoryId']),
       imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+      vatRate: serializer.fromJson<double>(json['vatRate']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       needsSync: serializer.fromJson<bool>(json['needsSync']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -912,6 +940,7 @@ class Product extends DataClass implements Insertable<Product> {
       'category': serializer.toJson<String?>(category),
       'categoryId': serializer.toJson<int?>(categoryId),
       'imageUrl': serializer.toJson<String?>(imageUrl),
+      'vatRate': serializer.toJson<double>(vatRate),
       'isActive': serializer.toJson<bool>(isActive),
       'needsSync': serializer.toJson<bool>(needsSync),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -931,6 +960,7 @@ class Product extends DataClass implements Insertable<Product> {
     Value<String?> category = const Value.absent(),
     Value<int?> categoryId = const Value.absent(),
     Value<String?> imageUrl = const Value.absent(),
+    double? vatRate,
     bool? isActive,
     bool? needsSync,
     DateTime? createdAt,
@@ -947,6 +977,7 @@ class Product extends DataClass implements Insertable<Product> {
     category: category.present ? category.value : this.category,
     categoryId: categoryId.present ? categoryId.value : this.categoryId,
     imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+    vatRate: vatRate ?? this.vatRate,
     isActive: isActive ?? this.isActive,
     needsSync: needsSync ?? this.needsSync,
     createdAt: createdAt ?? this.createdAt,
@@ -967,6 +998,7 @@ class Product extends DataClass implements Insertable<Product> {
           ? data.categoryId.value
           : this.categoryId,
       imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
+      vatRate: data.vatRate.present ? data.vatRate.value : this.vatRate,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       needsSync: data.needsSync.present ? data.needsSync.value : this.needsSync,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -988,6 +1020,7 @@ class Product extends DataClass implements Insertable<Product> {
           ..write('category: $category, ')
           ..write('categoryId: $categoryId, ')
           ..write('imageUrl: $imageUrl, ')
+          ..write('vatRate: $vatRate, ')
           ..write('isActive: $isActive, ')
           ..write('needsSync: $needsSync, ')
           ..write('createdAt: $createdAt, ')
@@ -1009,6 +1042,7 @@ class Product extends DataClass implements Insertable<Product> {
     category,
     categoryId,
     imageUrl,
+    vatRate,
     isActive,
     needsSync,
     createdAt,
@@ -1029,6 +1063,7 @@ class Product extends DataClass implements Insertable<Product> {
           other.category == this.category &&
           other.categoryId == this.categoryId &&
           other.imageUrl == this.imageUrl &&
+          other.vatRate == this.vatRate &&
           other.isActive == this.isActive &&
           other.needsSync == this.needsSync &&
           other.createdAt == this.createdAt &&
@@ -1047,6 +1082,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   final Value<String?> category;
   final Value<int?> categoryId;
   final Value<String?> imageUrl;
+  final Value<double> vatRate;
   final Value<bool> isActive;
   final Value<bool> needsSync;
   final Value<DateTime> createdAt;
@@ -1063,6 +1099,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.category = const Value.absent(),
     this.categoryId = const Value.absent(),
     this.imageUrl = const Value.absent(),
+    this.vatRate = const Value.absent(),
     this.isActive = const Value.absent(),
     this.needsSync = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1080,6 +1117,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.category = const Value.absent(),
     this.categoryId = const Value.absent(),
     this.imageUrl = const Value.absent(),
+    this.vatRate = const Value.absent(),
     this.isActive = const Value.absent(),
     this.needsSync = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1098,6 +1136,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Expression<String>? category,
     Expression<int>? categoryId,
     Expression<String>? imageUrl,
+    Expression<double>? vatRate,
     Expression<bool>? isActive,
     Expression<bool>? needsSync,
     Expression<DateTime>? createdAt,
@@ -1115,6 +1154,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       if (category != null) 'category': category,
       if (categoryId != null) 'category_id': categoryId,
       if (imageUrl != null) 'image_url': imageUrl,
+      if (vatRate != null) 'vat_rate': vatRate,
       if (isActive != null) 'is_active': isActive,
       if (needsSync != null) 'needs_sync': needsSync,
       if (createdAt != null) 'created_at': createdAt,
@@ -1134,6 +1174,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Value<String?>? category,
     Value<int?>? categoryId,
     Value<String?>? imageUrl,
+    Value<double>? vatRate,
     Value<bool>? isActive,
     Value<bool>? needsSync,
     Value<DateTime>? createdAt,
@@ -1151,6 +1192,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       category: category ?? this.category,
       categoryId: categoryId ?? this.categoryId,
       imageUrl: imageUrl ?? this.imageUrl,
+      vatRate: vatRate ?? this.vatRate,
       isActive: isActive ?? this.isActive,
       needsSync: needsSync ?? this.needsSync,
       createdAt: createdAt ?? this.createdAt,
@@ -1194,6 +1236,9 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     if (imageUrl.present) {
       map['image_url'] = Variable<String>(imageUrl.value);
     }
+    if (vatRate.present) {
+      map['vat_rate'] = Variable<double>(vatRate.value);
+    }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
@@ -1223,6 +1268,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
           ..write('category: $category, ')
           ..write('categoryId: $categoryId, ')
           ..write('imageUrl: $imageUrl, ')
+          ..write('vatRate: $vatRate, ')
           ..write('isActive: $isActive, ')
           ..write('needsSync: $needsSync, ')
           ..write('createdAt: $createdAt, ')
@@ -25650,6 +25696,7 @@ typedef $$ProductsTableCreateCompanionBuilder =
       Value<String?> category,
       Value<int?> categoryId,
       Value<String?> imageUrl,
+      Value<double> vatRate,
       Value<bool> isActive,
       Value<bool> needsSync,
       Value<DateTime> createdAt,
@@ -25668,6 +25715,7 @@ typedef $$ProductsTableUpdateCompanionBuilder =
       Value<String?> category,
       Value<int?> categoryId,
       Value<String?> imageUrl,
+      Value<double> vatRate,
       Value<bool> isActive,
       Value<bool> needsSync,
       Value<DateTime> createdAt,
@@ -25863,6 +25911,11 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<String> get imageUrl => $composableBuilder(
     column: $table.imageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get vatRate => $composableBuilder(
+    column: $table.vatRate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -26094,6 +26147,11 @@ class $$ProductsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get vatRate => $composableBuilder(
+    column: $table.vatRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isActive => $composableBuilder(
     column: $table.isActive,
     builder: (column) => ColumnOrderings(column),
@@ -26176,6 +26234,9 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<String> get imageUrl =>
       $composableBuilder(column: $table.imageUrl, builder: (column) => column);
+
+  GeneratedColumn<double> get vatRate =>
+      $composableBuilder(column: $table.vatRate, builder: (column) => column);
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
@@ -26386,6 +26447,7 @@ class $$ProductsTableTableManager
                 Value<String?> category = const Value.absent(),
                 Value<int?> categoryId = const Value.absent(),
                 Value<String?> imageUrl = const Value.absent(),
+                Value<double> vatRate = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<bool> needsSync = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -26402,6 +26464,7 @@ class $$ProductsTableTableManager
                 category: category,
                 categoryId: categoryId,
                 imageUrl: imageUrl,
+                vatRate: vatRate,
                 isActive: isActive,
                 needsSync: needsSync,
                 createdAt: createdAt,
@@ -26420,6 +26483,7 @@ class $$ProductsTableTableManager
                 Value<String?> category = const Value.absent(),
                 Value<int?> categoryId = const Value.absent(),
                 Value<String?> imageUrl = const Value.absent(),
+                Value<double> vatRate = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<bool> needsSync = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -26436,6 +26500,7 @@ class $$ProductsTableTableManager
                 category: category,
                 categoryId: categoryId,
                 imageUrl: imageUrl,
+                vatRate: vatRate,
                 isActive: isActive,
                 needsSync: needsSync,
                 createdAt: createdAt,

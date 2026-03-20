@@ -49,7 +49,7 @@ dependencies:
 
   # 엑셀 읽기/쓰기
   excel: ^4.0.2
-  file_picker: 6.1.1  # B-119: pin to avoid 6.2.x Android compile errors
+  file_picker: ^5.5.0  # B-119: v5 — avoids PluginRegistry.Registrar removed in Flutter SDK
 
   # 위치
   geolocator: ^12.0.0

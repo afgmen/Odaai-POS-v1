@@ -130,11 +130,9 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
           topRight: Radius.circular(20),
         ),
       ),
-      child: ConstrainedBox(
-        // B-096: Delivery 폼 추가 시 모달이 화면 밖으로 밀리지 않도록 최대 높이 제한
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.92,
-        ),
+      // B-109: 화면 높이에 맞게 최대 높이 제한 + 세로 스크롤 지원
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.92,
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: EdgeInsets.only(
@@ -602,7 +600,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
           ],
         ),
         ), // SingleChildScrollView
-      ), // ConstrainedBox
+      ), // SizedBox
     );
   }
 

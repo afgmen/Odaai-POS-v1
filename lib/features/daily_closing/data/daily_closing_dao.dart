@@ -140,6 +140,12 @@ class DailyClosingDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
+  /// B-105: closingId로 마감 데이터 조회
+  Future<DailyClosing?> getClosingById(int closingId) {
+    return (select(dailyClosings)..where((c) => c.id.equals(closingId)))
+        .getSingleOrNull();
+  }
+
   /// B-103: 특정 날짜 마감 실시간 스트림
   Stream<DailyClosing?> watchClosingByDate(DateTime date) {
     final targetDate = DateTime(date.year, date.month, date.day);

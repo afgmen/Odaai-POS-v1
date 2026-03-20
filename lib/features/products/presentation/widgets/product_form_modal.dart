@@ -284,7 +284,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           _showSnackBar(l10n.productUpdated, AppTheme.success);
         }
       } else {
-        // 추가 모드
+        // 추가 모드 — B-108: imageUrl 포함
         final companion = ProductsCompanion.insert(
           sku: _skuCtrl.text.trim(),
           name: _nameCtrl.text.trim(),
@@ -295,6 +295,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           minStock: Value(int.tryParse(_minStockCtrl.text) ?? 0),
           categoryId: _selectedCategoryId != null ? Value(_selectedCategoryId) : const Value.absent(),
           category: categoryText != null ? Value(categoryText) : const Value.absent(),
+          imageUrl: _imageUrl != null ? Value(_imageUrl) : const Value.absent(),
         );
         await dao.createProduct(companion);
         if (mounted) {

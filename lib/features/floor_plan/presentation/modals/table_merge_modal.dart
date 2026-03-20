@@ -185,13 +185,17 @@ class TableMergeModal extends ConsumerWidget {
         );
       }
 
-      // Update totals on current sale
+      // B-107: 합산 후 소계/합계/할인/세금 모두 업데이트
       final newSubtotal = currentSale.subtotal + targetSale.subtotal;
-      final newTotal = currentSale.total + targetSale.total;
+      final newDiscount = (currentSale.discount ?? 0) + (targetSale.discount ?? 0);
+      final newTax = (currentSale.tax ?? 0) + (targetSale.tax ?? 0);
+      final newTotal = newSubtotal - newDiscount + newTax;
       
       await (db.update(db.sales)..where((s) => s.id.equals(currentSaleId!)))
           .write(SalesCompanion(
         subtotal: drift.Value(newSubtotal),
+        discount: drift.Value(newDiscount),
+        tax: drift.Value(newTax),
         total: drift.Value(newTotal),
       ));
 

@@ -111,7 +111,7 @@ class _PosMainScreenState extends ConsumerState<PosMainScreen> {
                   child: CartPanel(
                     onCheckout: _isDineInWithTable
                         ? () => _handleSendToKitchen(context, ref)
-                        : () => _showPaymentModal(context, orderType: _selectedOrderType, tableId: widget.tableId),
+                        : () => _showPaymentModal(context, orderType: _selectedOrderType, tableId: widget.tableId, saleId: widget.existingSaleId),
                     isSidePanel: true,
                     orderType: _selectedOrderType,
                     tableId: widget.tableId,
@@ -142,7 +142,7 @@ class _PosMainScreenState extends ConsumerState<PosMainScreen> {
                 CartPanel(
                   onCheckout: _isDineInWithTable
                       ? () => _handleSendToKitchen(context, ref)
-                      : () => _showPaymentModal(context, orderType: _selectedOrderType, tableId: widget.tableId),
+                      : () => _showPaymentModal(context, orderType: _selectedOrderType, tableId: widget.tableId, saleId: widget.existingSaleId),
                   isSidePanel: false,
                   orderType: _selectedOrderType,
                   tableId: widget.tableId,
@@ -689,7 +689,8 @@ Future<void> _handleSendToKitchen(BuildContext context, WidgetRef ref) async {
 }
 
 /// 결제 모달 표시
-void _showPaymentModal(BuildContext context, {OrderType? orderType, int? tableId}) {
+// B-111: saleId 추가하여 KDS 체크 정상 동작
+void _showPaymentModal(BuildContext context, {OrderType? orderType, int? tableId, int? saleId}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -697,6 +698,7 @@ void _showPaymentModal(BuildContext context, {OrderType? orderType, int? tableId
     builder: (_) => PaymentModal(
         orderType: orderType,
         tableId: tableId,
+        saleId: saleId,
       ),
   );
 }

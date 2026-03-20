@@ -739,6 +739,7 @@
     }
   },
   "alreadyClosed": "This date has already been closed",
+  "additionalClosingAllowed": "Additional closing allowed",
   "cannotCloseFutureDate": "Cannot close future dates",
   "noSalesForDate": "No sales found for this date",
   "loginRequired": "Login required",

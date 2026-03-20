@@ -423,7 +423,7 @@ class _SummaryRow extends ConsumerWidget {
           ),
         ),
         Text(
-          isDiscount ? '-\${priceFormatter.format(value)}' : priceFormatter.format(value),
+          isDiscount ? '-${priceFormatter.format(value)}' : priceFormatter.format(value),
           style: TextStyle(
             fontSize: isBold ? 18 : 14,
             fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,

@@ -734,6 +734,7 @@
     }
   },
   "alreadyClosed": "Ngày này đã được đóng quỹ",
+  "additionalClosingAllowed": "Có thể đóng ca thêm",
   "cannotCloseFutureDate": "Không thể đóng quỹ cho ngày tương lai",
   "noSalesForDate": "Không có doanh thu cho ngày này",
   "loginRequired": "Yêu cầu đăng nhập",

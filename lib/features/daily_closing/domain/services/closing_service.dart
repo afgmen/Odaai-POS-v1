@@ -26,16 +26,9 @@ class ClosingService {
 
   /// 마감 가능 여부 확인
   Future<ClosingValidationResult> validateClosing(DateTime date) async {
-    // 1. 이미 마감된 날짜인지 확인
-    final hasClosing = await _dao.hasClosingForDate(date);
-    if (hasClosing) {
-      return ClosingValidationResult(
-        canClose: false,
-        reason: 'This date has already been closed.',
-      );
-    }
+    // B-106: 같은 날 여러 교대 종료 허용 — 날짜 중복 체크 제거
 
-    // 2. 미래 날짜인지 확인
+    // 1. 미래 날짜인지 확인
     final now = DateTime.now();
     if (date.isAfter(DateTime(now.year, now.month, now.day))) {
       return ClosingValidationResult(
@@ -82,19 +75,23 @@ class ClosingService {
       );
     }
 
-    // 5. 해당 날짜에 매출이 있는지 확인
+    // 5. 해당 날짜 매출 집계 (매출 없어도 마감 가능 — B-104)
     final aggregation = await _dao.aggregateSalesForDate(date);
-    if (aggregation == null || aggregation.totalTransactions == 0) {
-      return ClosingValidationResult(
-        canClose: false,
-        reason: 'No sales found for this date.',
-        failCode: ClosingFailCode.noSales,
-      );
-    }
 
     return ClosingValidationResult(
       canClose: true,
-      aggregation: aggregation,
+      // 매출 없으면 빈 집계 사용
+      aggregation: aggregation ?? SalesAggregation(
+        totalTransactions: 0,
+        totalSales: 0,
+        totalTax: 0,
+        totalDiscount: 0,
+        cashSales: 0,
+        cardSales: 0,
+        qrSales: 0,
+        transferSales: 0,
+        averageTransaction: 0,
+      ),
     );
   }
 

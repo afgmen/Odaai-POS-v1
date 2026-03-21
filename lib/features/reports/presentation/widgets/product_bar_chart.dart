@@ -67,7 +67,8 @@ class ProductBarChart extends StatelessWidget {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 80,
+                      // B-116: 상품명 표시 영역 확대
+                      reservedSize: 100,
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
                         if (index < 0 || index >= data.length) {
@@ -77,7 +78,7 @@ class ProductBarChart extends StatelessWidget {
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: Text(
-                            name.length > 8 ? '${name.substring(0, 8)}...' : name,
+                            name.length > 12 ? '${name.substring(0, 12)}...' : name,
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,

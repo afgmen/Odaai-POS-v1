@@ -102,6 +102,15 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
     ).get();
   }
 
+  /// B-117: 최근 결제 완료 주문 목록 (환불 화면에서 즉시 선택 가능)
+  Future<List<Sale>> getRecentCompletedSales({int limit = 30}) {
+    return (select(sales)
+      ..where((s) => s.status.equals('completed'))
+      ..orderBy([(s) => OrderingTerm.desc(s.saleDate)])
+      ..limit(limit)
+    ).get();
+  }
+
   Stream<List<Sale>> watchTodaySales() {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);

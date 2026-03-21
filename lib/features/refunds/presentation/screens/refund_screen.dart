@@ -23,6 +23,27 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
   List<SaleItem>? _saleItems;
   final Map<int, int> _refundQuantities = {}; // saleItemId → qty to refund
   String? _reason;
+  // B-117: 최근 결제 주문 목록
+  List<Sale> _recentSales = [];
+  bool _recentSalesLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // B-117: 화면 진입 시 최근 결제 주문 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadRecentSales());
+  }
+
+  Future<void> _loadRecentSales() async {
+    final salesDao = ref.read(salesDaoProvider);
+    final sales = await salesDao.getRecentCompletedSales(limit: 30);
+    if (mounted) {
+      setState(() {
+        _recentSales = sales;
+        _recentSalesLoaded = true;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -126,6 +147,41 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                 ),
               ),
             ),
+
+            // B-117: 최근 결제 완료 주문 목록 (검색 없이 바로 선택 가능)
+            if (_foundSale == null && _recentSalesLoaded && _recentSales.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.recentCompletedOrders,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      ..._recentSales.take(10).map((sale) => ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.receipt_long, size: 20, color: AppTheme.primary),
+                        title: Text('#${sale.saleNumber}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text(
+                          '${sale.customerName ?? '-'} · ₫${currencyFormat.format(sale.total)}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        trailing: const Icon(Icons.chevron_right, size: 18),
+                        onTap: () async {
+                          _saleNumberCtrl.text = sale.saleNumber;
+                          await _searchSaleBySale(sale);
+                        },
+                      )),
+                    ],
+                  ),
+                ),
+              ),
+            ],
 
             // ─── 검색 결과 ──────────────────────────
             if (_foundSale != null) ...[

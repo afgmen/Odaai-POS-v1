@@ -196,6 +196,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appliedProducts => 'Select Products';
 
   @override
+  String get selectPromotion => 'Select Promotion';
+
+  @override
+  String get noActivePromotions => 'No active promotions';
+
+  @override
+  String get clearPromotion => 'Clear Promotion';
+
+  @override
+  String get manualPromotion => 'Manual Promotion';
+
+  @override
   String get productName => 'Product Name';
 
   @override
@@ -936,6 +948,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchByReceipt => 'Search by Receipt #';
 
   @override
+  String get recentCompletedOrders => 'Recent Completed Orders';
+
+  @override
   String get receiptNumberHint => 'Enter receipt # (e.g. ODA-20250207-001)';
 
   @override
@@ -1520,6 +1535,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reasonHint => 'e.g. New stock, Loss, etc.';
 
   @override
+  String get stockSource => 'Source (optional)';
+
+  @override
+  String get stockSourceHint => 'e.g. Supplier name, Purchase order #';
+
+  @override
   String get stockAfterAdjust => 'Stock After Adjustment';
 
   @override
@@ -2012,7 +2033,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alreadyClosed => 'This date has already been closed';
 
   @override
-  // B-106: 같은 날 추가 마감 허용 안내 메시지
   String get additionalClosingAllowed => 'Additional closing allowed';
 
   @override

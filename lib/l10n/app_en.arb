@@ -64,6 +64,10 @@
   "paymentAmount": "Payment Amount",
   "itemCount": "{count} items",
   "appliedProducts": "Select Products",
+  "selectPromotion": "Select Promotion",
+  "noActivePromotions": "No active promotions",
+  "clearPromotion": "Clear Promotion",
+  "manualPromotion": "Manual Promotion",
 
   "productName": "Product Name",
   "productPrice": "Price",
@@ -347,6 +351,7 @@
 
   "refundManagement": "Refunds",
   "searchByReceipt": "Search by Receipt #",
+  "recentCompletedOrders": "Recent Completed Orders",
   "receiptNumberHint": "Enter receipt # (e.g. ODA-20250207-001)",
   "refundedStatus": "Refunded",
   "paidStatus": "Paid",
@@ -553,6 +558,8 @@
   "enterQuantity": "Enter quantity",
   "reasonOptional": "Reason (optional)",
   "reasonHint": "e.g. New stock, Loss, etc.",
+  "stockSource": "Source (optional)",
+  "stockSourceHint": "e.g. Supplier name, Purchase order #",
   "stockAfterAdjust": "Stock After Adjustment",
   "adjustComplete": "Complete",
   "stockAdjusted": "Stock adjusted ({change})",

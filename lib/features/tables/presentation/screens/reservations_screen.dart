@@ -470,8 +470,9 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
   void _showReservationDetail(Reservation reservation) {
     final l10n = AppLocalizations.of(context)!;
     final status = ReservationStatus.fromString(reservation.status);
-    final locale = Localizations.localeOf(context).toString();
-    final dateFormat = DateFormat('yyyy-MM-dd (E)', locale);
+    // B-112: 앱 지원 locale만 사용 (en/vi). 시스템 locale(ko 등) 방지
+    final appLocale = AppLocalizations.of(context)!.localeName;
+    final dateFormat = DateFormat('yyyy-MM-dd (E)', appLocale);
 
     showDialog(
       context: context,

@@ -13,6 +13,8 @@ class Products extends Table {
   TextColumn get category => text().nullable()();
   IntColumn get categoryId => integer().nullable().references(Categories, #id)();
   TextColumn get imageUrl => text().nullable()();
+  // B-118: 제품별 VAT 세율 (0, 5, 8, 10) — 베트남 정부 규정
+  RealColumn get vatRate => real().withDefault(const Constant(10.0))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   BoolColumn get needsSync => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();

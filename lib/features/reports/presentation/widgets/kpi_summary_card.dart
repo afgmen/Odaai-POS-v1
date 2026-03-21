@@ -68,6 +68,7 @@ class KpiSummaryCard extends StatelessWidget {
                 ),
             ],
           ),
+          // B-116: 텍스트 간격 개선
           const SizedBox(height: 10),
           Text(
             title,
@@ -76,15 +77,19 @@ class KpiSummaryCard extends StatelessWidget {
               color: AppTheme.textSecondary,
               fontWeight: FontWeight.w500,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             value,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
               color: color,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

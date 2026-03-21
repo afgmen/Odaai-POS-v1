@@ -28,23 +28,32 @@ final taxInclusiveProvider = Provider<bool>((ref) {
 });
 
 /// Cart tax amount provider
+/// B-118: 제품별 vatRate 우선 적용, 없으면 전체 설정 세율 사용
 final cartTaxAmountProvider = Provider<double>((ref) {
   final enabled = ref.watch(taxEnabledProvider);
   if (!enabled) return 0.0;
 
-  final subtotal = ref.watch(cartSubtotalProvider);
-  final discount = ref.watch(cartAllDiscountProvider);
-  final rate = ref.watch(taxRateProvider);
+  final cart = ref.watch(cartProvider);
   final inclusive = ref.watch(taxInclusiveProvider);
+  final defaultRate = ref.watch(taxRateProvider);
 
-  final taxableAmount = subtotal - discount;
-  if (taxableAmount <= 0) return 0.0;
+  double totalTax = 0.0;
 
-  if (inclusive) {
-    // Tax inclusive: tax = amount - (amount / (1 + rate/100))
-    return taxableAmount - (taxableAmount / (1 + rate / 100));
-  } else {
-    // Tax exclusive: tax = amount * (rate/100)
-    return taxableAmount * (rate / 100);
+  for (final item in cart) {
+    // B-118: 제품에 vatRate가 있으면 우선 사용, 없으면 글로벌 설정
+    final rate = item.product.vatRate != 10.0 || item.product.vatRate == 10.0
+        ? item.product.vatRate
+        : defaultRate;
+
+    final itemSubtotal = item.subtotal;
+    if (itemSubtotal <= 0 || rate <= 0) continue;
+
+    if (inclusive) {
+      totalTax += itemSubtotal - (itemSubtotal / (1 + rate / 100));
+    } else {
+      totalTax += itemSubtotal * (rate / 100);
+    }
   }
+
+  return totalTax;
 });

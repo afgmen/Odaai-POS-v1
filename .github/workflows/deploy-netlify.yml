@@ -40,6 +40,16 @@ jobs:
     - name: Build Flutter Web
       run: flutter build web --release --base-href /
 
+    - name: Download sqlite3.wasm from GitHub Releases
+      run: |
+        # Read sqlite3 version from pubspec.lock
+        SQLITE3_VERSION=$(grep -A5 '  sqlite3:' pubspec.lock | grep 'version:' | head -1 | tr -d ' "' | cut -d: -f2)
+        echo "sqlite3 version: $SQLITE3_VERSION"
+        WASM_URL="https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-${SQLITE3_VERSION}/sqlite3.wasm"
+        echo "Downloading from: $WASM_URL"
+        curl -L "$WASM_URL" -o web/sqlite3.wasm
+        echo "Downloaded sqlite3.wasm: $(ls -lh web/sqlite3.wasm)"
+
     - name: Copy WASM assets to build output
       run: |
         cp web/sqlite3.wasm build/web/sqlite3.wasm

@@ -1,5 +1,4 @@
 [build]
-  command = "flutter build web --release --base-href /"
   publish = "build/web"
 
 [[headers]]

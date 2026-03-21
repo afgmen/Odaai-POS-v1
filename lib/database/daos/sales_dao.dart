@@ -339,10 +339,11 @@ class SalesDao extends DatabaseAccessor<AppDatabase> with _$SalesDaoMixin {
       ..orderBy([OrderingTerm.desc(saleItems.quantity.sum())])
       ..limit(limit);
 
+    query.join([
+      innerJoin(sales, sales.id.equalsExp(saleItems.saleId)),
+    ]);
+    query.where(sales.status.equals('completed'));
     if (from != null && to != null) {
-      query.join([
-        innerJoin(sales, sales.id.equalsExp(saleItems.saleId)),
-      ]);
       query.where(
         sales.saleDate.isBiggerOrEqualValue(from) &
             sales.saleDate.isSmallerOrEqualValue(to),

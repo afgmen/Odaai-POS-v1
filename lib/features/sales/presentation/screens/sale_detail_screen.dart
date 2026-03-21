@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:drift/drift.dart' show Value;
+
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
+import '../../../cash_drawer/providers/cash_drawer_provider.dart';
 import '../../../sales/providers/sales_provider.dart';
 import '../../../dashboard/providers/dashboard_provider.dart';
 
@@ -208,7 +211,7 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
               child: Column(
                 children: [
                   _AmountRow(label: 'Subtotal', value: sale.subtotal),
-                  if (sale.discount > 0) _AmountRow(label: 'Discount', value: -sale.discount, color: AppTheme.success),
+                  if (sale.discount > 0) _AmountRow(label: 'Discount', value: -sale.discount, color: AppTheme.error),
                   if (sale.tax > 0) _AmountRow(label: 'Tax', value: sale.tax),
                   const SizedBox(height: 8),
                   const Divider(height: 1, color: AppTheme.divider),
@@ -321,6 +324,21 @@ class _SaleDetailScreenState extends ConsumerState<SaleDetailScreen> {
     try {
       final dao = ref.read(salesDaoProvider);
       await dao.refundSale(widget.saleId, 1, reason: refundReason); // employeeId: 1 (기본 관리자)
+
+      // 현금 결제 환불 시 Cash Drawer에 refund 로그 기록
+      if (_sale!.paymentMethod == 'cash') {
+        final cashDao = ref.read(cashDrawerDaoProvider);
+        final currentBalance = await cashDao.getCurrentDrawerBalance();
+        final refundAmount = _sale!.total;
+        await cashDao.logCashDrawer(CashDrawerLogsCompanion.insert(
+          type: 'refund',
+          amount: -refundAmount,
+          balanceBefore: currentBalance,
+          balanceAfter: currentBalance - refundAmount,
+          note: Value(refundReason ?? 'Refund for ${_sale!.saleNumber}'),
+        ));
+        ref.invalidate(currentDrawerBalanceProvider);
+      }
 
       // B-098: 주문 목록 + 대시보드 Total Sales 강제 갱신
       ref.invalidate(salesListProvider);

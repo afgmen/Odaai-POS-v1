@@ -5,24 +5,25 @@ import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
 import '../../data/daily_closing_dao.dart';
 import '../../providers/daily_closing_provider.dart';
+import '../../../auth/domain/session.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../constants/closing_constants.dart';
 
 /// ClosingService Provider
 final closingServiceProvider = Provider<ClosingService>((ref) {
   final dao = ref.watch(dailyClosingDaoProvider);
-  final authNotifier = ref.watch(authProvider.notifier);
   final db = ref.watch(databaseProvider);
-  return ClosingService(dao, authNotifier, db);
+  // Pass a lazy session getter so the service always reads the current session
+  return ClosingService(dao, () => ref.read(currentSessionProvider), db);
 });
 
 /// 마감 비즈니스 로직
 class ClosingService {
   final DailyClosingDao _dao;
-  final dynamic _authNotifier;
+  final Session? Function() _getSession;
   final AppDatabase _db;
 
-  ClosingService(this._dao, this._authNotifier, this._db);
+  ClosingService(this._dao, this._getSession, this._db);
 
   /// 마감 가능 여부 확인
   Future<ClosingValidationResult> validateClosing(DateTime date) async {
@@ -35,9 +36,10 @@ class ClosingService {
       );
     }
 
-    // 2. 미래 날짜인지 확인
+    // 2. 미래 날짜인지 확인 (시간 컴포넌트 제거 후 날짜만 비교)
     final now = DateTime.now();
-    if (date.isAfter(DateTime(now.year, now.month, now.day))) {
+    final targetDate = DateTime(date.year, date.month, date.day);
+    if (targetDate.isAfter(DateTime(now.year, now.month, now.day))) {
       return ClosingValidationResult(
         canClose: false,
         reason: 'Cannot close a future date.',
@@ -122,7 +124,7 @@ class ClosingService {
       }
 
       // 2. 현재 직원 ID 확인
-      final currentSession = _authNotifier.currentSession;
+      final currentSession = _getSession();
       if (currentSession == null) {
         return ClosingResult(
           success: false,

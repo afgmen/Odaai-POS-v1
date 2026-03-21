@@ -40,6 +40,13 @@ jobs:
     - name: Build Flutter Web
       run: flutter build web --release --base-href /
 
+    - name: Copy WASM assets to build output
+      run: |
+        cp web/sqlite3.wasm build/web/sqlite3.wasm
+        cp web/drift_worker.dart.js build/web/drift_worker.dart.js
+        echo "WASM assets copied:"
+        ls -la build/web/*.wasm build/web/drift_worker.dart.js
+
     - name: Deploy to Netlify
       uses: netlify/actions/cli@master
       with:

@@ -6,5 +6,6 @@ class Categories extends Table {
   TextColumn get description => text().nullable()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  RealColumn get vatRate => real().nullable()(); // null = use store-wide default
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

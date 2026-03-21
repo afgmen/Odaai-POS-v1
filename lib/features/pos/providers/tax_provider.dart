@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../settings/providers/store_settings_provider.dart';
+import '../../../features/products/providers/category_provider.dart';
 import 'cart_provider.dart';
 
 /// Tax settings keys
@@ -27,24 +28,52 @@ final taxInclusiveProvider = Provider<bool>((ref) {
   return settings[TaxSettingsKeys.taxInclusive] as bool? ?? true; // Vietnam default: inclusive
 });
 
-/// Cart tax amount provider
+/// Map of categoryId → vatRate (null entry means category has no override)
+final _categoryVatMapProvider = Provider<Map<int, double?>>((ref) {
+  final categoriesAsync = ref.watch(activeCategoriesListProvider);
+  return categoriesAsync.whenOrNull(
+    data: (categories) => {for (final c in categories) c.id: c.vatRate},
+  ) ?? {};
+});
+
+/// Cart tax amount provider (per-category VAT)
+/// Each item's tax is calculated using its category's vatRate.
+/// If a category has no vatRate set (null), the store-wide default is used.
 final cartTaxAmountProvider = Provider<double>((ref) {
   final enabled = ref.watch(taxEnabledProvider);
   if (!enabled) return 0.0;
 
-  final subtotal = ref.watch(cartSubtotalProvider);
+  final cart = ref.watch(cartProvider);
+  if (cart.isEmpty) return 0.0;
+
   final discount = ref.watch(cartAllDiscountProvider);
-  final rate = ref.watch(taxRateProvider);
+  final defaultRate = ref.watch(taxRateProvider);
   final inclusive = ref.watch(taxInclusiveProvider);
+  final categoryVatMap = ref.watch(_categoryVatMapProvider);
 
-  final taxableAmount = subtotal - discount;
-  if (taxableAmount <= 0) return 0.0;
+  // Distribute discount proportionally across items
+  final subtotal = cart.fold(0.0, (sum, item) => sum + item.subtotal);
+  final discountRatio = subtotal > 0 ? discount / subtotal : 0.0;
 
-  if (inclusive) {
-    // Tax inclusive: tax = amount - (amount / (1 + rate/100))
-    return taxableAmount - (taxableAmount / (1 + rate / 100));
-  } else {
-    // Tax exclusive: tax = amount * (rate/100)
-    return taxableAmount * (rate / 100);
+  double totalTax = 0.0;
+  for (final item in cart) {
+    final rate = (item.product.categoryId != null
+            ? categoryVatMap[item.product.categoryId]
+            : null) ??
+        defaultRate;
+
+    final itemSubtotal = item.subtotal;
+    final itemDiscount = itemSubtotal * discountRatio;
+    final taxableAmount = itemSubtotal - itemDiscount;
+
+    if (taxableAmount <= 0) continue;
+
+    if (inclusive) {
+      totalTax += taxableAmount - (taxableAmount / (1 + rate / 100));
+    } else {
+      totalTax += taxableAmount * (rate / 100);
+    }
   }
+
+  return totalTax;
 });

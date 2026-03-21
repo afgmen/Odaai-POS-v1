@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../providers/currency_provider.dart';
 import '../../data/daily_closing_dao.dart';
 
-class PaymentBreakdownWidget extends StatelessWidget {
+class PaymentBreakdownWidget extends ConsumerWidget {
   final SalesAggregation aggregation;
   final GlobalKey? tutorialKey;
 
@@ -14,10 +15,9 @@ class PaymentBreakdownWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final currencyFormat =
-        NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     final paymentMethods = [
       PaymentMethodData(
@@ -96,7 +96,7 @@ class PaymentBreakdownWidget extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          currencyFormat.format(method.amount),
+                          priceFormatter.format(method.amount),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

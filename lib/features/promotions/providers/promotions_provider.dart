@@ -4,11 +4,15 @@ import 'package:drift/drift.dart';
 import '../../../database/app_database.dart';
 import '../../../providers/database_providers.dart';
 
-/// 활성 프로모션 목록 Provider
+/// 활성 프로모션 목록 Provider — isActive=true & not expired by endDate
 final activePromotionsProvider = StreamProvider<List<Promotion>>((ref) {
   final db = ref.watch(databaseProvider);
+  final now = DateTime.now();
   return (db.select(db.promotions)
-        ..where((p) => p.isActive.equals(true))
+        ..where((p) =>
+            p.isActive.equals(true) &
+            (p.startDate.isNull() | p.startDate.isSmallerOrEqualValue(now)) &
+            (p.endDate.isNull() | p.endDate.isBiggerOrEqualValue(now)))
         ..orderBy([(p) => OrderingTerm.asc(p.name)]))
       .watch();
 });

@@ -154,7 +154,7 @@ class AppDatabase extends _$AppDatabase {
   late final dailyClosingDao = DailyClosingDao(this);
 
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 25;
 
   @override
   MigrationStrategy get migration {
@@ -316,6 +316,11 @@ class AppDatabase extends _$AppDatabase {
           // 기존 직원은 pinSalt=NULL → 레거시 전역 salt로 계속 로그인 가능
           // 다음 PIN 변경 시 자동으로 per-user salt 적용됨
           await _safeAddColumn('employees', 'pin_salt', 'TEXT NULL');
+        }
+        if (from < 25) {
+          // v24 → v25: Per-category VAT rate
+          // null = use store-wide default tax rate
+          await _safeAddColumn('categories', 'vat_rate', 'REAL NULL');
         }
         }
       },
@@ -676,6 +681,18 @@ class AppDatabase extends _$AppDatabase {
         ),
       ]);
     });
+
+    // Seed system settings for new databases
+    try {
+      await customStatement(
+        "INSERT OR IGNORE INTO system_settings (key, value, updated_at) VALUES ('require_kitchen_approval', 'true', CAST(strftime('%s', 'now') AS INTEGER))"
+      );
+      await customStatement(
+        "INSERT OR IGNORE INTO system_settings (key, value, updated_at) VALUES ('rbac_enabled', 'false', CAST(strftime('%s', 'now') AS INTEGER))"
+      );
+    } catch (e) {
+      debugPrint('[Seed] system_settings seed skipped: $e');
+    }
   }
 
   /// v5 → v6 마이그레이션: 백업 & 복구 시스템
@@ -1408,7 +1425,7 @@ class AppDatabase extends _$AppDatabase {
       // OWNER role 부여 (user_roles: id, user_id, role, scope, assigned_at, assigned_by)
       await customStatement(
         "INSERT OR IGNORE INTO user_roles (id, user_id, role, scope, assigned_at, assigned_by) "
-        "VALUES (?, ?, 'OWNER', 'ALL_STORES', CAST(strftime('%s', 'now') AS INTEGER), ?)",
+        "VALUES (?, ?, 'OWNER', 'ALL_STORES', CAST(strftime('%s', 'now') * 1000 AS INTEGER), ?)",
         ['ur_admin_owner', adminId, adminId],
       );
 

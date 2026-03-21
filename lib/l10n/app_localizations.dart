@@ -1910,6 +1910,18 @@ abstract class AppLocalizations {
   /// **'This order has already been refunded.'**
   String get alreadyRefunded;
 
+  /// No description provided for @recentCompletedOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Completed Orders'**
+  String get recentCompletedOrders;
+
+  /// No description provided for @noCompletedOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed orders'**
+  String get noCompletedOrders;
+
   /// No description provided for @todayRefundHistory.
   ///
   /// In en, this message translates to:

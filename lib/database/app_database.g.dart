@@ -70,6 +70,17 @@ class $CategoriesTable extends Categories
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _vatRateMeta = const VerificationMeta(
+    'vatRate',
+  );
+  @override
+  late final GeneratedColumn<double> vatRate = GeneratedColumn<double>(
+    'vat_rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -89,6 +100,7 @@ class $CategoriesTable extends Categories
     description,
     sortOrder,
     isActive,
+    vatRate,
     createdAt,
   ];
   @override
@@ -135,6 +147,12 @@ class $CategoriesTable extends Categories
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
       );
     }
+    if (data.containsKey('vat_rate')) {
+      context.handle(
+        _vatRateMeta,
+        vatRate.isAcceptableOrUnknown(data['vat_rate']!, _vatRateMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -170,6 +188,10 @@ class $CategoriesTable extends Categories
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
       )!,
+      vatRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}vat_rate'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -189,6 +211,7 @@ class Category extends DataClass implements Insertable<Category> {
   final String? description;
   final int sortOrder;
   final bool isActive;
+  final double? vatRate;
   final DateTime createdAt;
   const Category({
     required this.id,
@@ -196,6 +219,7 @@ class Category extends DataClass implements Insertable<Category> {
     this.description,
     required this.sortOrder,
     required this.isActive,
+    this.vatRate,
     required this.createdAt,
   });
   @override
@@ -208,6 +232,9 @@ class Category extends DataClass implements Insertable<Category> {
     }
     map['sort_order'] = Variable<int>(sortOrder);
     map['is_active'] = Variable<bool>(isActive);
+    if (!nullToAbsent || vatRate != null) {
+      map['vat_rate'] = Variable<double>(vatRate);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -221,6 +248,9 @@ class Category extends DataClass implements Insertable<Category> {
           : Value(description),
       sortOrder: Value(sortOrder),
       isActive: Value(isActive),
+      vatRate: vatRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(vatRate),
       createdAt: Value(createdAt),
     );
   }
@@ -236,6 +266,7 @@ class Category extends DataClass implements Insertable<Category> {
       description: serializer.fromJson<String?>(json['description']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       isActive: serializer.fromJson<bool>(json['isActive']),
+      vatRate: serializer.fromJson<double?>(json['vatRate']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -248,6 +279,7 @@ class Category extends DataClass implements Insertable<Category> {
       'description': serializer.toJson<String?>(description),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'isActive': serializer.toJson<bool>(isActive),
+      'vatRate': serializer.toJson<double?>(vatRate),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -258,6 +290,7 @@ class Category extends DataClass implements Insertable<Category> {
     Value<String?> description = const Value.absent(),
     int? sortOrder,
     bool? isActive,
+    Value<double?> vatRate = const Value.absent(),
     DateTime? createdAt,
   }) => Category(
     id: id ?? this.id,
@@ -265,6 +298,7 @@ class Category extends DataClass implements Insertable<Category> {
     description: description.present ? description.value : this.description,
     sortOrder: sortOrder ?? this.sortOrder,
     isActive: isActive ?? this.isActive,
+    vatRate: vatRate.present ? vatRate.value : this.vatRate,
     createdAt: createdAt ?? this.createdAt,
   );
   Category copyWithCompanion(CategoriesCompanion data) {
@@ -276,6 +310,7 @@ class Category extends DataClass implements Insertable<Category> {
           : this.description,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      vatRate: data.vatRate.present ? data.vatRate.value : this.vatRate,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -288,14 +323,22 @@ class Category extends DataClass implements Insertable<Category> {
           ..write('description: $description, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('isActive: $isActive, ')
+          ..write('vatRate: $vatRate, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, description, sortOrder, isActive, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    description,
+    sortOrder,
+    isActive,
+    vatRate,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -305,6 +348,7 @@ class Category extends DataClass implements Insertable<Category> {
           other.description == this.description &&
           other.sortOrder == this.sortOrder &&
           other.isActive == this.isActive &&
+          other.vatRate == this.vatRate &&
           other.createdAt == this.createdAt);
 }
 
@@ -314,6 +358,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<String?> description;
   final Value<int> sortOrder;
   final Value<bool> isActive;
+  final Value<double?> vatRate;
   final Value<DateTime> createdAt;
   const CategoriesCompanion({
     this.id = const Value.absent(),
@@ -321,6 +366,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.description = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.vatRate = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   CategoriesCompanion.insert({
@@ -329,6 +375,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.description = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.vatRate = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Category> custom({
@@ -337,6 +384,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<String>? description,
     Expression<int>? sortOrder,
     Expression<bool>? isActive,
+    Expression<double>? vatRate,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -345,6 +393,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (description != null) 'description': description,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (isActive != null) 'is_active': isActive,
+      if (vatRate != null) 'vat_rate': vatRate,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -355,6 +404,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Value<String?>? description,
     Value<int>? sortOrder,
     Value<bool>? isActive,
+    Value<double?>? vatRate,
     Value<DateTime>? createdAt,
   }) {
     return CategoriesCompanion(
@@ -363,6 +413,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       description: description ?? this.description,
       sortOrder: sortOrder ?? this.sortOrder,
       isActive: isActive ?? this.isActive,
+      vatRate: vatRate ?? this.vatRate,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -385,6 +436,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
+    if (vatRate.present) {
+      map['vat_rate'] = Variable<double>(vatRate.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -399,6 +453,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
           ..write('description: $description, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('isActive: $isActive, ')
+          ..write('vatRate: $vatRate, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -25376,6 +25431,7 @@ typedef $$CategoriesTableCreateCompanionBuilder =
       Value<String?> description,
       Value<int> sortOrder,
       Value<bool> isActive,
+      Value<double?> vatRate,
       Value<DateTime> createdAt,
     });
 typedef $$CategoriesTableUpdateCompanionBuilder =
@@ -25385,6 +25441,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder =
       Value<String?> description,
       Value<int> sortOrder,
       Value<bool> isActive,
+      Value<double?> vatRate,
       Value<DateTime> createdAt,
     });
 
@@ -25443,6 +25500,11 @@ class $$CategoriesTableFilterComposer
 
   ColumnFilters<bool> get isActive => $composableBuilder(
     column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get vatRate => $composableBuilder(
+    column: $table.vatRate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -25511,6 +25573,11 @@ class $$CategoriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get vatRate => $composableBuilder(
+    column: $table.vatRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -25542,6 +25609,9 @@ class $$CategoriesTableAnnotationComposer
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<double> get vatRate =>
+      $composableBuilder(column: $table.vatRate, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -25605,6 +25675,7 @@ class $$CategoriesTableTableManager
                 Value<String?> description = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<double?> vatRate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => CategoriesCompanion(
                 id: id,
@@ -25612,6 +25683,7 @@ class $$CategoriesTableTableManager
                 description: description,
                 sortOrder: sortOrder,
                 isActive: isActive,
+                vatRate: vatRate,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -25621,6 +25693,7 @@ class $$CategoriesTableTableManager
                 Value<String?> description = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<double?> vatRate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => CategoriesCompanion.insert(
                 id: id,
@@ -25628,6 +25701,7 @@ class $$CategoriesTableTableManager
                 description: description,
                 sortOrder: sortOrder,
                 isActive: isActive,
+                vatRate: vatRate,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0

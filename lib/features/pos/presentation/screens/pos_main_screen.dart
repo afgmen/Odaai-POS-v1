@@ -655,6 +655,7 @@ Future<void> _handleSendToKitchen(BuildContext context, WidgetRef ref) async {
     ref.read(cartProvider.notifier).clear();
     ref.read(discountValueProvider.notifier).state = 0;
     ref.read(promotionProductIdProvider.notifier).state = null;
+    ref.read(selectedManualPromotionProvider.notifier).state = null;
 
     // FloorPlanScreen으로 복귀 (push된 PosMainScreen에서 pop)
     navigator.pop();
@@ -842,6 +843,7 @@ class _EmployeeInfo extends ConsumerWidget {
               // 할인 초기화
               ref.read(discountValueProvider.notifier).state = 0;
               ref.read(promotionProductIdProvider.notifier).state = null;
+              ref.read(selectedManualPromotionProvider.notifier).state = null;
 
               // 세션 삭제 및 감사 로그 기록
               await ref.read(authProvider.notifier).logout();

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../providers/currency_provider.dart';
 import '../../../../providers/database_providers.dart';
 import '../../providers/refunds_provider.dart';
 
@@ -34,6 +35,8 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final todayRefunds = ref.watch(todayRefundsProvider);
+    final recentSalesAsync = ref.watch(recentCompletedSalesProvider);
+    final priceFormatter = ref.watch(priceFormatterProvider);
     final currencyFormat = NumberFormat('#,###');
 
     return Scaffold(
@@ -230,6 +233,65 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                 ),
               ),
             ],
+
+            // ─── 최근 완료 주문 목록 ─────────────────
+            const SizedBox(height: 24),
+            Text(
+              l10n.recentCompletedOrders,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            recentSalesAsync.when(
+              data: (sales) {
+                if (sales.isEmpty) {
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Center(
+                        child: Text(
+                          l10n.noCompletedOrders,
+                          style: const TextStyle(color: AppTheme.textSecondary),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                return Card(
+                  child: Column(
+                    children: sales.map((sale) {
+                      final isSelected = _foundSale?.id == sale.id;
+                      final isRefunded = sale.status == 'refunded';
+                      return ListTile(
+                        selected: isSelected,
+                        selectedTileColor: AppTheme.primary.withOpacity(0.08),
+                        leading: Icon(
+                          isRefunded ? Icons.undo : Icons.receipt_long,
+                          color: isRefunded ? AppTheme.error : AppTheme.primary,
+                        ),
+                        title: Text(
+                          '#${sale.saleNumber}',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          '${DateFormat('MM/dd HH:mm').format(sale.createdAt)}  ·  ${sale.customerName ?? '-'}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        trailing: Text(
+                          priceFormatter.format(sale.total),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: isRefunded ? AppTheme.error : AppTheme.textPrimary,
+                          ),
+                        ),
+                        onTap: isSelected ? null : () => _searchSaleBySale(sale),
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => const SizedBox.shrink(),
+            ),
 
             // ─── 오늘 환불 내역 ─────────────────────
             const SizedBox(height: 24),

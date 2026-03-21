@@ -17,6 +17,7 @@ import 'closing_history_screen.dart';
 import '../../../user_guide/configs/daily_closing_tutorial.dart';
 import '../../../user_guide/configs/tutorial_registry.dart';
 import '../../../user_guide/presentation/widgets/help_button.dart';
+import '../../../../providers/currency_provider.dart';
 
 class DailyClosingScreen extends ConsumerStatefulWidget {
   const DailyClosingScreen({super.key});
@@ -417,6 +418,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
 
   Widget _buildCashManagement(SalesAggregation aggregation) {
     final l10n = AppLocalizations.of(context)!;
+    final priceFormatter = ref.watch(priceFormatterProvider);
     return Card(
       key: DailyClosingTutorialKeys.cashReconciliation,
       child: Padding(
@@ -441,16 +443,14 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
             const SizedBox(height: 8),
             _buildInfoRow(
               l10n.expectedCash,
-              NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                  .format(aggregation.cashSales),
+              priceFormatter.format(aggregation.cashSales),
               isBold: true,
             ),
             if (actualCash != null) ...[
               const SizedBox(height: 8),
               _buildInfoRow(
                 l10n.actualCash,
-                NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                    .format(actualCash!),
+                priceFormatter.format(actualCash!),
                 isBold: true,
               ),
               const SizedBox(height: 8),
@@ -474,6 +474,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
 
   Widget _buildCashDifference(double expected, double actual) {
     final l10n = AppLocalizations.of(context)!;
+    final priceFormatter = ref.watch(priceFormatterProvider);
     final difference = actual - expected;
     final isAcceptable = difference.abs() <= ClosingConstants.acceptableCashDifference;
     final color = isAcceptable ? Colors.green : Colors.red;
@@ -486,8 +487,7 @@ class _DailyClosingScreenState extends ConsumerState<DailyClosingScreen> {
           style: const TextStyle(fontSize: 14),
         ),
         Text(
-          NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-              .format(difference),
+          priceFormatter.format(difference),
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,

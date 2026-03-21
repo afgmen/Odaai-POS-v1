@@ -948,6 +948,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         ref.read(discountValueProvider.notifier).state = 0;
         // 프로모션 state 초기화
         ref.read(promotionProductIdProvider.notifier).state = null;
+        ref.read(selectedManualPromotionProvider.notifier).state = null;
         // 고객 선택 및 포인트 사용 초기화
         ref.read(selectedCustomerProvider.notifier).state = null;
         ref.read(pointsToUseProvider.notifier).state = 0;

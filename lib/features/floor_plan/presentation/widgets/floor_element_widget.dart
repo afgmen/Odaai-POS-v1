@@ -5,13 +5,15 @@ import '../../../../database/app_database.dart';
 class FloorElementWidget extends StatefulWidget {
   final FloorElement element;
   final bool isDraggable;
+  final bool isSelected;
   final VoidCallback? onTap;
-  final Function(Offset)? onDragEnd;
+  final Future<void> Function(Offset)? onDragEnd;
 
   const FloorElementWidget({
     super.key,
     required this.element,
     this.isDraggable = true,
+    this.isSelected = false,
     this.onTap,
     this.onDragEnd,
   });
@@ -116,9 +118,9 @@ class _FloorElementWidgetState extends State<FloorElementWidget> {
                 .clamp(0, 2000 - widget.element.height);
           });
         },
-        onPanEnd: (_) {
-          setState(() => _isDragging = false);
-          widget.onDragEnd?.call(Offset(_displayX, _displayY));
+        onPanEnd: (_) async {
+          await widget.onDragEnd?.call(Offset(_displayX, _displayY));
+          if (mounted) setState(() => _isDragging = false);
         },
         child: AnimatedOpacity(
           opacity: _isDragging ? 0.7 : 1.0,
@@ -133,6 +135,7 @@ class _FloorElementWidgetState extends State<FloorElementWidget> {
     final color = colorForType(widget.element.elementType);
     final icon = iconForType(widget.element.elementType);
     final displayLabel = widget.element.label ?? widget.element.elementType;
+    final isSelected = widget.isSelected;
 
     return Transform.rotate(
       angle: widget.element.rotation * 3.14159265 / 180,
@@ -140,21 +143,32 @@ class _FloorElementWidgetState extends State<FloorElementWidget> {
         width: widget.element.width,
         height: widget.element.height,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: isSelected
+              ? color.withValues(alpha: 0.25)
+              : color.withValues(alpha: 0.1),
           border: Border.all(
-            color: color.withValues(alpha: _isDragging ? 0.7 : 0.4),
-            width: _isDragging ? 2 : 1,
+            color: isSelected ? color : color.withValues(alpha: _isDragging ? 0.7 : 0.4),
+            width: isSelected ? 2.5 : (_isDragging ? 2 : 1),
           ),
           borderRadius: BorderRadius.circular(6),
-          boxShadow: _isDragging
+          boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: color.withValues(alpha: 0.2),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
+                    color: color.withValues(alpha: 0.35),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 2),
                   )
                 ]
-              : null,
+              : _isDragging
+                  ? [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.2),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      )
+                    ]
+                  : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

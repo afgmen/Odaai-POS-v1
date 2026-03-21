@@ -159,40 +159,35 @@ final cartItemCountProvider = Provider<int>((ref) {
 
 // ── 프로모션 관련 Provider ───────────────────────
 
-/// 프로모션 타입
-enum PromotionType {
-  buy1get1('B1G1', 'Buy 1 Get 1 Free'),
-  buy2get1('B2G1', 'Buy 2 Get 1 Free');
-
-  final String label;
-  final String description;
-  const PromotionType(this.label, this.description);
-}
-
 /// 프로모션 적용 상품 ID (null이면 프로모션 없음)
 final promotionProductIdProvider = StateProvider<int?>((ref) => null);
 
-/// 프로모션 타입 (기본값 B1G1)
-final promotionTypeProvider = StateProvider<PromotionType>((ref) => PromotionType.buy1get1);
+/// 수동 선택된 DB 프로모션
+final selectedManualPromotionProvider = StateProvider<Promotion?>((ref) => null);
 
 /// 프로모션으로 인한 할인금액 계산
 final promotionDiscountProvider = Provider<double>((ref) {
   final cart = ref.watch(cartProvider);
   final promoProductId = ref.watch(promotionProductIdProvider);
-  final promoType = ref.watch(promotionTypeProvider);
+  final selectedPromo = ref.watch(selectedManualPromotionProvider);
 
-  if (promoProductId == null) return 0.0;
+  if (promoProductId == null || selectedPromo == null) return 0.0;
 
   final item = cart.where((i) => i.product.id == promoProductId).firstOrNull;
   if (item == null) return 0.0;
 
-  // 무료 개수 계산
-  final freeCount = switch (promoType) {
-    PromotionType.buy1get1 => item.quantity ~/ 2,      // 2개마다 1개 무료
-    PromotionType.buy2get1 => item.quantity ~/ 3,      // 3개마다 1개 무료
-  };
-
-  return freeCount * item.product.price;
+  switch (selectedPromo.type) {
+    case 'buy1get1':
+      return (item.quantity ~/ 2) * item.product.price;
+    case 'buy2get1':
+      return (item.quantity ~/ 3) * item.product.price;
+    case 'percentOff':
+      return item.subtotal * (selectedPromo.value / 100);
+    case 'amountOff':
+      return selectedPromo.value.clamp(0.0, item.subtotal);
+    default:
+      return 0.0;
+  }
 });
 
 // ── 할인 관련 Provider ─────────────────────────

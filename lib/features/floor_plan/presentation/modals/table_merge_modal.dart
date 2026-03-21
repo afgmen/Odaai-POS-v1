@@ -6,6 +6,7 @@ import 'package:drift/drift.dart' as drift;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
+import '../../../tables/data/tables_providers.dart';
 
 class TableMergeModal extends ConsumerWidget {
   final RestaurantTable currentTable;
@@ -19,17 +20,23 @@ class TableMergeModal extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final db = ref.watch(databaseProvider);
-    
-    return FutureBuilder<List<RestaurantTable>>(
-      future: _getOccupiedTables(db),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    final tablesAsync = ref.watch(allTablesStreamProvider);
 
-        final availableTables = snapshot.data!
-            .where((t) => t.id != currentTable.id && ['ORDERING', 'PREPARING', 'SERVED', 'CHECKOUT'].contains(t.status))
+    return tablesAsync.when(
+      loading: () => const AlertDialog(
+        content: SizedBox(
+          height: 100,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (_, __) => const AlertDialog(
+        content: Text('Failed to load tables'),
+      ),
+      data: (allTables) {
+        final availableTables = allTables
+            .where((t) =>
+                t.id != currentTable.id &&
+                ['ORDERING', 'PREPARING', 'SERVED', 'CHECKOUT'].contains(t.status))
             .toList();
 
         debugPrint('[MergeTable] Merge candidates (excluding current): ${availableTables.length}');
@@ -94,17 +101,6 @@ class TableMergeModal extends ConsumerWidget {
         );
       },
     );
-  }
-
-  Future<List<RestaurantTable>> _getOccupiedTables(AppDatabase db) async {
-    final tables = await (db.select(db.restaurantTables)
-          ..where((t) => t.status.isIn(['ORDERING', 'PREPARING', 'SERVED', 'CHECKOUT'])))
-        .get();
-    
-    debugPrint('[MergeTable] Found ${tables.length} active tables total');
-    debugPrint('[MergeTable] Current table: ${currentTable.tableNumber} (ID: ${currentTable.id})');
-    
-    return tables;
   }
 
   void _confirmMerge(BuildContext context, WidgetRef ref, RestaurantTable targetTable) {

@@ -5,13 +5,15 @@ import '../../../../database/app_database.dart';
 class FloorZoneWidget extends StatefulWidget {
   final FloorZone zone;
   final bool isDraggable;
+  final bool isSelected;
   final VoidCallback? onTap;
-  final Function(Offset)? onDragEnd;
+  final Future<void> Function(Offset)? onDragEnd;
 
   const FloorZoneWidget({
     super.key,
     required this.zone,
     this.isDraggable = true,
+    this.isSelected = false,
     this.onTap,
     this.onDragEnd,
   });
@@ -78,9 +80,9 @@ class _FloorZoneWidgetState extends State<FloorZoneWidget> {
                 .clamp(0, 2000 - widget.zone.height);
           });
         },
-        onPanEnd: (_) {
-          setState(() => _isDragging = false);
-          widget.onDragEnd?.call(Offset(_displayX, _displayY));
+        onPanEnd: (_) async {
+          await widget.onDragEnd?.call(Offset(_displayX, _displayY));
+          if (mounted) setState(() => _isDragging = false);
         },
         child: AnimatedOpacity(
           opacity: _isDragging ? 0.7 : 1.0,
@@ -92,25 +94,37 @@ class _FloorZoneWidgetState extends State<FloorZoneWidget> {
   }
 
   Widget _buildZoneRect(Color color) {
+    final isSelected = widget.isSelected;
     return Container(
       width: widget.zone.width,
       height: widget.zone.height,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
+        color: isSelected
+            ? color.withValues(alpha: 0.35)
+            : color.withValues(alpha: 0.2),
         border: Border.all(
-          color: color.withValues(alpha: 0.5),
-          width: _isDragging ? 2.5 : 1.5,
+          color: isSelected ? color : color.withValues(alpha: 0.5),
+          width: isSelected ? 2.5 : (_isDragging ? 2.5 : 1.5),
         ),
         borderRadius: BorderRadius.circular(8),
-        boxShadow: _isDragging
+        boxShadow: isSelected
             ? [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+                  color: color.withValues(alpha: 0.4),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 2),
                 )
               ]
-            : null,
+            : _isDragging
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
+                : null,
       ),
       child: Padding(
         padding: const EdgeInsets.all(6),

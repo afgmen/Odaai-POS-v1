@@ -122,31 +122,29 @@ class _CategoryButton extends StatelessWidget {
 }
 
 String _getLocalizedCategory(String category, AppLocalizations l10n) {
-  switch (category) {
-    case '식품':
-      return l10n.categoryFood;
-    case '음료':
-      return l10n.categoryBeverage;
-    case '전자제품':
-      return l10n.categoryElectronics;
-    case '일용품':
-      return l10n.categoryDaily;
-    default:
-      return category; // Return original if no translation
-  }
+  // Return the category name as-is (user-defined categories are already in the correct language)
+  return category;
 }
 
 IconData _getCategoryIcon(String category) {
-  switch (category) {
-    case '식품':
-      return Icons.fastfood_outlined;
-    case '전자제품':
-      return Icons.devices_outlined;
-    case '일용품':
-      return Icons.home_outlined;
-    case '음료':
-      return Icons.local_cafe_outlined;
-    default:
-      return Icons.label_outlined;
+  final lower = category.toLowerCase();
+  if (lower.contains('food') || lower.contains('đồ ăn') || lower.contains('식품') || lower.contains('meal') || lower.contains('snack')) {
+    return Icons.fastfood_outlined;
   }
+  if (lower.contains('bev') || lower.contains('drink') || lower.contains('đồ uống') || lower.contains('음료') || lower.contains('coffee') || lower.contains('juice') || lower.contains('tea')) {
+    return Icons.local_cafe_outlined;
+  }
+  if (lower.contains('alcohol') || lower.contains('beer') || lower.contains('wine') || lower.contains('bia') || lower.contains('rượu')) {
+    return Icons.local_bar_outlined;
+  }
+  if (lower.contains('dessert') || lower.contains('cake') || lower.contains('sweet') || lower.contains('bánh')) {
+    return Icons.cake_outlined;
+  }
+  if (lower.contains('electronic') || lower.contains('전자') || lower.contains('device')) {
+    return Icons.devices_outlined;
+  }
+  if (lower.contains('daily') || lower.contains('일용') || lower.contains('household')) {
+    return Icons.home_outlined;
+  }
+  return Icons.label_outlined;
 }

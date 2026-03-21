@@ -259,12 +259,15 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
 
   Widget _buildTableSelector(BuildContext context, AppLocalizations l10n) {
     final tablesAsync = ref.watch(allTablesStreamProvider);
+    final isEditMode = widget.reservation != null;
 
     return tablesAsync.when(
       data: (tables) {
-        final availableTables = tables
-            .where((t) => t.status == 'AVAILABLE' || t.id == _selectedTableId)
-            .toList();
+        // For new reservations: show all tables (booking for future date)
+        // For edit mode: show only available + currently selected table
+        final availableTables = isEditMode
+            ? tables.where((t) => t.status == 'AVAILABLE' || t.id == _selectedTableId).toList()
+            : tables;
 
         return DropdownButtonFormField<int?>(
           value: _selectedTableId,

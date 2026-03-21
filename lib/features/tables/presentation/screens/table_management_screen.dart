@@ -83,7 +83,9 @@ class _FloorPlanDesignerTab extends ConsumerStatefulWidget {
 }
 
 class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
-  int? _selectedTableId; // 선택된 테이블 ID (하이라이트용)
+  int? _selectedTableId;   // 선택된 테이블 ID (하이라이트용)
+  int? _selectedZoneId;    // 선택된 구역 ID (하이라이트용)
+  int? _selectedElementId; // 선택된 요소 ID (하이라이트용)
 
   /// InteractiveViewer의 현재 변환(스케일·이동)을 추적
   final TransformationController _transformationController =
@@ -96,18 +98,6 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
   void dispose() {
     _transformationController.dispose();
     super.dispose();
-  }
-
-  /// 글로벌 좌표 → 캔버스 로컬 좌표 변환
-  /// details.offset(글로벌)을 캔버스 Stack 기준 좌표로 바꿔준다.
-  Offset _toCanvasOffset(Offset globalOffset) {
-    final box = _canvasContainerKey.currentContext?.findRenderObject()
-        as RenderBox?;
-    if (box == null) return globalOffset;
-    // 1) 글로벌 → InteractiveViewer 뷰포트 좌표
-    final viewportOffset = box.globalToLocal(globalOffset);
-    // 2) 뷰포트 → 캔버스 씬 좌표 (스케일·패닝 보정)
-    return _transformationController.toScene(viewportOffset);
   }
 
   @override
@@ -134,10 +124,13 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
 
           // 캔버스
           Expanded(
-            child: Container(
-              key: _canvasContainerKey,
-              color: const Color(0xFFF5F5F5),
-              child: LayoutBuilder(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  key: _canvasContainerKey,
+                  color: const Color(0xFFF5F5F5),
+                  child: LayoutBuilder(
                 builder: (context, constraints) {
                   return InteractiveViewer(
                     transformationController: _transformationController,
@@ -154,10 +147,18 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
                           ...zonesAsync.when(
                             data: (zones) => zones.map((zone) =>
                                 FloorZoneWidget(
+                                  key: ValueKey('zone_${zone.id}'),
                                   zone: zone,
                                   isDraggable: true,
-                                  onTap: () =>
-                                      _showZoneDetail(context, ref, zone),
+                                  isSelected: _selectedZoneId == zone.id,
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedZoneId = _selectedZoneId == zone.id ? null : zone.id;
+                                      _selectedElementId = null;
+                                      _selectedTableId = null;
+                                    });
+                                    _showZoneDetail(context, ref, zone);
+                                  },
                                   onDragEnd: (offset) =>
                                       _handleZoneDragEnd(ref, zone, offset),
                                 )),
@@ -169,10 +170,18 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
                           ...elementsAsync.when(
                             data: (elements) => elements.map((element) =>
                                 FloorElementWidget(
+                                  key: ValueKey('element_${element.id}'),
                                   element: element,
                                   isDraggable: true,
-                                  onTap: () =>
-                                      _showElementDetail(context, ref, element),
+                                  isSelected: _selectedElementId == element.id,
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedElementId = _selectedElementId == element.id ? null : element.id;
+                                      _selectedZoneId = null;
+                                      _selectedTableId = null;
+                                    });
+                                    _showElementDetail(context, ref, element);
+                                  },
                                   onDragEnd: (offset) => _handleElementDragEnd(
                                       ref, element, offset),
                                 )),
@@ -189,10 +198,11 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
                                   isSelected: _selectedTableId == table.id,
                                   onTap: () {
                                     setState(() {
-                                      // 이미 선택된 테이블 탭 → 선택 해제
                                       _selectedTableId = _selectedTableId == table.id
                                           ? null
                                           : table.id;
+                                      _selectedZoneId = null;
+                                      _selectedElementId = null;
                                     });
                                     _showTableDetail(context, ref, table);
                                   },
@@ -208,6 +218,34 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
                   );
                 },
               ),
+            ),
+                // Zoom level indicator (bottom-right overlay)
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: ListenableBuilder(
+                    listenable: _transformationController,
+                    builder: (context, _) {
+                      final scale = _transformationController.value.getMaxScaleOnAxis();
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${(scale * 100).round()}%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -305,6 +343,11 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
             onPressed: () => _showAddTableDialog(context, ref),
           ),
           _ToolbarButton(
+            icon: Icons.fit_screen_outlined,
+            label: 'Reset View',
+            onPressed: _resetView,
+          ),
+          _ToolbarButton(
             icon: Icons.visibility_outlined,
             label: l10n.preview,
             onPressed: () => _showPreview(context, ref),
@@ -338,7 +381,7 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
       context: context,
       builder: (ctx) => AddZoneModal(existingZone: zone),
     );
-    
+    if (mounted) setState(() => _selectedZoneId = null);
     if (result == true && context.mounted) {
       // Zone list will auto-refresh via stream provider
     }
@@ -370,8 +413,8 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
   }
 
     void _showElementDetail(
-      BuildContext context, WidgetRef ref, FloorElement element) {
-    showDialog(
+      BuildContext context, WidgetRef ref, FloorElement element) async {
+    await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(element.label ?? element.elementType),
@@ -393,6 +436,7 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
         ],
       ),
     );
+    if (mounted) setState(() => _selectedElementId = null);
   }
 
   Future<void> _handleElementDragEnd(
@@ -442,6 +486,12 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
       x: canvasOffset.dx,
       y: canvasOffset.dy,
     );
+  }
+
+  // ─── View Controls ───
+
+  void _resetView() {
+    _transformationController.value = Matrix4.identity();
   }
 
   // ─── Preview & Save ───

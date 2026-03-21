@@ -28,6 +28,7 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
   String? _selectedZoneFilter;
   late Timer _clockTimer;
   String _currentTime = '';
+  final TransformationController _transformationController = TransformationController();
 
   @override
   void initState() {
@@ -39,7 +40,20 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
   @override
   void dispose() {
     _clockTimer.cancel();
+    _transformationController.dispose();
     super.dispose();
+  }
+
+  void _zoomIn() {
+    final current = _transformationController.value.getMaxScaleOnAxis();
+    final newScale = (current * 1.25).clamp(0.5, 2.0);
+    _transformationController.value = Matrix4.identity()..scale(newScale);
+  }
+
+  void _zoomOut() {
+    final current = _transformationController.value.getMaxScaleOnAxis();
+    final newScale = (current / 1.25).clamp(0.5, 2.0);
+    _transformationController.value = Matrix4.identity()..scale(newScale);
   }
 
   void _updateTime() {
@@ -91,9 +105,12 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
 
           // 플로어 플랜 캔버스
           Expanded(
-            child: Container(
+            child: Stack(
+              children: [
+                Container(
               color: const Color(0xFFF5F5F5),
               child: InteractiveViewer(
+                transformationController: _transformationController,
                 boundaryMargin: const EdgeInsets.all(100),
                 minScale: 0.5,
                 maxScale: 2.0,
@@ -147,6 +164,21 @@ class _FloorPlanScreenState extends ConsumerState<FloorPlanScreen> {
                   ),
                 ),
               ),
+            ),
+                // Zoom controls overlay
+                Positioned(
+                  right: 12,
+                  bottom: 16,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _ZoomButton(icon: Icons.add, onTap: _zoomIn),
+                      const SizedBox(height: 4),
+                      _ZoomButton(icon: Icons.remove, onTap: _zoomOut),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -359,9 +391,16 @@ class _OperationalTableWidgetState extends State<_OperationalTableWidget>
     return Positioned(
       left: widget.table.positionX,
       top: widget.table.positionY,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: card,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: metrics.radius,
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: metrics.radius,
+          splashColor: status.color.withValues(alpha: 0.25),
+          highlightColor: status.color.withValues(alpha: 0.15),
+          child: card,
+        ),
       ),
     );
   }
@@ -472,6 +511,32 @@ class _FilterChip extends StatelessWidget {
             fontWeight: FontWeight.w600,
             color: isSelected ? Colors.white : Colors.grey.shade700,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Zoom control button overlay
+class _ZoomButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _ZoomButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      elevation: 2,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(icon, size: 20, color: Colors.grey.shade700),
         ),
       ),
     );

@@ -108,7 +108,14 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
   /// 숫자 컨트롤러 초기값 포맷 (소수점 제거)
   String _num(double v) => v == v.toInt().toDouble() ? '${v.toInt()}' : '$v';
 
-  bool get _isValid => _skuCtrl.text.trim().isNotEmpty && _nameCtrl.text.trim().isNotEmpty && _priceCtrl.text.trim().isNotEmpty;
+  bool get _isValid {
+    if (_skuCtrl.text.trim().isEmpty || _nameCtrl.text.trim().isEmpty || _priceCtrl.text.trim().isEmpty) return false;
+    final price = double.tryParse(_priceCtrl.text);
+    if (price == null || price <= 0) return false;
+    final cost = double.tryParse(_costCtrl.text);
+    if (cost != null && cost < 0) return false;
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {

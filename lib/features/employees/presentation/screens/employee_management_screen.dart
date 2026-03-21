@@ -128,7 +128,7 @@ class _EmployeeManagementContent extends ConsumerWidget {
                       return _EmployeeCard(
                         employee: employee,
                         onEdit: () => _showEmployeeFormModal(context, ref, employee),
-                        onToggleActive: () => _toggleEmployeeActive(ref, employee),
+                        onToggleActive: () => _toggleEmployeeActive(context, ref, employee),
                       );
                     },
                   ),
@@ -159,7 +159,20 @@ class _EmployeeManagementContent extends ConsumerWidget {
     });
   }
 
-  Future<void> _toggleEmployeeActive(WidgetRef ref, Employee employee) async {
+  Future<void> _toggleEmployeeActive(BuildContext context, WidgetRef ref, Employee employee) async {
+    // EMP-006: Prevent self-deactivation
+    if (employee.isActive) {
+      final currentSession = ref.read(currentSessionProvider);
+      if (currentSession != null && currentSession.employeeId == employee.id) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot deactivate your own account while logged in.'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+        return;
+      }
+    }
     final employeesDao = ref.read(employeesDaoProvider);
     try {
       await employeesDao.updateEmployee(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../data/delivery_orders_providers.dart';
 import '../../data/models/delivery_order.dart';
 import '../../domain/enums/delivery_status.dart';
 import 'platform_badge.dart';
@@ -8,7 +10,7 @@ import '../../../../l10n/app_localizations.dart';
 /// Full-detail modal for a delivery order.
 /// Shows: platform badge, customer info, address, driver info, item list,
 /// status timeline, special instructions, totals.
-class DeliveryOrderDetailModal extends StatelessWidget {
+class DeliveryOrderDetailModal extends ConsumerWidget {
   final DeliveryOrder order;
 
   const DeliveryOrderDetailModal({super.key, required this.order});
@@ -25,7 +27,7 @@ class DeliveryOrderDetailModal extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
 
     return DraggableScrollableSheet(
@@ -289,6 +291,24 @@ class DeliveryOrderDetailModal extends StatelessWidget {
                     color: DeliveryStatus.readyForPickup.color,
                   ),
 
+                  // ── DEL-007: Cancel Order button ──
+                  if (!order.status.isTerminal) ...[
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.cancel_outlined,
+                          color: Colors.red),
+                      label: Text(
+                        l10n.cancelOrder,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red),
+                        minimumSize: const Size.fromHeight(44),
+                      ),
+                      onPressed: () => _confirmCancel(context, ref, l10n),
+                    ),
+                  ],
+
                   const SizedBox(height: 24),
                 ],
               ),
@@ -297,6 +317,37 @@ class DeliveryOrderDetailModal extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _confirmCancel(
+      BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.cancelOrder),
+        content: Text(l10n.kdsCancelOrderConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.no),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              l10n.yes,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    await ref
+        .read(deliveryOrdersDaoProvider)
+        .updateStatus(order.id, DeliveryStatus.cancelled.value);
+
+    if (context.mounted) Navigator.pop(context);
   }
 
   String _statusLabel(AppLocalizations l10n, DeliveryStatus status) {

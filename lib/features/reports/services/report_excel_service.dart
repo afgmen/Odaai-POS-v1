@@ -1,8 +1,9 @@
-import 'dart:io';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html show Blob, Url, AnchorElement;
 
 import 'package:excel/excel.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../../../database/daos/sales_dao.dart';
 
@@ -106,19 +107,23 @@ class ReportExcelService {
     // Delete default Sheet1
     excel.delete('Sheet1');
 
-    // Save file
-    final dir = await getApplicationDocumentsDirectory();
     final fileName =
         'oda_pos_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
-    final filePath = '${dir.path}/$fileName';
     final fileBytes = excel.save();
-    if (fileBytes != null) {
-      File(filePath)
-        ..createSync(recursive: true)
-        ..writeAsBytesSync(fileBytes);
+    if (fileBytes != null && kIsWeb) {
+      // RPT-006: Web download via Blob URL
+      final blob = html.Blob(
+        [fileBytes],
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      html.AnchorElement(href: url)
+        ..setAttribute('download', fileName)
+        ..click();
+      html.Url.revokeObjectUrl(url);
     }
 
-    return filePath;
+    return fileName;
   }
 
   static String _paymentLabel(String method, Map<String, String> labels) => switch (method) {

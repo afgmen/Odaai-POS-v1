@@ -21,6 +21,31 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
     return into(reservations).insert(reservation);
   }
 
+  /// EDGE-011: 같은 날짜+시간+테이블에 중복 예약이 있는지 확인
+  /// excludeId: 수정 시 자기 자신 제외
+  Future<bool> hasConflict({
+    required DateTime date,
+    required String time,
+    required int? tableId,
+    int? excludeId,
+  }) async {
+    if (tableId == null) return false; // 테이블 미지정 시 중복 허용
+    final startOfDay = DateTime.utc(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final query = select(reservations)
+      ..where((r) =>
+          r.reservationDate.isBiggerOrEqualValue(startOfDay) &
+          r.reservationDate.isSmallerThanValue(endOfDay) &
+          r.reservationTime.equals(time) &
+          r.tableId.equals(tableId) &
+          r.status.isNotIn(['cancelled', 'no_show']));
+    if (excludeId != null) {
+      query.where((r) => r.id.equals(excludeId).not());
+    }
+    final results = await query.get();
+    return results.isNotEmpty;
+  }
+
   // ============================================================
   // READ - Single
   // ============================================================

@@ -340,6 +340,24 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
     final reservationTime = _formatTimeOfDay(_selectedTime);
 
     try {
+      // EDGE-011: Check for duplicate table+time reservation
+      final hasConflict = await dao.hasConflict(
+        date: DateTime.utc(_selectedDate.year, _selectedDate.month, _selectedDate.day),
+        time: _formatTimeOfDay(_selectedTime),
+        tableId: _selectedTableId,
+        excludeId: widget.reservation?.id,
+      );
+      if (hasConflict && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This table is already reserved at the selected time.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+
       if (widget.reservation == null) {
         // 추가
         await dao.createReservation(

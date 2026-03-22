@@ -12,30 +12,31 @@ final categoryListProvider = StreamProvider<List<Category>>((ref) {
   return db.categoriesDao.getAllCategories().asStream();
 });
 
-/// 필터링된 상품 목록 Provider
-final filteredProductsProvider = FutureProvider<List<Product>>((ref) async {
+/// 필터링된 상품 목록 Provider (StreamProvider — 재고 변경 즉시 반영)
+final filteredProductsProvider = StreamProvider<List<Product>>((ref) {
   final dao = ref.watch(productsDaoProvider);
   final selectedCategoryId = ref.watch(selectedCategoryProvider);
 
   if (selectedCategoryId == null) {
-    return await dao.getAllProducts();
+    return dao.watchAllProducts();
   } else {
-    return await dao.getProductsByCategoryId(selectedCategoryId);
+    return dao.watchProductsByCategoryId(selectedCategoryId);
   }
 });
 
 /// 검색 키워드 Provider
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
-/// 검색 결과 Provider (키워드 입력 시 검색, 빈 경우 필터 목록)
-final searchResultsProvider = FutureProvider<List<Product>>((ref) async {
+/// 검색 결과 Provider (키워드 입력 시 검색, 빈 경우 필터 스트림)
+final searchResultsProvider = StreamProvider<List<Product>>((ref) {
   final dao = ref.watch(productsDaoProvider);
   final query = ref.watch(searchQueryProvider);
 
   if (query.trim().isEmpty) {
-    // 검색 키워드 없으면 카테고리 필터 적용
-    return await ref.watch(filteredProductsProvider.future);
+    // 검색 키워드 없으면 카테고리 필터 스트림 직접 반환 (재고 변경 실시간 반영)
+    return ref.watch(filteredProductsProvider.stream);
   }
 
-  return await dao.searchProducts(query.trim());
+  // 검색어 있으면 Future를 Stream으로 변환
+  return Stream.fromFuture(dao.searchProducts(query.trim()));
 });

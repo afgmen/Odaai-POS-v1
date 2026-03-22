@@ -84,10 +84,22 @@ class CartPanel extends ConsumerWidget {
                         return _CartItemRow(
                           item: item,
                           compact: true,
-                          onIncrease: () => ref.read(cartProvider.notifier).updateQuantity(
-                                item.product.id,
-                                item.quantity + 1,
-                              ),
+                          onIncrease: () {
+                            if (item.product.stock > 0 && item.quantity >= item.product.stock) {
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(SnackBar(
+                                  content: Text('Maximum stock reached (${item.product.stock})'),
+                                  backgroundColor: AppTheme.error,
+                                  duration: const Duration(seconds: 2),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  margin: const EdgeInsets.all(16),
+                                ));
+                              return;
+                            }
+                            ref.read(cartProvider.notifier).updateQuantity(item.product.id, item.quantity + 1);
+                          },
                           onDecrease: () => ref.read(cartProvider.notifier).updateQuantity(
                                 item.product.id,
                                 item.quantity - 1,
@@ -148,10 +160,22 @@ class CartPanel extends ConsumerWidget {
                   final item = cart[index];
                   return _CartItemRow(
                     item: item,
-                    onIncrease: () => ref.read(cartProvider.notifier).updateQuantity(
-                          item.product.id,
-                          item.quantity + 1,
-                        ),
+                    onIncrease: () {
+                      if (item.product.stock > 0 && item.quantity >= item.product.stock) {
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(SnackBar(
+                            content: Text('Maximum stock reached (${item.product.stock})'),
+                            backgroundColor: AppTheme.error,
+                            duration: const Duration(seconds: 2),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            margin: const EdgeInsets.all(16),
+                          ));
+                        return;
+                      }
+                      ref.read(cartProvider.notifier).updateQuantity(item.product.id, item.quantity + 1);
+                    },
                     onDecrease: () => ref.read(cartProvider.notifier).updateQuantity(
                           item.product.id,
                           item.quantity - 1,

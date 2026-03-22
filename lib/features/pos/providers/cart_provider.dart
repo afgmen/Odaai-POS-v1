@@ -75,15 +75,25 @@ class CartState extends Notifier<List<CartItem>> {
   List<CartItem> build() => [];
 
   /// 상품 추가 (modifier 포함, 같은 상품+modifier 조합이면 수량 증가)
-  void addItem(Product product, {List<SelectedModifier> modifiers = const []}) {
+  /// Returns false if stock would be exceeded (stock > 0 products only).
+  bool addItem(Product product, {List<SelectedModifier> modifiers = const []}) {
     final existing = state.indexWhere((item) => item.isSameAs(product, modifiers));
     if (existing >= 0) {
+      // EDGE-004/014: Stock enforcement
+      if (product.stock > 0 && state[existing].quantity >= product.stock) {
+        return false;
+      }
       final updated = [...state];
       updated[existing].quantity++;
       state = updated;
     } else {
+      if (product.stock == 0) {
+        // Out of stock — do not add
+        return false;
+      }
       state = [...state, CartItem(product: product, modifiers: modifiers)];
     }
+    return true;
   }
 
   /// 특정 인덱스의 아이템 제거

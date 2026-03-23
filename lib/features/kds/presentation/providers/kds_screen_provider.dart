@@ -38,6 +38,26 @@ final filteredOrdersProvider =
   }
 });
 
+/// B-UAT: 상태별 주문 건수 Provider (KDS filter tab 배지 표시용)
+final orderCountByStatusProvider = StreamProvider<Map<String?, int>>((ref) {
+  final dao = ref.watch(kitchenOrdersDaoProvider);
+  return dao.watchAllOrdersWithItems().map((orders) {
+    final Map<String?, int> counts = {
+      null: 0,
+      OrderStatus.pending.value: 0,
+      OrderStatus.preparing.value: 0,
+      OrderStatus.ready.value: 0,
+      OrderStatus.served.value: 0,
+      OrderStatus.cancelled.value: 0,
+    };
+    for (final o in orders) {
+      counts[null] = (counts[null] ?? 0) + 1;
+      counts[o.order.status] = (counts[o.order.status] ?? 0) + 1;
+    }
+    return counts;
+  });
+});
+
 /// 선택된 주문 ID
 final selectedOrderIdProvider = StateProvider<int?>((ref) => null);
 

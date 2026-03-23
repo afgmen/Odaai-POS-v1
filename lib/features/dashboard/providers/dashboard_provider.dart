@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../database/app_database.dart';
 import '../../../database/daos/sales_dao.dart';
 import '../../../providers/database_providers.dart';
+import '../../refunds/providers/refunds_provider.dart';
 
 // ── Date Filter Enum ──────────────────────────────
 enum DashboardFilter {
@@ -47,6 +48,20 @@ final totalSalesProvider = StreamProvider<double>((ref) {
   final filter = ref.watch(dashboardFilterProvider);
   final range = _dateRange(filter);
   return dao.watchTotalSales(range.from, range.to);
+});
+
+// ── B-UAT: 기간별 순 매출 (환불 차감) — StreamProvider ──
+// 환불 후 총 매출이 재계산되어 표시됨
+final netSalesProvider = StreamProvider<double>((ref) {
+  final filter = ref.watch(dashboardFilterProvider);
+  final range = _dateRange(filter);
+
+  final totalAsync = ref.watch(totalSalesProvider);
+  final refundAsync = ref.watch(refundTotalProvider(range));
+
+  final total = totalAsync.valueOrNull ?? 0;
+  final refunded = refundAsync.valueOrNull ?? 0;
+  return Stream.value((total - refunded).clamp(0, double.infinity));
 });
 
 // ── B-103: 기간별 주문 수 — StreamProvider ─────────

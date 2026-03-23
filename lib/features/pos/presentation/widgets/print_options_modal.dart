@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../settings/providers/store_settings_provider.dart';
 import '../../services/receipt_pdf_service.dart';
 
 /// 인쇄 용지 타입
@@ -28,11 +30,12 @@ extension PrintFormatL10n on PrintFormat {
 /// - 용지 선택 (80mm / A4)
 /// - 미리보기
 /// - 인쇄 실행
-class PrintOptionsModal extends StatefulWidget {
+class PrintOptionsModal extends ConsumerStatefulWidget {
   final String saleNumber;
   final List<SaleItem> items;
   final double subtotal;
   final double discount;
+  final double tax;
   final double total;
   final String paymentMethod;
   final double cashPaid;
@@ -44,6 +47,7 @@ class PrintOptionsModal extends StatefulWidget {
     required this.items,
     required this.subtotal,
     this.discount = 0,
+    this.tax = 0,
     required this.total,
     required this.paymentMethod,
     this.cashPaid = 0,
@@ -51,23 +55,31 @@ class PrintOptionsModal extends StatefulWidget {
   });
 
   @override
-  State<PrintOptionsModal> createState() => _PrintOptionsModalState();
+  ConsumerState<PrintOptionsModal> createState() => _PrintOptionsModalState();
 }
 
-class _PrintOptionsModalState extends State<PrintOptionsModal> {
+class _PrintOptionsModalState extends ConsumerState<PrintOptionsModal> {
   PrintFormat _format = PrintFormat.receipt;
   bool _isPrinting = false;
 
-  ReceiptData get _receiptData => ReceiptData(
-        saleNumber: widget.saleNumber,
-        items: widget.items,
-        subtotal: widget.subtotal,
-        discount: widget.discount,
-        total: widget.total,
-        paymentMethod: widget.paymentMethod,
-        cashPaid: widget.cashPaid,
-        saleDate: widget.saleDate,
-      );
+  ReceiptData _buildReceiptData() {
+    final storeSettings = ref.read(storeSettingsProvider);
+    final storeName = storeSettings[StoreSettingsKeys.storeName] as String? ?? 'Oda POS';
+    final receiptFooter = storeSettings[StoreSettingsKeys.receiptFooter] as String? ?? '';
+    return ReceiptData(
+      saleNumber: widget.saleNumber,
+      items: widget.items,
+      subtotal: widget.subtotal,
+      discount: widget.discount,
+      tax: widget.tax,
+      total: widget.total,
+      paymentMethod: widget.paymentMethod,
+      cashPaid: widget.cashPaid,
+      saleDate: widget.saleDate,
+      storeName: storeName,
+      receiptFooter: receiptFooter,
+    );
+  }
 
   Map<String, String> _buildReceiptLabels() {
     final l10n = AppLocalizations.of(context)!;
@@ -87,6 +99,7 @@ class _PrintOptionsModalState extends State<PrintOptionsModal> {
       'cashPaid': l10n.cashPaidAmount,
       'change': l10n.change,
       'thankYou': l10n.thankYouMessage,
+      'tax': 'VAT',
     };
   }
 
@@ -250,7 +263,7 @@ class _PrintOptionsModalState extends State<PrintOptionsModal> {
 
   /// PDF 미리보기 표시 (printing 패키지의 PdfPreview 활용)
   void _showPreview() {
-    final data = _receiptData;
+    final data = _buildReceiptData();
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -291,7 +304,7 @@ class _PrintOptionsModalState extends State<PrintOptionsModal> {
     setState(() => _isPrinting = true);
 
     try {
-      final data = _receiptData;
+      final data = _buildReceiptData();
       final receiptLabels = _buildReceiptLabels();
       final doc = _format == PrintFormat.receipt
           ? await ReceiptPdfService.generateReceipt(data, labels: receiptLabels)

@@ -217,6 +217,8 @@ class CartPanel extends ConsumerWidget {
               cancellationReason: Value(reason),
               cancelledAt: Value(DateTime.now()),
             ));
+            // B-UAT: 관련 kitchen order 취소 상태 업데이트 추가
+            await db.kitchenOrdersDao.cancelOrdersBySaleId(existingSaleId!, cancellationReason: reason);
             ref.read(cartProvider.notifier).clear();
           },
         ),

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' hide Column;
 import '../../providers/tax_provider.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +13,7 @@ import '../../../../providers/currency_provider.dart';
 import '../../../../providers/database_providers.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../customers/providers/customers_provider.dart';
+import '../../../delivery/data/delivery_orders_dao.dart';
 import '../../../loyalty/domain/services/loyalty_service.dart';
 import '../../providers/cart_provider.dart';
 import '../../data/models/order_type.dart';
@@ -918,6 +921,46 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
       // ── 저장된 SaleItems 조회 (영수증용) ───────
       final savedItems = await dao.getSaleItems(createdSale.id);
 
+      // ── 배달 주문인 경우 delivery_orders 테이블에도 기록 ──────────────
+      // B-UAT: 배달 주문 체크아웃 후 Delivery Orders 화면에 표시되도록 수정
+      if (_isDeliveryOrder) {
+        try {
+          final platform = _selectedOrderType == OrderType.platformDelivery ? 'grab' : 'manual';
+          final deliveryItemsJson = jsonEncode(
+            savedItems.map((item) => {
+              'name': item.productName,
+              'quantity': item.quantity,
+              'price': item.unitPrice,
+              'notes': null,
+            }).toList(),
+          );
+          final deliveryOrderCompanion = DeliveryOrdersCompanion.insert(
+            platformOrderId: createdSale.saleNumber,
+            platform: platform,
+            status: const Value('PREPARING'),
+            customerName: _customerNameController.text.trim().isNotEmpty
+                ? _customerNameController.text.trim()
+                : 'Walk-in Customer',
+            customerPhone: Value(_deliveryPhoneController.text.trim().isNotEmpty
+                ? _deliveryPhoneController.text.trim()
+                : null),
+            deliveryAddress: Value(_deliveryAddressController.text.trim().isNotEmpty
+                ? _deliveryAddressController.text.trim()
+                : null),
+            itemsJson: deliveryItemsJson,
+            totalAmount: createdSale.total,
+            specialInstructions: Value(_specialInstructionsController.text.trim().isNotEmpty
+                ? _specialInstructionsController.text.trim()
+                : null),
+          );
+          await db.deliveryOrdersDao.insertOrder(deliveryOrderCompanion);
+          debugPrint('[Checkout] Delivery order created for sale ${createdSale.saleNumber}');
+        } catch (e) {
+          // 배달 주문 기록 실패해도 결제 완료 처리 계속
+          debugPrint('[Checkout] Failed to create delivery order record: $e');
+        }
+      }
+
       // ── 테이블 상태 업데이트 (Dine-in/Open Tab 완료 시) ──────────────
       if (widget.tableId != null) {
         final tablesDao = ref.read(tablesDaoProvider);
@@ -970,6 +1013,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               items: savedItems,
               subtotal: subtotal,
               discount: discountAmount,
+              tax: ref.read(cartTaxAmountProvider),
               total: finalTotal,
               paymentMethod: _selectedMethod.name.toUpperCase(),
               cashPaid: _selectedMethod == PaymentMethod.cash ? _cashInput : 0,

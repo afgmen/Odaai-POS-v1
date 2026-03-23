@@ -14,6 +14,7 @@ class ReceiptScreen extends ConsumerWidget {
   final List<SaleItem> items;
   final double subtotal;
   final double discount;        // 할인금액
+  final double tax;             // VAT 금액
   final double total;
   final String paymentMethod;   // 'cash' | 'card' | 'qr'
   final double cashPaid;        // 현금 투입금액 (현금 결제 시만)
@@ -26,6 +27,7 @@ class ReceiptScreen extends ConsumerWidget {
     required this.items,
     required this.subtotal,
     this.discount = 0,
+    this.tax = 0,
     required this.total,
     required this.paymentMethod,
     this.cashPaid = 0,
@@ -243,6 +245,11 @@ class ReceiptScreen extends ConsumerWidget {
                         const SizedBox(height: 6),
                         _SummaryRow(label: l10n.discount, value: discount, isDiscount: true),
                       ],
+                      // VAT 행 (VAT > 0 일 때만)
+                      if (tax > 0) ...[
+                        const SizedBox(height: 6),
+                        _SummaryRow(label: 'VAT', value: tax),
+                      ],
                       const SizedBox(height: 6),
                       // 합계 (볼드)
                       _SummaryRow(label: l10n.total, value: total, isBold: true),
@@ -374,6 +381,7 @@ class ReceiptScreen extends ConsumerWidget {
         items: items,
         subtotal: subtotal,
         discount: discount,
+        tax: tax,
         total: total,
         paymentMethod: paymentMethod,
         cashPaid: cashPaid,

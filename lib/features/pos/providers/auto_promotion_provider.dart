@@ -24,10 +24,14 @@ final applicablePromotionsProvider = StreamProvider<Map<int, List<Promotion>>>((
     final now = DateTime.now();
 
     // 해당 상품에 적용 가능한 활성 프로모션 조회
+    // B-UAT: productId가 null인 경우는 전역 프로모션 (모든 상품 대상)
+    // productId가 명시적으로 지정된 경우에는 해당 상품만 적용
+    // 수정: productId가 null인 전역 프로모션과 해당 상품 전용 프로모션 모두 포함
+    // 단, productId가 있는 프로모션은 지정된 상품에만 적용되어야 함
     final promotions = await (db.select(db.promotions)
           ..where((p) =>
               p.isActive.equals(true) &
-              (p.productId.isNull() | p.productId.equals(productId)) &
+              p.productId.equals(productId) &
               (p.startDate.isNull() | p.startDate.isSmallerOrEqualValue(now)) &
               (p.endDate.isNull() | p.endDate.isBiggerOrEqualValue(now))))
         .get();

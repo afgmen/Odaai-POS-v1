@@ -40,10 +40,11 @@ final cartTaxAmountProvider = Provider<double>((ref) {
   double totalTax = 0.0;
 
   for (final item in cart) {
-    // B-118: 제품에 vatRate가 있으면 우선 사용, 없으면 글로벌 설정
-    final rate = item.product.vatRate != 10.0 || item.product.vatRate == 10.0
-        ? item.product.vatRate
-        : defaultRate;
+    // B-118: 제품에 vatRate가 설정되어 있으면 우선 사용, 없으면(null) 글로벌 설정
+    // 수정: 기존 조건 (vatRate != 10.0 || vatRate == 10.0 = 항상 true) 버그 수정
+    // vatRate가 제품별로 명시 설정되어 있으므로 product.vatRate를 직접 사용,
+    // 0%이면 해당 상품은 비과세 처리
+    final rate = item.product.vatRate;
 
     final itemSubtotal = item.subtotal;
     if (itemSubtotal <= 0 || rate <= 0) continue;

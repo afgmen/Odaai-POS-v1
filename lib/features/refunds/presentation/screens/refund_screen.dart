@@ -8,6 +8,8 @@ import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/database_providers.dart';
 import '../../providers/refunds_provider.dart';
+import '../../../sales/providers/sales_provider.dart';
+import '../../../dashboard/providers/dashboard_provider.dart';
 
 /// 환불/반품 처리 화면
 class RefundScreen extends ConsumerStatefulWidget {
@@ -402,11 +404,16 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
     );
 
     if (mounted) {
+      // B-UAT: Sales 목록 + 대시보드 Total Sales 즉시 갱신
+      ref.invalidate(salesListProvider);
+      ref.invalidate(totalSalesProvider);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.fullRefundComplete), backgroundColor: AppTheme.success),
       );
       setState(() {
         _foundSale = _foundSale!.copyWith(status: 'refunded');
+        _recentSales = _recentSales.where((s) => s.id != _foundSale!.id).toList();
       });
     }
   }
@@ -448,6 +455,10 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
     await dao.insertRefundItems(refundItemsList);
 
     if (mounted) {
+      // B-UAT: Sales 목록 + 대시보드 Total Sales 즉시 갱신
+      ref.invalidate(salesListProvider);
+      ref.invalidate(totalSalesProvider);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.partialRefundComplete), backgroundColor: AppTheme.success),
       );

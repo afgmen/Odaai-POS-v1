@@ -77,11 +77,25 @@ class PdfExportService {
       ),
     );
 
-    // Save file
-    final directory = await getApplicationDocumentsDirectory();
+        // Save file
+    // B-UAT: Try documents directory, fallback to temp directory on error
+    Directory? directory;
+    try {
+      directory = await getApplicationDocumentsDirectory();
+    } catch (_) {
+      directory = await getTemporaryDirectory();
+    }
+
     final fileName = 'closing_${dateFormat.format(closing.closingDate)}.pdf';
     final file = File('${directory.path}/$fileName');
-    await file.writeAsBytes(await pdf.save());
+
+    // Ensure directory exists
+    if (!await file.parent.exists()) {
+      await file.parent.create(recursive: true);
+    }
+
+    final pdfBytes = await pdf.save();
+    await file.writeAsBytes(pdfBytes);
 
     return file;
   }

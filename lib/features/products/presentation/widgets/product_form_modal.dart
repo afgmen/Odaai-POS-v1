@@ -544,16 +544,33 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     );
   }
 
+  // ── SKU 자동 생성 헬퍼 ───────────────────────
+  String _ensureSku() {
+    if (_skuCtrl.text.trim().isNotEmpty) return _skuCtrl.text.trim();
+    // 상품명 기반 임시 SKU 생성 (영문/숫자만, 최대 8자)
+    final name = _nameCtrl.text.trim();
+    String autoSku = name.isEmpty
+        ? 'SKU${DateTime.now().millisecondsSinceEpoch % 100000}'
+        : name
+            .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '')
+            .toUpperCase()
+            .padRight(4, '0')
+            .substring(0, name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').length.clamp(0, 8));
+    if (autoSku.isEmpty) autoSku = 'SKU${DateTime.now().millisecondsSinceEpoch % 100000}';
+    setState(() => _skuCtrl.text = autoSku);
+    return autoSku;
+  }
+
   // ── 이미지 핸들러 ─────────────────────────────
   Future<void> _handleCameraUpload() async {
     final l10n = AppLocalizations.of(context)!;
 
-    if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
-      _showSnackBar('Please enter SKU first', AppTheme.error);
+    // B-UAT: SKU가 없으면 자동 생성 (신규 상품에서도 이미지 추가 가능)
+    final sku = _isEditMode ? _skuCtrl.text.trim() : _ensureSku();
+    if (sku.isEmpty) {
+      _showSnackBar('Please enter a product name or SKU first', AppTheme.error);
       return;
     }
-
-    final sku = _skuCtrl.text.trim();
     final productId = widget.existingProduct?.id ?? 0;
 
     final notifier = ref.read(imageUploadStateProvider.notifier);
@@ -588,12 +605,13 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
   Future<void> _handleGalleryUpload() async {
     final l10n = AppLocalizations.of(context)!;
 
-    if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
-      _showSnackBar('Please enter SKU first', AppTheme.error);
+    // B-UAT: SKU가 없으면 자동 생성 (신규 상품에서도 이미지 추가 가능)
+    final sku = _isEditMode ? _skuCtrl.text.trim() : _ensureSku();
+    if (sku.isEmpty) {
+      _showSnackBar('Please enter a product name or SKU first', AppTheme.error);
       return;
     }
 
-    final sku = _skuCtrl.text.trim();
     final productId = widget.existingProduct?.id ?? 0;
 
     final notifier = ref.read(imageUploadStateProvider.notifier);

@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:drift/drift.dart';
 
 import '../../../database/app_database.dart';
 import '../../../providers/database_providers.dart';
+import '../../promotions/data/promotions_dao.dart';
 import 'cart_provider.dart';
 
 /// 장바구니 상품별 적용 가능한 프로모션 맵
 /// `Map<productId, List<Promotion>>`
+/// B-UAT: PromotionsDao.getApplicablePromotions() 사용 (applyToAll 포함)
 final applicablePromotionsProvider = StreamProvider<Map<int, List<Promotion>>>((ref) async* {
   final cart = ref.watch(cartProvider);
   final db = ref.watch(databaseProvider);
@@ -21,21 +22,8 @@ final applicablePromotionsProvider = StreamProvider<Map<int, List<Promotion>>>((
 
   for (final item in cart) {
     final productId = item.product.id;
-    final now = DateTime.now();
-
-    // 해당 상품에 적용 가능한 활성 프로모션 조회
-    // B-UAT: productId가 null인 경우는 전역 프로모션 (모든 상품 대상)
-    // productId가 명시적으로 지정된 경우에는 해당 상품만 적용
-    // 수정: productId가 null인 전역 프로모션과 해당 상품 전용 프로모션 모두 포함
-    // 단, productId가 있는 프로모션은 지정된 상품에만 적용되어야 함
-    final promotions = await (db.select(db.promotions)
-          ..where((p) =>
-              p.isActive.equals(true) &
-              p.productId.equals(productId) &
-              (p.startDate.isNull() | p.startDate.isSmallerOrEqualValue(now)) &
-              (p.endDate.isNull() | p.endDate.isBiggerOrEqualValue(now))))
-        .get();
-
+    // PromotionsDao의 getApplicablePromotions 사용 (applyToAll 포함)
+    final promotions = await db.promotionsDao.getApplicablePromotions(productId);
     if (promotions.isNotEmpty) {
       promoMap[productId] = promotions;
     }
@@ -45,6 +33,7 @@ final applicablePromotionsProvider = StreamProvider<Map<int, List<Promotion>>>((
 });
 
 /// 프로모션 자동 적용된 총 할인 금액
+/// B-UAT: 동일 프로모션(applyToAll)이 여러 상품에 중복 적용되지 않도록 처리
 final autoPromotionDiscountProvider = Provider<double>((ref) {
   final cart = ref.watch(cartProvider);
   final promoMapAsync = ref.watch(applicablePromotionsProvider);
@@ -52,6 +41,8 @@ final autoPromotionDiscountProvider = Provider<double>((ref) {
   return promoMapAsync.when(
     data: (promoMap) {
       double totalDiscount = 0.0;
+      // applyToAll 프로모션은 cart 전체에 한 번만 적용
+      final Set<int> appliedGlobalPromoIds = {};
 
       for (final item in cart) {
         final productId = item.product.id;
@@ -61,15 +52,24 @@ final autoPromotionDiscountProvider = Provider<double>((ref) {
 
         // 가장 유리한 프로모션 선택 (할인 금액 기준)
         double maxDiscount = 0.0;
+        Promotion? bestPromo;
 
         for (final promo in promotions) {
+          // applyToAll 프로모션은 이미 다른 상품에서 적용됐으면 스킵
+          if (promo.applyToAllProducts && appliedGlobalPromoIds.contains(promo.id)) continue;
           final discount = _calculatePromoDiscount(promo, item);
           if (discount > maxDiscount) {
             maxDiscount = discount;
+            bestPromo = promo;
           }
         }
 
-        totalDiscount += maxDiscount;
+        if (bestPromo != null && maxDiscount > 0) {
+          if (bestPromo.applyToAllProducts) {
+            appliedGlobalPromoIds.add(bestPromo.id);
+          }
+          totalDiscount += maxDiscount;
+        }
       }
 
       return totalDiscount;
@@ -120,6 +120,7 @@ class AppliedPromotion {
 }
 
 /// 적용된 프로모션 목록 Provider
+/// B-UAT: applyToAll 프로모션은 합산하여 1개 항목으로 표시 (중복 제거)
 final appliedPromotionsListProvider = Provider<List<AppliedPromotion>>((ref) {
   final cart = ref.watch(cartProvider);
   final promoMapAsync = ref.watch(applicablePromotionsProvider);
@@ -127,6 +128,10 @@ final appliedPromotionsListProvider = Provider<List<AppliedPromotion>>((ref) {
   return promoMapAsync.when(
     data: (promoMap) {
       final List<AppliedPromotion> applied = [];
+      // applyToAll 프로모션 집계 (promotionId → 할인 합산)
+      final Map<int, ({String name, double discount})> globalPromoAggregated = {};
+      // applyToAll 프로모션 중 이미 처리된 ID 추적
+      final Set<int> appliedGlobalPromoIds = {};
 
       for (final item in cart) {
         final productId = item.product.id;
@@ -139,6 +144,8 @@ final appliedPromotionsListProvider = Provider<List<AppliedPromotion>>((ref) {
         double maxDiscount = 0.0;
 
         for (final promo in promotions) {
+          // applyToAll 프로모션은 이미 다른 상품에서 선택됐으면 스킵
+          if (promo.applyToAllProducts && appliedGlobalPromoIds.contains(promo.id)) continue;
           final discount = _calculatePromoDiscount(promo, item);
           if (discount > maxDiscount) {
             maxDiscount = discount;
@@ -147,12 +154,39 @@ final appliedPromotionsListProvider = Provider<List<AppliedPromotion>>((ref) {
         }
 
         if (bestPromo != null && maxDiscount > 0) {
-          applied.add(AppliedPromotion(
-            productId: productId,
-            promotionName: bestPromo.name,
-            discountAmount: maxDiscount,
-          ));
+          if (bestPromo.applyToAllProducts) {
+            // applyToAll 프로모션은 집계 맵에 추가 (나중에 단일 항목으로 표시)
+            appliedGlobalPromoIds.add(bestPromo.id);
+            final existing = globalPromoAggregated[bestPromo.id];
+            if (existing != null) {
+              globalPromoAggregated[bestPromo.id] = (
+                name: existing.name,
+                discount: existing.discount + maxDiscount,
+              );
+            } else {
+              globalPromoAggregated[bestPromo.id] = (
+                name: bestPromo.name,
+                discount: maxDiscount,
+              );
+            }
+          } else {
+            // 특정 상품 전용 프로모션은 개별 항목으로 표시
+            applied.add(AppliedPromotion(
+              productId: productId,
+              promotionName: bestPromo.name,
+              discountAmount: maxDiscount,
+            ));
+          }
         }
+      }
+
+      // applyToAll 프로모션들을 합산하여 단일 항목으로 추가
+      for (final entry in globalPromoAggregated.entries) {
+        applied.add(AppliedPromotion(
+          productId: -1, // 전체 상품 대상은 productId -1 사용
+          promotionName: entry.value.name,
+          discountAmount: entry.value.discount,
+        ));
       }
 
       return applied;

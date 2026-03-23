@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../providers/currency_provider.dart';
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../settings/providers/store_settings_provider.dart';
 import '../widgets/print_options_modal.dart';
 
 /// 영수증 화면
@@ -63,6 +64,10 @@ class ReceiptScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final change = paymentMethod.toUpperCase() == 'CASH' ? (cashPaid - total) : 0.0;
     final priceFormatter = ref.watch(priceFormatterProvider);
+    final storeSettings = ref.watch(storeSettingsProvider);
+    final storeName = storeSettings[StoreSettingsKeys.storeName] as String? ?? 'Oda POS';
+    final receiptFooter = storeSettings[StoreSettingsKeys.receiptFooter] as String? ?? '';
+    final footerText = receiptFooter.isNotEmpty ? receiptFooter : l10n.thankYouMessage;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -108,9 +113,9 @@ class ReceiptScreen extends ConsumerWidget {
                     children: [
                       const Icon(Icons.point_of_sale, size: 36, color: AppTheme.primary),
                       const SizedBox(height: 6),
-                      const Text(
-                        'Oda POS',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
+                      Text(
+                        storeName,
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -309,11 +314,11 @@ class ReceiptScreen extends ConsumerWidget {
                 // ── 구분선 ─────────────────────────────
                 _DashedDivider(),
 
-                // ── 감사 메시지 ─────────────────────────
+                // ── 감사 메시지 / Footer ────────────────
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   child: Text(
-                    l10n.thankYouMessage,
+                    footerText,
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
                     textAlign: TextAlign.center,
                   ),

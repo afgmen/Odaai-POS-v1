@@ -13,6 +13,7 @@ import 'reservations_screen.dart';
 import '../../../floor_plan/presentation/modals/add_zone_modal.dart';
 import '../../../floor_plan/presentation/modals/add_element_modal.dart';
 import '../../../floor_plan/presentation/modals/add_table_modal.dart';
+import '../../../kds/data/kitchen_cancellation_provider.dart';
 
 /// Table Layout Screen (Phase 0: Floor Plan Designer 통합)
 class TableManagementScreen extends ConsumerStatefulWidget {
@@ -117,9 +118,125 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
     final zonesAsync = ref.watch(allZonesStreamProvider);
     final elementsAsync = ref.watch(allElementsStreamProvider);
 
+    // B-UAT: KDS 취소 알림 감지
+    final cancellations = ref.watch(kitchenCancellationProvider);
+    // 새 취소 알림이 있으면 SnackBar로 표시 (최신 1개)
+    ref.listen(kitchenCancellationProvider, (prev, next) {
+      if (next.isNotEmpty && (prev == null || prev.isEmpty || next.first.orderId != prev.first.orderId)) {
+        final notification = next.first;
+        final tableInfo = notification.tableNumber != null
+            ? ' (Table: ${notification.tableNumber})'
+            : '';
+        final reasonInfo = notification.reason != null
+            ? ': ${notification.reason}'
+            : '';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.cancel, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '⚠️ Kitchen cancelled order #${notification.orderId}$tableInfo$reasonInfo',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 5),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Colors.white,
+              onPressed: () {
+                ref.read(kitchenCancellationProvider.notifier).dismiss(notification.orderId);
+              },
+            ),
+          ),
+        );
+      }
+    });
+
     return Scaffold(
       body: Column(
         children: [
+          // B-UAT: KDS 취소 알림 배너 (미확인 알림이 있을 때)
+          if (cancellations.isNotEmpty)
+            Material(
+              color: Colors.red.shade50,
+              child: InkWell(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Row(
+                        children: [
+                          Icon(Icons.cancel, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Kitchen Cancellations', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                      content: SizedBox(
+                        width: 360,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: cancellations.map((n) => ListTile(
+                            dense: true,
+                            leading: const Icon(Icons.warning_amber, color: Colors.orange),
+                            title: Text('Order #${n.orderId}${n.tableNumber != null ? ' — Table: ${n.tableNumber}' : ''}'),
+                            subtitle: Text(n.reason ?? 'No reason provided'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.close, size: 18),
+                              onPressed: () {
+                                ref.read(kitchenCancellationProvider.notifier).dismiss(n.orderId);
+                              },
+                            ),
+                          )).toList(),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            ref.read(kitchenCancellationProvider.notifier).dismissAll();
+                            Navigator.pop(ctx);
+                          },
+                          child: const Text('Dismiss All'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.cancel, color: Colors.red, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${cancellations.length} kitchen cancellation${cancellations.length > 1 ? 's' : ''} — tap to review',
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, color: Colors.red, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
           // 상태 필터 탭 + 통계
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

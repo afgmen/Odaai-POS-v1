@@ -18,3 +18,9 @@ final todayRefundsProvider = StreamProvider<List<Refund>>((ref) {
 final saleRefundsProvider = FutureProvider.family<List<Refund>, int>((ref, saleId) {
   return ref.watch(refundsDaoProvider).getRefundsBySaleId(saleId);
 });
+
+/// B-UAT: 기간별 환불 총액 스트림 Provider
+/// dashboard에서 순 매출(총 매출 - 환불) 계산에 사용
+final refundTotalProvider = StreamProvider.family<double, ({DateTime from, DateTime to})>((ref, range) {
+  return ref.watch(refundsDaoProvider).watchTotalRefunds(range.from, range.to);
+});

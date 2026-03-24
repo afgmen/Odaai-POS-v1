@@ -16,6 +16,15 @@ class CategoriesDao extends DatabaseAccessor<AppDatabase> with _$CategoriesDaoMi
         .get();
   }
 
+  /// Watch all active categories (real-time stream)
+  /// B-UAT: 새 카테고리 추가 시 즉시 반영을 위해 StreamProvider에서 사용
+  Stream<List<Category>> watchAllCategories() {
+    return (select(categories)
+          ..where((tbl) => tbl.isActive.equals(true))
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.sortOrder)]))
+        .watch();
+  }
+
   /// Get category by id
   Future<Category?> getCategoryById(int id) {
     return (select(categories)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();

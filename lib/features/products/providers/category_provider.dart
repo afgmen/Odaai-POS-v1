@@ -2,10 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../database/app_database.dart';
 import '../../../providers/database_providers.dart';
 
-/// Provider for active categories list (as Future for initial load)
-final activeCategoriesListProvider = FutureProvider<List<Category>>((ref) {
+/// Provider for active categories list (StreamProvider for real-time updates)
+/// B-UAT: FutureProvider → StreamProvider로 변경하여 새 카테고리 추가 시 즉시 반영
+final activeCategoriesListProvider = StreamProvider<List<Category>>((ref) {
   final db = ref.watch(databaseProvider);
-  return db.categoriesDao.getAllCategories();
+  return db.categoriesDao.watchAllCategories();
 });
 
 /// Provider for category by id

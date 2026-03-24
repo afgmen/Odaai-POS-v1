@@ -21,6 +21,8 @@ class CashDrawerScreen extends ConsumerWidget {
     final isOpenedAsync = ref.watch(isTodayOpenedProvider);
     final priceFormatter = ref.watch(priceFormatterProvider);
     final timeFormat = DateFormat('HH:mm');
+    final now = DateTime.now();
+    final dateFormat = DateFormat('EEEE, MMMM d, yyyy');
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -30,6 +32,32 @@ class CashDrawerScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ─── 날짜 표시 ──────────────────────────
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withAlpha(15),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.primary.withAlpha(40)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, size: 16, color: AppTheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    dateFormat.format(now),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
             // ─── 현재 시재 카드 ─────────────────────
             Card(
               child: Padding(
@@ -310,66 +338,125 @@ class CashDrawerScreen extends ConsumerWidget {
     final currentBalance = await dao.getCurrentDrawerBalance();
     final priceFormatter = ref.read(priceFormatterProvider);
     final countCtrl = TextEditingController();
+    final reasonCtrl = TextEditingController();
 
     if (!context.mounted) return;
     showDialog(
       context: context,
       builder: (ctx) {
         final l10n = AppLocalizations.of(ctx)!;
-        return AlertDialog(
-          title: Text(l10n.closeSettlement),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                l10n.systemBalance(priceFormatter.format(currentBalance, includeSymbol: false)),
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: countCtrl,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: l10n.actualCashAmount,
-                  prefixText: '${priceFormatter.currency.symbol} ',
-                  prefixIcon: const Icon(Icons.calculate),
-                  hintText: l10n.countCashHint,
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            final countedText = countCtrl.text;
+            final counted = double.tryParse(countedText) ?? 0;
+            final diff = counted - currentBalance;
+            final hasDifference = countedText.isNotEmpty && diff != 0;
+
+            return AlertDialog(
+              title: Text(l10n.closeSettlement),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.systemBalance(priceFormatter.format(currentBalance, includeSymbol: false)),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: countCtrl,
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        labelText: l10n.actualCashAmount,
+                        prefixText: '${priceFormatter.currency.symbol} ',
+                        prefixIcon: const Icon(Icons.calculate),
+                        hintText: l10n.countCashHint,
+                      ),
+                    ),
+                    // 금액 차이가 있을 때 차이 표시 및 이유 입력 필드 노출
+                    if (hasDifference) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: diff > 0 ? AppTheme.success.withAlpha(20) : AppTheme.error.withAlpha(20),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: diff > 0 ? AppTheme.success : AppTheme.error,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              diff > 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                              size: 16,
+                              color: diff > 0 ? AppTheme.success : AppTheme.error,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Difference: ${diff > 0 ? '+' : ''}${priceFormatter.format(diff.abs(), includeSymbol: false)}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: diff > 0 ? AppTheme.success : AppTheme.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: reasonCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Reason for difference',
+                          hintText: 'e.g. Cashier error, change given',
+                          prefixIcon: Icon(Icons.note_alt_outlined),
+                        ),
+                        maxLines: 2,
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-            ElevatedButton(
-              onPressed: () async {
-                final counted = double.tryParse(countCtrl.text) ?? 0;
-                final diff = counted - currentBalance;
-                final note = diff == 0
-                    ? l10n.normalClose
-                    : '${l10n.difference('${diff > 0 ? '+' : ''}${priceFormatter.format(diff.abs(), includeSymbol: false)}')} (${l10n.actualCashAmount}: ${priceFormatter.format(counted, includeSymbol: false)})';
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+                ElevatedButton(
+                  onPressed: () async {
+                    final diff = counted - currentBalance;
+                    final reason = reasonCtrl.text.trim();
+                    String note;
+                    if (diff == 0) {
+                      note = l10n.normalClose;
+                    } else {
+                      final diffStr = '${diff > 0 ? '+' : ''}${priceFormatter.format(diff.abs(), includeSymbol: false)}';
+                      final reasonPart = reason.isNotEmpty ? ' · Reason: $reason' : '';
+                      note = '${l10n.difference(diffStr)} (${l10n.actualCashAmount}: ${priceFormatter.format(counted, includeSymbol: false)})$reasonPart';
+                    }
 
-                await dao.logCashDrawer(CashDrawerLogsCompanion.insert(
-                  type: 'close',
-                  amount: -currentBalance,
-                  balanceBefore: currentBalance,
-                  balanceAfter: 0,
-                  note: Value(note),
-                ));
+                    await dao.logCashDrawer(CashDrawerLogsCompanion.insert(
+                      type: 'close',
+                      amount: -currentBalance,
+                      balanceBefore: currentBalance,
+                      balanceAfter: 0,
+                      note: Value(note),
+                    ));
 
-                ref.invalidate(currentDrawerBalanceProvider);
-                ref.invalidate(isTodayOpenedProvider);
+                    ref.invalidate(currentDrawerBalanceProvider);
+                    ref.invalidate(isTodayOpenedProvider);
 
-                if (ctx.mounted) Navigator.pop(ctx);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.closeComplete(note)), backgroundColor: AppTheme.success),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-              child: Text(l10n.closeDrawer),
-            ),
-          ],
+                    if (ctx.mounted) Navigator.pop(ctx);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.closeComplete(note)), backgroundColor: AppTheme.success),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+                  child: Text(l10n.closeDrawer),
+                ),
+              ],
+            );
+          },
         );
       },
     );

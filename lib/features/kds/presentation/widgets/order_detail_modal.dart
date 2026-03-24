@@ -5,6 +5,7 @@ import '../../domain/enums/order_status.dart';
 import '../../domain/enums/order_priority.dart';
 import '../../domain/services/kitchen_service_provider.dart';
 import '../../data/kitchen_orders_providers.dart';
+import '../../data/kitchen_cancellation_provider.dart';
 import '../../data/models/kitchen_order_with_items.dart';
 import '../providers/kds_screen_provider.dart';
 import '../../../../database/app_database.dart';
@@ -217,6 +218,13 @@ class OrderDetailModal extends ConsumerWidget {
                               reason: reason,
                             );
                             if (cancelled && context.mounted) {
+                              // B-UAT: 취소 알림을 Floor Plan에 전달
+                              ref.read(kitchenCancellationProvider.notifier).addCancellation(
+                                orderId: orderId,
+                                saleId: order.saleId,
+                                tableNumber: order.tableNumber,
+                                reason: reason,
+                              );
                               ref
                                   .read(showOrderDetailProvider.notifier)
                                   .state = false;

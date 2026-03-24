@@ -142,6 +142,32 @@ class CustomersDao extends DatabaseAccessor<AppDatabase> with _$CustomersDaoMixi
   Future<List<RefundItem>> getRefundItems(int refundId) =>
       (select(refundItems)..where((ri) => ri.refundId.equals(refundId))).get();
 
+  /// B-UAT: 특정 sale item에 대해 이미 환불된 수량 합계 조회
+  /// 중복 환불 방지를 위해 사용
+  Future<int> getAlreadyRefundedQty(int saleItemId) async {
+    final query = selectOnly(refundItems)
+      ..addColumns([refundItems.quantity.sum()])
+      ..where(refundItems.saleItemId.equals(saleItemId));
+    final result = await query.getSingle();
+    return result.read(refundItems.quantity.sum()) ?? 0;
+  }
+
+  /// B-UAT: 특정 sale의 각 item별 이미 환불된 수량 맵 반환
+  /// { saleItemId: alreadyRefundedQty }
+  Future<Map<int, int>> getRefundedQtyBySaleItems(List<int> saleItemIds) async {
+    if (saleItemIds.isEmpty) return {};
+
+    final allRefundItems = await (select(refundItems)
+          ..where((ri) => ri.saleItemId.isIn(saleItemIds)))
+        .get();
+
+    final Map<int, int> result = {};
+    for (final item in allRefundItems) {
+      result[item.saleItemId] = (result[item.saleItemId] ?? 0) + item.quantity;
+    }
+    return result;
+  }
+
   Stream<List<Refund>> watchTodayRefunds() {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
@@ -149,6 +175,18 @@ class CustomersDao extends DatabaseAccessor<AppDatabase> with _$CustomersDaoMixi
           ..where((r) => r.createdAt.isBiggerOrEqualValue(startOfDay))
           ..orderBy([(r) => OrderingTerm.desc(r.createdAt)]))
         .watch();
+  }
+
+  /// B-UAT: 기간별 환불 총액 스트림 (partial + full 포함)
+  /// dashboard 총 매출 계산에서 환불 금액 차감에 사용
+  Stream<double> watchTotalRefunds(DateTime from, DateTime to) {
+    final query = selectOnly(refunds)
+      ..addColumns([refunds.refundAmount.sum()])
+      ..where(
+        refunds.createdAt.isBiggerOrEqualValue(from) &
+            refunds.createdAt.isSmallerOrEqualValue(to),
+      );
+    return query.watch().map((rows) => rows.first.read(refunds.refundAmount.sum()) ?? 0);
   }
 
   // ─── 로열티 프로그램 (v5) ─────────────────────────────

@@ -125,11 +125,11 @@ class _DashboardScreenContent extends ConsumerWidget {
                     children: [
                       Expanded(child: _totalSalesCard(ref, l10n, priceFormatter)),
                       const SizedBox(width: 10),
+                      Expanded(child: _netSalesCard(ref, l10n, priceFormatter)),
+                      const SizedBox(width: 10),
                       Expanded(child: _orderCountCard(ref, l10n)),
                       const SizedBox(width: 10),
                       Expanded(child: _avgOrderCard(ref, l10n, priceFormatter)),
-                      const SizedBox(width: 10),
-                      Expanded(child: _InventoryValueCompactCard()),
                     ],
                   )
                 else ...[
@@ -137,15 +137,15 @@ class _DashboardScreenContent extends ConsumerWidget {
                     children: [
                       Expanded(child: _totalSalesCard(ref, l10n, priceFormatter)),
                       const SizedBox(width: 10),
-                      Expanded(child: _orderCountCard(ref, l10n)),
+                      Expanded(child: _netSalesCard(ref, l10n, priceFormatter)),
                     ],
                   ),
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Expanded(child: _avgOrderCard(ref, l10n, priceFormatter)),
+                      Expanded(child: _orderCountCard(ref, l10n)),
                       const SizedBox(width: 10),
-                      const Expanded(child: SizedBox()),
+                      Expanded(child: _avgOrderCard(ref, l10n, priceFormatter)),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -267,6 +267,19 @@ Widget _totalSalesCard(WidgetRef ref, AppLocalizations l10n, priceFormatter) {
     color: AppTheme.primary,
     bgColor: const Color(0xFFE8F0FE),
     valueWidget: _asyncDoubleWidget(async, AppTheme.primary, (v) => priceFormatter.format(v), l10n),
+  );
+}
+
+// ── 순매출 카드 (환불 차감) B-122-A ────────────────
+Widget _netSalesCard(WidgetRef ref, AppLocalizations l10n, priceFormatter) {
+  // netSalesProvider는 Provider<AsyncValue<double>> — 환불 후 자동 재계산
+  final asyncValue = ref.watch(netSalesProvider);
+  return _statCardLayout(
+    title: 'Net Sales',
+    icon: Icons.trending_up,
+    color: AppTheme.success,
+    bgColor: const Color(0xFFE6FAF2),
+    valueWidget: _asyncDoubleWidget(asyncValue, AppTheme.success, (v) => priceFormatter.format(v), l10n),
   );
 }
 

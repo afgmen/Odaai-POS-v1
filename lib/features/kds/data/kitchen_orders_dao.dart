@@ -52,10 +52,15 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
-  /// Sale ID로 주문 조회
+  /// Sale ID로 주문 조회 (단건)
   Future<KitchenOrder?> getOrderBySaleId(int saleId) {
     return (select(kitchenOrders)..where((t) => t.saleId.equals(saleId)))
         .getSingleOrNull();
+  }
+
+  /// Sale ID로 모든 주문 조회 (B-121: 복수 조회용)
+  Future<List<KitchenOrder>> getOrdersBySaleId(int saleId) {
+    return (select(kitchenOrders)..where((t) => t.saleId.equals(saleId))).get();
   }
 
   // ============================================================

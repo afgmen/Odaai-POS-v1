@@ -50,18 +50,21 @@ final totalSalesProvider = StreamProvider<double>((ref) {
   return dao.watchTotalSales(range.from, range.to);
 });
 
-// ── B-UAT: 기간별 순 매출 (환불 차감) — StreamProvider ──
-// 환불 후 총 매출이 재계산되어 표시됨
-final netSalesProvider = StreamProvider<double>((ref) {
+// ── B-UAT / B-122: 기간별 순 매출 (환불 차감) — 반응형 Provider ──
+// B-122 수정: Stream.value() 대신 ref.watch 기반 파생값으로 변경
+// totalSalesProvider, refundTotalProvider 둘 다 watch하므로
+// 환불 후 자동으로 재계산됨
+final netSalesProvider = Provider<AsyncValue<double>>((ref) {
   final filter = ref.watch(dashboardFilterProvider);
   final range = _dateRange(filter);
 
   final totalAsync = ref.watch(totalSalesProvider);
   final refundAsync = ref.watch(refundTotalProvider(range));
 
-  final total = totalAsync.valueOrNull ?? 0;
-  final refunded = refundAsync.valueOrNull ?? 0;
-  return Stream.value((total - refunded).clamp(0, double.infinity));
+  return totalAsync.whenData((total) {
+    final refunded = refundAsync.valueOrNull ?? 0;
+    return (total - refunded).clamp(0, double.infinity);
+  });
 });
 
 // ── B-103: 기간별 주문 수 — StreamProvider ─────────

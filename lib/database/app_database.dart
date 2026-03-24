@@ -154,7 +154,7 @@ class AppDatabase extends _$AppDatabase {
   late final dailyClosingDao = DailyClosingDao(this);
 
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 25;
 
   @override
   MigrationStrategy get migration {
@@ -314,6 +314,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 24) {
           // v23 → v24: B-118 — 제품별 VAT 세율 (0/5/8/10%)
           await _safeAddColumn('products', 'vat_rate', 'REAL NOT NULL DEFAULT 10.0');
+        }
+        if (from < 25) {
+          // v24 → v25: B-120 — KitchenOrders cancellationReason 컬럼 추가
+          await _safeAddColumn('kitchen_orders', 'cancellation_reason', 'TEXT NULL');
         }
         }
       },

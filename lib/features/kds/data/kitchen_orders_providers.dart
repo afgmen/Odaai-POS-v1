@@ -88,9 +88,6 @@ final averagePrepTimeProvider = FutureProvider<double>((ref) {
   return repository.getAveragePrepTimeInMinutes();
 });
 
-/// 상태별 주문 개수
-final orderCountByStatusProvider =
-    FutureProvider<Map<String, int>>((ref) {
-  final repository = ref.watch(kitchenOrdersRepositoryProvider);
-  return repository.getOrderCountByStatus();
-});
+// B-123: orderCountByStatusProvider는 kds_screen_provider.dart에 StreamProvider로 정의됨
+// 중복 정의 제거 — 해당 파일에서 import하여 사용할 것
+// (구 FutureProvider<Map<String, int>> 버전은 실시간 갱신이 안 되어 제거)

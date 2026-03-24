@@ -934,6 +934,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               'notes': null,
             }).toList(),
           );
+          // B-124: saleId 포함하여 delivery_orders 테이블에 저장
           final deliveryOrderCompanion = DeliveryOrdersCompanion.insert(
             platformOrderId: createdSale.saleNumber,
             platform: platform,
@@ -952,12 +953,13 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
             specialInstructions: Value(_specialInstructionsController.text.trim().isNotEmpty
                 ? _specialInstructionsController.text.trim()
                 : null),
+            saleId: Value(createdSale.id),
           );
           await db.deliveryOrdersDao.insertOrder(deliveryOrderCompanion);
-          debugPrint('[Checkout] Delivery order created for sale ${createdSale.saleNumber}');
-        } catch (e) {
-          // 배달 주문 기록 실패해도 결제 완료 처리 계속
-          debugPrint('[Checkout] Failed to create delivery order record: $e');
+          debugPrint('[Checkout] Delivery order created for sale ${createdSale.saleNumber} (saleId=${createdSale.id})');
+        } catch (e, st) {
+          // 배달 주문 기록 실패해도 결제 완료 처리 계속 (에러는 로깅)
+          debugPrint('[Checkout] Failed to create delivery order record: $e\n$st');
         }
       }
 

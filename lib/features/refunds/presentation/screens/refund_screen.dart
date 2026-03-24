@@ -454,6 +454,10 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
     }
     await dao.insertRefundItems(refundItemsList);
 
+    // B-125: 부분 환불 후 Sale 상태를 'refunded'로 업데이트
+    final db = ref.read(databaseProvider);
+    await db.salesDao.updateSaleStatus(_foundSale!.id, 'refunded');
+
     if (mounted) {
       // B-UAT: Sales 목록 + 대시보드 Total Sales 즉시 갱신
       ref.invalidate(salesListProvider);
@@ -469,6 +473,8 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
       setState(() {
         _refundQuantities.clear();
         _alreadyRefundedQty = updatedRefundedQty;
+        // B-125: UI에서도 상태 즉시 반영
+        _foundSale = _foundSale!.copyWith(status: 'refunded');
       });
     }
   }

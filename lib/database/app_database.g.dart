@@ -15467,6 +15467,17 @@ class $KitchenOrdersTable extends KitchenOrders
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _cancellationReasonMeta =
+      const VerificationMeta('cancellationReason');
+  @override
+  late final GeneratedColumn<String> cancellationReason =
+      GeneratedColumn<String>(
+        'cancellation_reason',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _startedAtMeta = const VerificationMeta(
     'startedAt',
   );
@@ -15544,6 +15555,7 @@ class $KitchenOrdersTable extends KitchenOrders
     orderType,
     specialInstructions,
     tableNumber,
+    cancellationReason,
     startedAt,
     readyAt,
     servedAt,
@@ -15607,6 +15619,15 @@ class $KitchenOrdersTable extends KitchenOrders
         tableNumber.isAcceptableOrUnknown(
           data['table_number']!,
           _tableNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cancellation_reason')) {
+      context.handle(
+        _cancellationReasonMeta,
+        cancellationReason.isAcceptableOrUnknown(
+          data['cancellation_reason']!,
+          _cancellationReasonMeta,
         ),
       );
     }
@@ -15686,6 +15707,10 @@ class $KitchenOrdersTable extends KitchenOrders
         DriftSqlType.string,
         data['${effectivePrefix}table_number'],
       ),
+      cancellationReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cancellation_reason'],
+      ),
       startedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}started_at'],
@@ -15729,6 +15754,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
   final String orderType;
   final String? specialInstructions;
   final String? tableNumber;
+  final String? cancellationReason;
   final DateTime? startedAt;
   final DateTime? readyAt;
   final DateTime? servedAt;
@@ -15743,6 +15769,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     required this.orderType,
     this.specialInstructions,
     this.tableNumber,
+    this.cancellationReason,
     this.startedAt,
     this.readyAt,
     this.servedAt,
@@ -15763,6 +15790,9 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     }
     if (!nullToAbsent || tableNumber != null) {
       map['table_number'] = Variable<String>(tableNumber);
+    }
+    if (!nullToAbsent || cancellationReason != null) {
+      map['cancellation_reason'] = Variable<String>(cancellationReason);
     }
     if (!nullToAbsent || startedAt != null) {
       map['started_at'] = Variable<DateTime>(startedAt);
@@ -15794,6 +15824,9 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
       tableNumber: tableNumber == null && nullToAbsent
           ? const Value.absent()
           : Value(tableNumber),
+      cancellationReason: cancellationReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancellationReason),
       startedAt: startedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(startedAt),
@@ -15826,6 +15859,9 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
         json['specialInstructions'],
       ),
       tableNumber: serializer.fromJson<String?>(json['tableNumber']),
+      cancellationReason: serializer.fromJson<String?>(
+        json['cancellationReason'],
+      ),
       startedAt: serializer.fromJson<DateTime?>(json['startedAt']),
       readyAt: serializer.fromJson<DateTime?>(json['readyAt']),
       servedAt: serializer.fromJson<DateTime?>(json['servedAt']),
@@ -15845,6 +15881,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
       'orderType': serializer.toJson<String>(orderType),
       'specialInstructions': serializer.toJson<String?>(specialInstructions),
       'tableNumber': serializer.toJson<String?>(tableNumber),
+      'cancellationReason': serializer.toJson<String?>(cancellationReason),
       'startedAt': serializer.toJson<DateTime?>(startedAt),
       'readyAt': serializer.toJson<DateTime?>(readyAt),
       'servedAt': serializer.toJson<DateTime?>(servedAt),
@@ -15862,6 +15899,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     String? orderType,
     Value<String?> specialInstructions = const Value.absent(),
     Value<String?> tableNumber = const Value.absent(),
+    Value<String?> cancellationReason = const Value.absent(),
     Value<DateTime?> startedAt = const Value.absent(),
     Value<DateTime?> readyAt = const Value.absent(),
     Value<DateTime?> servedAt = const Value.absent(),
@@ -15878,6 +15916,9 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
         ? specialInstructions.value
         : this.specialInstructions,
     tableNumber: tableNumber.present ? tableNumber.value : this.tableNumber,
+    cancellationReason: cancellationReason.present
+        ? cancellationReason.value
+        : this.cancellationReason,
     startedAt: startedAt.present ? startedAt.value : this.startedAt,
     readyAt: readyAt.present ? readyAt.value : this.readyAt,
     servedAt: servedAt.present ? servedAt.value : this.servedAt,
@@ -15898,6 +15939,9 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
       tableNumber: data.tableNumber.present
           ? data.tableNumber.value
           : this.tableNumber,
+      cancellationReason: data.cancellationReason.present
+          ? data.cancellationReason.value
+          : this.cancellationReason,
       startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
       readyAt: data.readyAt.present ? data.readyAt.value : this.readyAt,
       servedAt: data.servedAt.present ? data.servedAt.value : this.servedAt,
@@ -15919,6 +15963,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
           ..write('orderType: $orderType, ')
           ..write('specialInstructions: $specialInstructions, ')
           ..write('tableNumber: $tableNumber, ')
+          ..write('cancellationReason: $cancellationReason, ')
           ..write('startedAt: $startedAt, ')
           ..write('readyAt: $readyAt, ')
           ..write('servedAt: $servedAt, ')
@@ -15938,6 +15983,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
     orderType,
     specialInstructions,
     tableNumber,
+    cancellationReason,
     startedAt,
     readyAt,
     servedAt,
@@ -15956,6 +16002,7 @@ class KitchenOrder extends DataClass implements Insertable<KitchenOrder> {
           other.orderType == this.orderType &&
           other.specialInstructions == this.specialInstructions &&
           other.tableNumber == this.tableNumber &&
+          other.cancellationReason == this.cancellationReason &&
           other.startedAt == this.startedAt &&
           other.readyAt == this.readyAt &&
           other.servedAt == this.servedAt &&
@@ -15972,6 +16019,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
   final Value<String> orderType;
   final Value<String?> specialInstructions;
   final Value<String?> tableNumber;
+  final Value<String?> cancellationReason;
   final Value<DateTime?> startedAt;
   final Value<DateTime?> readyAt;
   final Value<DateTime?> servedAt;
@@ -15986,6 +16034,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     this.orderType = const Value.absent(),
     this.specialInstructions = const Value.absent(),
     this.tableNumber = const Value.absent(),
+    this.cancellationReason = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.readyAt = const Value.absent(),
     this.servedAt = const Value.absent(),
@@ -16001,6 +16050,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     this.orderType = const Value.absent(),
     this.specialInstructions = const Value.absent(),
     this.tableNumber = const Value.absent(),
+    this.cancellationReason = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.readyAt = const Value.absent(),
     this.servedAt = const Value.absent(),
@@ -16016,6 +16066,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     Expression<String>? orderType,
     Expression<String>? specialInstructions,
     Expression<String>? tableNumber,
+    Expression<String>? cancellationReason,
     Expression<DateTime>? startedAt,
     Expression<DateTime>? readyAt,
     Expression<DateTime>? servedAt,
@@ -16032,6 +16083,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
       if (specialInstructions != null)
         'special_instructions': specialInstructions,
       if (tableNumber != null) 'table_number': tableNumber,
+      if (cancellationReason != null) 'cancellation_reason': cancellationReason,
       if (startedAt != null) 'started_at': startedAt,
       if (readyAt != null) 'ready_at': readyAt,
       if (servedAt != null) 'served_at': servedAt,
@@ -16049,6 +16101,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     Value<String>? orderType,
     Value<String?>? specialInstructions,
     Value<String?>? tableNumber,
+    Value<String?>? cancellationReason,
     Value<DateTime?>? startedAt,
     Value<DateTime?>? readyAt,
     Value<DateTime?>? servedAt,
@@ -16064,6 +16117,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
       orderType: orderType ?? this.orderType,
       specialInstructions: specialInstructions ?? this.specialInstructions,
       tableNumber: tableNumber ?? this.tableNumber,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
       startedAt: startedAt ?? this.startedAt,
       readyAt: readyAt ?? this.readyAt,
       servedAt: servedAt ?? this.servedAt,
@@ -16097,6 +16151,9 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
     if (tableNumber.present) {
       map['table_number'] = Variable<String>(tableNumber.value);
     }
+    if (cancellationReason.present) {
+      map['cancellation_reason'] = Variable<String>(cancellationReason.value);
+    }
     if (startedAt.present) {
       map['started_at'] = Variable<DateTime>(startedAt.value);
     }
@@ -16128,6 +16185,7 @@ class KitchenOrdersCompanion extends UpdateCompanion<KitchenOrder> {
           ..write('orderType: $orderType, ')
           ..write('specialInstructions: $specialInstructions, ')
           ..write('tableNumber: $tableNumber, ')
+          ..write('cancellationReason: $cancellationReason, ')
           ..write('startedAt: $startedAt, ')
           ..write('readyAt: $readyAt, ')
           ..write('servedAt: $servedAt, ')
@@ -35870,6 +35928,7 @@ typedef $$KitchenOrdersTableCreateCompanionBuilder =
       Value<String> orderType,
       Value<String?> specialInstructions,
       Value<String?> tableNumber,
+      Value<String?> cancellationReason,
       Value<DateTime?> startedAt,
       Value<DateTime?> readyAt,
       Value<DateTime?> servedAt,
@@ -35886,6 +35945,7 @@ typedef $$KitchenOrdersTableUpdateCompanionBuilder =
       Value<String> orderType,
       Value<String?> specialInstructions,
       Value<String?> tableNumber,
+      Value<String?> cancellationReason,
       Value<DateTime?> startedAt,
       Value<DateTime?> readyAt,
       Value<DateTime?> servedAt,
@@ -35978,6 +36038,11 @@ class $$KitchenOrdersTableFilterComposer
 
   ColumnFilters<String> get tableNumber => $composableBuilder(
     column: $table.tableNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -36099,6 +36164,11 @@ class $$KitchenOrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get startedAt => $composableBuilder(
     column: $table.startedAt,
     builder: (column) => ColumnOrderings(column),
@@ -36181,6 +36251,11 @@ class $$KitchenOrdersTableAnnotationComposer
 
   GeneratedColumn<String> get tableNumber => $composableBuilder(
     column: $table.tableNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
     builder: (column) => column,
   );
 
@@ -36288,6 +36363,7 @@ class $$KitchenOrdersTableTableManager
                 Value<String> orderType = const Value.absent(),
                 Value<String?> specialInstructions = const Value.absent(),
                 Value<String?> tableNumber = const Value.absent(),
+                Value<String?> cancellationReason = const Value.absent(),
                 Value<DateTime?> startedAt = const Value.absent(),
                 Value<DateTime?> readyAt = const Value.absent(),
                 Value<DateTime?> servedAt = const Value.absent(),
@@ -36302,6 +36378,7 @@ class $$KitchenOrdersTableTableManager
                 orderType: orderType,
                 specialInstructions: specialInstructions,
                 tableNumber: tableNumber,
+                cancellationReason: cancellationReason,
                 startedAt: startedAt,
                 readyAt: readyAt,
                 servedAt: servedAt,
@@ -36318,6 +36395,7 @@ class $$KitchenOrdersTableTableManager
                 Value<String> orderType = const Value.absent(),
                 Value<String?> specialInstructions = const Value.absent(),
                 Value<String?> tableNumber = const Value.absent(),
+                Value<String?> cancellationReason = const Value.absent(),
                 Value<DateTime?> startedAt = const Value.absent(),
                 Value<DateTime?> readyAt = const Value.absent(),
                 Value<DateTime?> servedAt = const Value.absent(),
@@ -36332,6 +36410,7 @@ class $$KitchenOrdersTableTableManager
                 orderType: orderType,
                 specialInstructions: specialInstructions,
                 tableNumber: tableNumber,
+                cancellationReason: cancellationReason,
                 startedAt: startedAt,
                 readyAt: readyAt,
                 servedAt: servedAt,

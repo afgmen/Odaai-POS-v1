@@ -13,6 +13,7 @@ import '../../providers/auto_promotion_provider.dart';
 import '../../../customers/providers/customers_provider.dart';
 import '../../../promotions/providers/promotions_provider.dart'; // B-113
 import '../modals/cancel_reason_modal.dart';
+import '../../../kds/data/kitchen_cancellation_provider.dart';
 
 /// 장바구니 패널 (하단 또는 우측 사이드)
 class CartPanel extends ConsumerWidget {
@@ -219,6 +220,16 @@ class CartPanel extends ConsumerWidget {
             ));
             // B-UAT: 관련 kitchen order 취소 상태 업데이트 추가
             await db.kitchenOrdersDao.cancelOrdersBySaleId(existingSaleId!, cancellationReason: reason);
+            // B-121: POS 취소 시 Floor Plan SnackBar 알림 전달
+            final kitchenOrders = await db.kitchenOrdersDao.getOrdersBySaleId(existingSaleId!);
+            for (final ko in kitchenOrders) {
+              ref.read(kitchenCancellationProvider.notifier).addCancellation(
+                orderId: ko.id,
+                saleId: existingSaleId,
+                tableNumber: ko.tableNumber,
+                reason: reason,
+              );
+            }
             ref.read(cartProvider.notifier).clear();
           },
         ),

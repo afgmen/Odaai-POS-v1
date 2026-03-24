@@ -22,6 +22,9 @@ class KitchenOrders extends Table {
   TextColumn get specialInstructions => text().nullable()();
   TextColumn get tableNumber => text().nullable()(); // 테이블 번호
 
+  // Cancellation
+  TextColumn get cancellationReason => text().nullable()(); // 취소 사유
+
   // Timestamps
   DateTimeColumn get startedAt => dateTime().nullable()(); // 조리 시작
   DateTimeColumn get readyAt => dateTime().nullable()();   // 완료

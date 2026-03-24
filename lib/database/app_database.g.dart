@@ -21209,6 +21209,18 @@ class $DeliveryOrdersTable extends DeliveryOrders
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _saleIdMeta = const VerificationMeta('saleId');
+  @override
+  late final GeneratedColumn<int> saleId = GeneratedColumn<int>(
+    'sale_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES sales (id) ON DELETE SET NULL',
+    ),
+  );
   static const VerificationMeta _platformOrderIdMeta = const VerificationMeta(
     'platformOrderId',
   );
@@ -21370,6 +21382,7 @@ class $DeliveryOrdersTable extends DeliveryOrders
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    saleId,
     platformOrderId,
     platform,
     status,
@@ -21399,6 +21412,12 @@ class $DeliveryOrdersTable extends DeliveryOrders
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('sale_id')) {
+      context.handle(
+        _saleIdMeta,
+        saleId.isAcceptableOrUnknown(data['sale_id']!, _saleIdMeta),
+      );
     }
     if (data.containsKey('platform_order_id')) {
       context.handle(
@@ -21534,6 +21553,10 @@ class $DeliveryOrdersTable extends DeliveryOrders
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      saleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sale_id'],
+      ),
       platformOrderId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}platform_order_id'],
@@ -21602,6 +21625,9 @@ class $DeliveryOrdersTable extends DeliveryOrders
 class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
   final int id;
 
+  /// B-124: POS 결제 시 생성된 Sale과 연결 (nullable — 외부 플랫폼 주문은 null)
+  final int? saleId;
+
   /// Platform's own order identifier (e.g. GrabFood order ID).
   final String platformOrderId;
 
@@ -21630,6 +21656,7 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
   final DateTime updatedAt;
   const DeliveryOrder({
     required this.id,
+    this.saleId,
     required this.platformOrderId,
     required this.platform,
     required this.status,
@@ -21649,6 +21676,9 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    if (!nullToAbsent || saleId != null) {
+      map['sale_id'] = Variable<int>(saleId);
+    }
     map['platform_order_id'] = Variable<String>(platformOrderId);
     map['platform'] = Variable<String>(platform);
     map['status'] = Variable<String>(status);
@@ -21681,6 +21711,9 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
   DeliveryOrdersCompanion toCompanion(bool nullToAbsent) {
     return DeliveryOrdersCompanion(
       id: Value(id),
+      saleId: saleId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(saleId),
       platformOrderId: Value(platformOrderId),
       platform: Value(platform),
       status: Value(status),
@@ -21717,6 +21750,7 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return DeliveryOrder(
       id: serializer.fromJson<int>(json['id']),
+      saleId: serializer.fromJson<int?>(json['saleId']),
       platformOrderId: serializer.fromJson<String>(json['platformOrderId']),
       platform: serializer.fromJson<String>(json['platform']),
       status: serializer.fromJson<String>(json['status']),
@@ -21742,6 +21776,7 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'saleId': serializer.toJson<int?>(saleId),
       'platformOrderId': serializer.toJson<String>(platformOrderId),
       'platform': serializer.toJson<String>(platform),
       'status': serializer.toJson<String>(status),
@@ -21761,6 +21796,7 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
 
   DeliveryOrder copyWith({
     int? id,
+    Value<int?> saleId = const Value.absent(),
     String? platformOrderId,
     String? platform,
     String? status,
@@ -21777,6 +21813,7 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
     DateTime? updatedAt,
   }) => DeliveryOrder(
     id: id ?? this.id,
+    saleId: saleId.present ? saleId.value : this.saleId,
     platformOrderId: platformOrderId ?? this.platformOrderId,
     platform: platform ?? this.platform,
     status: status ?? this.status,
@@ -21807,6 +21844,7 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
   DeliveryOrder copyWithCompanion(DeliveryOrdersCompanion data) {
     return DeliveryOrder(
       id: data.id.present ? data.id.value : this.id,
+      saleId: data.saleId.present ? data.saleId.value : this.saleId,
       platformOrderId: data.platformOrderId.present
           ? data.platformOrderId.value
           : this.platformOrderId,
@@ -21846,6 +21884,7 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
   String toString() {
     return (StringBuffer('DeliveryOrder(')
           ..write('id: $id, ')
+          ..write('saleId: $saleId, ')
           ..write('platformOrderId: $platformOrderId, ')
           ..write('platform: $platform, ')
           ..write('status: $status, ')
@@ -21867,6 +21906,7 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
   @override
   int get hashCode => Object.hash(
     id,
+    saleId,
     platformOrderId,
     platform,
     status,
@@ -21887,6 +21927,7 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
       identical(this, other) ||
       (other is DeliveryOrder &&
           other.id == this.id &&
+          other.saleId == this.saleId &&
           other.platformOrderId == this.platformOrderId &&
           other.platform == this.platform &&
           other.status == this.status &&
@@ -21905,6 +21946,7 @@ class DeliveryOrder extends DataClass implements Insertable<DeliveryOrder> {
 
 class DeliveryOrdersCompanion extends UpdateCompanion<DeliveryOrder> {
   final Value<int> id;
+  final Value<int?> saleId;
   final Value<String> platformOrderId;
   final Value<String> platform;
   final Value<String> status;
@@ -21921,6 +21963,7 @@ class DeliveryOrdersCompanion extends UpdateCompanion<DeliveryOrder> {
   final Value<DateTime> updatedAt;
   const DeliveryOrdersCompanion({
     this.id = const Value.absent(),
+    this.saleId = const Value.absent(),
     this.platformOrderId = const Value.absent(),
     this.platform = const Value.absent(),
     this.status = const Value.absent(),
@@ -21938,6 +21981,7 @@ class DeliveryOrdersCompanion extends UpdateCompanion<DeliveryOrder> {
   });
   DeliveryOrdersCompanion.insert({
     this.id = const Value.absent(),
+    this.saleId = const Value.absent(),
     required String platformOrderId,
     required String platform,
     this.status = const Value.absent(),
@@ -21959,6 +22003,7 @@ class DeliveryOrdersCompanion extends UpdateCompanion<DeliveryOrder> {
        totalAmount = Value(totalAmount);
   static Insertable<DeliveryOrder> custom({
     Expression<int>? id,
+    Expression<int>? saleId,
     Expression<String>? platformOrderId,
     Expression<String>? platform,
     Expression<String>? status,
@@ -21976,6 +22021,7 @@ class DeliveryOrdersCompanion extends UpdateCompanion<DeliveryOrder> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (saleId != null) 'sale_id': saleId,
       if (platformOrderId != null) 'platform_order_id': platformOrderId,
       if (platform != null) 'platform': platform,
       if (status != null) 'status': status,
@@ -21997,6 +22043,7 @@ class DeliveryOrdersCompanion extends UpdateCompanion<DeliveryOrder> {
 
   DeliveryOrdersCompanion copyWith({
     Value<int>? id,
+    Value<int?>? saleId,
     Value<String>? platformOrderId,
     Value<String>? platform,
     Value<String>? status,
@@ -22014,6 +22061,7 @@ class DeliveryOrdersCompanion extends UpdateCompanion<DeliveryOrder> {
   }) {
     return DeliveryOrdersCompanion(
       id: id ?? this.id,
+      saleId: saleId ?? this.saleId,
       platformOrderId: platformOrderId ?? this.platformOrderId,
       platform: platform ?? this.platform,
       status: status ?? this.status,
@@ -22036,6 +22084,9 @@ class DeliveryOrdersCompanion extends UpdateCompanion<DeliveryOrder> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (saleId.present) {
+      map['sale_id'] = Variable<int>(saleId.value);
     }
     if (platformOrderId.present) {
       map['platform_order_id'] = Variable<String>(platformOrderId.value);
@@ -22088,6 +22139,7 @@ class DeliveryOrdersCompanion extends UpdateCompanion<DeliveryOrder> {
   String toString() {
     return (StringBuffer('DeliveryOrdersCompanion(')
           ..write('id: $id, ')
+          ..write('saleId: $saleId, ')
           ..write('platformOrderId: $platformOrderId, ')
           ..write('platform: $platform, ')
           ..write('status: $status, ')
@@ -25421,6 +25473,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       ),
       result: [TableUpdate('daily_closings', kind: UpdateKind.update)],
     ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'sales',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('delivery_orders', kind: UpdateKind.update)],
+    ),
   ]);
 }
 
@@ -27314,6 +27373,24 @@ final class $$SalesTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$DeliveryOrdersTable, List<DeliveryOrder>>
+  _deliveryOrdersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.deliveryOrders,
+    aliasName: $_aliasNameGenerator(db.sales.id, db.deliveryOrders.saleId),
+  );
+
+  $$DeliveryOrdersTableProcessedTableManager get deliveryOrdersRefs {
+    final manager = $$DeliveryOrdersTableTableManager(
+      $_db,
+      $_db.deliveryOrders,
+    ).filter((f) => f.saleId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_deliveryOrdersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$SalesTableFilterComposer extends Composer<_$AppDatabase, $SalesTable> {
@@ -27500,6 +27577,31 @@ class $$SalesTableFilterComposer extends Composer<_$AppDatabase, $SalesTable> {
           }) => $$KitchenOrdersTableFilterComposer(
             $db: $db,
             $table: $db.kitchenOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> deliveryOrdersRefs(
+    Expression<bool> Function($$DeliveryOrdersTableFilterComposer f) f,
+  ) {
+    final $$DeliveryOrdersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.deliveryOrders,
+      getReferencedColumn: (t) => t.saleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DeliveryOrdersTableFilterComposer(
+            $db: $db,
+            $table: $db.deliveryOrders,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -27800,6 +27902,31 @@ class $$SalesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> deliveryOrdersRefs<T extends Object>(
+    Expression<T> Function($$DeliveryOrdersTableAnnotationComposer a) f,
+  ) {
+    final $$DeliveryOrdersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.deliveryOrders,
+      getReferencedColumn: (t) => t.saleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DeliveryOrdersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.deliveryOrders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$SalesTableTableManager
@@ -27819,6 +27946,7 @@ class $$SalesTableTableManager
             bool saleItemsRefs,
             bool pointTransactionsRefs,
             bool kitchenOrdersRefs,
+            bool deliveryOrdersRefs,
           })
         > {
   $$SalesTableTableManager(_$AppDatabase db, $SalesTable table)
@@ -27939,6 +28067,7 @@ class $$SalesTableTableManager
                 saleItemsRefs = false,
                 pointTransactionsRefs = false,
                 kitchenOrdersRefs = false,
+                deliveryOrdersRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -27946,6 +28075,7 @@ class $$SalesTableTableManager
                     if (saleItemsRefs) db.saleItems,
                     if (pointTransactionsRefs) db.pointTransactions,
                     if (kitchenOrdersRefs) db.kitchenOrders,
+                    if (deliveryOrdersRefs) db.deliveryOrders,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -28009,6 +28139,27 @@ class $$SalesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (deliveryOrdersRefs)
+                        await $_getPrefetchedData<
+                          Sale,
+                          $SalesTable,
+                          DeliveryOrder
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SalesTableReferences
+                              ._deliveryOrdersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SalesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).deliveryOrdersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.saleId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -28033,6 +28184,7 @@ typedef $$SalesTableProcessedTableManager =
         bool saleItemsRefs,
         bool pointTransactionsRefs,
         bool kitchenOrdersRefs,
+        bool deliveryOrdersRefs,
       })
     >;
 typedef $$SaleItemsTableCreateCompanionBuilder =
@@ -39101,6 +39253,7 @@ typedef $$SystemSettingsTableProcessedTableManager =
 typedef $$DeliveryOrdersTableCreateCompanionBuilder =
     DeliveryOrdersCompanion Function({
       Value<int> id,
+      Value<int?> saleId,
       required String platformOrderId,
       required String platform,
       Value<String> status,
@@ -39119,6 +39272,7 @@ typedef $$DeliveryOrdersTableCreateCompanionBuilder =
 typedef $$DeliveryOrdersTableUpdateCompanionBuilder =
     DeliveryOrdersCompanion Function({
       Value<int> id,
+      Value<int?> saleId,
       Value<String> platformOrderId,
       Value<String> platform,
       Value<String> status,
@@ -39142,6 +39296,24 @@ final class $$DeliveryOrdersTableReferences
     super.$_table,
     super.$_typedResult,
   );
+
+  static $SalesTable _saleIdTable(_$AppDatabase db) => db.sales.createAlias(
+    $_aliasNameGenerator(db.deliveryOrders.saleId, db.sales.id),
+  );
+
+  $$SalesTableProcessedTableManager? get saleId {
+    final $_column = $_itemColumn<int>('sale_id');
+    if ($_column == null) return null;
+    final manager = $$SalesTableTableManager(
+      $_db,
+      $_db.sales,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_saleIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
 
   static $KitchenOrdersTable _kitchenOrderIdTable(_$AppDatabase db) =>
       db.kitchenOrders.createAlias(
@@ -39244,6 +39416,29 @@ class $$DeliveryOrdersTableFilterComposer
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  $$SalesTableFilterComposer get saleId {
+    final $$SalesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleId,
+      referencedTable: $db.sales,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SalesTableFilterComposer(
+            $db: $db,
+            $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 
   $$KitchenOrdersTableFilterComposer get kitchenOrderId {
     final $$KitchenOrdersTableFilterComposer composer = $composerBuilder(
@@ -39348,6 +39543,29 @@ class $$DeliveryOrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  $$SalesTableOrderingComposer get saleId {
+    final $$SalesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleId,
+      referencedTable: $db.sales,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SalesTableOrderingComposer(
+            $db: $db,
+            $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   $$KitchenOrdersTableOrderingComposer get kitchenOrderId {
     final $$KitchenOrdersTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -39439,6 +39657,29 @@ class $$DeliveryOrdersTableAnnotationComposer
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
+  $$SalesTableAnnotationComposer get saleId {
+    final $$SalesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleId,
+      referencedTable: $db.sales,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SalesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   $$KitchenOrdersTableAnnotationComposer get kitchenOrderId {
     final $$KitchenOrdersTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -39476,7 +39717,7 @@ class $$DeliveryOrdersTableTableManager
           $$DeliveryOrdersTableUpdateCompanionBuilder,
           (DeliveryOrder, $$DeliveryOrdersTableReferences),
           DeliveryOrder,
-          PrefetchHooks Function({bool kitchenOrderId})
+          PrefetchHooks Function({bool saleId, bool kitchenOrderId})
         > {
   $$DeliveryOrdersTableTableManager(
     _$AppDatabase db,
@@ -39494,6 +39735,7 @@ class $$DeliveryOrdersTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<int?> saleId = const Value.absent(),
                 Value<String> platformOrderId = const Value.absent(),
                 Value<String> platform = const Value.absent(),
                 Value<String> status = const Value.absent(),
@@ -39510,6 +39752,7 @@ class $$DeliveryOrdersTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => DeliveryOrdersCompanion(
                 id: id,
+                saleId: saleId,
                 platformOrderId: platformOrderId,
                 platform: platform,
                 status: status,
@@ -39528,6 +39771,7 @@ class $$DeliveryOrdersTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<int?> saleId = const Value.absent(),
                 required String platformOrderId,
                 required String platform,
                 Value<String> status = const Value.absent(),
@@ -39544,6 +39788,7 @@ class $$DeliveryOrdersTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => DeliveryOrdersCompanion.insert(
                 id: id,
+                saleId: saleId,
                 platformOrderId: platformOrderId,
                 platform: platform,
                 status: status,
@@ -39567,7 +39812,7 @@ class $$DeliveryOrdersTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({kitchenOrderId = false}) {
+          prefetchHooksCallback: ({saleId = false, kitchenOrderId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -39587,6 +39832,20 @@ class $$DeliveryOrdersTableTableManager
                       dynamic
                     >
                   >(state) {
+                    if (saleId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.saleId,
+                                referencedTable: $$DeliveryOrdersTableReferences
+                                    ._saleIdTable(db),
+                                referencedColumn:
+                                    $$DeliveryOrdersTableReferences
+                                        ._saleIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
                     if (kitchenOrderId) {
                       state =
                           state.withJoin(
@@ -39625,7 +39884,7 @@ typedef $$DeliveryOrdersTableProcessedTableManager =
       $$DeliveryOrdersTableUpdateCompanionBuilder,
       (DeliveryOrder, $$DeliveryOrdersTableReferences),
       DeliveryOrder,
-      PrefetchHooks Function({bool kitchenOrderId})
+      PrefetchHooks Function({bool saleId, bool kitchenOrderId})
     >;
 typedef $$FloorZonesTableCreateCompanionBuilder =
     FloorZonesCompanion Function({

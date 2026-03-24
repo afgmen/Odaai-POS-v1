@@ -1,10 +1,15 @@
 import 'package:drift/drift.dart';
 import 'kitchen_orders.dart';
+import 'sales.dart';
 
 /// Delivery orders table — stores orders received from delivery platforms
 /// (GrabFood, ShopeeFood, manual).
 class DeliveryOrders extends Table {
   IntColumn get id => integer().autoIncrement()();
+
+  /// B-124: POS 결제 시 생성된 Sale과 연결 (nullable — 외부 플랫폼 주문은 null)
+  IntColumn get saleId =>
+      integer().nullable().references(Sales, #id, onDelete: KeyAction.setNull)();
 
   /// Platform's own order identifier (e.g. GrabFood order ID).
   TextColumn get platformOrderId => text()();

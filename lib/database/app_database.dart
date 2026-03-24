@@ -154,7 +154,7 @@ class AppDatabase extends _$AppDatabase {
   late final dailyClosingDao = DailyClosingDao(this);
 
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 26;
 
   @override
   MigrationStrategy get migration {
@@ -319,6 +319,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 25) {
           // v24 → v25: B-120 — KitchenOrders cancellationReason 컬럼 추가
           await _safeAddColumn('kitchen_orders', 'cancellation_reason', 'TEXT NULL');
+        }
+        if (from < 26) {
+          // v25 → v26: B-124 — DeliveryOrders.saleId 컬럼 추가 (POS 결제 연결)
+          await _safeAddColumn('delivery_orders', 'sale_id', 'INTEGER NULL REFERENCES sales(id) ON DELETE SET NULL');
         }
       },
       beforeOpen: (details) async {

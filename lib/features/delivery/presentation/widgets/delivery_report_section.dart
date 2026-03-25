@@ -358,16 +358,19 @@ class _KpiCard extends StatelessWidget {
                 Text(title,
                     style: const TextStyle(
                         fontSize: 11, color: AppTheme.textSecondary)),
-                const SizedBox(height: 2),
+                // B-116: 텍스트 간격 개선
+                const SizedBox(height: 6),
                 Text(value,
                     style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.textPrimary)),
-                if (subtitle != null)
+                if (subtitle != null) ...[
+                  const SizedBox(height: 4),
                   Text(subtitle!,
                       style: const TextStyle(
                           fontSize: 11, color: Colors.grey)),
+                ],
               ],
             ),
           ),

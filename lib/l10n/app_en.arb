@@ -826,6 +826,25 @@
   "reservationSeated": "Seated",
   "reservationCancelled": "Cancelled",
   "reservationNoShow": "No Show",
+  "reservationCount": "{count} reservations",
+  "@reservationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reservationStatusCount": "{count} {status}",
+  "@reservationStatusCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
 
   "confirmed": "Confirmed",
   "pending": "Pending",

@@ -807,6 +807,8 @@
   "reservationSeated": "Đã ngồi",
   "reservationCancelled": "Đã hủy",
   "reservationNoShow": "Không đến",
+  "reservationCount": "{count} đặt chỗ",
+  "reservationStatusCount": "{count} {status}",
 
   "confirmed": "Đã xác nhận",
   "pending": "Chờ xử lý",

@@ -4178,6 +4178,18 @@ abstract class AppLocalizations {
   /// **'No Show'**
   String get reservationNoShow;
 
+  /// No description provided for @reservationCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reservations'**
+  String reservationCount(int count);
+
+  /// No description provided for @reservationStatusCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {status}'**
+  String reservationStatusCount(int count, String status);
+
   /// No description provided for @confirmed.
   ///
   /// In en, this message translates to:

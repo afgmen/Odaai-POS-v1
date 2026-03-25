@@ -259,15 +259,17 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                 for (final r in reservations) {
                   statusCounts[r.status] = (statusCounts[r.status] ?? 0) + 1;
                 }
+                final l10n = AppLocalizations.of(context)!;
                 final tooltipLines = statusCounts.entries.map((e) {
                   final status = ReservationStatus.fromString(e.key);
-                  return '${e.value}개 ${status.localizationKey}';
+                  final statusLabel = _getLocalizedStatusLabel(l10n, status);
+                  return l10n.reservationStatusCount(e.value, statusLabel);
                 }).join('\n');
                 
                 return Positioned(
                   bottom: 1,
                   child: Tooltip(
-                    message: '$count개 예약\n$tooltipLines',
+                    message: '${l10n.reservationCount(count)}\n$tooltipLines',
                     preferBelow: false,
                     child: Container(
                       width: 16,
@@ -639,17 +641,17 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              _LegendItem(
+              _legendItem(
                 color: ReservationStatus.confirmed.color,
                 label: l10n.reservationConfirmed,
               ),
               const SizedBox(width: 12),
-              _LegendItem(
+              _legendItem(
                 color: ReservationStatus.pending.color,
                 label: l10n.reservationPending,
               ),
               const SizedBox(width: 12),
-              _LegendItem(
+              _legendItem(
                 color: ReservationStatus.seated.color,
                 label: l10n.reservationSeated,
               ),
@@ -668,12 +670,12 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              _LegendItem(
+              _legendItem(
                 color: ReservationStatus.noShow.color,
                 label: l10n.reservationNoShow,
               ),
               const SizedBox(width: 12),
-              _LegendItem(
+              _legendItem(
                 color: ReservationStatus.cancelled.color,
                 label: l10n.reservationCancelled,
               ),
@@ -685,7 +687,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
   }
 
   /// 범례 아이템 (컴팩트 디자인)
-  Widget _LegendItem({required Color color, required String label}) {
+  Widget _legendItem({required Color color, required String label}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

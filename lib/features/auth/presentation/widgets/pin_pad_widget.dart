@@ -115,7 +115,7 @@ class PinPadWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           // Row 4: Backspace, 0, Submit
-          // B-114: 백스페이스 버튼 강조 표시
+          // B-114: 백스페이스 버튼 시각적 강조 (항상 표시)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -123,8 +123,9 @@ class PinPadWidget extends StatelessWidget {
                 context,
                 icon: Icons.backspace_rounded,
                 onPressed: pin.isNotEmpty ? _onBackspace : null,
-                color: pin.isNotEmpty ? Colors.orange.shade400 : Colors.grey.shade200,
-                highlighted: pin.isNotEmpty,
+                color: pin.isNotEmpty ? Colors.orange.shade500 : Colors.orange.shade100,
+                iconColor: pin.isNotEmpty ? Colors.white : Colors.orange.shade300,
+                highlighted: true,
               ),
               _buildNumberButton(context, '0'),
               _buildActionButton(
@@ -172,6 +173,7 @@ class PinPadWidget extends StatelessWidget {
     required IconData icon,
     required VoidCallback? onPressed,
     Color? color,
+    Color? iconColor,
     bool highlighted = false,
   }) {
     return InkWell(
@@ -188,15 +190,15 @@ class PinPadWidget extends StatelessWidget {
             width: highlighted ? 2 : 1,
           ),
           boxShadow: highlighted
-              ? [BoxShadow(color: (color ?? Colors.orange).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))]
+              ? [BoxShadow(color: (color ?? Colors.orange).withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))]
               : null,
         ),
         child: Center(
           child: Icon(
             icon,
             size: 28,
-            // B-114: 활성 시 흰색, 비활성 시 회색
-            color: onPressed != null ? Colors.white : Colors.grey.shade400,
+            // B-114: 커스텀 아이콘 색상 또는 활성/비활성 기본값
+            color: iconColor ?? (onPressed != null ? Colors.white : Colors.grey.shade400),
           ),
         ),
       ),

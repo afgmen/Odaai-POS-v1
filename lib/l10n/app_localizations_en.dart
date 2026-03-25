@@ -2209,6 +2209,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reservationNoShow => 'No Show';
 
   @override
+  String reservationCount(int count) {
+    return '$count reservations';
+  }
+
+  @override
+  String reservationStatusCount(int count, String status) {
+    return '$count $status';
+  }
+
+  @override
   String get confirmed => 'Confirmed';
 
   @override

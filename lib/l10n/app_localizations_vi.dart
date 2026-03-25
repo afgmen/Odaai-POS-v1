@@ -2216,6 +2216,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get reservationNoShow => 'Không đến';
 
   @override
+  String reservationCount(int count) {
+    return '$count đặt chỗ';
+  }
+
+  @override
+  String reservationStatusCount(int count, String status) {
+    return '$count $status';
+  }
+
+  @override
   String get confirmed => 'Đã xác nhận';
 
   @override

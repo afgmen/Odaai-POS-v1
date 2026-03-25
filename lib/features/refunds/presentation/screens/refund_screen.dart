@@ -475,6 +475,7 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
         _alreadyRefundedQty = updatedRefundedQty;
         // B-125: UI에서도 상태 즉시 반영
         _foundSale = _foundSale!.copyWith(status: 'refunded');
+        _recentSales = _recentSales.where((s) => s.id != _foundSale!.id).toList();
       });
     }
   }

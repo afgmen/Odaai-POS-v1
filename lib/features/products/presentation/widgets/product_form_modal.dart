@@ -10,12 +10,11 @@ import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
-import '../../../products/providers/products_management_provider.dart';
 import '../../domain/models/search_image_result.dart';
 import '../providers/image_providers.dart';
 import 'image_search_dialog.dart';
 import '../../providers/category_provider.dart';
-import '../../providers/products_management_provider.dart' show categoryNameMapProvider;
+import '../../providers/products_management_provider.dart';
 
 /// 상품 추가 / 수정 폼 모달
 /// existingProduct == null → 추가 모드
@@ -206,19 +205,20 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 suffixText: l10n.unit,
               ),
               // B-118: VAT 세율 선택
-              _sectionLabel('VAT Rate'),
+              _sectionLabel(l10n.vatRate),
               const SizedBox(height: 8),
               DropdownButtonFormField<double>(
                 value: _vatRate,
                 decoration: InputDecoration(
-                  hintText: 'Select VAT rate',
+                  hintText: l10n.vatRate,
                   suffixText: '%',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
                 items: _vatRates.map((rate) => DropdownMenuItem(
                   value: rate,
-                  child: Text('${rate.toInt()}%${rate == 10.0 ? ' (Standard)' : rate == 0.0 ? ' (Tax-free)' : ''}'),
+                  child: Text('${rate.toInt()}%'
+                    '${rate == 10.0 ? ' (${l10n.vatRateStandard})' : rate == 0.0 ? ' (${l10n.vatRateTaxFree})' : ''}'),
                 )).toList(),
                 onChanged: (val) => setState(() => _vatRate = val ?? 10.0),
               ),

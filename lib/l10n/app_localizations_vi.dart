@@ -2018,6 +2018,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get taxTotal => 'Tổng thuế';
 
   @override
+  String get vatRate => 'Thuế VAT';
+
+  @override
+  String get vatRateStandard => 'Tiêu chuẩn';
+
+  @override
+  String get vatRateTaxFree => 'Miễn thuế';
+
+  @override
   String get discountTotal => 'Tổng giảm giá';
 
   @override

@@ -2014,6 +2014,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taxTotal => 'Total Tax';
 
   @override
+  String get vatRate => 'VAT Rate';
+
+  @override
+  String get vatRateStandard => 'Standard';
+
+  @override
+  String get vatRateTaxFree => 'Tax-free';
+
+  @override
   String get discountTotal => 'Total Discount';
 
   @override

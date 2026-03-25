@@ -3824,6 +3824,24 @@ abstract class AppLocalizations {
   /// **'Total Tax'**
   String get taxTotal;
 
+  /// No description provided for @vatRate.
+  ///
+  /// In en, this message translates to:
+  /// **'VAT Rate'**
+  String get vatRate;
+
+  /// No description provided for @vatRateStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get vatRateStandard;
+
+  /// No description provided for @vatRateTaxFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax-free'**
+  String get vatRateTaxFree;
+
   /// No description provided for @discountTotal.
   ///
   /// In en, this message translates to:

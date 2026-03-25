@@ -171,7 +171,8 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                         leading: const Icon(Icons.receipt_long, size: 20, color: AppTheme.primary),
                         title: Text('#${sale.saleNumber}', style: const TextStyle(fontWeight: FontWeight.w600)),
                         subtitle: Text(
-                          '${sale.customerName ?? '-'} · ₫${currencyFormat.format(sale.total)}',
+                          '${sale.customerName ?? '-'} · ₫${currencyFormat.format(sale.total)}'
+                          ' · ${DateFormat('MM/dd HH:mm').format(sale.createdAt)}',
                           style: const TextStyle(fontSize: 12),
                         ),
                         trailing: const Icon(Icons.chevron_right, size: 18),

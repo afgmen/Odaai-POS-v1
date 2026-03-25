@@ -1393,6 +1393,28 @@ class $StockMovementsTable extends StockMovements
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _supplierNameMeta = const VerificationMeta(
+    'supplierName',
+  );
+  @override
+  late final GeneratedColumn<String> supplierName = GeneratedColumn<String>(
+    'supplier_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _supplierIdMeta = const VerificationMeta(
+    'supplierId',
+  );
+  @override
+  late final GeneratedColumn<int> supplierId = GeneratedColumn<int>(
+    'supplier_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1417,6 +1439,8 @@ class $StockMovementsTable extends StockMovements
     reason,
     employeeId,
     saleId,
+    supplierName,
+    supplierId,
     createdAt,
   ];
   @override
@@ -1506,6 +1530,21 @@ class $StockMovementsTable extends StockMovements
         saleId.isAcceptableOrUnknown(data['sale_id']!, _saleIdMeta),
       );
     }
+    if (data.containsKey('supplier_name')) {
+      context.handle(
+        _supplierNameMeta,
+        supplierName.isAcceptableOrUnknown(
+          data['supplier_name']!,
+          _supplierNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('supplier_id')) {
+      context.handle(
+        _supplierIdMeta,
+        supplierId.isAcceptableOrUnknown(data['supplier_id']!, _supplierIdMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1561,6 +1600,14 @@ class $StockMovementsTable extends StockMovements
         DriftSqlType.int,
         data['${effectivePrefix}sale_id'],
       ),
+      supplierName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}supplier_name'],
+      ),
+      supplierId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}supplier_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1585,6 +1632,8 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
   final String? reason;
   final int? employeeId;
   final int? saleId;
+  final String? supplierName;
+  final int? supplierId;
   final DateTime createdAt;
   const StockMovement({
     required this.id,
@@ -1597,6 +1646,8 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
     this.reason,
     this.employeeId,
     this.saleId,
+    this.supplierName,
+    this.supplierId,
     required this.createdAt,
   });
   @override
@@ -1617,6 +1668,12 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
     }
     if (!nullToAbsent || saleId != null) {
       map['sale_id'] = Variable<int>(saleId);
+    }
+    if (!nullToAbsent || supplierName != null) {
+      map['supplier_name'] = Variable<String>(supplierName);
+    }
+    if (!nullToAbsent || supplierId != null) {
+      map['supplier_id'] = Variable<int>(supplierId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -1640,6 +1697,12 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
       saleId: saleId == null && nullToAbsent
           ? const Value.absent()
           : Value(saleId),
+      supplierName: supplierName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supplierName),
+      supplierId: supplierId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supplierId),
       createdAt: Value(createdAt),
     );
   }
@@ -1660,6 +1723,8 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
       reason: serializer.fromJson<String?>(json['reason']),
       employeeId: serializer.fromJson<int?>(json['employeeId']),
       saleId: serializer.fromJson<int?>(json['saleId']),
+      supplierName: serializer.fromJson<String?>(json['supplierName']),
+      supplierId: serializer.fromJson<int?>(json['supplierId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1677,6 +1742,8 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
       'reason': serializer.toJson<String?>(reason),
       'employeeId': serializer.toJson<int?>(employeeId),
       'saleId': serializer.toJson<int?>(saleId),
+      'supplierName': serializer.toJson<String?>(supplierName),
+      'supplierId': serializer.toJson<int?>(supplierId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1692,6 +1759,8 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
     Value<String?> reason = const Value.absent(),
     Value<int?> employeeId = const Value.absent(),
     Value<int?> saleId = const Value.absent(),
+    Value<String?> supplierName = const Value.absent(),
+    Value<int?> supplierId = const Value.absent(),
     DateTime? createdAt,
   }) => StockMovement(
     id: id ?? this.id,
@@ -1704,6 +1773,8 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
     reason: reason.present ? reason.value : this.reason,
     employeeId: employeeId.present ? employeeId.value : this.employeeId,
     saleId: saleId.present ? saleId.value : this.saleId,
+    supplierName: supplierName.present ? supplierName.value : this.supplierName,
+    supplierId: supplierId.present ? supplierId.value : this.supplierId,
     createdAt: createdAt ?? this.createdAt,
   );
   StockMovement copyWithCompanion(StockMovementsCompanion data) {
@@ -1726,6 +1797,12 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
           ? data.employeeId.value
           : this.employeeId,
       saleId: data.saleId.present ? data.saleId.value : this.saleId,
+      supplierName: data.supplierName.present
+          ? data.supplierName.value
+          : this.supplierName,
+      supplierId: data.supplierId.present
+          ? data.supplierId.value
+          : this.supplierId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1743,6 +1820,8 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
           ..write('reason: $reason, ')
           ..write('employeeId: $employeeId, ')
           ..write('saleId: $saleId, ')
+          ..write('supplierName: $supplierName, ')
+          ..write('supplierId: $supplierId, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1760,6 +1839,8 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
     reason,
     employeeId,
     saleId,
+    supplierName,
+    supplierId,
     createdAt,
   );
   @override
@@ -1776,6 +1857,8 @@ class StockMovement extends DataClass implements Insertable<StockMovement> {
           other.reason == this.reason &&
           other.employeeId == this.employeeId &&
           other.saleId == this.saleId &&
+          other.supplierName == this.supplierName &&
+          other.supplierId == this.supplierId &&
           other.createdAt == this.createdAt);
 }
 
@@ -1790,6 +1873,8 @@ class StockMovementsCompanion extends UpdateCompanion<StockMovement> {
   final Value<String?> reason;
   final Value<int?> employeeId;
   final Value<int?> saleId;
+  final Value<String?> supplierName;
+  final Value<int?> supplierId;
   final Value<DateTime> createdAt;
   const StockMovementsCompanion({
     this.id = const Value.absent(),
@@ -1802,6 +1887,8 @@ class StockMovementsCompanion extends UpdateCompanion<StockMovement> {
     this.reason = const Value.absent(),
     this.employeeId = const Value.absent(),
     this.saleId = const Value.absent(),
+    this.supplierName = const Value.absent(),
+    this.supplierId = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   StockMovementsCompanion.insert({
@@ -1815,6 +1902,8 @@ class StockMovementsCompanion extends UpdateCompanion<StockMovement> {
     this.reason = const Value.absent(),
     this.employeeId = const Value.absent(),
     this.saleId = const Value.absent(),
+    this.supplierName = const Value.absent(),
+    this.supplierId = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : productId = Value(productId),
        productName = Value(productName),
@@ -1833,6 +1922,8 @@ class StockMovementsCompanion extends UpdateCompanion<StockMovement> {
     Expression<String>? reason,
     Expression<int>? employeeId,
     Expression<int>? saleId,
+    Expression<String>? supplierName,
+    Expression<int>? supplierId,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -1846,6 +1937,8 @@ class StockMovementsCompanion extends UpdateCompanion<StockMovement> {
       if (reason != null) 'reason': reason,
       if (employeeId != null) 'employee_id': employeeId,
       if (saleId != null) 'sale_id': saleId,
+      if (supplierName != null) 'supplier_name': supplierName,
+      if (supplierId != null) 'supplier_id': supplierId,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -1861,6 +1954,8 @@ class StockMovementsCompanion extends UpdateCompanion<StockMovement> {
     Value<String?>? reason,
     Value<int?>? employeeId,
     Value<int?>? saleId,
+    Value<String?>? supplierName,
+    Value<int?>? supplierId,
     Value<DateTime>? createdAt,
   }) {
     return StockMovementsCompanion(
@@ -1874,6 +1969,8 @@ class StockMovementsCompanion extends UpdateCompanion<StockMovement> {
       reason: reason ?? this.reason,
       employeeId: employeeId ?? this.employeeId,
       saleId: saleId ?? this.saleId,
+      supplierName: supplierName ?? this.supplierName,
+      supplierId: supplierId ?? this.supplierId,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -1911,6 +2008,12 @@ class StockMovementsCompanion extends UpdateCompanion<StockMovement> {
     if (saleId.present) {
       map['sale_id'] = Variable<int>(saleId.value);
     }
+    if (supplierName.present) {
+      map['supplier_name'] = Variable<String>(supplierName.value);
+    }
+    if (supplierId.present) {
+      map['supplier_id'] = Variable<int>(supplierId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1930,6 +2033,8 @@ class StockMovementsCompanion extends UpdateCompanion<StockMovement> {
           ..write('reason: $reason, ')
           ..write('employeeId: $employeeId, ')
           ..write('saleId: $saleId, ')
+          ..write('supplierName: $supplierName, ')
+          ..write('supplierId: $supplierId, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -26829,6 +26934,8 @@ typedef $$StockMovementsTableCreateCompanionBuilder =
       Value<String?> reason,
       Value<int?> employeeId,
       Value<int?> saleId,
+      Value<String?> supplierName,
+      Value<int?> supplierId,
       Value<DateTime> createdAt,
     });
 typedef $$StockMovementsTableUpdateCompanionBuilder =
@@ -26843,6 +26950,8 @@ typedef $$StockMovementsTableUpdateCompanionBuilder =
       Value<String?> reason,
       Value<int?> employeeId,
       Value<int?> saleId,
+      Value<String?> supplierName,
+      Value<int?> supplierId,
       Value<DateTime> createdAt,
     });
 
@@ -26925,6 +27034,16 @@ class $$StockMovementsTableFilterComposer
 
   ColumnFilters<int> get saleId => $composableBuilder(
     column: $table.saleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get supplierName => $composableBuilder(
+    column: $table.supplierName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get supplierId => $composableBuilder(
+    column: $table.supplierId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -27011,6 +27130,16 @@ class $$StockMovementsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get supplierName => $composableBuilder(
+    column: $table.supplierName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get supplierId => $composableBuilder(
+    column: $table.supplierId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -27084,6 +27213,16 @@ class $$StockMovementsTableAnnotationComposer
   GeneratedColumn<int> get saleId =>
       $composableBuilder(column: $table.saleId, builder: (column) => column);
 
+  GeneratedColumn<String> get supplierName => $composableBuilder(
+    column: $table.supplierName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get supplierId => $composableBuilder(
+    column: $table.supplierId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -27151,6 +27290,8 @@ class $$StockMovementsTableTableManager
                 Value<String?> reason = const Value.absent(),
                 Value<int?> employeeId = const Value.absent(),
                 Value<int?> saleId = const Value.absent(),
+                Value<String?> supplierName = const Value.absent(),
+                Value<int?> supplierId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => StockMovementsCompanion(
                 id: id,
@@ -27163,6 +27304,8 @@ class $$StockMovementsTableTableManager
                 reason: reason,
                 employeeId: employeeId,
                 saleId: saleId,
+                supplierName: supplierName,
+                supplierId: supplierId,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -27177,6 +27320,8 @@ class $$StockMovementsTableTableManager
                 Value<String?> reason = const Value.absent(),
                 Value<int?> employeeId = const Value.absent(),
                 Value<int?> saleId = const Value.absent(),
+                Value<String?> supplierName = const Value.absent(),
+                Value<int?> supplierId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => StockMovementsCompanion.insert(
                 id: id,
@@ -27189,6 +27334,8 @@ class $$StockMovementsTableTableManager
                 reason: reason,
                 employeeId: employeeId,
                 saleId: saleId,
+                supplierName: supplierName,
+                supplierId: supplierId,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0

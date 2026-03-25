@@ -32,5 +32,8 @@ class StockMovements extends Table {
   TextColumn get reason => text().nullable()();
   IntColumn get employeeId => integer().nullable()();
   IntColumn get saleId => integer().nullable()();
+  // B-115: 입고 출처 — Oda 공급업체 API 연동 대비 확장 가능 설계
+  TextColumn get supplierName => text().nullable()(); // 텍스트 fallback (현재 사용)
+  IntColumn get supplierId => integer().nullable()(); // nullable FK (향후 Oda 연동)
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

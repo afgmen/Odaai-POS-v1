@@ -12,10 +12,12 @@ final categoryListProvider = StreamProvider<List<Category>>((ref) {
   return db.categoriesDao.getAllCategories().asStream();
 });
 
-/// 필터링된 상품 목록 Provider (StreamProvider — 재고 변경 즉시 반영)
+/// 필터링된 상품 목록 Provider (StreamProvider — 재고/가격 변경 즉시 반영)
+/// productChangeSignalProvider를 watch하여 Products Management CUD 시 강제 갱신됨
 final filteredProductsProvider = StreamProvider<List<Product>>((ref) {
   final dao = ref.watch(productsDaoProvider);
   final selectedCategoryId = ref.watch(selectedCategoryProvider);
+  ref.watch(productChangeSignalProvider); // 상품 변경 신호 구독 → 변경 시 스트림 재구독
 
   if (selectedCategoryId == null) {
     return dao.watchAllProducts();

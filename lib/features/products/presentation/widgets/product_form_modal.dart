@@ -294,6 +294,8 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           // provider 캐시 갱신 → 목록 리스트 즉시 반영
           ref.invalidate(mgmtFilteredProductsProvider);
           ref.invalidate(mgmtCategoryListProvider);
+          // POS 화면 상품 목록 강제 갱신 (Drift WASM 스트림 알림 보완)
+          ref.read(productChangeSignalProvider.notifier).state++;
           Navigator.of(context).pop();
           _showSnackBar(l10n.productUpdated, AppTheme.success);
         }
@@ -315,6 +317,8 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
         if (mounted) {
           ref.invalidate(mgmtFilteredProductsProvider);
           ref.invalidate(mgmtCategoryListProvider);
+          // POS 화면 상품 목록 강제 갱신 (Drift WASM 스트림 알림 보완)
+          ref.read(productChangeSignalProvider.notifier).state++;
           Navigator.of(context).pop();
           _showSnackBar(l10n.productAdded, AppTheme.success);
         }

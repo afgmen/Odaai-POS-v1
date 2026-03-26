@@ -47,3 +47,7 @@ final activeProductsProvider = StreamProvider<List<Product>>((ref) {
   final dao = ref.watch(productsDaoProvider);
   return dao.watchAllProducts();
 });
+
+/// 상품 데이터 변경 신호 — Products Management에서 CUD 발생 시 증가
+/// POS filteredProductsProvider가 이를 watch하여 즉시 갱신됨
+final productChangeSignalProvider = StateProvider<int>((ref) => 0);

@@ -365,7 +365,7 @@ class _PosAppBarState extends State<_PosAppBar> {
                 const Icon(Icons.point_of_sale, color: AppTheme.primary, size: 22),
                 const SizedBox(width: 6),
                 const Text(
-                  'Oda POS',
+                  'Oda POS v3',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
                 ),
                 const SizedBox(width: 12),
@@ -655,6 +655,7 @@ Future<void> _handleSendToKitchen(BuildContext context, WidgetRef ref) async {
     ref.read(cartProvider.notifier).clear();
     ref.read(discountValueProvider.notifier).state = 0;
     ref.read(promotionProductIdProvider.notifier).state = null;
+    ref.read(selectedManualPromotionProvider.notifier).state = null;
 
     // FloorPlanScreen으로 복귀 (push된 PosMainScreen에서 pop)
     navigator.pop();
@@ -838,21 +839,25 @@ class _EmployeeInfo extends ConsumerWidget {
             child: Text(l10n.cancel, style: const TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               // 장바구니 초기화
               ref.read(cartProvider.notifier).clear();
               // 할인 초기화
               ref.read(discountValueProvider.notifier).state = 0;
               ref.read(promotionProductIdProvider.notifier).state = null;
-              // 현재 직원 초기화는 로그아웃 시 자동 처리됨
-              // (Provider는 읽기 전용이므로 직접 변경 불가)
+              ref.read(selectedManualPromotionProvider.notifier).state = null;
+
+              // 세션 삭제 및 감사 로그 기록
+              await ref.read(authProvider.notifier).logout();
 
               // PIN 로그인 화면으로 이동
-              Navigator.of(ctx).pop();
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const PinLoginScreen()),
-                (route) => false,
-              );
+              if (context.mounted) Navigator.of(ctx).pop();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const PinLoginScreen()),
+                  (route) => false,
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.error,

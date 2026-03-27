@@ -7,7 +7,7 @@ import '../../domain/enums/table_status.dart';
 class TableWidget extends StatefulWidget {
   final RestaurantTable table;
   final VoidCallback onTap;
-  final Function(Offset)? onDragEnd;
+  final Future<void> Function(Offset)? onDragEnd;
   final bool isDraggable;
   /// 현재 선택된 상태 여부 — true면 primary 색상 하이라이트
   final bool isSelected;
@@ -80,14 +80,17 @@ class _TableWidgetState extends State<TableWidget> {
           final metrics = _shapeMetrics();
           setState(() {
             _displayX = (_displayX + details.delta.dx)
-                .clamp(0, 2000 - metrics.w);
+                .clamp(0.0, 1000.0 - metrics.w);
             _displayY = (_displayY + details.delta.dy)
-                .clamp(0, 2000 - metrics.h);
+                .clamp(0.0, 700.0 - metrics.h);
           });
         },
-        onPanEnd: (_) {
-          setState(() => _isDragging = false);
-          widget.onDragEnd?.call(Offset(_displayX, _displayY));
+        onPanEnd: (_) async {
+          // Keep _isDragging=true until DB save completes so
+          // didUpdateWidget cannot overwrite the dragged position
+          // with a stale stream emission during the async save.
+          await widget.onDragEnd?.call(Offset(_displayX, _displayY));
+          if (mounted) setState(() => _isDragging = false);
         },
         child: AnimatedOpacity(
           opacity: _isDragging ? 0.75 : 1.0,

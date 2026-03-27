@@ -10,6 +10,7 @@ import '../../../../providers/database_providers.dart';
 import '../../data/models/order_type.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/auto_promotion_provider.dart';
+import '../../../promotions/providers/promotions_provider.dart';
 import '../../../customers/providers/customers_provider.dart';
 import '../../../promotions/providers/promotions_provider.dart'; // B-113
 import '../modals/cancel_reason_modal.dart';
@@ -85,10 +86,22 @@ class CartPanel extends ConsumerWidget {
                         return _CartItemRow(
                           item: item,
                           compact: true,
-                          onIncrease: () => ref.read(cartProvider.notifier).updateQuantity(
-                                item.product.id,
-                                item.quantity + 1,
-                              ),
+                          onIncrease: () {
+                            if (item.product.stock > 0 && item.quantity >= item.product.stock) {
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(SnackBar(
+                                  content: Text('Maximum stock reached (${item.product.stock})'),
+                                  backgroundColor: AppTheme.error,
+                                  duration: const Duration(seconds: 2),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  margin: const EdgeInsets.all(16),
+                                ));
+                              return;
+                            }
+                            ref.read(cartProvider.notifier).updateQuantity(item.product.id, item.quantity + 1);
+                          },
                           onDecrease: () => ref.read(cartProvider.notifier).updateQuantity(
                                 item.product.id,
                                 item.quantity - 1,
@@ -149,10 +162,22 @@ class CartPanel extends ConsumerWidget {
                   final item = cart[index];
                   return _CartItemRow(
                     item: item,
-                    onIncrease: () => ref.read(cartProvider.notifier).updateQuantity(
-                          item.product.id,
-                          item.quantity + 1,
-                        ),
+                    onIncrease: () {
+                      if (item.product.stock > 0 && item.quantity >= item.product.stock) {
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(SnackBar(
+                            content: Text('Maximum stock reached (${item.product.stock})'),
+                            backgroundColor: AppTheme.error,
+                            duration: const Duration(seconds: 2),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            margin: const EdgeInsets.all(16),
+                          ));
+                        return;
+                      }
+                      ref.read(cartProvider.notifier).updateQuantity(item.product.id, item.quantity + 1);
+                    },
                     onDecrease: () => ref.read(cartProvider.notifier).updateQuantity(
                           item.product.id,
                           item.quantity - 1,
@@ -521,6 +546,7 @@ class _DiscountRow extends ConsumerWidget {
                 onTap: () {
                   ref.read(discountValueProvider.notifier).state = 0;
                   ref.read(promotionProductIdProvider.notifier).state = null;
+                  ref.read(selectedManualPromotionProvider.notifier).state = null;
                 },
                 borderRadius: BorderRadius.circular(4),
                 child: const Icon(Icons.close, size: 14, color: AppTheme.textDisabled),
@@ -917,7 +943,7 @@ class _PromotionTab extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final cart = ref.watch(cartProvider);
     final promoProductId = ref.watch(promotionProductIdProvider);
-    final promoType = ref.watch(promotionTypeProvider);
+    final selectedPromo = ref.watch(selectedManualPromotionProvider);
     final promoDiscount = ref.watch(promotionDiscountProvider);
     final total = subtotal - promoDiscount;
 
@@ -925,6 +951,7 @@ class _PromotionTab extends ConsumerWidget {
     final activePromosAsync = ref.watch(activePromotionsProvider);
     final selectedDbPromo = ref.watch(selectedDbPromotionProvider);
     final isDbPromoMode = selectedDbPromo != null;
+    final promoType = ref.watch(promotionTypeProvider);
 
     return SingleChildScrollView(
       child: Column(
@@ -1172,7 +1199,7 @@ class _PromotionTab extends ConsumerWidget {
           SizedBox(
             height: 48,
             child: ElevatedButton(
-              onPressed: promoProductId == null ? null : () => Navigator.of(context).pop(),
+              onPressed: (promoProductId == null || selectedPromo == null) ? null : () => Navigator.of(context).pop(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,
                 disabledBackgroundColor: AppTheme.textDisabled,
@@ -1186,6 +1213,21 @@ class _PromotionTab extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _promoTypeBadge(String type, double value) {
+    switch (type) {
+      case 'buy1get1':
+        return 'B1G1';
+      case 'buy2get1':
+        return 'B2G1';
+      case 'percentOff':
+        return '${value.toStringAsFixed(value % 1 == 0 ? 0 : 1)}% OFF';
+      case 'amountOff':
+        return '-${value.toStringAsFixed(0)}';
+      default:
+        return type;
+    }
   }
 }
 
@@ -1234,21 +1276,27 @@ class _AutoPromotionsSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 4),
-        ...appliedPromos.map((promo) {
-          return Padding(
+        // 동일 프로모션 이름별로 합산하여 표시 (#12-Medium)
+        ...() {
+          final consolidated = <String, double>{};
+          for (final promo in appliedPromos) {
+            consolidated[promo.promotionName] =
+                (consolidated[promo.promotionName] ?? 0) + promo.discountAmount;
+          }
+          return consolidated.entries.map((entry) => Padding(
             padding: const EdgeInsets.only(left: 18, top: 2),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Flexible(
                   child: Text(
-                    promo.promotionName,
+                    entry.key,
                     style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Text(
-                  '-${priceFormatter.format(promo.discountAmount)}',
+                  '-${priceFormatter.format(entry.value)}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -1257,8 +1305,8 @@ class _AutoPromotionsSection extends ConsumerWidget {
                 ),
               ],
             ),
-          );
-        }),
+          ));
+        }(),
       ],
     );
   }

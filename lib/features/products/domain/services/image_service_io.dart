@@ -111,9 +111,10 @@ class ImageService {
         ],
       );
 
-      return croppedFile != null ? File(croppedFile.path) : null;
+      // If crop was cancelled (null result), use original image
+      return croppedFile != null ? File(croppedFile.path) : imageFile;
     } catch (e) {
-      // Cropper cancelled or error - return original image
+      // Cropper error - return original image
       return imageFile;
     }
   }

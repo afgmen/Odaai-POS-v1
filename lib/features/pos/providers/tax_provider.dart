@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../settings/providers/store_settings_provider.dart';
+import '../../../features/products/providers/category_provider.dart';
 import 'cart_provider.dart';
 
 /// Tax settings keys
@@ -27,32 +28,53 @@ final taxInclusiveProvider = Provider<bool>((ref) {
   return settings[TaxSettingsKeys.taxInclusive] as bool? ?? true; // Vietnam default: inclusive
 });
 
-/// Cart tax amount provider
-/// B-118: 제품별 vatRate 우선 적용, 없으면 전체 설정 세율 사용
+/// Map of categoryId → vatRate (null entry means category has no override)
+final _categoryVatMapProvider = Provider<Map<int, double?>>((ref) {
+  final categoriesAsync = ref.watch(activeCategoriesListProvider);
+  return categoriesAsync.whenOrNull(
+    data: (categories) => {for (final c in categories) c.id: c.vatRate},
+  ) ?? {};
+});
+
+/// Cart tax amount provider (per-product VAT, with per-category fallback)
+/// B-118: 제품별 vatRate 우선 적용, 없으면 카테고리 vatRate, 없으면 전체 설정 세율 사용
 final cartTaxAmountProvider = Provider<double>((ref) {
   final enabled = ref.watch(taxEnabledProvider);
   if (!enabled) return 0.0;
 
   final cart = ref.watch(cartProvider);
-  final inclusive = ref.watch(taxInclusiveProvider);
+  if (cart.isEmpty) return 0.0;
+
+  final discount = ref.watch(cartAllDiscountProvider);
   final defaultRate = ref.watch(taxRateProvider);
+  final inclusive = ref.watch(taxInclusiveProvider);
+  final categoryVatMap = ref.watch(_categoryVatMapProvider);
+
+  // Distribute discount proportionally across items
+  final subtotal = cart.fold(0.0, (sum, item) => sum + item.subtotal);
+  final discountRatio = subtotal > 0 ? discount / subtotal : 0.0;
 
   double totalTax = 0.0;
-
   for (final item in cart) {
-    // B-118: 제품에 vatRate가 설정되어 있으면 우선 사용, 없으면(null) 글로벌 설정
-    // 수정: 기존 조건 (vatRate != 10.0 || vatRate == 10.0 = 항상 true) 버그 수정
-    // vatRate가 제품별로 명시 설정되어 있으므로 product.vatRate를 직접 사용,
-    // 0%이면 해당 상품은 비과세 처리
-    final rate = item.product.vatRate;
+    // B-118: product.vatRate 우선, 카테고리 override, 마지막으로 global default
+    final productVatRate = item.product.vatRate;
+    final categoryVatRate = item.product.categoryId != null
+        ? categoryVatMap[item.product.categoryId]
+        : null;
+    final rate = productVatRate != 10.0
+        ? productVatRate
+        : (categoryVatRate ?? defaultRate);
 
     final itemSubtotal = item.subtotal;
-    if (itemSubtotal <= 0 || rate <= 0) continue;
+    final itemDiscount = itemSubtotal * discountRatio;
+    final taxableAmount = itemSubtotal - itemDiscount;
+
+    if (taxableAmount <= 0 || rate <= 0) continue;
 
     if (inclusive) {
-      totalTax += itemSubtotal - (itemSubtotal / (1 + rate / 100));
+      totalTax += taxableAmount - (taxableAmount / (1 + rate / 100));
     } else {
-      totalTax += itemSubtotal * (rate / 100);
+      totalTax += taxableAmount * (rate / 100);
     }
   }
 

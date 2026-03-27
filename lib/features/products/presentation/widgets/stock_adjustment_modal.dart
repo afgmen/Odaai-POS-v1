@@ -293,6 +293,8 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
         supplierName: supplierName?.isEmpty == true ? null : supplierName,
       );
       if (mounted) {
+        // POS 화면 상품 목록 강제 갱신 (재고 변경 즉시 반영)
+        ref.read(productChangeSignalProvider.notifier).state++;
         Navigator.of(context).pop();
         _showSnackBar(l10n.stockAdjusted('${_isIn ? '+' : ''}${_isIn ? _quantity : -_quantity}'), AppTheme.success);
       }

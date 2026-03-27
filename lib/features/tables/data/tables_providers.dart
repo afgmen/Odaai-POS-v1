@@ -86,10 +86,15 @@ final showAddTableModalProvider = StateProvider<bool>((ref) => false);
 // Statistics Providers
 // ============================================================
 
-/// 상태별 테이블 개수
-final tableCountByStatusProvider = FutureProvider<Map<String, int>>((ref) {
-  final dao = ref.watch(tablesDaoProvider);
-  return dao.getTableCountByStatus();
+/// 상태별 테이블 개수 (실시간 - allTablesStreamProvider에서 파생)
+final tableCountByStatusProvider = StreamProvider<Map<String, int>>((ref) {
+  return ref.watch(allTablesStreamProvider.stream).map((tables) {
+    final counts = <String, int>{};
+    for (final table in tables) {
+      counts[table.status] = (counts[table.status] ?? 0) + 1;
+    }
+    return counts;
+  });
 });
 
 /// 평균 테이블 회전율 (오늘)

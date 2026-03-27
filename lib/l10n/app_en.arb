@@ -361,6 +361,8 @@
   "partialRefund": "Partial Refund ({amount})",
   "fullRefund": "Full Refund",
   "alreadyRefunded": "This order has already been refunded.",
+  "recentCompletedOrders": "Recent Completed Orders",
+  "noCompletedOrders": "No completed orders",
   "todayRefundHistory": "Today's Refunds",
   "noRefundToday": "No refunds today",
   "fullRefundType": "Full",

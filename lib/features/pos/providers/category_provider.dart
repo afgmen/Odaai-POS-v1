@@ -13,29 +13,32 @@ final categoryListProvider = StreamProvider<List<Category>>((ref) {
 });
 
 /// 필터링된 상품 목록 Provider
+/// productChangeSignalProvider를 watch → Products Management CUD 시 강제 갱신
 final filteredProductsProvider = FutureProvider<List<Product>>((ref) async {
   final dao = ref.watch(productsDaoProvider);
   final selectedCategoryId = ref.watch(selectedCategoryProvider);
+  ref.watch(productChangeSignalProvider); // 상품 변경 신호 → 리빌드 트리거
 
   if (selectedCategoryId == null) {
-    return await dao.getAllProducts();
+    return dao.getAllProducts();
   } else {
-    return await dao.getProductsByCategoryId(selectedCategoryId);
+    return dao.getProductsByCategoryId(selectedCategoryId);
   }
 });
 
 /// 검색 키워드 Provider
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
-/// 검색 결과 Provider (키워드 입력 시 검색, 빈 경우 필터 목록)
+/// 검색 결과 Provider
+/// productChangeSignal/searchQuery/selectedCategory 중 하나라도 바뀌면 즉시 갱신
 final searchResultsProvider = FutureProvider<List<Product>>((ref) async {
   final dao = ref.watch(productsDaoProvider);
   final query = ref.watch(searchQueryProvider);
+  ref.watch(productChangeSignalProvider); // 상품 변경 신호 → 리빌드 트리거
 
-  if (query.trim().isEmpty) {
-    // 검색 키워드 없으면 카테고리 필터 적용
-    return await ref.watch(filteredProductsProvider.future);
+  if (query.trim().isNotEmpty) {
+    return dao.searchProducts(query.trim());
   }
 
-  return await dao.searchProducts(query.trim());
+  return ref.watch(filteredProductsProvider.future);
 });

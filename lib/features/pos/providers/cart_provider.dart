@@ -75,15 +75,25 @@ class CartState extends Notifier<List<CartItem>> {
   List<CartItem> build() => [];
 
   /// 상품 추가 (modifier 포함, 같은 상품+modifier 조합이면 수량 증가)
-  void addItem(Product product, {List<SelectedModifier> modifiers = const []}) {
+  /// Returns false if stock would be exceeded (stock > 0 products only).
+  bool addItem(Product product, {List<SelectedModifier> modifiers = const []}) {
     final existing = state.indexWhere((item) => item.isSameAs(product, modifiers));
     if (existing >= 0) {
+      // EDGE-004/014: Stock enforcement
+      if (product.stock > 0 && state[existing].quantity >= product.stock) {
+        return false;
+      }
       final updated = [...state];
       updated[existing].quantity++;
       state = updated;
     } else {
+      if (product.stock == 0) {
+        // Out of stock — do not add
+        return false;
+      }
       state = [...state, CartItem(product: product, modifiers: modifiers)];
     }
+    return true;
   }
 
   /// 특정 인덱스의 아이템 제거
@@ -175,6 +185,9 @@ final promotionProductIdProvider = StateProvider<int?>((ref) => null);
 /// 프로모션 타입 (기본값 B1G1) — 레거시
 final promotionTypeProvider = StateProvider<PromotionType>((ref) => PromotionType.buy1get1);
 
+/// 수동 선택된 DB 프로모션
+final selectedManualPromotionProvider = StateProvider<Promotion?>((ref) => null);
+
 // B-113: DB에서 선택된 프로모션 (Promotion 객체, null이면 미선택)
 final selectedDbPromotionProvider = StateProvider<dynamic>((ref) => null);
 
@@ -183,9 +196,10 @@ final selectedDbPromotionProvider = StateProvider<dynamic>((ref) => null);
 final promotionDiscountProvider = Provider<double>((ref) {
   final cart = ref.watch(cartProvider);
   final promoProductId = ref.watch(promotionProductIdProvider);
+  final selectedPromo = ref.watch(selectedManualPromotionProvider);
   final selectedPromotion = ref.watch(selectedDbPromotionProvider);
 
-  // B-113: DB 프로모션 선택된 경우
+  // B-113: DB 프로모션 선택된 경우 우선 적용
   if (selectedPromotion != null) {
     double totalDiscount = 0.0;
     final promo = selectedPromotion;
@@ -204,7 +218,25 @@ final promotionDiscountProvider = Provider<double>((ref) {
     return totalDiscount;
   }
 
-  // 기존 방식 (B1G1/B2G1 수동 선택)
+  // 수동 선택된 DB 프로모션 (selectedManualPromotionProvider)
+  if (promoProductId != null && selectedPromo != null) {
+    final item = cart.where((i) => i.product.id == promoProductId).firstOrNull;
+    if (item == null) return 0.0;
+    switch (selectedPromo.type) {
+      case 'buy1get1':
+        return (item.quantity ~/ 2) * item.product.price;
+      case 'buy2get1':
+        return (item.quantity ~/ 3) * item.product.price;
+      case 'percentOff':
+        return item.subtotal * (selectedPromo.value / 100);
+      case 'amountOff':
+        return selectedPromo.value.clamp(0.0, item.subtotal);
+      default:
+        return 0.0;
+    }
+  }
+
+  // 기존 방식 (B1G1/B2G1 수동 선택 — 레거시)
   if (promoProductId == null) return 0.0;
 
   final promoType = ref.watch(promotionTypeProvider);

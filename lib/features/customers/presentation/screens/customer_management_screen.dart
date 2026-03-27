@@ -272,9 +272,93 @@ class _CustomerCard extends ConsumerWidget {
                   ),
                 ],
               ),
+              // 편집/삭제 메뉴
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: AppTheme.textSecondary),
+                onSelected: (value) {
+                  if (value == 'edit') _showEditForm(context, ref);
+                  if (value == 'delete') _confirmDelete(context, ref);
+                },
+                itemBuilder: (_) => [
+                  const PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit_outlined, size: 18), SizedBox(width: 8), Text('Edit')])),
+                  const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline, size: 18, color: AppTheme.error), SizedBox(width: 8), Text('Delete', style: TextStyle(color: AppTheme.error))])),
+                ],
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showEditForm(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final nameCtrl = TextEditingController(text: customer.name);
+    final phoneCtrl = TextEditingController(text: customer.phone ?? '');
+    final emailCtrl = TextEditingController(text: customer.email ?? '');
+    final noteCtrl = TextEditingController(text: customer.note ?? '');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.editCustomer),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: nameCtrl, decoration: InputDecoration(labelText: l10n.customerNameLabel, prefixIcon: const Icon(Icons.person))),
+              const SizedBox(height: 12),
+              TextField(controller: phoneCtrl, decoration: InputDecoration(labelText: l10n.customerPhoneLabel, prefixIcon: const Icon(Icons.phone)), keyboardType: TextInputType.phone),
+              const SizedBox(height: 12),
+              TextField(controller: emailCtrl, decoration: InputDecoration(labelText: l10n.customerEmailLabel, prefixIcon: const Icon(Icons.email)), keyboardType: TextInputType.emailAddress),
+              const SizedBox(height: 12),
+              TextField(controller: noteCtrl, decoration: InputDecoration(labelText: l10n.customerNoteLabel, prefixIcon: const Icon(Icons.note)), maxLines: 2),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameCtrl.text.trim().isEmpty) return;
+              await ref.read(customersDaoProvider).updateCustomer(CustomersCompanion(
+                id: Value(customer.id),
+                name: Value(nameCtrl.text.trim()),
+                phone: Value(phoneCtrl.text.trim().isEmpty ? null : phoneCtrl.text.trim()),
+                email: Value(emailCtrl.text.trim().isEmpty ? null : emailCtrl.text.trim()),
+                note: Value(noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim()),
+                points: Value(customer.points),
+                balance: Value(customer.balance),
+                isActive: const Value(true),
+                createdAt: Value(customer.createdAt),
+              ));
+              ref.invalidate(allCustomersProvider);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Customer'),
+        content: Text('Delete "${customer.name}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+            onPressed: () async {
+              await ref.read(customersDaoProvider).deleteCustomer(customer.id);
+              ref.invalidate(allCustomersProvider);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

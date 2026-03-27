@@ -265,7 +265,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                   final statusLabel = _getLocalizedStatusLabel(l10n, status);
                   return l10n.reservationStatusCount(e.value, statusLabel);
                 }).join('\n');
-                
+
                 return Positioned(
                   bottom: 1,
                   child: Tooltip(

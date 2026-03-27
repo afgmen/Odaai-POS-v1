@@ -356,6 +356,8 @@
   "partialRefund": "Hoàn một phần ({amount})",
   "fullRefund": "Hoàn toàn bộ",
   "alreadyRefunded": "Đơn hàng đã được hoàn tiền.",
+  "recentCompletedOrders": "Đơn hàng gần đây",
+  "noCompletedOrders": "Không có đơn hàng hoàn thành",
   "todayRefundHistory": "Hoàn tiền hôm nay",
   "noRefundToday": "Không có hoàn tiền hôm nay",
   "fullRefundType": "Toàn bộ",

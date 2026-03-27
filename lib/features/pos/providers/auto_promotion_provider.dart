@@ -22,8 +22,11 @@ final applicablePromotionsProvider = StreamProvider<Map<int, List<Promotion>>>((
 
   for (final item in cart) {
     final productId = item.product.id;
-    // PromotionsDao의 getApplicablePromotions 사용 (applyToAll 포함)
+    // 해당 상품에 적용 가능한 활성 프로모션 조회
+    // promotionsDao.getApplicablePromotions: applyToAllProducts=true 또는
+    // promotion_products 테이블에 해당 상품이 등록된 프로모션만 반환
     final promotions = await db.promotionsDao.getApplicablePromotions(productId);
+
     if (promotions.isNotEmpty) {
       promoMap[productId] = promotions;
     }

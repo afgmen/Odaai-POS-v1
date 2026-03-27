@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../providers/currency_provider.dart';
 import '../../providers/daily_closing_provider.dart';
 import '../../domain/services/pdf_export_service.dart';
 import '../../domain/constants/closing_constants.dart';
@@ -100,8 +101,7 @@ class _ClosingHistoryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final currencyFormat =
-        NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    final priceFormatter = ref.watch(priceFormatterProvider);
     final dateFormat = DateFormat('yyyy-MM-dd');
 
     final hasCashDifference = closing.actualCash != null &&
@@ -145,7 +145,7 @@ class _ClosingHistoryCard extends ConsumerWidget {
                   Expanded(
                     child: _buildInfoChip(
                       l10n.totalSales,
-                      currencyFormat.format(closing.totalSales),
+                      priceFormatter.format(closing.totalSales),
                       Icons.attach_money,
                     ),
                   ),
@@ -188,7 +188,7 @@ class _ClosingHistoryCard extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        currencyFormat.format(closing.cashDifference!),
+                        priceFormatter.format(closing.cashDifference!),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -274,8 +274,7 @@ class _ClosingHistoryCard extends ConsumerWidget {
 
   void _showDetailDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final currencyFormat =
-        NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    final priceFormatter = ref.read(priceFormatterProvider);
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
 
     showDialog(
@@ -291,26 +290,26 @@ class _ClosingHistoryCard extends ConsumerWidget {
               _buildDetailRow(l10n.assignedEmployee, employee?.name ?? l10n.unknown),
               const Divider(),
               _buildDetailRow(l10n.totalTransactions, l10n.transactionsCount(closing.totalTransactions)),
-              _buildDetailRow(l10n.totalSales, currencyFormat.format(closing.totalSales)),
+              _buildDetailRow(l10n.totalSales, priceFormatter.format(closing.totalSales)),
               _buildDetailRow(
-                  l10n.averageTransaction, currencyFormat.format(closing.averageTransaction)),
+                  l10n.averageTransaction, priceFormatter.format(closing.averageTransaction)),
               const Divider(),
-              _buildDetailRow(l10n.cash, currencyFormat.format(closing.cashSales)),
-              _buildDetailRow(l10n.card, currencyFormat.format(closing.cardSales)),
-              _buildDetailRow(l10n.qr, currencyFormat.format(closing.qrSales)),
-              _buildDetailRow(l10n.transferSales, currencyFormat.format(closing.transferSales)),
+              _buildDetailRow(l10n.cash, priceFormatter.format(closing.cashSales)),
+              _buildDetailRow(l10n.card, priceFormatter.format(closing.cardSales)),
+              _buildDetailRow(l10n.qr, priceFormatter.format(closing.qrSales)),
+              _buildDetailRow(l10n.transferSales, priceFormatter.format(closing.transferSales)),
               const Divider(),
-              _buildDetailRow(l10n.taxTotal, currencyFormat.format(closing.totalTax)),
-              _buildDetailRow(l10n.discountTotal, currencyFormat.format(closing.totalDiscount)),
+              _buildDetailRow(l10n.taxTotal, priceFormatter.format(closing.totalTax)),
+              _buildDetailRow(l10n.discountTotal, priceFormatter.format(closing.totalDiscount)),
               if (closing.actualCash != null) ...[
                 const Divider(),
                 _buildDetailRow(
-                    l10n.expectedCash, currencyFormat.format(closing.expectedCash)),
+                    l10n.expectedCash, priceFormatter.format(closing.expectedCash)),
                 _buildDetailRow(
-                    l10n.actualCash, currencyFormat.format(closing.actualCash!)),
+                    l10n.actualCash, priceFormatter.format(closing.actualCash!)),
                 _buildDetailRow(
                   l10n.cashDifference,
-                  currencyFormat.format(closing.cashDifference!),
+                  priceFormatter.format(closing.cashDifference!),
                   isWarning: closing.cashDifference!.abs() > 1000.0,
                 ),
               ],

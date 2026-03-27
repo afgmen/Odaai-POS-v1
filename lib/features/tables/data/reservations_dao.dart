@@ -21,6 +21,31 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
     return into(reservations).insert(reservation);
   }
 
+  /// EDGE-011: 같은 날짜+시간+테이블에 중복 예약이 있는지 확인
+  /// excludeId: 수정 시 자기 자신 제외
+  Future<bool> hasConflict({
+    required DateTime date,
+    required String time,
+    required int? tableId,
+    int? excludeId,
+  }) async {
+    if (tableId == null) return false; // 테이블 미지정 시 중복 허용
+    final startOfDay = DateTime.utc(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final query = select(reservations)
+      ..where((r) =>
+          r.reservationDate.isBiggerOrEqualValue(startOfDay) &
+          r.reservationDate.isSmallerThanValue(endOfDay) &
+          r.reservationTime.equals(time) &
+          r.tableId.equals(tableId) &
+          r.status.isNotIn(['cancelled', 'no_show']));
+    if (excludeId != null) {
+      query.where((r) => r.id.equals(excludeId).not());
+    }
+    final results = await query.get();
+    return results.isNotEmpty;
+  }
+
   // ============================================================
   // READ - Single
   // ============================================================
@@ -42,7 +67,8 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
 
     return (select(reservations)
           ..where((r) =>
-              r.reservationDate.isBetweenValues(startOfDay, endOfDay))
+              r.reservationDate.isBiggerOrEqualValue(startOfDay) &
+              r.reservationDate.isSmallerThanValue(endOfDay))
           ..orderBy([
             (r) =>
                 OrderingTerm(expression: r.reservationTime, mode: OrderingMode.asc)
@@ -123,7 +149,8 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
 
     return (select(reservations)
           ..where((r) =>
-              r.reservationDate.isBetweenValues(startOfDay, endOfDay))
+              r.reservationDate.isBiggerOrEqualValue(startOfDay) &
+              r.reservationDate.isSmallerThanValue(endOfDay))
           ..orderBy([
             (r) => OrderingTerm(
                 expression: r.reservationTime, mode: OrderingMode.asc)
@@ -196,6 +223,8 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
     DateTime? reservationDate,
     String? reservationTime,
     String? specialRequests,
+    int? tableId,
+    bool clearTableId = false,
   }) {
     return (update(reservations)..where((r) => r.id.equals(reservationId)))
         .write(
@@ -215,6 +244,11 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
             ? Value(reservationTime)
             : const Value.absent(),
         specialRequests: Value(specialRequests),
+        tableId: clearTableId
+            ? const Value(null)
+            : tableId != null
+                ? Value(tableId)
+                : const Value.absent(),
         updatedAt: Value(DateTime.now()),
       ),
     ).then((count) => count > 0);
@@ -268,7 +302,8 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
 
     final query = selectOnly(reservations)
       ..addColumns([reservations.status, reservations.id.count()])
-      ..where(reservations.reservationDate.isBetweenValues(startOfDay, endOfDay))
+      ..where(reservations.reservationDate.isBiggerOrEqualValue(startOfDay) &
+            reservations.reservationDate.isSmallerThanValue(endOfDay))
       ..groupBy([reservations.status]);
 
     return query.watch().map((rows) {
@@ -293,7 +328,8 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
     final query = selectOnly(reservations)
       ..addColumns([reservations.id.count()])
       ..where(
-        reservations.reservationDate.isBetweenValues(startOfDay, endOfDay) &
+        reservations.reservationDate.isBiggerOrEqualValue(startOfDay) &
+            reservations.reservationDate.isSmallerThanValue(endOfDay) &
             reservations.status.equals('NO_SHOW'),
       );
 
@@ -310,7 +346,8 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
     final query = selectOnly(reservations)
       ..addColumns([reservations.id.count()])
       ..where(
-        reservations.reservationDate.isBetweenValues(startOfDay, endOfDay) &
+        reservations.reservationDate.isBiggerOrEqualValue(startOfDay) &
+            reservations.reservationDate.isSmallerThanValue(endOfDay) &
             reservations.status.equals('CONFIRMED'),
       );
 
@@ -326,7 +363,8 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
     final query = selectOnly(reservations)
       ..addColumns([reservations.id.count()])
       ..where(
-          reservations.reservationDate.isBetweenValues(startOfDay, endOfDay));
+          reservations.reservationDate.isBiggerOrEqualValue(startOfDay) &
+          reservations.reservationDate.isSmallerThanValue(endOfDay));
 
     final result = await query.getSingle();
     return result.read(reservations.id.count()) ?? 0;
@@ -360,7 +398,8 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
 
     var query = select(reservations)
       ..where((r) =>
-          r.reservationDate.isBetweenValues(startOfDay, endOfDay) &
+          r.reservationDate.isBiggerOrEqualValue(startOfDay) &
+          r.reservationDate.isSmallerThanValue(endOfDay) &
           r.reservationTime.equals(time) &
           (r.status.equals('PENDING') |
               r.status.equals('CONFIRMED') |
@@ -386,7 +425,8 @@ class ReservationsDao extends DatabaseAccessor<AppDatabase>
     var query = select(reservations)
       ..where((r) =>
           r.tableId.equals(tableId) &
-          r.reservationDate.isBetweenValues(startOfDay, endOfDay) &
+          r.reservationDate.isBiggerOrEqualValue(startOfDay) &
+          r.reservationDate.isSmallerThanValue(endOfDay) &
           (r.status.equals('CONFIRMED') | r.status.equals('PENDING')));
 
     if (excludeReservationId != null) {

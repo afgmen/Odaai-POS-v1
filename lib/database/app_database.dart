@@ -313,10 +313,17 @@ class AppDatabase extends _$AppDatabase {
           await _migrateProductModifiers(m);
         }
         if (from < 24) {
+          // v23 → v24: 직원별 PIN salt 추가 (보안 강화)
+          // 기존 직원은 pinSalt=NULL → 레거시 전역 salt로 계속 로그인 가능
+          // 다음 PIN 변경 시 자동으로 per-user salt 적용됨
+          await _safeAddColumn('employees', 'pin_salt', 'TEXT NULL');
           // v23 → v24: B-118 — 제품별 VAT 세율 (0/5/8/10%)
           await _safeAddColumn('products', 'vat_rate', 'REAL NOT NULL DEFAULT 10.0');
         }
         if (from < 25) {
+          // v24 → v25: Per-category VAT rate
+          // null = use store-wide default tax rate
+          await _safeAddColumn('categories', 'vat_rate', 'REAL NULL');
           // v24 → v25: B-120 — KitchenOrders cancellationReason 컬럼 추가
           await _safeAddColumn('kitchen_orders', 'cancellation_reason', 'TEXT NULL');
         }
@@ -687,6 +694,18 @@ class AppDatabase extends _$AppDatabase {
         ),
       ]);
     });
+
+    // Seed system settings for new databases
+    try {
+      await customStatement(
+        "INSERT OR IGNORE INTO system_settings (key, value, updated_at) VALUES ('require_kitchen_approval', 'true', CAST(strftime('%s', 'now') AS INTEGER))"
+      );
+      await customStatement(
+        "INSERT OR IGNORE INTO system_settings (key, value, updated_at) VALUES ('rbac_enabled', 'false', CAST(strftime('%s', 'now') AS INTEGER))"
+      );
+    } catch (e) {
+      debugPrint('[Seed] system_settings seed skipped: $e');
+    }
   }
 
   /// v5 → v6 마이그레이션: 백업 & 복구 시스템
@@ -1419,7 +1438,7 @@ class AppDatabase extends _$AppDatabase {
       // OWNER role 부여 (user_roles: id, user_id, role, scope, assigned_at, assigned_by)
       await customStatement(
         "INSERT OR IGNORE INTO user_roles (id, user_id, role, scope, assigned_at, assigned_by) "
-        "VALUES (?, ?, 'OWNER', 'ALL_STORES', CAST(strftime('%s', 'now') AS INTEGER), ?)",
+        "VALUES (?, ?, 'OWNER', 'ALL_STORES', CAST(strftime('%s', 'now') * 1000 AS INTEGER), ?)",
         ['ur_admin_owner', adminId, adminId],
       );
 

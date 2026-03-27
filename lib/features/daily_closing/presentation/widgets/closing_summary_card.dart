@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../providers/currency_provider.dart';
 import '../../data/daily_closing_dao.dart';
 
-class ClosingSummaryCard extends StatelessWidget {
+class ClosingSummaryCard extends ConsumerWidget {
   final SalesAggregation aggregation;
   final GlobalKey? tutorialKey;
 
@@ -14,10 +15,9 @@ class ClosingSummaryCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final currencyFormat =
-        NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    final priceFormatter = ref.watch(priceFormatterProvider);
 
     return Card(
       key: tutorialKey,
@@ -51,7 +51,7 @@ class ClosingSummaryCard extends StatelessWidget {
             _buildSummaryRow(
               context,
               l10n.totalSales,
-              currencyFormat.format(aggregation.totalSales),
+              priceFormatter.format(aggregation.totalSales),
               icon: Icons.attach_money,
               isHighlighted: true,
             ),
@@ -59,7 +59,7 @@ class ClosingSummaryCard extends StatelessWidget {
             _buildSummaryRow(
               context,
               l10n.averageTransaction,
-              currencyFormat.format(aggregation.averageTransaction),
+              priceFormatter.format(aggregation.averageTransaction),
               icon: Icons.trending_up,
             ),
             const Divider(),
@@ -67,14 +67,14 @@ class ClosingSummaryCard extends StatelessWidget {
             _buildSummaryRow(
               context,
               l10n.taxTotal,
-              currencyFormat.format(aggregation.totalTax),
+              priceFormatter.format(aggregation.totalTax),
               icon: Icons.account_balance,
             ),
             const SizedBox(height: 8),
             _buildSummaryRow(
               context,
               l10n.discountTotal,
-              currencyFormat.format(aggregation.totalDiscount),
+              priceFormatter.format(aggregation.totalDiscount),
               icon: Icons.discount,
             ),
           ],

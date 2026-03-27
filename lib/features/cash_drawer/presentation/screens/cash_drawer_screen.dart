@@ -308,6 +308,22 @@ class CashDrawerScreen extends ConsumerWidget {
                 final currentBalance = await dao.getCurrentDrawerBalance();
 
                 final isWithdraw = type == 'withdraw' || type == 'close';
+
+                // CASH-005: Prevent overdraft
+                if (isWithdraw && amount > currentBalance) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Insufficient balance. Available: ${ref.read(priceFormatterProvider).format(currentBalance)}',
+                        ),
+                        backgroundColor: AppTheme.error,
+                      ),
+                    );
+                  }
+                  return;
+                }
+
                 final effectiveAmount = isWithdraw ? -amount : amount;
                 final newBalance = currentBalance + effectiveAmount;
 

@@ -51,7 +51,19 @@ class ProductCard extends ConsumerWidget {
             }
           } else {
             // Add directly to cart (no modifiers)
-            ref.read(cartProvider.notifier).addItem(product);
+            final added = ref.read(cartProvider.notifier).addItem(product);
+            if (!added && context.mounted) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(SnackBar(
+                  content: Text(product.stock <= 0 ? 'Out of stock' : 'Maximum stock reached (${product.stock})'),
+                  backgroundColor: AppTheme.error,
+                  duration: const Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  margin: const EdgeInsets.all(16),
+                ));
+            }
           }
         },
         borderRadius: BorderRadius.circular(12),

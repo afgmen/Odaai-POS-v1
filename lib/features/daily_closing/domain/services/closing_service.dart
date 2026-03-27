@@ -5,32 +5,34 @@ import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
 import '../../data/daily_closing_dao.dart';
 import '../../providers/daily_closing_provider.dart';
+import '../../../auth/domain/session.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../constants/closing_constants.dart';
 
 /// ClosingService Provider
 final closingServiceProvider = Provider<ClosingService>((ref) {
   final dao = ref.watch(dailyClosingDaoProvider);
-  final authNotifier = ref.watch(authProvider.notifier);
   final db = ref.watch(databaseProvider);
-  return ClosingService(dao, authNotifier, db);
+  // Pass a lazy session getter so the service always reads the current session
+  return ClosingService(dao, () => ref.read(currentSessionProvider), db);
 });
 
 /// 마감 비즈니스 로직
 class ClosingService {
   final DailyClosingDao _dao;
-  final dynamic _authNotifier;
+  final Session? Function() _getSession;
   final AppDatabase _db;
 
-  ClosingService(this._dao, this._authNotifier, this._db);
+  ClosingService(this._dao, this._getSession, this._db);
 
   /// 마감 가능 여부 확인
   Future<ClosingValidationResult> validateClosing(DateTime date) async {
     // B-106: 같은 날 여러 교대 종료 허용 — 날짜 중복 체크 제거
 
-    // 1. 미래 날짜인지 확인
+    // 2. 미래 날짜인지 확인 (시간 컴포넌트 제거 후 날짜만 비교)
     final now = DateTime.now();
-    if (date.isAfter(DateTime(now.year, now.month, now.day))) {
+    final targetDate = DateTime(date.year, date.month, date.day);
+    if (targetDate.isAfter(DateTime(now.year, now.month, now.day))) {
       return ClosingValidationResult(
         canClose: false,
         reason: 'Cannot close a future date.',
@@ -75,23 +77,26 @@ class ClosingService {
       );
     }
 
-    // 5. 해당 날짜 매출 집계 (매출 없어도 마감 가능 — B-104)
+    // 5. 매출 집계 (매출 없어도 마감 허용 - issue #13 / B-104)
     final aggregation = await _dao.aggregateSalesForDate(date);
+    final finalAggregation = aggregation ??
+        SalesAggregation(
+          totalTransactions: 0,
+          totalSales: 0,
+          totalTax: 0,
+          totalDiscount: 0,
+          cashSales: 0,
+          cardSales: 0,
+          qrSales: 0,
+          transferSales: 0,
+          averageTransaction: 0,
+        );
 
     return ClosingValidationResult(
       canClose: true,
-      // 매출 없으면 빈 집계 사용
-      aggregation: aggregation ?? SalesAggregation(
-        totalTransactions: 0,
-        totalSales: 0,
-        totalTax: 0,
-        totalDiscount: 0,
-        cashSales: 0,
-        cardSales: 0,
-        qrSales: 0,
-        transferSales: 0,
-        averageTransaction: 0,
-      ),
+      aggregation: finalAggregation,
+      failCode: finalAggregation.totalTransactions == 0 ? ClosingFailCode.noSales : null,
+      reason: finalAggregation.totalTransactions == 0 ? 'No sales for this date.' : null,
     );
   }
 
@@ -112,7 +117,7 @@ class ClosingService {
       }
 
       // 2. 현재 직원 ID 확인
-      final currentSession = _authNotifier.currentSession;
+      final currentSession = _getSession();
       if (currentSession == null) {
         return ClosingResult(
           success: false,

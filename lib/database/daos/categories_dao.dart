@@ -35,12 +35,14 @@ class CategoriesDao extends DatabaseAccessor<AppDatabase> with _$CategoriesDaoMi
     required String name,
     String? description,
     int sortOrder = 0,
+    double? vatRate,
   }) {
     return into(categories).insert(
       CategoriesCompanion.insert(
         name: name,
         description: Value(description),
         sortOrder: Value(sortOrder),
+        vatRate: Value(vatRate),
       ),
     );
   }
@@ -51,15 +53,21 @@ class CategoriesDao extends DatabaseAccessor<AppDatabase> with _$CategoriesDaoMi
     String? name,
     String? description,
     int? sortOrder,
+    Object? vatRate = _absent,
   }) {
     return (update(categories)..where((tbl) => tbl.id.equals(id))).write(
       CategoriesCompanion(
         name: name != null ? Value(name) : const Value.absent(),
         description: description != null ? Value(description) : const Value.absent(),
         sortOrder: sortOrder != null ? Value(sortOrder) : const Value.absent(),
+        vatRate: vatRate == _absent
+            ? const Value.absent()
+            : Value(vatRate as double?),
       ),
     ).then((rows) => rows > 0);
   }
+
+  static const _absent = Object();
 
   /// Soft delete category (set isActive = false)
   Future<bool> deleteCategory(int id) {

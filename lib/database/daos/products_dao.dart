@@ -89,6 +89,13 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
         .watch();
   }
 
+  Stream<List<Product>> watchProductsByCategoryId(int categoryId) {
+    return (select(products)
+          ..where((p) => p.categoryId.equals(categoryId) & p.isActive.equals(true))
+          ..orderBy([(p) => OrderingTerm.asc(p.name)]))
+        .watch();
+  }
+
   Stream<List<Product>> watchLowStockProducts() {
     return (select(products)
           ..where((p) =>

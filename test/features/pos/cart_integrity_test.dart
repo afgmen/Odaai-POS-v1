@@ -8,6 +8,23 @@ import 'package:oda_pos/database/app_database.dart';
 // and cartDiscountAmountProvider instead, and verify the formula manually.
 
 // ---------------------------------------------------------------------------
+// Helper: build a minimal Promotion for test purposes.
+// ---------------------------------------------------------------------------
+Promotion _promo(String type, {double value = 0}) {
+  final now = DateTime(2024);
+  return Promotion(
+    id: 1,
+    name: type,
+    type: type,
+    value: value,
+    applyToAllProducts: false,
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Helper: build a minimal Product for test purposes.
 // ---------------------------------------------------------------------------
 Product _product(int id, String name, double price, {String? category}) {
@@ -286,7 +303,7 @@ void main() {
       c.read(cartProvider.notifier).addItem(p); // qty 2
 
       c.read(promotionProductIdProvider.notifier).state = p.id;
-      c.read(promotionTypeProvider.notifier).state = PromotionType.buy1get1;
+      c.read(selectedManualPromotionProvider.notifier).state = _promo('buy1get1');
 
       final promoDiscount = c.read(promotionDiscountProvider);
       expect(promoDiscount, closeTo(5000, 0.01)); // 1 free unit
@@ -300,7 +317,7 @@ void main() {
       c.read(cartProvider.notifier).addItem(p); // qty 1
 
       c.read(promotionProductIdProvider.notifier).state = p.id;
-      c.read(promotionTypeProvider.notifier).state = PromotionType.buy1get1;
+      c.read(selectedManualPromotionProvider.notifier).state = _promo('buy1get1');
 
       expect(c.read(promotionDiscountProvider), 0.0);
     });
@@ -315,7 +332,7 @@ void main() {
       c.read(cartProvider.notifier).addItem(p); // qty 3
 
       c.read(promotionProductIdProvider.notifier).state = p.id;
-      c.read(promotionTypeProvider.notifier).state = PromotionType.buy2get1;
+      c.read(selectedManualPromotionProvider.notifier).state = _promo('buy2get1');
 
       expect(c.read(promotionDiscountProvider), closeTo(4000, 0.01));
     });

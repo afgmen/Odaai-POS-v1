@@ -43,14 +43,28 @@ class SalesHistoryScreen extends ConsumerWidget {
   }
 }
 
-class _SalesHistoryContent extends ConsumerWidget {
+class _SalesHistoryContent extends ConsumerStatefulWidget {
   const _SalesHistoryContent();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_SalesHistoryContent> createState() =>
+      _SalesHistoryContentState();
+}
+
+class _SalesHistoryContentState extends ConsumerState<_SalesHistoryContent> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final filter = ref.watch(selectedDateFilterProvider);
-    final salesAsync = ref.watch(salesListProvider);
+    final salesAsync = ref.watch(filteredSalesListProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -105,6 +119,52 @@ class _SalesHistoryContent extends ConsumerWidget {
             ),
           ),
 
+          // ── 검색 바 ──────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) =>
+                  ref.read(salesSearchQueryProvider.notifier).state = value,
+              decoration: InputDecoration(
+                hintText: l10n.searchByReceipt,
+                hintStyle: const TextStyle(
+                    fontSize: 14, color: AppTheme.textDisabled),
+                prefixIcon: const Icon(Icons.search,
+                    size: 20, color: AppTheme.textDisabled),
+                suffixIcon: ref.watch(salesSearchQueryProvider).isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear,
+                            size: 18, color: AppTheme.textDisabled),
+                        onPressed: () {
+                          _searchController.clear();
+                          ref
+                              .read(salesSearchQueryProvider.notifier)
+                              .state = '';
+                        },
+                      )
+                    : null,
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 10),
+                filled: true,
+                fillColor: AppTheme.cardWhite,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppTheme.divider),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: AppTheme.divider),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide:
+                      const BorderSide(color: AppTheme.primary, width: 1.5),
+                ),
+              ),
+            ),
+          ),
+
           // ── 주문 리스트 ──────────────────────────────
           Expanded(
             child: salesAsync.when(
@@ -135,7 +195,9 @@ class _SalesHistoryContent extends ConsumerWidget {
                   itemBuilder: (context, i) {
                     final dateKey = dateKeys[i];
                     final daySales = grouped[dateKey]!;
-                    final dayTotal = daySales.fold(0.0, (sum, s) => sum + s.total);
+                    final dayTotal = daySales
+                        .where((s) => s.status != 'refunded')
+                        .fold(0.0, (sum, s) => sum + s.total);
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

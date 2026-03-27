@@ -61,7 +61,7 @@ class _EnableRbacButtonState extends ConsumerState<EnableRbacButton> {
       );
       await db.customStatement('''
         INSERT INTO user_roles (id, user_id, role, scope, assigned_at, assigned_by)
-        VALUES (lower(hex(randomblob(16))), ?, 'OWNER', 'ALL_STORES', CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER), ?)
+        VALUES (lower(hex(randomblob(16))), ?, 'OWNER', 'ALL_STORES', CAST(strftime('%s', 'now') * 1000 AS INTEGER), ?)
       ''', [currentSession.employeeId, currentSession.employeeId]);
 
       if (!mounted) return;

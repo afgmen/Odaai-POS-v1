@@ -1,19 +1,28 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:crypto/crypto.dart';
 
 /// PIN 암호화 유틸리티
 /// SHA-256 해시를 사용하여 PIN을 안전하게 저장
 class PinHasher {
-  // 솔트 (앱 고유 값)
-  static const String _salt = 'ODA_POS_PIN_SALT_v1_2026';
+  // 레거시 전역 salt (기존 데이터 호환용 — 신규 PIN 설정 시에는 사용하지 않음)
+  static const String _legacySalt = 'ODA_POS_PIN_SALT_v1_2026';
+
+  /// 직원별 고유 salt 생성 (16바이트 랜덤)
+  static String generateSalt() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    return base64Encode(bytes);
+  }
 
   /// PIN을 SHA-256 해시로 변환
   ///
   /// [plainPin] 평문 PIN (4-6자리 숫자)
+  /// [salt] 직원별 고유 salt. null이면 레거시 전역 salt 사용
   /// Returns: SHA-256 해시 문자열
-  static String hashPin(String plainPin) {
-    // 솔트 추가하여 보안 강화
-    final saltedPin = plainPin + _salt;
+  static String hashPin(String plainPin, {String? salt}) {
+    final effectiveSalt = salt ?? _legacySalt;
+    final saltedPin = plainPin + effectiveSalt;
     final bytes = utf8.encode(saltedPin);
     final digest = sha256.convert(bytes);
     return digest.toString();
@@ -23,9 +32,10 @@ class PinHasher {
   ///
   /// [plainPin] 입력받은 평문 PIN
   /// [storedHash] 저장된 해시 값
+  /// [salt] 직원별 고유 salt. null이면 레거시 전역 salt로 검증
   /// Returns: 일치 여부
-  static bool verifyPin(String plainPin, String storedHash) {
-    final inputHash = hashPin(plainPin);
+  static bool verifyPin(String plainPin, String storedHash, {String? salt}) {
+    final inputHash = hashPin(plainPin, salt: salt);
     return inputHash == storedHash;
   }
 

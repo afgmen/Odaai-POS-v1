@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../../../../database/app_database.dart';
 import '../../../../database/daos/products_dao.dart';
 import '../../data/api/unsplash_api_client.dart';
@@ -52,16 +54,20 @@ class ImageSearchService {
       // Download image bytes
       final bytes = await _unsplashClient.downloadImage(imageUrl);
 
-      // Convert to file
-      final tempFile = await _imageService.bytesToFile(bytes, sku);
+      // Use dynamic to handle platform differences:
+      // Web: bytesToFile -> String (data URL), resizeAndSaveImage is a no-op
+      // IO:  bytesToFile -> File, resizeAndSaveImage -> File
+      final dynamic tempData = await _imageService.bytesToFile(bytes, sku);
 
-      // Resize and save to product_images
-      final savedFile = await _imageService.resizeAndSaveImage(tempFile, sku);
+      if (kIsWeb) {
+        // Web: tempData is already the final data URL
+        return tempData as String;
+      }
 
-      // Delete temp file
-      await tempFile.delete();
-
-      return savedFile.path;
+      // IO: resize, delete temp, return path
+      final dynamic savedFile = await _imageService.resizeAndSaveImage(tempData, sku);
+      (tempData as dynamic).delete().catchError((_) {});
+      return (savedFile as dynamic).path as String;
     } catch (e) {
       throw Exception('Download and save failed: $e');
     }
@@ -92,15 +98,15 @@ class ImageSearchService {
         }
 
         // Download first result
-        await downloadAndSaveImage(
+        final savedPath = await downloadAndSaveImage(
           imageUrl: results.first.regularUrl,
           sku: product.sku,
         );
 
-        // Update DB
+        // Update DB with actual saved path (data URL on web, file path on IO)
         await productsDao.updateProductImageUrl(
           product.id,
-          'product_images/${product.sku}.jpg',
+          savedPath,
         );
 
         successCount++;

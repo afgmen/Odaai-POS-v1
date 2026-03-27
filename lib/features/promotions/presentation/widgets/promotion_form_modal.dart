@@ -220,21 +220,25 @@ class _PromotionFormModalState extends ConsumerState<PromotionFormModal> {
 
               // ── 고정 저장 버튼 (항상 화면 하단에 표시) ──────────────
               const SizedBox(height: 16),
-              _loadingProducts
-                  ? const Center(child: CircularProgressIndicator())
-                  : ElevatedButton(
-                      onPressed: _savePromotion,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: Text(_isEdit ? l10n.edit : l10n.add,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600)),
-                    ),
+              ElevatedButton(
+                onPressed: _loadingProducts ? null : _savePromotion,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppTheme.primary.withValues(alpha: 0.5),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: _loadingProducts
+                    ? const SizedBox(
+                        width: 20, height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
+                    : Text(_isEdit ? l10n.edit : l10n.add,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
             ], // outer Column children
           ), // outer Column / Form
         ),
@@ -390,7 +394,7 @@ class _ProductMultiSelector extends ConsumerWidget {
               if (selectedProductIds.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
-                  '${selectedProductIds.length}개 제품 선택됨',
+                  '${selectedProductIds.length} product(s) selected',
                   style: TextStyle(
                     fontSize: 12,
                     color: AppTheme.primary,

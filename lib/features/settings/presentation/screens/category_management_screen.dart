@@ -67,11 +67,12 @@ class CategoryManagementScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => _CategoryDialog(
-        onSave: (name, description) async {
+        onSave: (name, description, vatRate) async {
           final db = ref.read(databaseProvider);
           await db.categoriesDao.createCategory(
             name: name,
             description: description,
+            vatRate: vatRate,
           );
           ref.invalidate(activeCategoriesListProvider);
         },
@@ -99,9 +100,20 @@ class _CategoryCard extends ConsumerWidget {
           category.name,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: category.description != null
-            ? Text(category.description!, maxLines: 2, overflow: TextOverflow.ellipsis)
-            : null,
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (category.description != null)
+              Text(category.description!, maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text(
+              category.vatRate != null
+                  ? 'VAT: ${category.vatRate!.toStringAsFixed(category.vatRate! % 1 == 0 ? 0 : 1)}%'
+                  : 'VAT: default',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -125,12 +137,14 @@ class _CategoryCard extends ConsumerWidget {
       builder: (context) => _CategoryDialog(
         initialName: category.name,
         initialDescription: category.description,
-        onSave: (name, description) async {
+        initialVatRate: category.vatRate,
+        onSave: (name, description, vatRate) async {
           final db = ref.read(databaseProvider);
           await db.categoriesDao.updateCategory(
             id: category.id,
             name: name,
             description: description,
+            vatRate: vatRate,
           );
           ref.invalidate(activeCategoriesListProvider);
         },
@@ -170,11 +184,13 @@ class _CategoryCard extends ConsumerWidget {
 class _CategoryDialog extends StatefulWidget {
   final String? initialName;
   final String? initialDescription;
-  final Future<void> Function(String name, String? description) onSave;
+  final double? initialVatRate;
+  final Future<void> Function(String name, String? description, double? vatRate) onSave;
 
   const _CategoryDialog({
     this.initialName,
     this.initialDescription,
+    this.initialVatRate,
     required this.onSave,
   });
 
@@ -185,6 +201,7 @@ class _CategoryDialog extends StatefulWidget {
 class _CategoryDialogState extends State<_CategoryDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
+  late final TextEditingController _vatRateController;
   bool _isSaving = false;
 
   @override
@@ -192,12 +209,19 @@ class _CategoryDialogState extends State<_CategoryDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.initialName);
     _descriptionController = TextEditingController(text: widget.initialDescription);
+    _vatRateController = TextEditingController(
+      text: widget.initialVatRate != null
+          ? widget.initialVatRate!.toStringAsFixed(
+              widget.initialVatRate! % 1 == 0 ? 0 : 1)
+          : '',
+    );
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _vatRateController.dispose();
     super.dispose();
   }
 
@@ -227,6 +251,16 @@ class _CategoryDialogState extends State<_CategoryDialog> {
               border: const OutlineInputBorder(),
             ),
             maxLines: 3,
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _vatRateController,
+            decoration: const InputDecoration(
+              labelText: 'VAT Rate % (leave blank to use default)',
+              border: OutlineInputBorder(),
+              suffixText: '%',
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
         ],
       ),
@@ -261,9 +295,28 @@ class _CategoryDialogState extends State<_CategoryDialog> {
       return;
     }
 
+    final vatRateText = _vatRateController.text.trim();
+    double? vatRate;
+    if (vatRateText.isNotEmpty) {
+      vatRate = double.tryParse(vatRateText);
+      if (vatRate == null || vatRate < 0 || vatRate > 100) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('VAT rate must be a number between 0 and 100'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+        return;
+      }
+    }
+
     setState(() => _isSaving = true);
     try {
-      await widget.onSave(name, _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim());
+      await widget.onSave(
+        name,
+        _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+        vatRate,
+      );
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {

@@ -25,18 +25,22 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
   bool _isProcessing = false;
   late final TextEditingController _quantityController;
   late final TextEditingController _reasonController;
+  // B-115: 입고 출처 필드 (supplier_name)
+  late final TextEditingController _supplierNameController;
 
   @override
   void initState() {
     super.initState();
     _quantityController = TextEditingController();
     _reasonController = TextEditingController();
+    _supplierNameController = TextEditingController();
   }
 
   @override
   void dispose() {
     _quantityController.dispose();
     _reasonController.dispose();
+    _supplierNameController.dispose();
     super.dispose();
   }
 
@@ -172,6 +176,23 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
             ),
             const SizedBox(height: 14),
 
+            // B-115: 입고 출처 (supplier_name) — 입고 모드일 때만 표시
+            if (_isIn) ...[
+              Text(
+                l10n.stockSource,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _supplierNameController,
+                decoration: InputDecoration(
+                  hintText: l10n.stockSourceHint,
+                  prefixIcon: const Icon(Icons.local_shipping_outlined, size: 20),
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+
             // ─── 사유 ───────────────────────────
             Text(
               l10n.reasonOptional,
@@ -260,11 +281,16 @@ class _StockAdjustmentModalState extends ConsumerState<StockAdjustmentModal> {
     setState(() => _isProcessing = true);
     try {
       final dao = ref.read(productsDaoProvider);
+      // B-115: supplierName을 전용 컬럼에 저장 (더 이상 reason에 묶지 않음)
+      final supplierName = _isIn ? _supplierNameController.text.trim() : null;
+      final reason = _reasonController.text.trim();
+
       await dao.updateStock(
         productId: widget.product.id,
         quantity: _isIn ? _quantity : -_quantity,
         type: _isIn ? 'in' : 'out',
-        reason: _reasonController.text.trim().isEmpty ? null : _reasonController.text.trim(),
+        reason: reason.isEmpty ? null : reason,
+        supplierName: supplierName?.isEmpty == true ? null : supplierName,
       );
       if (mounted) {
         // POS 화면 상품 목록 강제 갱신 (재고 변경 즉시 반영)

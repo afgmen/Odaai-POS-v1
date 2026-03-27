@@ -9,6 +9,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/currency_provider.dart';
 import '../../../../providers/database_providers.dart';
 import '../../providers/refunds_provider.dart';
+import '../../../sales/providers/sales_provider.dart';
+import '../../../dashboard/providers/dashboard_provider.dart';
 
 /// 환불/반품 처리 화면
 class RefundScreen extends ConsumerStatefulWidget {
@@ -23,7 +25,29 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
   Sale? _foundSale;
   List<SaleItem>? _saleItems;
   final Map<int, int> _refundQuantities = {}; // saleItemId → qty to refund
+  Map<int, int> _alreadyRefundedQty = {}; // B-UAT: saleItemId → already refunded qty
   String? _reason;
+  // B-117: 최근 결제 주문 목록
+  List<Sale> _recentSales = [];
+  bool _recentSalesLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // B-117: 화면 진입 시 최근 결제 주문 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadRecentSales());
+  }
+
+  Future<void> _loadRecentSales() async {
+    final salesDao = ref.read(salesDaoProvider);
+    final sales = await salesDao.getRecentCompletedSales(limit: 30);
+    if (mounted) {
+      setState(() {
+        _recentSales = sales;
+        _recentSalesLoaded = true;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -130,6 +154,42 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
               ),
             ),
 
+            // B-117: 최근 결제 완료 주문 목록 (검색 없이 바로 선택 가능)
+            if (_foundSale == null && _recentSalesLoaded && _recentSales.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.recentCompletedOrders,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      ..._recentSales.take(10).map((sale) => ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.receipt_long, size: 20, color: AppTheme.primary),
+                        title: Text('#${sale.saleNumber}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text(
+                          '${sale.customerName ?? '-'} · ₫${currencyFormat.format(sale.total)}'
+                          ' · ${DateFormat('MM/dd HH:mm').format(sale.createdAt)}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        trailing: const Icon(Icons.chevron_right, size: 18),
+                        onTap: () async {
+                          _saleNumberCtrl.text = sale.saleNumber;
+                          await _searchSaleBySale(sale);
+                        },
+                      )),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
             // ─── 검색 결과 ──────────────────────────
             if (_foundSale != null) ...[
               const SizedBox(height: 16),
@@ -177,17 +237,23 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
                         const SizedBox(height: 16),
                         Text(l10n.selectRefundItems, style: const TextStyle(fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
-                        ..._saleItems!.map((item) => _RefundItemRow(
-                              item: item,
-                              refundQty: _refundQuantities[item.id] ?? 0,
-                              onChanged: (qty) => setState(() {
-                                if (qty == 0) {
-                                  _refundQuantities.remove(item.id);
-                                } else {
-                                  _refundQuantities[item.id] = qty;
-                                }
-                              }),
-                            )),
+                        ..._saleItems!.map((item) {
+                              final alreadyRefunded = _alreadyRefundedQty[item.id] ?? 0;
+                              final maxRefundable = item.quantity - alreadyRefunded;
+                              return _RefundItemRow(
+                                item: item,
+                                refundQty: _refundQuantities[item.id] ?? 0,
+                                maxRefundable: maxRefundable,
+                                alreadyRefunded: alreadyRefunded,
+                                onChanged: maxRefundable > 0 ? (qty) => setState(() {
+                                  if (qty == 0) {
+                                    _refundQuantities.remove(item.id);
+                                  } else {
+                                    _refundQuantities[item.id] = qty;
+                                  }
+                                }) : null,
+                              );
+                            }),
 
                         const SizedBox(height: 12),
                         TextField(
@@ -362,10 +428,15 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
           ..where((si) => si.saleId.equals(sale.id)))
         .get();
 
+    // B-UAT: 이미 환불된 수량 조회하여 중복 환불 방지
+    final saleItemIds = items.map((i) => i.id).toList();
+    final alreadyRefunded = await ref.read(refundsDaoProvider).getRefundedQtyBySaleItems(saleItemIds);
+
     setState(() {
       _foundSale = sale;
       _saleItems = items;
       _refundQuantities.clear();
+      _alreadyRefundedQty = alreadyRefunded;
     });
   }
 
@@ -385,36 +456,27 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
     final confirm = await _confirmRefund(l10n.fullRefund, _foundSale!.total.toInt());
     if (!confirm) return;
 
-    final dao = ref.read(refundsDaoProvider);
     final db = ref.read(databaseProvider);
 
-    // 환불 기록 생성
-    await dao.createRefund(RefundsCompanion.insert(
-      originalSaleId: _foundSale!.id,
-      originalSaleNumber: _foundSale!.saleNumber,
-      refundAmount: _foundSale!.total,
-      reason: Value(_reason),
-      refundType: 'full',
-    ));
-
-    // 주문 상태 변경
-    await (db.update(db.sales)..where((s) => s.id.equals(_foundSale!.id)))
-        .write(const SalesCompanion(status: Value('refunded')));
-
-    // 재고 복구
-    if (_saleItems != null) {
-      final productsDao = ref.read(productsDaoProvider);
-      for (final item in _saleItems!) {
-        await productsDao.updateStock(productId: item.productId, quantity: item.quantity, type: 'in', reason: 'refund_stock_restore');
-      }
-    }
+    // B-UAT: SalesDao.refundSale을 사용하여 일관된 환불 처리
+    // (Sales 상태 변경 + Refund 기록 + 재고 복구를 한 트랜잭션으로)
+    await db.salesDao.refundSale(
+      _foundSale!.id,
+      0, // employeeId (0 = 시스템)
+      reason: _reason,
+    );
 
     if (mounted) {
+      // B-UAT: Sales 목록 + 대시보드 Total Sales 즉시 갱신
+      ref.invalidate(salesListProvider);
+      ref.invalidate(totalSalesProvider);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.fullRefundComplete), backgroundColor: AppTheme.success),
       );
       setState(() {
         _foundSale = _foundSale!.copyWith(status: 'refunded');
+        _recentSales = _recentSales.where((s) => s.id != _foundSale!.id).toList();
       });
     }
   }
@@ -455,12 +517,28 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
     }
     await dao.insertRefundItems(refundItemsList);
 
+    // B-125: 부분 환불 후 Sale 상태를 'refunded'로 업데이트
+    final db = ref.read(databaseProvider);
+    await db.salesDao.updateSaleStatus(_foundSale!.id, 'refunded');
+
     if (mounted) {
+      // B-UAT: Sales 목록 + 대시보드 Total Sales 즉시 갱신
+      ref.invalidate(salesListProvider);
+      ref.invalidate(totalSalesProvider);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.partialRefundComplete), backgroundColor: AppTheme.success),
       );
+      // B-UAT: 환불 완료 후 alreadyRefundedQty 갱신하여 중복 환불 방지
+      final updatedRefundedQty = await ref.read(refundsDaoProvider).getRefundedQtyBySaleItems(
+        _saleItems!.map((i) => i.id).toList(),
+      );
       setState(() {
         _refundQuantities.clear();
+        _alreadyRefundedQty = updatedRefundedQty;
+        // B-125: UI에서도 상태 즉시 반영
+        _foundSale = _foundSale!.copyWith(status: 'refunded');
+        _recentSales = _recentSales.where((s) => s.id != _foundSale!.id).toList();
       });
     }
   }
@@ -493,13 +571,22 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
 class _RefundItemRow extends StatelessWidget {
   final SaleItem item;
   final int refundQty;
-  final ValueChanged<int> onChanged;
+  final int maxRefundable;   // B-UAT: 최대 환불 가능 수량 (이미 환불된 수량 차감)
+  final int alreadyRefunded; // B-UAT: 이미 환불된 수량
+  final ValueChanged<int>? onChanged; // B-UAT: null이면 전량 환불 완료 상태
 
-  const _RefundItemRow({required this.item, required this.refundQty, required this.onChanged});
+  const _RefundItemRow({
+    required this.item,
+    required this.refundQty,
+    this.maxRefundable = 0,
+    this.alreadyRefunded = 0,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat('#,###');
+    final isFullyRefunded = maxRefundable <= 0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -509,41 +596,60 @@ class _RefundItemRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.productName, style: const TextStyle(fontWeight: FontWeight.w500)),
                 Text(
-                  '₫${currencyFormat.format(item.unitPrice.toInt())} x ${item.quantity}',
-                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  item.productName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: isFullyRefunded ? AppTheme.textDisabled : null,
+                    decoration: isFullyRefunded ? TextDecoration.lineThrough : null,
+                  ),
                 ),
+                Text(
+                  '₫${currencyFormat.format(item.unitPrice.toInt())} x ${item.quantity}'
+                  '${alreadyRefunded > 0 ? ' (환불됨: $alreadyRefunded)' : ''}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isFullyRefunded ? AppTheme.textDisabled : AppTheme.textSecondary,
+                  ),
+                ),
+                if (isFullyRefunded)
+                  const Text(
+                    '이미 전량 환불됨',
+                    style: TextStyle(fontSize: 11, color: AppTheme.error, fontWeight: FontWeight.w500),
+                  ),
               ],
             ),
           ),
-          // 수량 조절
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: refundQty > 0 ? () => onChanged(refundQty - 1) : null,
-                icon: const Icon(Icons.remove_circle_outline, size: 20),
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-              ),
-              SizedBox(
-                width: 32,
-                child: Text(
-                  '$refundQty',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: refundQty > 0 ? AppTheme.error : AppTheme.textSecondary,
+          // 수량 조절 (이미 전량 환불된 경우 비활성화)
+          if (!isFullyRefunded)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: refundQty > 0 ? () => onChanged!(refundQty - 1) : null,
+                  icon: const Icon(Icons.remove_circle_outline, size: 20),
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                ),
+                SizedBox(
+                  width: 32,
+                  child: Text(
+                    '$refundQty',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: refundQty > 0 ? AppTheme.error : AppTheme.textSecondary,
+                    ),
                   ),
                 ),
-              ),
-              IconButton(
-                onPressed: refundQty < item.quantity ? () => onChanged(refundQty + 1) : null,
-                icon: const Icon(Icons.add_circle_outline, size: 20),
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-              ),
-            ],
-          ),
+                IconButton(
+                  onPressed: refundQty < maxRefundable ? () => onChanged!(refundQty + 1) : null,
+                  icon: const Icon(Icons.add_circle_outline, size: 20),
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                ),
+              ],
+            )
+          else
+            const Icon(Icons.check_circle, color: AppTheme.error, size: 24),
         ],
       ),
     );

@@ -169,35 +169,86 @@ final cartItemCountProvider = Provider<int>((ref) {
 
 // ── 프로모션 관련 Provider ───────────────────────
 
+/// 프로모션 타입 (B1G1/B2G1 하드코딩 방식 — 레거시 호환)
+enum PromotionType {
+  buy1get1('B1G1', 'Buy 1 Get 1 Free'),
+  buy2get1('B2G1', 'Buy 2 Get 1 Free');
+
+  final String label;
+  final String description;
+  const PromotionType(this.label, this.description);
+}
+
 /// 프로모션 적용 상품 ID (null이면 프로모션 없음)
 final promotionProductIdProvider = StateProvider<int?>((ref) => null);
+
+/// 프로모션 타입 (기본값 B1G1) — 레거시
+final promotionTypeProvider = StateProvider<PromotionType>((ref) => PromotionType.buy1get1);
 
 /// 수동 선택된 DB 프로모션
 final selectedManualPromotionProvider = StateProvider<Promotion?>((ref) => null);
 
+// B-113: DB에서 선택된 프로모션 (Promotion 객체, null이면 미선택)
+final selectedDbPromotionProvider = StateProvider<dynamic>((ref) => null);
+
 /// 프로모션으로 인한 할인금액 계산
+/// B-113: DB 프로모션이 선택된 경우 우선 적용
 final promotionDiscountProvider = Provider<double>((ref) {
   final cart = ref.watch(cartProvider);
   final promoProductId = ref.watch(promotionProductIdProvider);
   final selectedPromo = ref.watch(selectedManualPromotionProvider);
+  final selectedPromotion = ref.watch(selectedDbPromotionProvider);
 
-  if (promoProductId == null || selectedPromo == null) return 0.0;
+  // B-113: DB 프로모션 선택된 경우 우선 적용
+  if (selectedPromotion != null) {
+    double totalDiscount = 0.0;
+    final promo = selectedPromotion;
+    for (final item in cart) {
+      switch (promo.type as String) {
+        case 'buy1get1':
+          totalDiscount += (item.quantity ~/ 2) * item.product.price;
+        case 'buy2get1':
+          totalDiscount += (item.quantity ~/ 3) * item.product.price;
+        case 'percentOff':
+          totalDiscount += item.subtotal * ((promo.value as double) / 100);
+        case 'amountOff':
+          totalDiscount += (promo.value as double).clamp(0.0, item.subtotal);
+      }
+    }
+    return totalDiscount;
+  }
 
+  // 수동 선택된 DB 프로모션 (selectedManualPromotionProvider)
+  if (promoProductId != null && selectedPromo != null) {
+    final item = cart.where((i) => i.product.id == promoProductId).firstOrNull;
+    if (item == null) return 0.0;
+    switch (selectedPromo.type) {
+      case 'buy1get1':
+        return (item.quantity ~/ 2) * item.product.price;
+      case 'buy2get1':
+        return (item.quantity ~/ 3) * item.product.price;
+      case 'percentOff':
+        return item.subtotal * (selectedPromo.value / 100);
+      case 'amountOff':
+        return selectedPromo.value.clamp(0.0, item.subtotal);
+      default:
+        return 0.0;
+    }
+  }
+
+  // 기존 방식 (B1G1/B2G1 수동 선택 — 레거시)
+  if (promoProductId == null) return 0.0;
+
+  final promoType = ref.watch(promotionTypeProvider);
   final item = cart.where((i) => i.product.id == promoProductId).firstOrNull;
   if (item == null) return 0.0;
 
-  switch (selectedPromo.type) {
-    case 'buy1get1':
-      return (item.quantity ~/ 2) * item.product.price;
-    case 'buy2get1':
-      return (item.quantity ~/ 3) * item.product.price;
-    case 'percentOff':
-      return item.subtotal * (selectedPromo.value / 100);
-    case 'amountOff':
-      return selectedPromo.value.clamp(0.0, item.subtotal);
-    default:
-      return 0.0;
-  }
+  final freeCount = switch (promoType) {
+    PromotionType.buy1get1 => item.quantity ~/ 2,
+    PromotionType.buy2get1 => item.quantity ~/ 3,
+  };
+
+  return freeCount * item.product.price;
 });
 
 // ── 할인 관련 Provider ─────────────────────────

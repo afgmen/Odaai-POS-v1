@@ -63,6 +63,14 @@ class ImageUploadStateNotifier extends StateNotifier<ImageUploadState> {
       }
 
       final dynamic savedFile = await _imageService.resizeAndSaveImage(file, sku);
+      // B-108: 신규 상품(productId=0)은 아직 DB에 없으므로 DB 업데이트 스킵
+      // 이미지 경로는 상품 저장 시 _imageUrl로 함께 저장됨
+      if (productId > 0) {
+        await _productsDao.updateProductImageUrl(
+          productId,
+          'product_images/$sku.jpg',
+        );
+      }
 
       if (kIsWeb) {
         final String dataUrl = savedFile as String;
@@ -92,6 +100,14 @@ class ImageUploadStateNotifier extends StateNotifier<ImageUploadState> {
       }
 
       final dynamic savedFile = await _imageService.resizeAndSaveImage(file, sku);
+      // B-108: 신규 상품(productId=0)은 아직 DB에 없으므로 DB 업데이트 스킵
+      // 이미지 경로는 상품 저장 시 _imageUrl로 함께 저장됨
+      if (productId > 0) {
+        await _productsDao.updateProductImageUrl(
+          productId,
+          'product_images/$sku.jpg',
+        );
+      }
 
       if (kIsWeb) {
         final String dataUrl = savedFile as String;

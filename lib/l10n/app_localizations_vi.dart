@@ -196,6 +196,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appliedProducts => 'Chọn sản phẩm';
 
   @override
+  String get selectPromotion => 'Chọn khuyến mãi';
+
+  @override
+  String get noActivePromotions => 'Không có khuyến mãi đang hoạt động';
+
+  @override
+  String get clearPromotion => 'Xóa khuyến mãi';
+
+  @override
+  String get manualPromotion => 'Khuyến mãi thủ công';
+
+  @override
   String get productName => 'Tên sản phẩm';
 
   @override
@@ -936,6 +948,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get searchByReceipt => 'Tìm theo số hóa đơn';
 
   @override
+  String get recentCompletedOrders => 'Đơn hàng hoàn thành gần đây';
+
+  @override
   String get receiptNumberHint => 'Nhập số hóa đơn (VD: ODA-20250207-001)';
 
   @override
@@ -1528,6 +1543,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get reasonHint => 'VD: Nhập hàng mới, Hao hụt, v.v.';
 
   @override
+  String get stockSource => 'Nguồn nhập (tùy chọn)';
+
+  @override
+  String get stockSourceHint => 'VD: Tên nhà cung cấp, Số đơn đặt hàng';
+
+  @override
   String get stockAfterAdjust => 'Tồn kho sau điều chỉnh';
 
   @override
@@ -2003,6 +2024,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get taxTotal => 'Tổng thuế';
 
   @override
+  String get vatRate => 'Thuế VAT';
+
+  @override
+  String get vatRateStandard => 'Tiêu chuẩn';
+
+  @override
+  String get vatRateTaxFree => 'Miễn thuế';
+
+  @override
   String get discountTotal => 'Tổng giảm giá';
 
   @override
@@ -2020,6 +2050,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get alreadyClosed => 'Ngày này đã được đóng quỹ';
+
+  @override
+  String get additionalClosingAllowed => 'Có thể đóng ca thêm';
 
   @override
   String get cannotCloseFutureDate => 'Không thể đóng quỹ cho ngày tương lai';
@@ -2196,6 +2229,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get reservationNoShow => 'Không đến';
+
+  @override
+  String reservationCount(int count) {
+    return '$count đặt chỗ';
+  }
+
+  @override
+  String reservationStatusCount(int count, String status) {
+    return '$count $status';
+  }
 
   @override
   String get confirmed => 'Đã xác nhận';

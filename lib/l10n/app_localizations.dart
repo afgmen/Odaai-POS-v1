@@ -464,6 +464,30 @@ abstract class AppLocalizations {
   /// **'Select Products'**
   String get appliedProducts;
 
+  /// No description provided for @selectPromotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Promotion'**
+  String get selectPromotion;
+
+  /// No description provided for @noActivePromotions.
+  ///
+  /// In en, this message translates to:
+  /// **'No active promotions'**
+  String get noActivePromotions;
+
+  /// No description provided for @clearPromotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Promotion'**
+  String get clearPromotion;
+
+  /// No description provided for @manualPromotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual Promotion'**
+  String get manualPromotion;
+
   /// No description provided for @productName.
   ///
   /// In en, this message translates to:
@@ -1856,6 +1880,12 @@ abstract class AppLocalizations {
   /// **'Search by Receipt #'**
   String get searchByReceipt;
 
+  /// No description provided for @recentCompletedOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Completed Orders'**
+  String get recentCompletedOrders;
+
   /// No description provided for @receiptNumberHint.
   ///
   /// In en, this message translates to:
@@ -2942,6 +2972,18 @@ abstract class AppLocalizations {
   /// **'e.g. New stock, Loss, etc.'**
   String get reasonHint;
 
+  /// No description provided for @stockSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source (optional)'**
+  String get stockSource;
+
+  /// No description provided for @stockSourceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Supplier name, Purchase order #'**
+  String get stockSourceHint;
+
   /// No description provided for @stockAfterAdjust.
   ///
   /// In en, this message translates to:
@@ -3794,6 +3836,24 @@ abstract class AppLocalizations {
   /// **'Total Tax'**
   String get taxTotal;
 
+  /// No description provided for @vatRate.
+  ///
+  /// In en, this message translates to:
+  /// **'VAT Rate'**
+  String get vatRate;
+
+  /// No description provided for @vatRateStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get vatRateStandard;
+
+  /// No description provided for @vatRateTaxFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax-free'**
+  String get vatRateTaxFree;
+
   /// No description provided for @discountTotal.
   ///
   /// In en, this message translates to:
@@ -3823,6 +3883,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This date has already been closed'**
   String get alreadyClosed;
+
+  /// No description provided for @additionalClosingAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional closing allowed'**
+  String get additionalClosingAllowed;
 
   /// No description provided for @cannotCloseFutureDate.
   ///
@@ -4141,6 +4207,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No Show'**
   String get reservationNoShow;
+
+  /// No description provided for @reservationCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reservations'**
+  String reservationCount(int count);
+
+  /// No description provided for @reservationStatusCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {status}'**
+  String reservationStatusCount(int count, String status);
 
   /// No description provided for @confirmed.
   ///

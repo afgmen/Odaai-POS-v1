@@ -17,6 +17,7 @@ class ReceiptData {
   final double cashPaid;
   final DateTime saleDate;
   final String storeName;
+  final String receiptFooter;
 
   const ReceiptData({
     required this.saleNumber,
@@ -29,6 +30,7 @@ class ReceiptData {
     this.cashPaid = 0,
     required this.saleDate,
     this.storeName = 'Oda POS',
+    this.receiptFooter = '',
   });
 
   double get change =>
@@ -104,11 +106,11 @@ class ReceiptPdfService {
               _buildPaymentInfo(data, labels),
               _dashedDivider(),
 
-              // ── 감사 메시지 ──────────────────
+              // ── 감사 메시지 / Footer ──────────────────
               pw.SizedBox(height: 8),
               pw.Center(
                 child: pw.Text(
-                  labels['thankYou'] ?? 'Thank you!',
+                  data.receiptFooter.isNotEmpty ? data.receiptFooter : (labels['thankYou'] ?? 'Thank you!'),
                   style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
                 ),
               ),
@@ -152,7 +154,7 @@ class ReceiptPdfService {
                   pw.SizedBox(height: 12),
                   pw.Center(
                     child: pw.Text(
-                      labels['thankYou'] ?? 'Thank you!',
+                      data.receiptFooter.isNotEmpty ? data.receiptFooter : (labels['thankYou'] ?? 'Thank you!'),
                       style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
                     ),
                   ),

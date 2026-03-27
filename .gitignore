@@ -60,7 +60,4 @@ test-results/
 server/.env
 
 # Web build artifacts (generated)
-web/drift_worker.dart.js
-web/drift_worker.dart.js.deps
-web/drift_worker.dart.js.map
 web/sqlite3.wasm

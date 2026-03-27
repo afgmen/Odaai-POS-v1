@@ -132,19 +132,38 @@ class DailyClosingDao extends DatabaseAccessor<AppDatabase>
     );
   }
 
-  /// 특정 날짜의 마감 데이터 조회
+  /// 특정 날짜의 마감 데이터 조회 (B-106: 같은 날 여러 교대 허용 — 가장 최근 마감 반환)
   Future<DailyClosing?> getClosingByDate(DateTime date) {
     final targetDate = DateTime(date.year, date.month, date.day);
     return (select(dailyClosings)
-          ..where((c) => c.closingDate.equals(targetDate)))
+          ..where((c) => c.closingDate.equals(targetDate))
+          ..orderBy([(c) => OrderingTerm.desc(c.closedAt)])
+          ..limit(1))
         .getSingleOrNull();
   }
 
-  /// B-103: 특정 날짜 마감 실시간 스트림
+  /// 특정 날짜의 모든 마감 데이터 조회 (B-106: 당일 다중 교대 지원)
+  Future<List<DailyClosing>> getClosingsByDate(DateTime date) {
+    final targetDate = DateTime(date.year, date.month, date.day);
+    return (select(dailyClosings)
+          ..where((c) => c.closingDate.equals(targetDate))
+          ..orderBy([(c) => OrderingTerm.desc(c.closedAt)]))
+        .get();
+  }
+
+  /// B-105: closingId로 마감 데이터 조회
+  Future<DailyClosing?> getClosingById(int closingId) {
+    return (select(dailyClosings)..where((c) => c.id.equals(closingId)))
+        .getSingleOrNull();
+  }
+
+  /// B-103: 특정 날짜 마감 실시간 스트림 (B-106: 가장 최근 마감 반환)
   Stream<DailyClosing?> watchClosingByDate(DateTime date) {
     final targetDate = DateTime(date.year, date.month, date.day);
     return (select(dailyClosings)
-          ..where((c) => c.closingDate.equals(targetDate)))
+          ..where((c) => c.closingDate.equals(targetDate))
+          ..orderBy([(c) => OrderingTerm.desc(c.closedAt)])
+          ..limit(1))
         .watchSingleOrNull();
   }
 

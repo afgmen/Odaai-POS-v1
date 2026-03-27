@@ -36,9 +36,8 @@ final _categoryVatMapProvider = Provider<Map<int, double?>>((ref) {
   ) ?? {};
 });
 
-/// Cart tax amount provider (per-category VAT)
-/// Each item's tax is calculated using its category's vatRate.
-/// If a category has no vatRate set (null), the store-wide default is used.
+/// Cart tax amount provider (per-product VAT, with per-category fallback)
+/// B-118: 제품별 vatRate 우선 적용, 없으면 카테고리 vatRate, 없으면 전체 설정 세율 사용
 final cartTaxAmountProvider = Provider<double>((ref) {
   final enabled = ref.watch(taxEnabledProvider);
   if (!enabled) return 0.0;
@@ -57,16 +56,20 @@ final cartTaxAmountProvider = Provider<double>((ref) {
 
   double totalTax = 0.0;
   for (final item in cart) {
-    final rate = (item.product.categoryId != null
-            ? categoryVatMap[item.product.categoryId]
-            : null) ??
-        defaultRate;
+    // B-118: product.vatRate 우선, 카테고리 override, 마지막으로 global default
+    final productVatRate = item.product.vatRate;
+    final categoryVatRate = item.product.categoryId != null
+        ? categoryVatMap[item.product.categoryId]
+        : null;
+    final rate = productVatRate != 10.0
+        ? productVatRate
+        : (categoryVatRate ?? defaultRate);
 
     final itemSubtotal = item.subtotal;
     final itemDiscount = itemSubtotal * discountRatio;
     final taxableAmount = itemSubtotal - itemDiscount;
 
-    if (taxableAmount <= 0) continue;
+    if (taxableAmount <= 0 || rate <= 0) continue;
 
     if (inclusive) {
       totalTax += taxableAmount - (taxableAmount / (1 + rate / 100));

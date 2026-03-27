@@ -5,6 +5,13 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../providers/category_provider.dart';
 
+/// 카테고리 선택 및 검색 쿼리 초기화 헬퍼
+void _selectCategory(WidgetRef ref, int? categoryId) {
+  // B-UAT: 카테고리 전환 시 검색 결과 초기화 (이슈 #18)
+  ref.read(searchQueryProvider.notifier).state = '';
+  ref.read(selectedCategoryProvider.notifier).state = categoryId;
+}
+
 /// 카테고리 필터 리스트 (세로 배치)
 class CategoryFilter extends ConsumerWidget {
   const CategoryFilter({super.key});
@@ -33,10 +40,7 @@ class CategoryFilter extends ConsumerWidget {
                   label: l10n.categoryAll,
                   icon: Icons.apps_outlined,
                   isSelected: selectedCategoryId == null,
-                  onTap: () {
-                    ref.read(selectedCategoryProvider.notifier).state = null;
-                    ref.read(searchQueryProvider.notifier).state = '';
-                  },
+                  onTap: () => _selectCategory(ref, null),
                 ),
                 const Divider(height: 1, color: AppTheme.divider),
                 // ─── Category list ─────────────
@@ -48,10 +52,7 @@ class CategoryFilter extends ConsumerWidget {
                         label: _getLocalizedCategory(category.name, l10n),
                         icon: _getCategoryIcon(category.name),
                         isSelected: isActive,
-                        onTap: () {
-                          ref.read(selectedCategoryProvider.notifier).state = category.id;
-                          ref.read(searchQueryProvider.notifier).state = '';
-                        },
+                        onTap: () => _selectCategory(ref, category.id),
                       ),
                       if (category != categories.last)
                         const Divider(height: 1, color: AppTheme.divider),

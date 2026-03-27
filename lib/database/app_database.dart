@@ -154,7 +154,7 @@ class AppDatabase extends _$AppDatabase {
   late final dailyClosingDao = DailyClosingDao(this);
 
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 27;
 
   @override
   MigrationStrategy get migration {
@@ -303,6 +303,7 @@ class AppDatabase extends _$AppDatabase {
         if (from < 20) {
           // v19 → v20: KDS orderType normalization
           await _safeAddColumn('kitchen_orders', 'order_type', "TEXT NOT NULL DEFAULT 'dineIn'");
+        }
         if (from < 21) {
           // v20 → v21: Categories table and Products.categoryId
           await _migrateCategorySystem(m);
@@ -316,12 +317,24 @@ class AppDatabase extends _$AppDatabase {
           // 기존 직원은 pinSalt=NULL → 레거시 전역 salt로 계속 로그인 가능
           // 다음 PIN 변경 시 자동으로 per-user salt 적용됨
           await _safeAddColumn('employees', 'pin_salt', 'TEXT NULL');
+          // v23 → v24: B-118 — 제품별 VAT 세율 (0/5/8/10%)
+          await _safeAddColumn('products', 'vat_rate', 'REAL NOT NULL DEFAULT 10.0');
         }
         if (from < 25) {
           // v24 → v25: Per-category VAT rate
           // null = use store-wide default tax rate
           await _safeAddColumn('categories', 'vat_rate', 'REAL NULL');
+          // v24 → v25: B-120 — KitchenOrders cancellationReason 컬럼 추가
+          await _safeAddColumn('kitchen_orders', 'cancellation_reason', 'TEXT NULL');
         }
+        if (from < 26) {
+          // v25 → v26: B-124 — DeliveryOrders.saleId 컬럼 추가 (POS 결제 연결)
+          await _safeAddColumn('delivery_orders', 'sale_id', 'INTEGER NULL REFERENCES sales(id) ON DELETE SET NULL');
+        }
+        if (from < 27) {
+          // v26 → v27: B-115 — StockMovements 공급업체 정보 컬럼 추가 (Oda 연동 대비)
+          await _safeAddColumn('stock_movements', 'supplier_name', 'TEXT NULL');
+          await _safeAddColumn('stock_movements', 'supplier_id', 'INTEGER NULL');
         }
       },
       beforeOpen: (details) async {

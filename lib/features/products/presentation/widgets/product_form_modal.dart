@@ -11,12 +11,11 @@ import '../../../../core/utils/snackbar_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
-import '../../../products/providers/products_management_provider.dart';
 import '../../domain/models/search_image_result.dart';
 import '../providers/image_providers.dart';
 import 'image_search_dialog.dart';
 import '../../providers/category_provider.dart';
-import '../../providers/products_management_provider.dart' show categoryNameMapProvider;
+import '../../providers/products_management_provider.dart';
 
 /// 상품 추가 / 수정 폼 모달
 /// existingProduct == null → 추가 모드
@@ -47,6 +46,10 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
   // Selected category ID (null if no category selected)
   int? _selectedCategoryId;
 
+  // B-118: 제품별 VAT 세율 (0, 5, 8, 10)
+  double _vatRate = 10.0;
+  static const _vatRates = [0.0, 5.0, 8.0, 10.0];
+
   // ── 이미지 상태 ─────────────────────────
   String? _imageUrl;
   File? _localImageFile;
@@ -66,6 +69,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     _stockCtrl = TextEditingController(text: p != null ? '${p.stock}' : '0');
     _minStockCtrl = TextEditingController(text: p != null ? '${p.minStock}' : '0');
         _selectedCategoryId = p?.categoryId;
+        _vatRate = p?.vatRate ?? 10.0;
 
     // Load existing image if in edit mode
     _imageUrl = p?.imageUrl;
@@ -214,6 +218,26 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
                 isNumber: true,
                 suffixText: l10n.unit,
               ),
+              // B-118: VAT 세율 선택
+              _sectionLabel(l10n.vatRate),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<double>(
+                value: _vatRate,
+                decoration: InputDecoration(
+                  hintText: l10n.vatRate,
+                  suffixText: '%',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                ),
+                items: _vatRates.map((rate) => DropdownMenuItem(
+                  value: rate,
+                  child: Text('${rate.toInt()}%'
+                    '${rate == 10.0 ? ' (${l10n.vatRateStandard})' : rate == 0.0 ? ' (${l10n.vatRateTaxFree})' : ''}'),
+                )).toList(),
+                onChanged: (val) => setState(() => _vatRate = val ?? 10.0),
+              ),
+              const SizedBox(height: 16),
+
               // Category Dropdown
               _sectionLabel(l10n.category),
               const SizedBox(height: 8),
@@ -285,6 +309,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           minStock: Value(int.tryParse(_minStockCtrl.text) ?? old.minStock),
           categoryId: Value(_selectedCategoryId),
           category: Value(categoryText),
+          vatRate: Value(_vatRate), // B-118
           updatedAt: Value(DateTime.now()),
           needsSync: const Value(true),
         );
@@ -300,7 +325,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           _showSnackBar(l10n.productUpdated, AppTheme.success);
         }
       } else {
-        // 추가 모드
+        // 추가 모드 — B-108: imageUrl, B-118: vatRate 포함
         final companion = ProductsCompanion.insert(
           sku: _skuCtrl.text.trim(),
           name: _nameCtrl.text.trim(),
@@ -312,6 +337,7 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           categoryId: _selectedCategoryId != null ? Value(_selectedCategoryId) : const Value.absent(),
           category: categoryText != null ? Value(categoryText) : const Value.absent(),
           imageUrl: _imageUrl != null ? Value(_imageUrl) : const Value.absent(),
+          vatRate: Value(_vatRate),
         );
         await dao.createProduct(companion);
         if (mounted) {
@@ -544,16 +570,33 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     );
   }
 
+  // ── SKU 자동 생성 헬퍼 ───────────────────────
+  String _ensureSku() {
+    if (_skuCtrl.text.trim().isNotEmpty) return _skuCtrl.text.trim();
+    // 상품명 기반 임시 SKU 생성 (영문/숫자만, 최대 8자)
+    final name = _nameCtrl.text.trim();
+    String autoSku = name.isEmpty
+        ? 'SKU${DateTime.now().millisecondsSinceEpoch % 100000}'
+        : name
+            .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '')
+            .toUpperCase()
+            .padRight(4, '0')
+            .substring(0, name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').length.clamp(0, 8));
+    if (autoSku.isEmpty) autoSku = 'SKU${DateTime.now().millisecondsSinceEpoch % 100000}';
+    setState(() => _skuCtrl.text = autoSku);
+    return autoSku;
+  }
+
   // ── 이미지 핸들러 ─────────────────────────────
   Future<void> _handleCameraUpload() async {
     final l10n = AppLocalizations.of(context)!;
 
-    if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
-      _showSnackBar('Please enter SKU first', AppTheme.error);
+    // B-UAT: SKU가 없으면 자동 생성 (신규 상품에서도 이미지 추가 가능)
+    final sku = _isEditMode ? _skuCtrl.text.trim() : _ensureSku();
+    if (sku.isEmpty) {
+      _showSnackBar('Please enter a product name or SKU first', AppTheme.error);
       return;
     }
-
-    final sku = _skuCtrl.text.trim();
     final productId = widget.existingProduct?.id ?? 0;
 
     final notifier = ref.read(imageUploadStateProvider.notifier);
@@ -600,12 +643,13 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
   Future<void> _handleGalleryUpload() async {
     final l10n = AppLocalizations.of(context)!;
 
-    if (!_isEditMode && _skuCtrl.text.trim().isEmpty) {
-      _showSnackBar('Please enter SKU first', AppTheme.error);
+    // B-UAT: SKU가 없으면 자동 생성 (신규 상품에서도 이미지 추가 가능)
+    final sku = _isEditMode ? _skuCtrl.text.trim() : _ensureSku();
+    if (sku.isEmpty) {
+      _showSnackBar('Please enter a product name or SKU first', AppTheme.error);
       return;
     }
 
-    final sku = _skuCtrl.text.trim();
     final productId = widget.existingProduct?.id ?? 0;
 
     final notifier = ref.read(imageUploadStateProvider.notifier);

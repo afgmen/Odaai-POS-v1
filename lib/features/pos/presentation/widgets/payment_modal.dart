@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'dart:convert';
+
 import 'package:drift/drift.dart' hide Column;
 import '../../providers/tax_provider.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +14,7 @@ import '../../../../providers/currency_provider.dart';
 import '../../../../providers/database_providers.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../customers/providers/customers_provider.dart';
+import '../../../delivery/data/delivery_orders_dao.dart';
 import '../../../loyalty/domain/services/loyalty_service.dart';
 import '../../providers/cart_provider.dart';
 import '../../data/models/order_type.dart';
@@ -139,8 +142,9 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
           topRight: Radius.circular(20),
         ),
       ),
+      // B-109: 화면 높이에 맞게 최대 높이 제한 + 세로 스크롤 지원 (issue #16)
       child: ConstrainedBox(
-        // 키보드 높이와 상태바를 고려한 동적 최대 높이 (issue #16)
+        // 키보드 높이와 상태바를 고려한 동적 최대 높이
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height
               - MediaQuery.of(context).viewInsets.bottom
@@ -492,16 +496,19 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 6),
-              // 빠른 금액 버튼
+              // 빠른 금액 버튼 (클릭 시 누적 합산, 4종: 10k/50k/100k/500k)
               Row(
                 children: [10000, 50000, 100000, 500000].map((amount) {
+                  final isLast = amount == 500000;
                   return Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(right: amount == 500000 ? 0 : 6),
+                      padding: EdgeInsets.only(right: isLast ? 0 : 6),
                       child: OutlinedButton(
                         onPressed: () {
-                          setState(() => _cashInput += amount.toDouble());
-                          _cashController.text = priceFormatter.format(_cashInput, includeSymbol: false);
+                          // 누적: 기존 금액에 더함
+                          final newAmount = _cashInput + amount;
+                          setState(() => _cashInput = newAmount);
+                          _cashController.text = priceFormatter.format(newAmount, includeSymbol: false);
                         },
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -509,24 +516,39 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                           side: const BorderSide(color: AppTheme.divider),
                           foregroundColor: AppTheme.textPrimary,
                         ),
-                        child: Text(priceFormatter.format(amount.toDouble()), style: const TextStyle(fontSize: 13)),
+                        child: Text(
+                          // 짧게 표시: 10K / 50K / 100K / 500K
+                          amount >= 1000 ? '${(amount ~/ 1000)}K' : '$amount',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ),
                   );
                 }).toList(),
               ),
               const SizedBox(height: 8),
-              // 현금 금액 입력
+              // 현금 금액 입력 (숫자 패드 강제 표시)
               TextField(
                 controller: _cashController,
-                keyboardType: const TextInputType.numberWithOptions(),
+                keyboardType: TextInputType.number,
+                // POS 특성상 숫자 패드만 표시
+                inputFormatters: [],
                 decoration: InputDecoration(
                   prefixText: priceFormatter.currency.symbol,
                   prefixStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.primary),
                   hintText: l10n.enterAmount,
+                  suffixIcon: _cashInput > 0
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () {
+                            setState(() => _cashInput = 0);
+                            _cashController.clear();
+                          },
+                        )
+                      : null,
                 ),
                 onChanged: (value) {
-                  final cleaned = value.replaceAll(',', '');
+                  final cleaned = value.replaceAll(',', '').replaceAll('.', '');
                   setState(() => _cashInput = double.tryParse(cleaned) ?? 0);
                 },
               ),
@@ -929,6 +951,48 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
       // ── 저장된 SaleItems 조회 (영수증용) ───────
       savedItems = await dao.getSaleItems(createdSale.id);
 
+      // ── 배달 주문인 경우 delivery_orders 테이블에도 기록 ──────────────
+      // B-UAT: 배달 주문 체크아웃 후 Delivery Orders 화면에 표시되도록 수정
+      if (_isDeliveryOrder) {
+        try {
+          final platform = _selectedOrderType == OrderType.platformDelivery ? 'grab' : 'manual';
+          final deliveryItemsJson = jsonEncode(
+            savedItems.map((item) => {
+              'name': item.productName,
+              'quantity': item.quantity,
+              'price': item.unitPrice,
+              'notes': null,
+            }).toList(),
+          );
+          // B-124: saleId 포함하여 delivery_orders 테이블에 저장
+          final deliveryOrderCompanion = DeliveryOrdersCompanion.insert(
+            platformOrderId: createdSale.saleNumber,
+            platform: platform,
+            status: const Value('PREPARING'),
+            customerName: _customerNameController.text.trim().isNotEmpty
+                ? _customerNameController.text.trim()
+                : 'Walk-in Customer',
+            customerPhone: Value(_deliveryPhoneController.text.trim().isNotEmpty
+                ? _deliveryPhoneController.text.trim()
+                : null),
+            deliveryAddress: Value(_deliveryAddressController.text.trim().isNotEmpty
+                ? _deliveryAddressController.text.trim()
+                : null),
+            itemsJson: deliveryItemsJson,
+            totalAmount: createdSale.total,
+            specialInstructions: Value(_specialInstructionsController.text.trim().isNotEmpty
+                ? _specialInstructionsController.text.trim()
+                : null),
+            saleId: Value(createdSale.id),
+          );
+          await db.deliveryOrdersDao.insertOrder(deliveryOrderCompanion);
+          debugPrint('[Checkout] Delivery order created for sale ${createdSale.saleNumber} (saleId=${createdSale.id})');
+        } catch (e, st) {
+          // 배달 주문 기록 실패해도 결제 완료 처리 계속 (에러는 로깅)
+          debugPrint('[Checkout] Failed to create delivery order record: $e\n$st');
+        }
+      }
+
       // ── 테이블 상태 업데이트 (Dine-in/Open Tab 완료 시) ──────────────
       if (widget.tableId != null) {
         final tablesDao = ref.read(tablesDaoProvider);
@@ -983,6 +1047,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               items: savedItems,
               subtotal: subtotal,
               discount: discountAmount,
+              tax: ref.read(cartTaxAmountProvider),
               total: finalTotal,
               paymentMethod: _selectedMethod.name.toUpperCase(),
               cashPaid: _selectedMethod == PaymentMethod.cash ? _cashInput : 0,

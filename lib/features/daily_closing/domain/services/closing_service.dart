@@ -27,14 +27,7 @@ class ClosingService {
 
   /// 마감 가능 여부 확인
   Future<ClosingValidationResult> validateClosing(DateTime date) async {
-    // 1. 이미 마감된 날짜인지 확인
-    final hasClosing = await _dao.hasClosingForDate(date);
-    if (hasClosing) {
-      return ClosingValidationResult(
-        canClose: false,
-        reason: 'This date has already been closed.',
-      );
-    }
+    // B-106: 같은 날 여러 교대 종료 허용 — 날짜 중복 체크 제거
 
     // 2. 미래 날짜인지 확인 (시간 컴포넌트 제거 후 날짜만 비교)
     final now = DateTime.now();
@@ -84,7 +77,7 @@ class ClosingService {
       );
     }
 
-    // 5. 매출 집계 (매출 없어도 마감 허용 - issue #13)
+    // 5. 매출 집계 (매출 없어도 마감 허용 - issue #13 / B-104)
     final aggregation = await _dao.aggregateSalesForDate(date);
     final finalAggregation = aggregation ??
         SalesAggregation(

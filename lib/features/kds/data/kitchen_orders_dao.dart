@@ -52,10 +52,15 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
-  /// Sale ID로 주문 조회
+  /// Sale ID로 주문 조회 (단건)
   Future<KitchenOrder?> getOrderBySaleId(int saleId) {
     return (select(kitchenOrders)..where((t) => t.saleId.equals(saleId)))
         .getSingleOrNull();
+  }
+
+  /// Sale ID로 모든 주문 조회 (B-121: 복수 조회용)
+  Future<List<KitchenOrder>> getOrdersBySaleId(int saleId) {
+    return (select(kitchenOrders)..where((t) => t.saleId.equals(saleId))).get();
   }
 
   // ============================================================
@@ -275,6 +280,25 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
   /// READY → SERVED
   Future<bool> markAsServed(int id) {
     return updateOrderStatus(id, 'SERVED');
+  }
+
+  /// B-UAT: saleId로 해당 sale의 모든 kitchen orders를 CANCELLED로 변경
+  /// POS에서 주문 취소 시 주방에도 즉시 반영되도록
+  Future<void> cancelOrdersBySaleId(int saleId, {String? cancellationReason}) async {
+    final orders = await (select(kitchenOrders)
+          ..where((t) => t.saleId.equals(saleId) & t.status.isNotIn(['CANCELLED', 'SERVED'])))
+        .get();
+    final now = DateTime.now();
+    for (final order in orders) {
+      await (update(kitchenOrders)..where((t) => t.id.equals(order.id))).write(
+        KitchenOrdersCompanion(
+          status: const Value('CANCELLED'),
+          cancelledAt: Value(now),
+          updatedAt: Value(now),
+          cancellationReason: Value(cancellationReason),
+        ),
+      );
+    }
   }
 
   /// 주문 취소

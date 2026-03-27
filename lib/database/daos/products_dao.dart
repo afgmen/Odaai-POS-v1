@@ -118,6 +118,9 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
     String? reason,
     int? employeeId,
     int? saleId,
+    // B-115: 입고 출처 정보 (Oda 공급업체 API 연동 대비)
+    String? supplierName,
+    int? supplierId,
   }) async {
     await transaction(() async {
       final product = await (select(products)
@@ -149,9 +152,34 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
           reason: Value(reason),
           employeeId: Value(employeeId),
           saleId: Value(saleId),
+          supplierName: Value(supplierName),
+          supplierId: Value(supplierId),
         ),
       );
     });
+  }
+
+  // ==================== STOCK MOVEMENTS ====================
+
+  /// B-115: 특정 제품의 재고 이동 이력 조회 (최근 순)
+  Future<List<StockMovement>> getStockMovements({
+    required int productId,
+    int limit = 50,
+  }) {
+    return (select(stockMovements)
+          ..where((m) => m.productId.equals(productId))
+          ..orderBy([(m) => OrderingTerm.desc(m.createdAt)])
+          ..limit(limit))
+        .get();
+  }
+
+  /// B-115: 입고 이력 조회 (supplierName 포함)
+  Future<List<StockMovement>> getStockInHistory({int limit = 100}) {
+    return (select(stockMovements)
+          ..where((m) => m.type.equals('in'))
+          ..orderBy([(m) => OrderingTerm.desc(m.createdAt)])
+          ..limit(limit))
+        .get();
   }
 
   // ==================== DELETE ====================

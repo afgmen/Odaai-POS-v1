@@ -64,6 +64,10 @@
   "paymentAmount": "Payment Amount",
   "itemCount": "{count} items",
   "appliedProducts": "Select Products",
+  "selectPromotion": "Select Promotion",
+  "noActivePromotions": "No active promotions",
+  "clearPromotion": "Clear Promotion",
+  "manualPromotion": "Manual Promotion",
 
   "productName": "Product Name",
   "productPrice": "Price",
@@ -347,6 +351,7 @@
 
   "refundManagement": "Refunds",
   "searchByReceipt": "Search by Receipt #",
+  "recentCompletedOrders": "Recent Completed Orders",
   "receiptNumberHint": "Enter receipt # (e.g. ODA-20250207-001)",
   "refundedStatus": "Refunded",
   "paidStatus": "Paid",
@@ -555,6 +560,8 @@
   "enterQuantity": "Enter quantity",
   "reasonOptional": "Reason (optional)",
   "reasonHint": "e.g. New stock, Loss, etc.",
+  "stockSource": "Source (optional)",
+  "stockSourceHint": "e.g. Supplier name, Purchase order #",
   "stockAfterAdjust": "Stock After Adjustment",
   "adjustComplete": "Complete",
   "stockAdjusted": "Stock adjusted ({change})",
@@ -726,6 +733,9 @@
   "unknown": "Unknown",
   "averageTransaction": "Average Transaction",
   "taxTotal": "Total Tax",
+  "vatRate": "VAT Rate",
+  "vatRateStandard": "Standard",
+  "vatRateTaxFree": "Tax-free",
   "discountTotal": "Total Discount",
   "normalCashDifference": "Within Range",
   "pdfSaved": "PDF saved: {path}",
@@ -741,6 +751,7 @@
     }
   },
   "alreadyClosed": "This date has already been closed",
+  "additionalClosingAllowed": "Additional closing allowed",
   "cannotCloseFutureDate": "Cannot close future dates",
   "noSalesForDate": "No sales found for this date",
   "loginRequired": "Login required",
@@ -820,6 +831,25 @@
   "reservationSeated": "Seated",
   "reservationCancelled": "Cancelled",
   "reservationNoShow": "No Show",
+  "reservationCount": "{count} reservations",
+  "@reservationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reservationStatusCount": "{count} {status}",
+  "@reservationStatusCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
 
   "confirmed": "Confirmed",
   "pending": "Pending",

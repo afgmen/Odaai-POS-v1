@@ -169,7 +169,8 @@ class _ReservationFormState extends ConsumerState<ReservationForm> {
                   prefixIcon: const Icon(Icons.calendar_today),
                 ),
                 child: Text(
-                  DateFormat('yyyy-MM-dd (E)', Localizations.localeOf(context).toString()).format(_selectedDate),
+                  // B-112: 앱 locale만 사용 (en/vi)
+                  DateFormat('yyyy-MM-dd (E)', AppLocalizations.of(context)!.localeName).format(_selectedDate),
                   style: const TextStyle(fontSize: 16),
                 ),
               ),

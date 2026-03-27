@@ -12,7 +12,9 @@ import '../../providers/cart_provider.dart';
 import '../../providers/auto_promotion_provider.dart';
 import '../../../promotions/providers/promotions_provider.dart';
 import '../../../customers/providers/customers_provider.dart';
+import '../../../promotions/providers/promotions_provider.dart'; // B-113
 import '../modals/cancel_reason_modal.dart';
+import '../../../kds/data/kitchen_cancellation_provider.dart';
 
 /// 장바구니 패널 (하단 또는 우측 사이드)
 class CartPanel extends ConsumerWidget {
@@ -241,6 +243,18 @@ class CartPanel extends ConsumerWidget {
               cancellationReason: Value(reason),
               cancelledAt: Value(DateTime.now()),
             ));
+            // B-UAT: 관련 kitchen order 취소 상태 업데이트 추가
+            await db.kitchenOrdersDao.cancelOrdersBySaleId(existingSaleId!, cancellationReason: reason);
+            // B-121: POS 취소 시 Floor Plan SnackBar 알림 전달
+            final kitchenOrders = await db.kitchenOrdersDao.getOrdersBySaleId(existingSaleId!);
+            for (final ko in kitchenOrders) {
+              ref.read(kitchenCancellationProvider.notifier).addCancellation(
+                orderId: ko.id,
+                saleId: existingSaleId,
+                tableNumber: ko.tableNumber,
+                reason: reason,
+              );
+            }
             ref.read(cartProvider.notifier).clear();
           },
         ),
@@ -931,138 +945,215 @@ class _PromotionTab extends ConsumerWidget {
     final promoProductId = ref.watch(promotionProductIdProvider);
     final selectedPromo = ref.watch(selectedManualPromotionProvider);
     final promoDiscount = ref.watch(promotionDiscountProvider);
-    final promotionsAsync = ref.watch(activePromotionsProvider);
     final total = subtotal - promoDiscount;
+
+    // B-113: DB 프로모션 목록
+    final activePromosAsync = ref.watch(activePromotionsProvider);
+    final selectedDbPromo = ref.watch(selectedDbPromotionProvider);
+    final isDbPromoMode = selectedDbPromo != null;
+    final promoType = ref.watch(promotionTypeProvider);
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 프로모션 선택 목록
-          promotionsAsync.when(
-            data: (promotions) {
-              if (promotions.isEmpty) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: const Center(
-                    child: Text(
-                      'No active promotions available',
-                      style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
-                    ),
+          // B-113: DB 프로모션 선택 섹션
+          activePromosAsync.when(
+            data: (promos) {
+              if (promos.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    l10n.noActivePromotions,
+                    style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                    textAlign: TextAlign.center,
                   ),
                 );
               }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: promotions.map((promo) {
-                  final isActive = selectedPromo?.id == promo.id;
-                  final badge = _promoTypeBadge(promo.type, promo.value);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
+                children: [
+                  Text(
+                    l10n.selectPromotion,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                  ),
+                  const SizedBox(height: 8),
+                  // DB 프로모션 선택 해제 버튼
+                  if (isDbPromoMode)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: TextButton.icon(
+                        onPressed: () => ref.read(selectedDbPromotionProvider.notifier).state = null,
+                        icon: const Icon(Icons.close, size: 16),
+                        label: Text(l10n.clearPromotion),
+                        style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+                      ),
+                    ),
+                  ...promos.map((promo) {
+                    final isSelected = selectedDbPromo?.id == promo.id;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: InkWell(
+                        onTap: () {
+                          // DB 프로모션 선택 시 수동 선택 초기화
+                          ref.read(selectedDbPromotionProvider.notifier).state =
+                              isSelected ? null : promo;
+                          if (!isSelected) {
+                            ref.read(promotionProductIdProvider.notifier).state = null;
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFFE8F0FE) : AppTheme.background,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: isSelected ? AppTheme.primary : AppTheme.divider),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isSelected ? Icons.check_circle : Icons.local_offer_outlined,
+                                size: 20,
+                                color: isSelected ? AppTheme.primary : AppTheme.textDisabled,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      promo.name,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                        color: AppTheme.textPrimary,
+                                      ),
+                                    ),
+                                    Text(
+                                      _promoTypeLabel(promo.type, promo.value),
+                                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                  const Divider(height: 24),
+                  // 수동 B1G1/B2G1 선택 (DB 프로모션 없을 때 대안)
+                  Text(
+                    l10n.manualPromotion,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              );
+            },
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+            error: (_, _) => const SizedBox.shrink(),
+          ),
+
+          // 수동 프로모션 타입 선택 (B1G1/B2G1)
+          if (!isDbPromoMode) ...[
+            Row(
+              children: PromotionType.values.map((t) {
+                final isActive = promoType == t;
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: t == PromotionType.buy2get1 ? 0 : 8),
                     child: InkWell(
-                      onTap: () {
-                        ref.read(selectedManualPromotionProvider.notifier).state =
-                            isActive ? null : promo;
-                      },
+                      onTap: () => ref.read(promotionTypeProvider.notifier).state = t,
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
                           color: isActive ? AppTheme.primary : AppTheme.background,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: isActive ? AppTheme.primary : AppTheme.divider),
                         ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                promo.name,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: isActive ? Colors.white : AppTheme.textPrimary,
-                                ),
-                              ),
+                        child: Center(
+                          child: Text(
+                            t.label,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: isActive ? Colors.white : AppTheme.textPrimary,
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: isActive ? Colors.white24 : AppTheme.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                badge,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: isActive ? Colors.white : AppTheme.primary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => const SizedBox.shrink(),
-          ),
-          const SizedBox(height: 14),
-
-          // 상품 선택
-          Text(l10n.appliedProducts, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-          const SizedBox(height: 8),
-          ...cart.map((item) {
-            final isSelected = promoProductId == item.product.id;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: InkWell(
-                onTap: () {
-                  ref.read(promotionProductIdProvider.notifier).state =
-                      isSelected ? null : item.product.id;
-                },
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFE8F0FE) : AppTheme.background,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: isSelected ? AppTheme.primary : AppTheme.divider),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isSelected ? Icons.check_circle : Icons.circle_outlined,
-                        size: 20,
-                        color: isSelected ? AppTheme.primary : AppTheme.textDisabled,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          item.product.name,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                            color: AppTheme.textPrimary,
                           ),
                         ),
                       ),
-                      Text(
-                        l10n.itemCount(item.quantity),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              promoType.description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 14),
+
+            // 상품 선택 (수동 모드)
+            Text(l10n.appliedProducts, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+            const SizedBox(height: 8),
+            ...cart.map((item) {
+              final isSelected = promoProductId == item.product.id;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: InkWell(
+                  onTap: () {
+                    ref.read(promotionProductIdProvider.notifier).state =
+                        isSelected ? null : item.product.id;
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFFE8F0FE) : AppTheme.background,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: isSelected ? AppTheme.primary : AppTheme.divider),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isSelected ? Icons.check_circle : Icons.circle_outlined,
+                          size: 20,
+                          color: isSelected ? AppTheme.primary : AppTheme.textDisabled,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            item.product.name,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          l10n.itemCount(item.quantity),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          ],
 
           const SizedBox(height: 14),
 
@@ -1137,6 +1228,22 @@ class _PromotionTab extends ConsumerWidget {
       default:
         return type;
     }
+  }
+}
+
+// B-113: 프로모션 타입 라벨 헬퍼
+String _promoTypeLabel(String type, double value) {
+  switch (type) {
+    case 'buy1get1':
+      return 'B1G1 — Buy 1 Get 1 Free';
+    case 'buy2get1':
+      return 'B2G1 — Buy 2 Get 1 Free';
+    case 'percentOff':
+      return '${value.toInt()}% Off';
+    case 'amountOff':
+      return '${value.toStringAsFixed(0)} Off';
+    default:
+      return type;
   }
 }
 

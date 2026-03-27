@@ -1,0 +1,57 @@
+name: Deploy to Netlify
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build Flutter Web & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.38.9'
+        channel: 'stable'
+        cache: true
+
+    - name: Cache pub dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.pub-cache
+          .dart_tool
+        key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pub-
+
+    - name: Get dependencies
+      run: flutter pub get
+
+    - name: Run build_runner
+      run: flutter pub run build_runner build --delete-conflicting-outputs
+
+    - name: Build Flutter Web
+      run: flutter build web --release --base-href /
+
+    - name: Copy WASM assets to build output
+      run: |
+        echo "sqlite3.wasm in repo: $(ls -lh web/sqlite3.wasm)"
+        cp web/sqlite3.wasm build/web/sqlite3.wasm
+        cp web/drift_worker.dart.js build/web/drift_worker.dart.js
+        echo "Copied to build/web:"
+        ls -lh build/web/sqlite3.wasm build/web/drift_worker.dart.js
+
+    - name: Deploy to Netlify
+      uses: netlify/actions/cli@master
+      with:
+        args: deploy --prod --dir=build/web
+      env:
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

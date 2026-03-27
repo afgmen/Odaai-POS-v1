@@ -349,7 +349,10 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
           _showSnackBar(l10n.productAdded, AppTheme.success);
         }
       }
-    } catch (e) {
+    } catch (e, st) {
+      // Always log to console so staff can share browser DevTools output
+      // ignore: avoid_print
+      print('[ProductForm] save error: $e\n$st');
       if (mounted) {
         setState(() => _isProcessing = false);
         _showSnackBar(SnackBarHelper.sanitizeError(e), AppTheme.error);

@@ -980,9 +980,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get alreadyRefunded => 'Đơn hàng đã được hoàn tiền.';
 
   @override
-  String get recentCompletedOrders => 'Đơn hàng gần đây';
-
-  @override
   String get noCompletedOrders => 'Không có đơn hàng hoàn thành';
 
   @override

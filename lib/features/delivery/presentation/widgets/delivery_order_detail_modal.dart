@@ -344,8 +344,8 @@ class DeliveryOrderDetailModal extends ConsumerWidget {
     if (confirmed != true) return;
 
     await ref
-        .read(deliveryOrdersDaoProvider)
-        .updateStatus(order.id, DeliveryStatus.cancelled.value);
+        .read(deliveryOrdersRepositoryProvider)
+        .updateStatus(int.parse(order.id), DeliveryStatus.cancelled);
 
     if (context.mounted) Navigator.pop(context);
   }

@@ -980,9 +980,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alreadyRefunded => 'This order has already been refunded.';
 
   @override
-  String get recentCompletedOrders => 'Recent Completed Orders';
-
-  @override
   String get noCompletedOrders => 'No completed orders';
 
   @override

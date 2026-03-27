@@ -214,7 +214,13 @@ void main() {
         ),
       );
 
-      final positioned = tester.widget<Positioned>(find.byType(Positioned));
+      // Use descendant finder to scope to OdaBadge's Stack only,
+      // avoiding multiple Positioned matches from Scaffold internals.
+      final positionedFinder = find.descendant(
+        of: find.byType(Stack),
+        matching: find.byType(Positioned),
+      );
+      final positioned = tester.widget<Positioned>(positionedFinder.first);
       expect(positioned.top, -4);
       expect(positioned.right, -4);
     });

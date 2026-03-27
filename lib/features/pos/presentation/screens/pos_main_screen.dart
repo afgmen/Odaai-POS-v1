@@ -365,7 +365,7 @@ class _PosAppBarState extends State<_PosAppBar> {
                 const Icon(Icons.point_of_sale, color: AppTheme.primary, size: 22),
                 const SizedBox(width: 6),
                 const Text(
-                  'Oda POS',
+                  'Oda POS v3',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
                 ),
                 const SizedBox(width: 12),

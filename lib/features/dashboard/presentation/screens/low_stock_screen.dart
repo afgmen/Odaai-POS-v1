@@ -6,6 +6,7 @@ import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/database_providers.dart';
 import '../../providers/dashboard_provider.dart';
+import '../../../../core/utils/snackbar_helper.dart';
 
 /// 재고 부족 알림 화면
 class LowStockScreen extends ConsumerWidget {
@@ -126,8 +127,9 @@ class LowStockScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final dao = ref.read(productsDaoProvider);
     int addQty = 0;
+    final supplierCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
 
-    // eslint-disable-next-line
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) {
@@ -135,131 +137,153 @@ class LowStockScreen extends ConsumerWidget {
           builder: (ctx2, setLocalState) {
             return Dialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 제목
-                  Text(
-                    l10n.addStockTitle(product.name),
-                    style: const TextStyle(
-                        fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.currentStock(product.stock, product.minStock),
-                    style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-                  ),
-                  const SizedBox(height: 18),
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 제목
+                    Text(
+                      l10n.addStockTitle(product.name),
+                      style: const TextStyle(
+                          fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.currentStock(product.stock, product.minStock),
+                      style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 18),
 
-                  // 수량 입력
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // minus
-                      InkWell(
-                        onTap: () => setLocalState(() { if (addQty > 0) addQty--; }),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppTheme.background,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppTheme.divider),
-                          ),
-                          child: const Icon(Icons.remove, size: 20, color: AppTheme.textPrimary),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      // 수량 표시
-                      Text(
-                        '$addQty',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
-                      ),
-                      const SizedBox(width: 16),
-                      // plus
-                      InkWell(
-                        onTap: () => setLocalState(() { addQty++; }),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppTheme.primary,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.add, size: 20, color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // 빠른 추가 버튼
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [5, 10, 20, 50].map((n) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: InkWell(
-                          onTap: () => setLocalState(() { addQty = n; }),
-                          borderRadius: BorderRadius.circular(14),
+                    // 수량 입력
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        InkWell(
+                          onTap: () => setLocalState(() { if (addQty > 0) addQty--; }),
+                          borderRadius: BorderRadius.circular(8),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            width: 40,
+                            height: 40,
                             decoration: BoxDecoration(
                               color: AppTheme.background,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: AppTheme.divider),
                             ),
-                            child: Text('+$n', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                            child: const Icon(Icons.remove, size: 20, color: AppTheme.textPrimary),
                           ),
                         ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 20),
+                        const SizedBox(width: 16),
+                        Text(
+                          '$addQty',
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                        ),
+                        const SizedBox(width: 16),
+                        InkWell(
+                          onTap: () => setLocalState(() { addQty++; }),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.add, size: 20, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // 빠른 추가 버튼
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [5, 10, 20, 50].map((n) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: InkWell(
+                            onTap: () => setLocalState(() { addQty = n; }),
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppTheme.background,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppTheme.divider),
+                              ),
+                              child: Text('+$n', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 18),
 
-                  // 버튼 행
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: () => Navigator.pop(ctx, false),
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: AppTheme.background,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppTheme.divider),
+                    // 입고 출처 (supplier_name)
+                    Text(l10n.stockSource, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: supplierCtrl,
+                      decoration: InputDecoration(
+                        hintText: l10n.stockSourceHint,
+                        prefixIcon: const Icon(Icons.local_shipping_outlined, size: 20),
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 메모 (reason)
+                    Text(l10n.reasonOptional, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppTheme.textSecondary)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: noteCtrl,
+                      decoration: InputDecoration(
+                        hintText: l10n.reasonHint,
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 버튼 행
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => Navigator.pop(ctx, false),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: AppTheme.background,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: AppTheme.divider),
+                              ),
+                              child: Center(child: Text(l10n.cancel, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary))),
                             ),
-                            child: Center(child: Text(l10n.cancel, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary))),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: InkWell(
-                          onTap: () {
-                            if (addQty > 0) Navigator.pop(ctx, true);
-                          },
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: addQty > 0 ? AppTheme.primary : AppTheme.textDisabled,
-                              borderRadius: BorderRadius.circular(10),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              if (addQty > 0) Navigator.pop(ctx, true);
+                            },
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: addQty > 0 ? AppTheme.primary : AppTheme.textDisabled,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Center(child: Text(l10n.addStock, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white))),
                             ),
-                            child: Center(child: Text(l10n.addStock, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white))),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -267,25 +291,29 @@ class LowStockScreen extends ConsumerWidget {
       },
     );
 
+    final supplier = supplierCtrl.text.trim();
+    final note = noteCtrl.text.trim();
+    supplierCtrl.dispose();
+    noteCtrl.dispose();
+
     if (result == true && context.mounted) {
-      await dao.updateStock(
-        productId: product.id,
-        quantity: addQty,
-        type: 'in',
-        reason: l10n.stockReplenishReason,
-      );
-      // Snackbar 표시
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.stockAddedMsg(product.name, addQty)),
-            duration: const Duration(seconds: 2),
-            backgroundColor: AppTheme.success,
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12), topRight: Radius.circular(12))),
-          ),
+      try {
+        await dao.updateStock(
+          productId: product.id,
+          quantity: addQty,
+          type: 'in',
+          reason: note.isNotEmpty ? note : l10n.stockReplenishReason,
+          supplierName: supplier.isNotEmpty ? supplier : null,
         );
+        // T-8: POS 화면 즉시 갱신
+        ref.read(productChangeSignalProvider.notifier).state++;
+        if (context.mounted) {
+          SnackBarHelper.showSuccess(context, l10n.stockAddedMsg(product.name, addQty));
+        }
+      } catch (e) {
+        if (context.mounted) {
+          SnackBarHelper.showSanitizedError(context, e);
+        }
       }
     }
   }

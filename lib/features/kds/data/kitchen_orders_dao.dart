@@ -428,29 +428,38 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// 평균 조리 시간 계산 (초 단위) - 오늘 주문만
+  /// T-9: startedAt/readyAt 없으면 createdAt→servedAt fallback 사용
   Future<double> calculateAveragePrepTime() async {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     final orders = await (select(kitchenOrders)
-          ..where((t) => t.status.equals('READY') | t.status.equals('SERVED'))
-          ..where((t) => t.startedAt.isNotNull())
-          ..where((t) => t.readyAt.isNotNull())
+          ..where((t) => t.status.equals('SERVED'))
           ..where((t) => t.createdAt.isBiggerOrEqualValue(startOfDay))
           ..where((t) => t.createdAt.isSmallerThanValue(endOfDay)))
         .get();
 
     if (orders.isEmpty) return 0.0;
 
-    final totalSeconds = orders.fold<int>(0, (sum, order) {
-      if (order.startedAt != null && order.readyAt != null) {
-        final duration = order.readyAt!.difference(order.startedAt!);
-        return sum + duration.inSeconds;
-      }
-      return sum;
-    });
+    int totalSeconds = 0;
+    int validCount = 0;
 
-    return totalSeconds / orders.length;
+    for (final order in orders) {
+      if (order.startedAt != null && order.readyAt != null) {
+        // Preferred: startedAt → readyAt (KDS button flow)
+        final duration = order.readyAt!.difference(order.startedAt!);
+        totalSeconds += duration.inSeconds;
+        validCount++;
+      } else if (order.servedAt != null) {
+        // Fallback: createdAt → servedAt (auto-serve flow)
+        final duration = order.servedAt!.difference(order.createdAt);
+        totalSeconds += duration.inSeconds;
+        validCount++;
+      }
+    }
+
+    if (validCount == 0) return 0.0;
+    return totalSeconds / validCount;
   }
 }

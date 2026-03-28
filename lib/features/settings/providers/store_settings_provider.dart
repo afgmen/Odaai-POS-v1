@@ -39,21 +39,21 @@ class StoreSettingsNotifier extends Notifier<Map<String, dynamic>> {
   }
 
   Future<void> setString(String key, String value) async {
+    state = {...state, key: value}; // Update state immediately
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setString(key, value);
-    state = {...state, key: value};
   }
 
   Future<void> setBool(String key, bool value) async {
+    state = {...state, key: value}; // Update state immediately
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setBool(key, value);
-    state = {...state, key: value};
   }
 
   Future<void> setDouble(String key, double value) async {
+    state = {...state, key: value}; // Update state immediately
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setDouble(key, value);
-    state = {...state, key: value};
   }
 }
 

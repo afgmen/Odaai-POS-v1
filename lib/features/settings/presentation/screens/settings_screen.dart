@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -788,6 +789,36 @@ class _BackupRestoreCard extends StatelessWidget {
   }
 
   Future<void> _handleCreateBackup(BuildContext context, WidgetRef ref) async {
+    // T-7: Backup requires file system access — not available in browser
+    if (kIsWeb) {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.blue),
+                SizedBox(width: 10),
+                Text('Browser Limitation'),
+              ],
+            ),
+            content: const Text(
+              'File backup is not supported in the browser.\n\n'
+              'To back up your data, use the Excel export in the Reports screen. '
+              'It contains all sales, products, and payment data.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
     try {
       final backupService = ref.read(backupServiceProvider);
       final currentEmployee = ref.read(currentEmployeeProvider);

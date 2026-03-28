@@ -68,11 +68,19 @@ final previousDateRangeProvider =
 
 // ── 리포트 데이터 Providers ─────────────────────
 
-/// 매출 합계
+/// 매출 합계 (POS sales + 배달 플랫폼 주문 포함)
 final reportTotalSalesProvider = FutureProvider<double>((ref) async {
   final dao = ref.watch(salesDaoProvider);
+  final db = ref.watch(databaseProvider);
   final range = ref.watch(reportDateRangeProvider);
-  return await dao.getTotalSales(range.from, range.to);
+
+  final posSales = await dao.getTotalSales(range.from, range.to);
+
+  // U-25: 배달 플랫폼 주문 매출 포함 (CANCELLED 제외)
+  final deliveryRevenue = await db.deliveryOrdersDao.revenueByPlatformInRange(range.from, range.to);
+  final totalDelivery = deliveryRevenue.values.fold(0.0, (sum, v) => sum + v);
+
+  return posSales + totalDelivery;
 });
 
 /// 주문 건수

@@ -294,9 +294,11 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
     setState(() => _isProcessing = true);
     try {
       final dao = ref.read(productsDaoProvider);
-      // categoryId → category name 매핑 (텍스트 필드 동기화용)
-      final catMap = ref.read(categoryNameMapProvider).valueOrNull ?? {};
-      final categoryText = _selectedCategoryId != null ? catMap[_selectedCategoryId!] : null;
+      // U-19: activeCategoriesListProvider로 직접 조회 (categoryNameMapProvider는 FutureProvider라 최신 반영 지연 가능)
+      final categories = ref.read(activeCategoriesListProvider).valueOrNull ?? [];
+      final categoryText = _selectedCategoryId != null
+          ? categories.where((c) => c.id == _selectedCategoryId).firstOrNull?.name
+          : null;
 
       if (_isEditMode) {
         // 수정 모드 — Companion을 직접 구성하여 write
@@ -828,6 +830,13 @@ class _ProductFormModalState extends ConsumerState<ProductFormModal> {
               onChanged: (value) {
                 setState(() {
                   _selectedCategoryId = value;
+                  // U-24: 카테고리 선택 시 해당 VAT 세율 자동 적용
+                  if (value != null) {
+                    final selected = categories.where((c) => c.id == value).firstOrNull;
+                    if (selected?.vatRate != null) {
+                      _vatRate = selected!.vatRate!;
+                    }
+                  }
                 });
               },
             ),

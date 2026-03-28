@@ -6,6 +6,7 @@ import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../providers/database_providers.dart';
 import '../../../products/providers/category_provider.dart';
+import '../../../products/providers/products_management_provider.dart';
 
 class CategoryManagementScreen extends ConsumerWidget {
   const CategoryManagementScreen({super.key});
@@ -75,6 +76,8 @@ class CategoryManagementScreen extends ConsumerWidget {
             vatRate: vatRate,
           );
           ref.invalidate(activeCategoriesListProvider);
+          ref.invalidate(categoryNameMapProvider);
+          ref.invalidate(mgmtCategoryListProvider);
         },
       ),
     );
@@ -147,6 +150,8 @@ class _CategoryCard extends ConsumerWidget {
             vatRate: vatRate,
           );
           ref.invalidate(activeCategoriesListProvider);
+          ref.invalidate(categoryNameMapProvider);
+          ref.invalidate(mgmtCategoryListProvider);
         },
       ),
     );
@@ -171,6 +176,8 @@ class _CategoryCard extends ConsumerWidget {
               final db = ref.read(databaseProvider);
               await db.categoriesDao.deleteCategory(category.id);
               ref.invalidate(activeCategoriesListProvider);
+          ref.invalidate(categoryNameMapProvider);
+          ref.invalidate(mgmtCategoryListProvider);
               if (context.mounted) Navigator.pop(context);
             },
             child: Text(l10n.delete, style: const TextStyle(color: AppTheme.error)),

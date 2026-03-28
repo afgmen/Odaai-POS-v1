@@ -133,8 +133,8 @@ class TableMergeModal extends ConsumerWidget {
     final currentDiscount = currentSale?.discount ?? 0;
     final targetDiscount = targetSale?.discount ?? 0;
 
-    // T-2: both tables have promotions → let user choose which to keep
-    if (currentDiscount > 0 && targetDiscount > 0) {
+    // T-2: at least one table has a promotion → ask user
+    if (currentDiscount > 0 || targetDiscount > 0) {
       _showPromotionPickerDialog(
         context,
         ref,
@@ -143,17 +143,12 @@ class TableMergeModal extends ConsumerWidget {
         targetDiscount: targetDiscount,
       );
     } else {
-      // Only one (or neither) has a promotion — keep whichever is non-zero
-      _showConfirmDialog(
-        context,
-        ref,
-        targetTable,
-        chosenDiscount: currentDiscount + targetDiscount,
-      );
+      // Neither table has a promotion
+      _showConfirmDialog(context, ref, targetTable, chosenDiscount: 0);
     }
   }
 
-  /// Step 2a: show promotion picker when both tables have a discount.
+  /// Step 2a: show promotion picker when at least one table has a discount.
   void _showPromotionPickerDialog(
     BuildContext context,
     WidgetRef ref,
@@ -161,40 +156,52 @@ class TableMergeModal extends ConsumerWidget {
     required double currentDiscount,
     required double targetDiscount,
   }) {
+    final bothHavePromo = currentDiscount > 0 && targetDiscount > 0;
+    final activeDiscount = currentDiscount > 0 ? currentDiscount : targetDiscount;
+    final activeTableNumber =
+        currentDiscount > 0 ? currentTable.tableNumber : targetTable.tableNumber;
+
+    final description = bothHavePromo
+        ? 'Both Table ${currentTable.tableNumber} and Table ${targetTable.tableNumber} '
+            'have promotions applied.\n\nWhich promotion should apply to the merged table?'
+        : 'Table $activeTableNumber has a promotion applied.\n\n'
+            'Should the merged table keep this promotion?';
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Choose Promotion'),
+        title: const Text('Promotion'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Both Table ${currentTable.tableNumber} and Table ${targetTable.tableNumber} '
-              'have promotions applied.\n\nWhich promotion should apply to the merged table?',
-            ),
+            Text(description),
             const SizedBox(height: 20),
+            if (currentDiscount > 0) ...[
+              _PromoOptionTile(
+                tableNumber: currentTable.tableNumber,
+                discount: currentDiscount,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showConfirmDialog(context, ref, targetTable, chosenDiscount: currentDiscount);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (targetDiscount > 0) ...[
+              _PromoOptionTile(
+                tableNumber: targetTable.tableNumber,
+                discount: targetDiscount,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showConfirmDialog(context, ref, targetTable, chosenDiscount: targetDiscount);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
             _PromoOptionTile(
-              tableNumber: currentTable.tableNumber,
-              discount: currentDiscount,
-              onTap: () {
-                Navigator.pop(ctx);
-                _showConfirmDialog(context, ref, targetTable, chosenDiscount: currentDiscount);
-              },
-            ),
-            const SizedBox(height: 8),
-            _PromoOptionTile(
-              tableNumber: targetTable.tableNumber,
-              discount: targetDiscount,
-              onTap: () {
-                Navigator.pop(ctx);
-                _showConfirmDialog(context, ref, targetTable, chosenDiscount: targetDiscount);
-              },
-            ),
-            const SizedBox(height: 8),
-            _PromoOptionTile(
-              tableNumber: null, // "No promotion" option
-              discount: 0,
+              tableNumber: null,
+              discount: activeDiscount, // passed but unused when isNoPromo=true
               onTap: () {
                 Navigator.pop(ctx);
                 _showConfirmDialog(context, ref, targetTable, chosenDiscount: 0);

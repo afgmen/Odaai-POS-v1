@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../database/app_database.dart';
 import '../../../../providers/database_providers.dart';
 import '../../../tables/data/tables_providers.dart';
+
+final vndFormat = NumberFormat('#,###', 'en_US');
 
 class TableMergeModal extends ConsumerWidget {
   final RestaurantTable currentTable;
@@ -86,7 +88,7 @@ class TableMergeModal extends ConsumerWidget {
                           title: Text('Table ${table.tableNumber}'),
                           subtitle: Text('Capacity: ${table.seats} | Status: ${table.status}'),
                           trailing: const Icon(Icons.arrow_forward),
-                          onTap: () => _confirmMerge(context, ref, table),
+                          onTap: () => _handleTableSelection(context, ref, table),
                         ),
                       );
                     },
@@ -103,7 +105,120 @@ class TableMergeModal extends ConsumerWidget {
     );
   }
 
-  void _confirmMerge(BuildContext context, WidgetRef ref, RestaurantTable targetTable) {
+  /// Step 1: load both sales, decide whether to show promotion picker or go
+  /// straight to the confirm dialog.
+  Future<void> _handleTableSelection(
+    BuildContext context,
+    WidgetRef ref,
+    RestaurantTable targetTable,
+  ) async {
+    if (currentSaleId == null) {
+      _showConfirmDialog(context, ref, targetTable, chosenDiscount: 0);
+      return;
+    }
+
+    final db = ref.read(databaseProvider);
+
+    final currentSale = await (db.select(db.sales)
+          ..where((s) => s.id.equals(currentSaleId!)))
+        .getSingleOrNull();
+
+    final targetSale = await (db.select(db.sales)
+          ..where((s) => s.tableId.equals(targetTable.id))
+          ..where((s) => s.status.isIn(['open', 'pending'])))
+        .getSingleOrNull();
+
+    if (!context.mounted) return;
+
+    final currentDiscount = currentSale?.discount ?? 0;
+    final targetDiscount = targetSale?.discount ?? 0;
+
+    // T-2: both tables have promotions → let user choose which to keep
+    if (currentDiscount > 0 && targetDiscount > 0) {
+      _showPromotionPickerDialog(
+        context,
+        ref,
+        targetTable,
+        currentDiscount: currentDiscount,
+        targetDiscount: targetDiscount,
+      );
+    } else {
+      // Only one (or neither) has a promotion — keep whichever is non-zero
+      _showConfirmDialog(
+        context,
+        ref,
+        targetTable,
+        chosenDiscount: currentDiscount + targetDiscount,
+      );
+    }
+  }
+
+  /// Step 2a: show promotion picker when both tables have a discount.
+  void _showPromotionPickerDialog(
+    BuildContext context,
+    WidgetRef ref,
+    RestaurantTable targetTable, {
+    required double currentDiscount,
+    required double targetDiscount,
+  }) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Choose Promotion'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Both Table ${currentTable.tableNumber} and Table ${targetTable.tableNumber} '
+              'have promotions applied.\n\nWhich promotion should apply to the merged table?',
+            ),
+            const SizedBox(height: 20),
+            _PromoOptionTile(
+              tableNumber: currentTable.tableNumber,
+              discount: currentDiscount,
+              onTap: () {
+                Navigator.pop(ctx);
+                _showConfirmDialog(context, ref, targetTable, chosenDiscount: currentDiscount);
+              },
+            ),
+            const SizedBox(height: 8),
+            _PromoOptionTile(
+              tableNumber: targetTable.tableNumber,
+              discount: targetDiscount,
+              onTap: () {
+                Navigator.pop(ctx);
+                _showConfirmDialog(context, ref, targetTable, chosenDiscount: targetDiscount);
+              },
+            ),
+            const SizedBox(height: 8),
+            _PromoOptionTile(
+              tableNumber: null, // "No promotion" option
+              discount: 0,
+              onTap: () {
+                Navigator.pop(ctx);
+                _showConfirmDialog(context, ref, targetTable, chosenDiscount: 0);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Step 2b: confirm merge with the already-chosen discount.
+  void _showConfirmDialog(
+    BuildContext context,
+    WidgetRef ref,
+    RestaurantTable targetTable, {
+    required double chosenDiscount,
+  }) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -121,7 +236,7 @@ class TableMergeModal extends ConsumerWidget {
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
             onPressed: () async {
               Navigator.pop(ctx);
-              await _performMerge(context, ref, targetTable);
+              await _performMerge(context, ref, targetTable, chosenDiscount: chosenDiscount);
               if (context.mounted) Navigator.pop(context, true);
             },
             child: const Text('Merge', style: TextStyle(color: Colors.white)),
@@ -134,10 +249,11 @@ class TableMergeModal extends ConsumerWidget {
   Future<void> _performMerge(
     BuildContext context,
     WidgetRef ref,
-    RestaurantTable targetTable,
-  ) async {
+    RestaurantTable targetTable, {
+    required double chosenDiscount,
+  }) async {
     final db = ref.read(databaseProvider);
-    
+
     try {
       if (currentSaleId == null) {
         throw Exception('Current sale not found');
@@ -152,7 +268,7 @@ class TableMergeModal extends ConsumerWidget {
         throw Exception('Current sale not found');
       }
 
-      // Find target table's sale (status is 'open' for active sales - issue #2)
+      // Find target table's sale
       final targetSale = await (db.select(db.sales)
             ..where((s) => s.tableId.equals(targetTable.id))
             ..where((s) => s.status.isIn(['open', 'pending'])))
@@ -181,16 +297,15 @@ class TableMergeModal extends ConsumerWidget {
         );
       }
 
-      // B-107: 합산 후 소계/합계/할인/세금 모두 업데이트
+      // B-107 / T-2: use the user-chosen discount, not a blind sum
       final newSubtotal = currentSale.subtotal + targetSale.subtotal;
-      final newDiscount = (currentSale.discount ?? 0) + (targetSale.discount ?? 0);
-      final newTax = (currentSale.tax ?? 0) + (targetSale.tax ?? 0);
-      final newTotal = newSubtotal - newDiscount + newTax;
-      
+      final newTax = currentSale.tax + targetSale.tax;
+      final newTotal = newSubtotal - chosenDiscount + newTax;
+
       await (db.update(db.sales)..where((s) => s.id.equals(currentSaleId!)))
           .write(SalesCompanion(
         subtotal: drift.Value(newSubtotal),
-        discount: drift.Value(newDiscount),
+        discount: drift.Value(chosenDiscount),
         tax: drift.Value(newTax),
         total: drift.Value(newTotal),
       ));
@@ -227,5 +342,65 @@ class TableMergeModal extends ConsumerWidget {
         );
       }
     }
+  }
+}
+
+/// A tappable card showing one promotion option in the picker dialog.
+class _PromoOptionTile extends StatelessWidget {
+  final String? tableNumber; // null = "No promotion"
+  final double discount;
+  final VoidCallback onTap;
+
+  const _PromoOptionTile({
+    required this.tableNumber,
+    required this.discount,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isNoPromo = tableNumber == null;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: isNoPromo ? Colors.grey.shade300 : AppTheme.primary),
+          borderRadius: BorderRadius.circular(8),
+          color: isNoPromo ? Colors.transparent : AppTheme.primary.withValues(alpha: 0.05),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isNoPromo ? Icons.remove_circle_outline : Icons.local_offer_outlined,
+              color: isNoPromo ? Colors.grey : AppTheme.primary,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isNoPromo ? 'No promotion' : 'Table $tableNumber\'s promotion',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isNoPromo ? Colors.grey[600] : Colors.black87,
+                    ),
+                  ),
+                  if (!isNoPromo)
+                    Text(
+                      'Discount: -₫${vndFormat.format(discount)}',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
   }
 }

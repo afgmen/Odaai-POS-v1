@@ -282,6 +282,24 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
     return updateOrderStatus(id, 'SERVED');
   }
 
+  /// U-23: saleId로 해당 sale의 모든 kitchen orders를 SERVED로 변경
+  /// POS에서 결제 완료 시 주방에도 즉시 반영되도록
+  Future<void> serveOrdersBySaleId(int saleId) async {
+    final orders = await (select(kitchenOrders)
+          ..where((t) => t.saleId.equals(saleId) & t.status.isNotIn(['CANCELLED', 'SERVED'])))
+        .get();
+    final now = DateTime.now();
+    for (final order in orders) {
+      await (update(kitchenOrders)..where((t) => t.id.equals(order.id))).write(
+        KitchenOrdersCompanion(
+          status: const Value('SERVED'),
+          servedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+    }
+  }
+
   /// B-UAT: saleId로 해당 sale의 모든 kitchen orders를 CANCELLED로 변경
   /// POS에서 주문 취소 시 주방에도 즉시 반영되도록
   Future<void> cancelOrdersBySaleId(int saleId, {String? cancellationReason}) async {

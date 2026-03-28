@@ -696,11 +696,12 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     if (confirmed == true) {
       final currentEmployee = ref.read(currentEmployeeProvider);
       await db.customStatement('''
-        INSERT INTO permission_logs (employee_id, action_type, action_target, permission_granted, reason, created_at)
-        VALUES (?, 'FORCE_CHECKOUT', ?, 1, 'Kitchen status: ${status ?? 'UNKNOWN'}', CAST(strftime('%s', 'now') AS INTEGER))
+        INSERT INTO permission_logs (employee_id, action_type, action_target, permission_granted, metadata)
+        VALUES (?, 'FORCE_CHECKOUT', ?, 1, ?)
       ''', [
         currentEmployee?.id ?? 0,
         'sale_$saleId',
+        'Kitchen status: ${status ?? 'UNKNOWN'}',
       ]);
     }
     
@@ -1005,6 +1006,14 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         debugPrint('[Checkout] Table ${widget.tableId} reset to AVAILABLE');
       }
       }); // end transaction
+
+      // U-23: 결제 완료 후 주방 주문 SERVED로 자동 업데이트
+      try {
+        final finalSaleId = widget.saleId ?? createdSale.id;
+        await db.kitchenOrdersDao.serveOrdersBySaleId(finalSaleId);
+      } catch (e) {
+        debugPrint('[Checkout] Failed to mark kitchen orders as served: $e');
+      }
 
       if (mounted) {
         ref.read(cartProvider.notifier).clear();

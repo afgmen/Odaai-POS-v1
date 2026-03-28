@@ -132,59 +132,64 @@ class _ReportsScreenContent extends ConsumerWidget {
     final avgAsync = ref.watch(reportAvgOrderProvider);
     final growthAsync = ref.watch(reportGrowthProvider);
 
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        SizedBox(
-          width: 170,
-          child: totalAsync.when(
-            data: (total) {
-              final growth = growthAsync.valueOrNull;
-              return KpiSummaryCard(
-                title: l10n.totalSalesAmount,
-                value: priceFormatter.format(total),
-                icon: Icons.attach_money,
-                color: AppTheme.primary,
-                bgColor: const Color(0xFFE8F0FE),
-                subtitle: growth != null
-                    ? '${growth >= 0 ? '+' : ''}${growth.toStringAsFixed(1)}%'
-                    : null,
-              );
-            },
-            loading: () => _loadingCard(),
-            error: (_, _) => _errorCard(l10n),
-          ),
-        ),
-        SizedBox(
-          width: 170,
-          child: countAsync.when(
-            data: (count) => KpiSummaryCard(
-              title: l10n.orderCount,
-              value: '$count${l10n.orderUnit}',
-              icon: Icons.receipt_long,
-              color: AppTheme.success,
-              bgColor: const Color(0xFFE6FAF2),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = ((constraints.maxWidth - 20) / 3).clamp(140.0, 240.0);
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            SizedBox(
+              width: cardWidth,
+              child: totalAsync.when(
+                data: (total) {
+                  final growth = growthAsync.valueOrNull;
+                  return KpiSummaryCard(
+                    title: l10n.totalSalesAmount,
+                    value: priceFormatter.format(total),
+                    icon: Icons.attach_money,
+                    color: AppTheme.primary,
+                    bgColor: const Color(0xFFE8F0FE),
+                    subtitle: growth != null
+                        ? '${growth >= 0 ? '+' : ''}${growth.toStringAsFixed(1)}%'
+                        : null,
+                  );
+                },
+                loading: () => _loadingCard(),
+                error: (_, _) => _errorCard(l10n),
+              ),
             ),
-            loading: () => _loadingCard(),
-            error: (_, _) => _errorCard(l10n),
-          ),
-        ),
-        SizedBox(
-          width: 170,
-          child: avgAsync.when(
-            data: (avg) => KpiSummaryCard(
-              title: l10n.avgOrderAmount,
-              value: priceFormatter.format(avg),
-              icon: Icons.bar_chart,
-              color: AppTheme.warning,
-              bgColor: const Color(0xFFFFF3E0),
+            SizedBox(
+              width: cardWidth,
+              child: countAsync.when(
+                data: (count) => KpiSummaryCard(
+                  title: l10n.orderCount,
+                  value: '$count${l10n.orderUnit}',
+                  icon: Icons.receipt_long,
+                  color: AppTheme.success,
+                  bgColor: const Color(0xFFE6FAF2),
+                ),
+                loading: () => _loadingCard(),
+                error: (_, _) => _errorCard(l10n),
+              ),
             ),
-            loading: () => _loadingCard(),
-            error: (_, _) => _errorCard(l10n),
-          ),
-        ),
-      ],
+            SizedBox(
+              width: cardWidth,
+              child: avgAsync.when(
+                data: (avg) => KpiSummaryCard(
+                  title: l10n.avgOrderAmount,
+                  value: priceFormatter.format(avg),
+                  icon: Icons.bar_chart,
+                  color: AppTheme.warning,
+                  bgColor: const Color(0xFFFFF3E0),
+                ),
+                loading: () => _loadingCard(),
+                error: (_, _) => _errorCard(l10n),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

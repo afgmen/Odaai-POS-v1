@@ -150,10 +150,9 @@ class ClosingService {
   }
 
   /// 오늘 마감 가능 여부 확인
+  /// B-106: 같은 날 여러 교대 종료 허용 — 항상 true 반환
   Future<bool> canCloseToday() async {
-    final today = DateTime.now();
-    final targetDate = DateTime(today.year, today.month, today.day);
-    return !(await _dao.hasClosingForDate(targetDate));
+    return true;
   }
 
   /// 시재 차액 계산

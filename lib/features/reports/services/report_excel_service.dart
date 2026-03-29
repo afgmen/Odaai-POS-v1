@@ -1,9 +1,10 @@
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html show Blob, Url, AnchorElement;
-
 import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:intl/intl.dart';
+
+// Conditional import: uses dart:html only on web, stub elsewhere.
+import 'web_download_stub.dart'
+    if (dart.library.html) 'web_download_web.dart';
 
 import '../../../database/daos/sales_dao.dart';
 
@@ -111,16 +112,8 @@ class ReportExcelService {
         'oda_pos_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
     final fileBytes = excel.save();
     if (fileBytes != null && kIsWeb) {
-      // RPT-006: Web download via Blob URL
-      final blob = html.Blob(
-        [fileBytes],
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      );
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      html.AnchorElement(href: url)
-        ..setAttribute('download', fileName)
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      // RPT-006: Web download via Blob URL (conditional import handles platform)
+      downloadExcelBytes(fileBytes, fileName);
     }
 
     return fileName;

@@ -16,3 +16,8 @@
 # uCrop
 -dontwarn com.yalantis.ucrop.**
 -keep class com.yalantis.ucrop.** { *; }
+
+# Google Play Core — referenced by Flutter deferred components (optional feature).
+# Not used in this app; suppress R8 missing-class errors.
+-dontwarn com.google.android.play.core.**
+-keep class com.google.android.play.core.** { *; }

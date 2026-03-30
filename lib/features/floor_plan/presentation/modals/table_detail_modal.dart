@@ -288,6 +288,11 @@ class TableDetailModal extends ConsumerWidget {
           cancelledAt: Value(DateTime.now()),
         ),
       );
+      // U-23b: cancel kitchen orders so they disappear from KDS active list
+      await db.kitchenOrdersDao.cancelOrdersBySaleId(
+        table.currentSaleId!,
+        cancellationReason: reason,
+      );
       debugPrint('[Cancel] Sale ${table.currentSaleId} cancelled: $reason');
     } catch (e) {
       debugPrint('[Cancel] Error saving cancellation: $e');

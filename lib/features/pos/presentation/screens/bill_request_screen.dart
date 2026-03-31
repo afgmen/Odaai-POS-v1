@@ -245,10 +245,9 @@ class _BillItemRow extends StatelessWidget {
   }
 
   // Fix #19, #20: ₫ 기호 통일 + 천 단위 구분자 추가
-  final _currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
-
   String _formatCurrency(double amount) {
-    return _currencyFormatter.format(amount);
+    final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+    return formatter.format(amount);
   }
 }
 

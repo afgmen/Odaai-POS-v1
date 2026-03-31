@@ -3,7 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 
 /// Cancel reason selection modal
 class CancelReasonModal extends StatefulWidget {
-  final Function(String reason) onConfirm;
+  final Future<void> Function(String reason) onConfirm;
 
   const CancelReasonModal({super.key, required this.onConfirm});
 
@@ -28,7 +28,7 @@ class _CancelReasonModalState extends State<CancelReasonModal> {
     super.dispose();
   }
 
-  void _confirm() {
+  Future<void> _confirm() async {
     if (_selectedReason == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -54,8 +54,10 @@ class _CancelReasonModalState extends State<CancelReasonModal> {
       finalReason = 'Other: $custom';
     }
 
-    widget.onConfirm(finalReason);
-    Navigator.of(context).pop();
+    // Await the callback so all DB operations complete before closing the dialog.
+    // This ensures the KDS stream updates before the dialog context is removed.
+    await widget.onConfirm(finalReason);
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override

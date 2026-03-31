@@ -276,11 +276,15 @@ class TableDetailModal extends ConsumerWidget {
   }
 
   Future<void> _saveCancellation(WidgetRef ref, String reason) async {
-    final db = ref.read(databaseProvider);
     if (table.currentSaleId == null) return;
 
+    // Capture both db and saleId synchronously before any await.
+    final db = ref.read(databaseProvider);
+    final saleId = table.currentSaleId!;
+
+    // 1. Mark the sale as cancelled
     try {
-      await (db.update(db.sales)..where((s) => s.id.equals(table.currentSaleId!)))
+      await (db.update(db.sales)..where((s) => s.id.equals(saleId)))
           .write(
         SalesCompanion(
           status: const Value('cancelled'),
@@ -288,15 +292,17 @@ class TableDetailModal extends ConsumerWidget {
           cancelledAt: Value(DateTime.now()),
         ),
       );
-      // U-23b: cancel kitchen orders so they disappear from KDS active list
-      await db.kitchenOrdersDao.cancelOrdersBySaleId(
-        table.currentSaleId!,
-        cancellationReason: reason,
-      );
-      debugPrint('[Cancel] Sale ${table.currentSaleId} cancelled: $reason');
     } catch (e) {
-      debugPrint('[Cancel] Error saving cancellation: $e');
+      debugPrint('[Cancel] Error saving sale cancellation: $e');
     }
+
+    // 2. U-23b: cancel kitchen orders so they disappear from KDS active list.
+    //    Kept outside the sale-update try/catch so any failure here is not swallowed silently.
+    await db.kitchenOrdersDao.cancelOrdersBySaleId(
+      saleId,
+      cancellationReason: reason,
+    );
+    debugPrint('[Cancel] Sale $saleId kitchen orders cancelled: $reason');
   }
 
   String _formatDuration(Duration d) {

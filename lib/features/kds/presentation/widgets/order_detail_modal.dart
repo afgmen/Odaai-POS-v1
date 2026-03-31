@@ -453,7 +453,7 @@ class OrderDetailModal extends ConsumerWidget {
     await showDialog<void>(
       context: context,
       builder: (ctx) => CancelReasonModal(
-        onConfirm: (reason) {
+        onConfirm: (reason) async {
           selectedReason = reason;
         },
       ),

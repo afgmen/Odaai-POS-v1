@@ -428,20 +428,19 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// Fix #3 (Stream): 오늘 완료(SERVED) 주문 개수 — 실시간 스트림
+  /// selectOnly().watchSingle()은 집계쿼리라 변경감지 불안정 →
+  /// 전체 행 watch 후 dart에서 count (변경 감지 확실)
   Stream<int> watchTodayServedCount() {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    final query = selectOnly(kitchenOrders)
-      ..addColumns([kitchenOrders.id.count()])
-      ..where(kitchenOrders.status.equals('SERVED'))
-      ..where(kitchenOrders.servedAt.isBiggerOrEqualValue(startOfDay))
-      ..where(kitchenOrders.servedAt.isSmallerThanValue(endOfDay));
-
-    return query
-        .map((row) => row.read(kitchenOrders.id.count()) ?? 0)
-        .watchSingle();
+    return (select(kitchenOrders)
+          ..where((t) => t.status.equals('SERVED'))
+          ..where((t) => t.servedAt.isBiggerOrEqualValue(startOfDay))
+          ..where((t) => t.servedAt.isSmallerThanValue(endOfDay)))
+        .watch()
+        .map((rows) => rows.length);
   }
 
   /// 평균 조리 시간 계산 (초 단위) - 오늘 주문만

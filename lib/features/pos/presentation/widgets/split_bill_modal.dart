@@ -18,7 +18,8 @@ class SplitBillModal extends ConsumerStatefulWidget {
 }
 
 class _SplitBillModalState extends ConsumerState<SplitBillModal> {
-  final priceFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0);
+  // Fix #19: 통화 기호 ₫ 통일 (đ → ₫)
+  final priceFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
   int _splitCount = 2;
   
   @override

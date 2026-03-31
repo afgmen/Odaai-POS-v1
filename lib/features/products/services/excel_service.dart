@@ -131,16 +131,16 @@ class ExcelService {
         }
       }
 
-      // ── 파일 저장 ──────────────────────────────
       final fileName = 'oda_products_${_dateTag()}.xlsx';
 
+      // Fix #11,#12: Web 플랫폼 — excel.save(fileName:) 자체가 다운로드 트리거
+      // FilePicker.saveFile은 Web에서 지원 안 되므로 스킵 → 에러 팝업 방지
       if (kIsWeb) {
-        // On web: let the excel package handle the browser download directly
-        excel.save(fileName: fileName);
-        return fileName;
+        final bytes = excel.save(fileName: fileName);
+        return bytes != null ? fileName : null;
       }
 
-      // On native: open OS save dialog
+      // ── 파일 저장 (네이티브 저장 다이얼로그) ──
       final bytes = excel.save();
       if (bytes == null) return null;
 

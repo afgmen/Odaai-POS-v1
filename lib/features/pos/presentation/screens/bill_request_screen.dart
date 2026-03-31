@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../database/app_database.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -243,8 +244,11 @@ class _BillItemRow extends StatelessWidget {
     );
   }
 
+  // Fix #19, #20: ₫ 기호 통일 + 천 단위 구분자 추가
+  final _currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+
   String _formatCurrency(double amount) {
-    return '${amount.toStringAsFixed(0)}đ';
+    return _currencyFormatter.format(amount);
   }
 }
 
@@ -279,7 +283,8 @@ class _SummaryRow extends StatelessWidget {
             ),
           ),
           Text(
-            '${amount < 0 ? '-' : ''}${amount.abs().toStringAsFixed(0)}đ',
+            // Fix #19, #20: ₫ 통일 + 천단위 구분자
+            '${amount < 0 ? '-' : ''}${NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0).format(amount.abs())}',
             style: TextStyle(
               fontSize: fontSize,
               fontWeight: isBold ? FontWeight.bold : FontWeight.w600,

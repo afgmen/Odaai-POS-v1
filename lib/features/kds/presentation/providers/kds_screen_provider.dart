@@ -39,6 +39,7 @@ final filteredOrdersProvider =
 });
 
 /// B-UAT: 상태별 주문 건수 Provider (KDS filter tab 배지 표시용)
+/// Fix #15: All 탭은 활성 주문(PENDING/PREPARING/READY)만 카운트 (SERVED/CANCELLED 제외)
 final orderCountByStatusProvider = StreamProvider<Map<String?, int>>((ref) {
   final dao = ref.watch(kitchenOrdersDaoProvider);
   return dao.watchAllOrdersWithItems().map((orders) {
@@ -51,7 +52,12 @@ final orderCountByStatusProvider = StreamProvider<Map<String?, int>>((ref) {
       OrderStatus.cancelled.value: 0,
     };
     for (final o in orders) {
-      counts[null] = (counts[null] ?? 0) + 1;
+      // Fix #15: All 탭 = 활성 주문 카운트만 (PENDING/PREPARING/READY)
+      if (o.order.status == OrderStatus.pending.value ||
+          o.order.status == OrderStatus.preparing.value ||
+          o.order.status == OrderStatus.ready.value) {
+        counts[null] = (counts[null] ?? 0) + 1;
+      }
       counts[o.order.status] = (counts[o.order.status] ?? 0) + 1;
     }
     return counts;

@@ -18,9 +18,8 @@ import '../widgets/cart_panel.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/payment_modal.dart';
 import '../widgets/product_card.dart';
-import '../../../kds/domain/services/kitchen_service.dart';
-import '../../../kds/domain/services/kitchen_service_provider.dart';
 import '../../../kds/presentation/screens/kds_mode_selection_screen.dart';
+import '../../../kds/data/kitchen_orders_providers.dart';
 import '../../data/models/order_type.dart';
 
 /// POS 메인 화면
@@ -644,6 +643,9 @@ Future<void> _handleSendToKitchen(BuildContext context, WidgetRef ref) async {
         createKitchenOrder: true,
       );
 
+      // Fix #16: 신규 sale ID를 provider에 저장 → cart 취소 시 kitchen order 취소 가능
+      ref.read(currentPendingSaleIdProvider.notifier).state = sale.id;
+
       // 테이블 상태 → ORDERING
       await tablesDao.updateTableStatus(
         tableId: tableId,
@@ -654,6 +656,7 @@ Future<void> _handleSendToKitchen(BuildContext context, WidgetRef ref) async {
     }
 
     // 장바구니 초기화
+    ref.read(currentPendingSaleIdProvider.notifier).state = null; // 전송 완료 후 초기화
     ref.read(cartProvider.notifier).clear();
     ref.read(discountValueProvider.notifier).state = 0;
     ref.read(promotionProductIdProvider.notifier).state = null;
@@ -873,61 +876,62 @@ class _EmployeeInfo extends ConsumerWidget {
   }
 }
 
-/// KDS 통계 배지 (완료, 진행중, 평균) — 실시간 KDS 데이터 반영
+/// KDS 통계 배지 (완료, 진행중, 평균)
 class _KdsStatsBadges extends ConsumerWidget {
   const _KdsStatsBadges();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final performanceAsync = ref.watch(kitchenPerformanceProvider);
+    // Fix #3: 하드코딩 '0' → 실시간 KDS 데이터 연결
+    final activeOrdersAsync = ref.watch(activeOrdersStreamProvider);
+    final todayServedAsync = ref.watch(todayServedCountProvider);
+    final avgPrepTimeAsync = ref.watch(averagePrepTimeProvider);
 
-    return performanceAsync.when(
-      data: (KitchenPerformance performance) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildStatBadge(
-            icon: Icons.check_circle_outline,
-            label: l10n.kdsCompleted,
-            value: '${performance.todayServedCount}',
-            color: Colors.green,
-          ),
-          const SizedBox(width: 8),
-          _buildStatBadge(
-            icon: Icons.pending_outlined,
-            label: l10n.kdsInProgress,
-            value: '${performance.totalActiveOrders}',
-            color: Colors.orange,
-          ),
-          const SizedBox(width: 8),
-          _buildStatBadge(
-            icon: Icons.timer_outlined,
-            label: l10n.kdsAverage,
-            value: performance.averagePrepTimeFormatted,
-            color: Colors.blue,
-          ),
-        ],
-      ),
-      loading: () => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildStatBadge(icon: Icons.check_circle_outline, label: l10n.kdsCompleted, value: '—', color: Colors.green),
-          const SizedBox(width: 8),
-          _buildStatBadge(icon: Icons.pending_outlined, label: l10n.kdsInProgress, value: '—', color: Colors.orange),
-          const SizedBox(width: 8),
-          _buildStatBadge(icon: Icons.timer_outlined, label: l10n.kdsAverage, value: '—', color: Colors.blue),
-        ],
-      ),
-      error: (_, __) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildStatBadge(icon: Icons.check_circle_outline, label: l10n.kdsCompleted, value: '0', color: Colors.green),
-          const SizedBox(width: 8),
-          _buildStatBadge(icon: Icons.pending_outlined, label: l10n.kdsInProgress, value: '0', color: Colors.orange),
-          const SizedBox(width: 8),
-          _buildStatBadge(icon: Icons.timer_outlined, label: l10n.kdsAverage, value: '0m 0s', color: Colors.blue),
-        ],
-      ),
+    final inProgressCount = activeOrdersAsync.when(
+      data: (orders) => orders
+          .where((o) => o.status == 'PENDING' || o.status == 'PREPARING')
+          .length,
+      loading: () => 0,
+      error: (_, __) => 0,
+    );
+    final completedCount = todayServedAsync.when(
+      data: (count) => count,
+      loading: () => 0,
+      error: (_, __) => 0,
+    );
+    final avgMinutes = avgPrepTimeAsync.when(
+      data: (mins) => mins,
+      loading: () => 0.0,
+      error: (_, __) => 0.0,
+    );
+    final avgMins = avgMinutes.floor();
+    final avgSecs = ((avgMinutes - avgMins) * 60).floor();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildStatBadge(
+          icon: Icons.check_circle_outline,
+          label: l10n.kdsCompleted,
+          value: '$completedCount',
+          color: Colors.green,
+        ),
+        const SizedBox(width: 8),
+        _buildStatBadge(
+          icon: Icons.pending_outlined,
+          label: l10n.kdsInProgress,
+          value: '$inProgressCount',
+          color: Colors.orange,
+        ),
+        const SizedBox(width: 8),
+        _buildStatBadge(
+          icon: Icons.timer_outlined,
+          label: l10n.kdsAverage,
+          value: '${avgMins}m ${avgSecs}s',
+          color: Colors.blue,
+        ),
+      ],
     );
   }
 

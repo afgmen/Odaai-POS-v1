@@ -109,16 +109,20 @@ final avgOccupancyTimeProvider = FutureProvider<double>((ref) {
   return dao.getAverageOccupancyTime();
 });
 
-/// 빈 테이블 개수
-final availableTableCountProvider = FutureProvider<int>((ref) {
-  final dao = ref.watch(tablesDaoProvider);
-  return dao.getAvailableTableCount();
+/// 빈 테이블 개수 (Fix #4: FutureProvider → StreamProvider 실시간 갱신)
+final availableTableCountProvider = StreamProvider<int>((ref) {
+  return ref.watch(allTablesStreamProvider.stream).map(
+    (tables) => tables.where((t) => t.status == 'AVAILABLE').length,
+  );
 });
 
-/// 점유 중인 테이블 개수
-final occupiedTableCountProvider = FutureProvider<int>((ref) {
-  final dao = ref.watch(tablesDaoProvider);
-  return dao.getOccupiedTableCount();
+/// 점유 중인 테이블 개수 (Fix #4: FutureProvider → StreamProvider 실시간 갱신)
+final occupiedTableCountProvider = StreamProvider<int>((ref) {
+  return ref.watch(allTablesStreamProvider.stream).map(
+    (tables) => tables
+        .where((t) => t.status != 'AVAILABLE' && t.status != 'CLEANING')
+        .length,
+  );
 });
 
 // ============================================================

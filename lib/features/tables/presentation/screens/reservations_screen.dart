@@ -219,6 +219,9 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
             shape: BoxShape.circle,
           ),
           weekendTextStyle: const TextStyle(color: Colors.red),
+          // Fix #22: 날짜 셀 마진 → 하이라이트 오버플로우 방지
+          cellMargin: const EdgeInsets.all(4.0),
+          outsideDaysVisible: false,
         ),
         headerStyle: const HeaderStyle(
           formatButtonVisible: true,

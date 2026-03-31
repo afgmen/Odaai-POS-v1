@@ -212,7 +212,8 @@ class _PlatformRow extends StatelessWidget {
                   fontSize: 13, color: AppTheme.textPrimary)),
         ),
         Text(
-          '$orders orders',
+          // Fix #18: 단수/복수 처리
+          orders == 1 ? '1 order' : '$orders orders',
           style: const TextStyle(
               fontSize: 12, color: AppTheme.textSecondary),
         ),

@@ -1746,7 +1746,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String kdsOrdersCount(Object count) {
-    return '$count orders';
+    // Fix #18: 단수/복수 처리
+    return count == 1 ? '1 order' : '$count orders';
   }
 
   @override
@@ -1896,7 +1897,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String kdsOrders(int count) {
-    return '$count orders';
+    // Fix #18: 단수/복수 처리
+    return count == 1 ? '1 order' : '$count orders';
   }
 
   @override

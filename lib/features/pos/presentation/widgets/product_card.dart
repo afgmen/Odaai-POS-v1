@@ -113,7 +113,8 @@ class ProductCard extends ConsumerWidget {
                             ),
                           ),
                         )
-                      else if (product.stock <= product.minStock)
+                      // Fix #14: minStock > 0 일 때만 Low Stock 배지 표시
+                      else if (product.minStock > 0 && product.stock <= product.minStock)
                         Positioned(
                           top: 8,
                           right: 8,

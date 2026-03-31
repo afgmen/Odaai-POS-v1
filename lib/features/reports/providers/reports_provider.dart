@@ -40,20 +40,24 @@ final customDateRangeProvider =
 });
 
 /// 계산된 날짜 범위
+/// Fix #13: to는 선택 날짜의 23:59:59.999 (하루 끝) 기준으로 쿼리
+DateTime _endOfDay(DateTime date) =>
+    DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+
 final reportDateRangeProvider =
     Provider<({DateTime from, DateTime to})>((ref) {
   final period = ref.watch(reportPeriodProvider);
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
-  final to = today.add(const Duration(days: 1));
 
   return switch (period) {
-    ReportPeriod.today => (from: today, to: to),
-    ReportPeriod.week => (from: today.subtract(const Duration(days: 6)), to: to),
-    ReportPeriod.month => (from: DateTime(now.year, now.month, 1), to: to),
+    // Fix #13: +1일 대신 endOfDay(today) 사용
+    ReportPeriod.today => (from: today, to: _endOfDay(today)),
+    ReportPeriod.week => (from: today.subtract(const Duration(days: 6)), to: _endOfDay(today)),
+    ReportPeriod.month => (from: DateTime(now.year, now.month, 1), to: _endOfDay(today)),
     ReportPeriod.custom => (
         from: ref.watch(customDateRangeProvider).from,
-        to: ref.watch(customDateRangeProvider).to.add(const Duration(days: 1)),
+        to: _endOfDay(ref.watch(customDateRangeProvider).to),
       ),
   };
 });

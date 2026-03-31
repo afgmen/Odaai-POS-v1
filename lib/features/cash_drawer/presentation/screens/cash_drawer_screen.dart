@@ -116,44 +116,61 @@ class CashDrawerScreen extends ConsumerWidget {
             const SizedBox(height: 16),
 
             // ─── 액션 버튼 ──────────────────────────
-            Row(
-              children: [
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.lock_open,
-                    label: l10n.openDrawer,
-                    color: AppTheme.success,
-                    onTap: () => _showAmountDialog(context, ref, l10n.openDrawer, 'open'),
+            // Fix #7: Closed 상태에서 Close/Deposit/Withdraw 버튼 비활성화
+            isOpenedAsync.when(
+              data: (isOpened) => Row(
+                children: [
+                  // Open 버튼: Closed 상태에서만 활성화
+                  Expanded(
+                    child: _ActionButton(
+                      icon: Icons.lock_open,
+                      label: l10n.openDrawer,
+                      color: AppTheme.success,
+                      onTap: isOpened
+                          ? null // 이미 열려있으면 비활성
+                          : () => _showAmountDialog(context, ref, l10n.openDrawer, 'open'),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.lock,
-                    label: l10n.closeDrawer,
-                    color: AppTheme.error,
-                    onTap: () => _showCloseDialog(context, ref),
+                  const SizedBox(width: 8),
+                  // Close 버튼: Opened 상태에서만 활성화
+                  Expanded(
+                    child: _ActionButton(
+                      icon: Icons.lock,
+                      label: l10n.closeDrawer,
+                      color: AppTheme.error,
+                      onTap: isOpened
+                          ? () => _showCloseDialog(context, ref)
+                          : null, // Closed 상태에서 비활성
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.add,
-                    label: l10n.deposit,
-                    color: AppTheme.primary,
-                    onTap: () => _showAmountDialog(context, ref, l10n.deposit, 'deposit'),
+                  const SizedBox(width: 8),
+                  // Deposit 버튼: Opened 상태에서만 활성화
+                  Expanded(
+                    child: _ActionButton(
+                      icon: Icons.add,
+                      label: l10n.deposit,
+                      color: AppTheme.primary,
+                      onTap: isOpened
+                          ? () => _showAmountDialog(context, ref, l10n.deposit, 'deposit')
+                          : null, // Closed 상태에서 비활성
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.remove,
-                    label: l10n.withdraw,
-                    color: Colors.orange,
-                    onTap: () => _showAmountDialog(context, ref, l10n.withdraw, 'withdraw'),
+                  const SizedBox(width: 8),
+                  // Withdraw 버튼: Opened 상태에서만 활성화
+                  Expanded(
+                    child: _ActionButton(
+                      icon: Icons.remove,
+                      label: l10n.withdraw,
+                      color: Colors.orange,
+                      onTap: isOpened
+                          ? () => _showAmountDialog(context, ref, l10n.withdraw, 'withdraw')
+                          : null, // Closed 상태에서 비활성
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
             ),
 
             const SizedBox(height: 24),
@@ -485,14 +502,17 @@ class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final VoidCallback onTap;
+  // Fix #7: nullable onTap — null이면 버튼 비활성화
+  final VoidCallback? onTap;
 
   const _ActionButton({required this.icon, required this.label, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final isDisabled = onTap == null;
+    final effectiveColor = isDisabled ? AppTheme.textDisabled : color;
     return Material(
-      color: color.withAlpha(15),
+      color: effectiveColor.withAlpha(15),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -501,9 +521,9 @@ class _ActionButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
             children: [
-              Icon(icon, color: color, size: 28),
+              Icon(icon, color: effectiveColor, size: 28),
               const SizedBox(height: 4),
-              Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color)),
+              Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: effectiveColor)),
             ],
           ),
         ),

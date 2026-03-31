@@ -20,6 +20,7 @@ import '../widgets/payment_modal.dart';
 import '../widgets/product_card.dart';
 import '../../../kds/presentation/screens/kds_mode_selection_screen.dart';
 import '../../../kds/data/kitchen_orders_providers.dart';
+import '../../../kds/domain/services/kitchen_service_provider.dart';
 import '../../data/models/order_type.dart';
 
 /// POS 메인 화면
@@ -883,25 +884,22 @@ class _KdsStatsBadges extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    // Fix #3: 하드코딩 '0' → 실시간 KDS 데이터 연결
-    final activeOrdersAsync = ref.watch(activeOrdersStreamProvider);
-    final todayServedAsync = ref.watch(todayServedCountProvider);
-    final avgPrepTimeAsync = ref.watch(averagePrepTimeProvider);
+    // Fix #3: Kitchen화면과 동일한 kitchenPerformanceProvider 사용
+    // (todayServedCountProvider 별도 스트림 대신 단일 소스로 통일)
+    final performanceAsync = ref.watch(kitchenPerformanceProvider);
 
-    final inProgressCount = activeOrdersAsync.when(
-      data: (orders) => orders
-          .where((o) => o.status == 'PENDING' || o.status == 'PREPARING')
-          .length,
+    final inProgressCount = performanceAsync.when(
+      data: (p) => p.pendingCount + p.preparingCount,
       loading: () => 0,
       error: (_, __) => 0,
     );
-    final completedCount = todayServedAsync.when(
-      data: (count) => count,
+    final completedCount = performanceAsync.when(
+      data: (p) => p.todayServedCount,
       loading: () => 0,
       error: (_, __) => 0,
     );
-    final avgMinutes = avgPrepTimeAsync.when(
-      data: (mins) => mins,
+    final avgMinutes = performanceAsync.when(
+      data: (p) => p.averagePrepTimeMinutes,
       loading: () => 0.0,
       error: (_, __) => 0.0,
     );

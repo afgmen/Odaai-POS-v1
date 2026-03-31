@@ -137,6 +137,11 @@ class KitchenOrdersRepository {
     return _dao.countTodayServedOrders();
   }
 
+  /// Fix #3 (Stream): 오늘 완료 주문 개수 실시간 스트림
+  Stream<int> watchTodayServedCount() {
+    return _dao.watchTodayServedCount();
+  }
+
   /// 평균 조리 시간 (분 단위)
   Future<double> getAveragePrepTimeInMinutes() async {
     final seconds = await _dao.calculateAveragePrepTime();

@@ -76,10 +76,10 @@ final readyOrdersStreamProvider =
 // Statistics Providers
 // ============================================================
 
-/// 오늘 처리된 주문 개수
-final todayServedCountProvider = FutureProvider<int>((ref) {
+/// 오늘 처리된 주문 개수 (Fix #3: FutureProvider → StreamProvider 실시간 갱신)
+final todayServedCountProvider = StreamProvider<int>((ref) {
   final repository = ref.watch(kitchenOrdersRepositoryProvider);
-  return repository.getTodayServedCount();
+  return repository.watchTodayServedCount();
 });
 
 /// 평균 조리 시간 (분)

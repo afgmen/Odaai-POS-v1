@@ -257,6 +257,8 @@ class _ProductManagementScreenState extends ConsumerState<ProductManagementScree
     if (confirmed == true && context.mounted) {
       final dao = ref.read(productsDaoProvider);
       await dao.deleteProduct(product.id);
+      // Fix #5: 삭제 후 POS 상품 목록 즉시 갱신 (productChangeSignal 발생)
+      ref.read(productChangeSignalProvider.notifier).state++;
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -800,7 +802,8 @@ class _ProductTable extends ConsumerWidget {
                 DataColumn(label: Text(l10n.action)),
               ],
               rows: products.map((p) {
-                final isLowStock = p.stock <= p.minStock;
+                // Fix #14: minStock > 0 이어야 Low Stock 처리
+                final isLowStock = p.minStock > 0 && p.stock <= p.minStock;
                 return DataRow(
                   cells: [
                     // 이미지

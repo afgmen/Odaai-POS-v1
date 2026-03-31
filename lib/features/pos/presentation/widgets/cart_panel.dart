@@ -260,6 +260,14 @@ class CartPanel extends ConsumerWidget {
         ),
       );
     } else {
+      // Fix #16: 신규 주문이지만 이미 Kitchen으로 전송된 경우 → kitchen order 취소
+      final pendingSaleId = ref.read(currentPendingSaleIdProvider);
+      if (pendingSaleId != null) {
+        final db = ref.read(databaseProvider);
+        await db.kitchenOrdersDao.cancelOrdersBySaleId(pendingSaleId,
+            cancellationReason: 'Cancelled from POS');
+        ref.read(currentPendingSaleIdProvider.notifier).state = null;
+      }
       ref.read(cartProvider.notifier).clear();
     }
   }
@@ -945,7 +953,9 @@ class _PromotionTab extends ConsumerWidget {
     final promoProductId = ref.watch(promotionProductIdProvider);
     final selectedPromo = ref.watch(selectedManualPromotionProvider);
     final promoDiscount = ref.watch(promotionDiscountProvider);
-    final total = subtotal - promoDiscount;
+    // Fix #2: 미리보기는 autoPromotion 포함한 전체 할인 사용 (payment_modal과 동기화)
+    final totalDiscount = ref.watch(cartAllDiscountProvider);
+    final total = subtotal - totalDiscount;
 
     // B-113: DB 프로모션 목록
     final activePromosAsync = ref.watch(activePromotionsProvider);
@@ -1179,7 +1189,8 @@ class _PromotionTab extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(l10n.promotion, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-                    Text('-${priceFormatter.format(promoDiscount)}', style: const TextStyle(fontSize: 13, color: AppTheme.error)),
+                    // Fix #2: totalDiscount (autoPromo 포함) 표시
+                    Text('-${priceFormatter.format(totalDiscount)}', style: const TextStyle(fontSize: 13, color: AppTheme.error)),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -1199,6 +1210,8 @@ class _PromotionTab extends ConsumerWidget {
           SizedBox(
             height: 48,
             child: ElevatedButton(
+              // Fix #1: DB 프로모션 선택 OR 수동 프로모션 상품 선택 시 Apply 활성화
+              // selectedManualPromotionProvider 조건 제거 — promoProductId만 있으면 충분
               onPressed: (isDbPromoMode || promoProductId != null) ? () => Navigator.of(context).pop() : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,

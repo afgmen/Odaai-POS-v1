@@ -62,9 +62,11 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
   Future<List<Product>> getLowStockProducts() {
+    // Fix #14: minStock > 0 인 상품만 Low Stock 대상 (0이 기본값이면 항상 low)
     return (select(products)
           ..where((p) =>
               p.stock.isSmallerOrEqual(p.minStock) &
+              p.minStock.isBiggerThanValue(0) &
               p.isActive.equals(true))
           ..orderBy([(p) => OrderingTerm.asc(p.stock)]))
         .get();
@@ -83,9 +85,10 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<List<Product>> watchAllProducts() {
+    // Fix #21: 기본 정렬 → SKU 오름차순 (DEMO001 → DEMO002 → DEMO003 순서)
     return (select(products)
           ..where((p) => p.isActive.equals(true))
-          ..orderBy([(p) => OrderingTerm.asc(p.name)]))
+          ..orderBy([(p) => OrderingTerm.asc(p.sku)]))
         .watch();
   }
 
@@ -97,9 +100,11 @@ class ProductsDao extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<List<Product>> watchLowStockProducts() {
+    // Fix #14: minStock > 0 인 상품만
     return (select(products)
           ..where((p) =>
               p.stock.isSmallerOrEqual(p.minStock) &
+              p.minStock.isBiggerThanValue(0) &
               p.isActive.equals(true)))
         .watch();
   }

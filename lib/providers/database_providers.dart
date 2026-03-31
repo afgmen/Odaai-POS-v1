@@ -51,3 +51,7 @@ final activeProductsProvider = StreamProvider<List<Product>>((ref) {
 /// 상품 데이터 변경 신호 — Products Management에서 CUD 발생 시 증가
 /// POS filteredProductsProvider가 이를 watch하여 즉시 갱신됨
 final productChangeSignalProvider = StateProvider<int>((ref) => 0);
+
+/// Fix #16: POS에서 Send to Kitchen 후 생성된 saleId 추적
+/// cart clear 시 해당 kitchen order를 취소하는 데 사용
+final currentPendingSaleIdProvider = StateProvider<int?>((ref) => null);

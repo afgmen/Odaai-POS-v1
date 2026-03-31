@@ -1,5 +1,4 @@
 import 'package:excel/excel.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:intl/intl.dart';
 
 import '../../../database/daos/sales_dao.dart';
@@ -106,10 +105,10 @@ class ReportExcelService {
 
     final fileName =
         'oda_pos_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
-    // RPT-006: Pass fileName so the excel package downloads with the correct name on web.
-    // Previously, excel.save() auto-downloaded as "FlutterExcel.xlsx" and then
-    // downloadExcelBytes triggered a second download — causing two files.
-    excel.save(fileName: kIsWeb ? fileName : null);
+    // Fix #11: excel.save(fileName:) 호출 — Web에서 excel 라이브러리가 자동 다운로드함
+    // 별도 downloadExcelBytes 호출 제거 → 2개 파일 동시 다운로드 방지
+    // excel.save() 내부: Web → web_save_excel_browser.dart 가 fileName으로 1회만 다운로드
+    excel.save(fileName: fileName);
 
     return fileName;
   }

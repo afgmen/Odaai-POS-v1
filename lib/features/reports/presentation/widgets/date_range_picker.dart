@@ -34,8 +34,9 @@ class DateRangePicker extends ConsumerWidget {
               },
               borderRadius: BorderRadius.circular(20),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                // Fix #23: 최소 너비 보장 → "Custom" 버튼 텍스트 잘림 방지
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                constraints: const BoxConstraints(minWidth: 60),
                 decoration: BoxDecoration(
                   color: isSelected ? AppTheme.primary : AppTheme.cardWhite,
                   borderRadius: BorderRadius.circular(20),
@@ -46,6 +47,8 @@ class DateRangePicker extends ConsumerWidget {
                 ),
                 child: Text(
                   _getLocalizedPeriodLabel(l10n, p),
+                  overflow: TextOverflow.visible,
+                  softWrap: false,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -118,6 +121,7 @@ class DateRangePicker extends ConsumerWidget {
     );
 
     if (picked != null) {
+      // Fix #13: +1일 제거 → to는 선택한 날짜 그대로 (23:59:59 처리는 DB 쿼리단)
       ref.read(customDateRangeProvider.notifier).state = (
         from: picked.start,
         to: picked.end,

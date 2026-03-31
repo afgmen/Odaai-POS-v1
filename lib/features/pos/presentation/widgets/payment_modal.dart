@@ -191,14 +191,23 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
                 '${l10n.discount}: -${priceFormatter.format(allDiscount)}',
                 style: const TextStyle(fontSize: 13, color: AppTheme.error),
               ),
-            // VAT line
+            // VAT line — Fix #8: inclusive 시 subtotal 기반으로 계산
             if (ref.watch(taxEnabledProvider)) ...[
               Builder(builder: (context) {
-                final taxAmount = ref.watch(cartTaxAmountProvider);
                 final taxRate = ref.watch(taxRateProvider);
                 final taxInclusive = ref.watch(taxInclusiveProvider);
+                // Fix #8: cartTaxAmountProvider가 0인 경우 fallback 계산
+                // (BillRequest 또는 외부 total 전달 시 cart가 비어 0이 될 수 있음)
+                final cartTax = ref.watch(cartTaxAmountProvider);
+                final effectiveTaxable = subtotal - allDiscount;
+                final fallbackTax = taxRate > 0 && effectiveTaxable > 0
+                    ? (taxInclusive
+                        ? effectiveTaxable - (effectiveTaxable / (1 + taxRate / 100))
+                        : effectiveTaxable * (taxRate / 100))
+                    : 0.0;
+                final displayTax = cartTax > 0 ? cartTax : fallbackTax;
                 return Text(
-                  'VAT (${taxRate.toStringAsFixed(0)}%)${taxInclusive ? " (included)" : ""}: ${priceFormatter.format(taxAmount)}',
+                  'VAT (${taxRate.toStringAsFixed(0)}%)${taxInclusive ? " (included)" : ""}: ${priceFormatter.format(displayTax)}',
                   style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                 );
               }),
@@ -655,6 +664,35 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
     if (status == 'READY' || status == 'SERVED') {
       return true;
     }
+
+    // Fix #10: CANCELLED 주문은 결제 차단 (오류 메시지 없이 명확한 알림)
+    if (status == 'CANCELLED') {
+      if (!mounted) return false;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.cancel, color: Colors.red, size: 28),
+              SizedBox(width: 12),
+              Text('Order Cancelled'),
+            ],
+          ),
+          content: const Text(
+            'This order has been cancelled by the kitchen.\n\n'
+            'Please review the order with the customer before proceeding.',
+            style: TextStyle(fontSize: 14),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return false; // 결제 차단
+    }
     
     // 4. PENDING 또는 PREPARING이면 경고 모달 표시
     if (!mounted) return false;
@@ -671,7 +709,8 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
           ],
         ),
         content: Text(
-          'This order is still being prepared in the kitchen (Status: ${status ?? 'UNKNOWN'}).' + '\n\n' +
+          // Fix #10: 상태에 맞는 정확한 메시지 (PENDING/PREPARING만 여기 도달)
+          'This order is still being ${status == 'PENDING' ? 'queued' : 'prepared'} in the kitchen (Status: ${status ?? 'UNKNOWN'}).\n\n'
           'Are you sure you want to proceed with checkout?',
           style: const TextStyle(fontSize: 14),
         ),
@@ -1046,6 +1085,9 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         ref.invalidate(hourlySalesProvider);
         // Sales list (StreamProvider이지만 invalidate도 허용)
         ref.invalidate(salesListProvider);
+        // Fix #6: Cash Drawer 잔액 실시간 갱신 (현금 결제 후 ₫0 표시 방지)
+        ref.invalidate(currentDrawerBalanceProvider);
+        ref.invalidate(todayCashLogsProvider);
 
         // 결제 모달 닫고 영수증 화면으로 전이
         Navigator.of(context).pop();

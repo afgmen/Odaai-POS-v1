@@ -3,6 +3,7 @@ import 'dart:io' as dart_io;
 import 'package:drift/drift.dart' hide Column;
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../../database/app_database.dart';
@@ -130,11 +131,18 @@ class ExcelService {
         }
       }
 
-      // ── 파일 저장 (네이티브 저장 다이얼로그) ──
+      // ── 파일 저장 ──────────────────────────────
+      final fileName = 'oda_products_${_dateTag()}.xlsx';
+
+      if (kIsWeb) {
+        // On web: let the excel package handle the browser download directly
+        excel.save(fileName: fileName);
+        return fileName;
+      }
+
+      // On native: open OS save dialog
       final bytes = excel.save();
       if (bytes == null) return null;
-
-      final fileName = 'oda_products_${_dateTag()}.xlsx';
 
       final savedPath = await FilePicker.platform.saveFile(
         dialogTitle: labels['dialogSaveTitle'] ?? 'Save Excel File',

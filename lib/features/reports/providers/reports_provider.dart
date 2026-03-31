@@ -51,7 +51,10 @@ final reportDateRangeProvider =
     ReportPeriod.today => (from: today, to: to),
     ReportPeriod.week => (from: today.subtract(const Duration(days: 6)), to: to),
     ReportPeriod.month => (from: DateTime(now.year, now.month, 1), to: to),
-    ReportPeriod.custom => ref.watch(customDateRangeProvider),
+    ReportPeriod.custom => (
+        from: ref.watch(customDateRangeProvider).from,
+        to: ref.watch(customDateRangeProvider).to.add(const Duration(days: 1)),
+      ),
   };
 });
 

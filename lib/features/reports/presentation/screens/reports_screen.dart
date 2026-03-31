@@ -254,7 +254,7 @@ class _ReportsScreenContent extends ConsumerWidget {
           'title': l10n.reportTitle,
           'periodText': l10n.reportPeriod(
             DateFormat('yyyy-MM-dd').format(range.from),
-            DateFormat('yyyy-MM-dd').format(range.to),
+            DateFormat('yyyy-MM-dd').format(range.to.subtract(const Duration(days: 1))),
           ),
           'item': l10n.reportItem,
           'value': l10n.reportValue,

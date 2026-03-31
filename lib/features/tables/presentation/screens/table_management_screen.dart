@@ -375,24 +375,26 @@ class _FloorPlanDesignerTabState extends ConsumerState<_FloorPlanDesignerTab> {
 
   /// Statistics badges
   Widget _buildStatistics(WidgetRef ref) {
-    final availableCountAsync = ref.watch(availableTableCountProvider);
-    final occupiedCountAsync = ref.watch(occupiedTableCountProvider);
+    // Use the reactive stream provider so badges update in real-time
+    final countAsync = ref.watch(tableCountByStatusProvider);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        availableCountAsync.when(
-          data: (count) => _buildStatBadge('Empty', count, Colors.green),
-          loading: () => const SizedBox.shrink(),
-          error: (_, _) => const SizedBox.shrink(),
-        ),
-        const SizedBox(width: 6),
-        occupiedCountAsync.when(
-          data: (count) => _buildStatBadge('Busy', count, Colors.red),
-          loading: () => const SizedBox.shrink(),
-          error: (_, _) => const SizedBox.shrink(),
-        ),
-      ],
+    return countAsync.when(
+      data: (counts) {
+        final emptyCount = counts['AVAILABLE'] ?? 0;
+        final busyCount = counts.entries
+            .where((e) => e.key != 'AVAILABLE')
+            .fold(0, (sum, e) => sum + e.value);
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildStatBadge('Empty', emptyCount, Colors.green),
+            const SizedBox(width: 6),
+            _buildStatBadge('Busy', busyCount, Colors.red),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 

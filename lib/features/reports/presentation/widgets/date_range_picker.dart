@@ -120,7 +120,7 @@ class DateRangePicker extends ConsumerWidget {
     if (picked != null) {
       ref.read(customDateRangeProvider.notifier).state = (
         from: picked.start,
-        to: picked.end.add(const Duration(days: 1)),
+        to: picked.end,
       );
     }
   }

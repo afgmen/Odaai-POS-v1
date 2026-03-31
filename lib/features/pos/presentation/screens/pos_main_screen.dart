@@ -18,6 +18,8 @@ import '../widgets/cart_panel.dart';
 import '../widgets/category_filter.dart';
 import '../widgets/payment_modal.dart';
 import '../widgets/product_card.dart';
+import '../../../kds/domain/services/kitchen_service.dart';
+import '../../../kds/domain/services/kitchen_service_provider.dart';
 import '../../../kds/presentation/screens/kds_mode_selection_screen.dart';
 import '../../data/models/order_type.dart';
 
@@ -871,38 +873,61 @@ class _EmployeeInfo extends ConsumerWidget {
   }
 }
 
-/// KDS 통계 배지 (완료, 진행중, 평균)
+/// KDS 통계 배지 (완료, 진행중, 평균) — 실시간 KDS 데이터 반영
 class _KdsStatsBadges extends ConsumerWidget {
   const _KdsStatsBadges();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final performanceAsync = ref.watch(kitchenPerformanceProvider);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildStatBadge(
-          icon: Icons.check_circle_outline,
-          label: l10n.kdsCompleted,
-          value: '0',
-          color: Colors.green,
-        ),
-        const SizedBox(width: 8),
-        _buildStatBadge(
-          icon: Icons.pending_outlined,
-          label: l10n.kdsInProgress,
-          value: '0',
-          color: Colors.orange,
-        ),
-        const SizedBox(width: 8),
-        _buildStatBadge(
-          icon: Icons.timer_outlined,
-          label: l10n.kdsAverage,
-          value: '0m 0s',
-          color: Colors.blue,
-        ),
-      ],
+    return performanceAsync.when(
+      data: (KitchenPerformance performance) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildStatBadge(
+            icon: Icons.check_circle_outline,
+            label: l10n.kdsCompleted,
+            value: '${performance.todayServedCount}',
+            color: Colors.green,
+          ),
+          const SizedBox(width: 8),
+          _buildStatBadge(
+            icon: Icons.pending_outlined,
+            label: l10n.kdsInProgress,
+            value: '${performance.totalActiveOrders}',
+            color: Colors.orange,
+          ),
+          const SizedBox(width: 8),
+          _buildStatBadge(
+            icon: Icons.timer_outlined,
+            label: l10n.kdsAverage,
+            value: performance.averagePrepTimeFormatted,
+            color: Colors.blue,
+          ),
+        ],
+      ),
+      loading: () => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildStatBadge(icon: Icons.check_circle_outline, label: l10n.kdsCompleted, value: '—', color: Colors.green),
+          const SizedBox(width: 8),
+          _buildStatBadge(icon: Icons.pending_outlined, label: l10n.kdsInProgress, value: '—', color: Colors.orange),
+          const SizedBox(width: 8),
+          _buildStatBadge(icon: Icons.timer_outlined, label: l10n.kdsAverage, value: '—', color: Colors.blue),
+        ],
+      ),
+      error: (_, __) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildStatBadge(icon: Icons.check_circle_outline, label: l10n.kdsCompleted, value: '0', color: Colors.green),
+          const SizedBox(width: 8),
+          _buildStatBadge(icon: Icons.pending_outlined, label: l10n.kdsInProgress, value: '0', color: Colors.orange),
+          const SizedBox(width: 8),
+          _buildStatBadge(icon: Icons.timer_outlined, label: l10n.kdsAverage, value: '0m 0s', color: Colors.blue),
+        ],
+      ),
     );
   }
 

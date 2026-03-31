@@ -1199,7 +1199,7 @@ class _PromotionTab extends ConsumerWidget {
           SizedBox(
             height: 48,
             child: ElevatedButton(
-              onPressed: (isDbPromoMode || (promoProductId != null && selectedPromo != null)) ? () => Navigator.of(context).pop() : null,
+              onPressed: (isDbPromoMode || promoProductId != null) ? () => Navigator.of(context).pop() : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,
                 disabledBackgroundColor: AppTheme.textDisabled,

@@ -26,6 +26,7 @@ import '../../../daily_closing/providers/daily_closing_provider.dart';
 import '../../../reports/providers/reports_provider.dart';
 import '../../../sales/providers/sales_provider.dart';
 import '../../../kds/data/kitchen_orders_providers.dart';
+import '../../../kds/domain/services/kitchen_service_provider.dart';
 import 'delivery_info_section.dart';
 
 /// 결제 방법 열거형
@@ -1065,9 +1066,11 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         final finalSaleId = widget.saleId ?? createdSale.id;
         await db.kitchenOrdersDao.serveOrdersBySaleId(finalSaleId);
         // Fix #3: SERVED 업데이트 후 명시적 invalidate → StreamProvider 즉시 갱신 보장
+        // Fix #Completed: kitchenPerformanceProvider도 invalidate → POS Completed 카운터 즉시 반영
         if (mounted) {
           ref.invalidate(todayServedCountProvider);
           ref.invalidate(activeOrdersStreamProvider);
+          ref.invalidate(kitchenPerformanceProvider);
         }
       } catch (e) {
         debugPrint('[Checkout] Failed to mark kitchen orders as served: $e');

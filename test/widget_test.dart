@@ -8,16 +8,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:oda_pos/main.dart';
+import 'package:oda_pos/features/user_guide/presentation/providers/tutorial_preference_provider.dart';
 
 void main() {
   testWidgets('OdaPosApp smoke test', (WidgetTester tester) async {
+    // Mock SharedPreferences for CI/headless environments
+    SharedPreferences.setMockInitialValues({});
+
     await tester.pumpWidget(
-      const ProviderScope(
-        child: OdaPosApp(),
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(
+            await SharedPreferences.getInstance(),
+          ),
+        ],
+        child: const OdaPosApp(),
       ),
     );
+
+    // Allow async providers to settle
+    await tester.pump();
 
     // App launches on PinLoginScreen — verify visible elements
     expect(find.text('Oda POS'), findsOneWidget);

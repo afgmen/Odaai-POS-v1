@@ -26,6 +26,7 @@ import '../../../daily_closing/providers/daily_closing_provider.dart';
 import '../../../reports/providers/reports_provider.dart';
 import '../../../sales/providers/sales_provider.dart';
 import '../../../kds/data/kitchen_orders_providers.dart';
+import '../../../kds/domain/services/kitchen_service_provider.dart';
 import 'delivery_info_section.dart';
 
 /// 결제 방법 열거형
@@ -750,7 +751,20 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
 
   Future<void> _processPayment(double subtotal, double discountAmount, double total) async {
     final l10n = AppLocalizations.of(context)!;
-    
+
+    // ── VAT 계산: BillTotal(Open Tab) 케이스에서 cartTaxAmountProvider가
+    //    cart 비어 0이 되는 문제 수정 → fallback 계산으로 통일
+    final cartTax = ref.read(cartTaxAmountProvider);
+    final taxRate = ref.read(taxRateProvider);
+    final taxInclusive = ref.read(taxInclusiveProvider);
+    final effectiveTaxable = subtotal - discountAmount;
+    final fallbackTax = taxRate > 0 && effectiveTaxable > 0
+        ? (taxInclusive
+            ? effectiveTaxable - (effectiveTaxable / (1 + taxRate / 100))
+            : effectiveTaxable * (taxRate / 100))
+        : 0.0;
+    final effectiveTax = cartTax > 0 ? cartTax : fallbackTax;
+
     // ────────────────────────────────────────────────────────
     // 🔥 NEW: KDS 상태 체크 (Open Tab 체크아웃 시)
     // ────────────────────────────────────────────────────────
@@ -889,7 +903,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
           subtotal: Value(subtotal),
           discount: Value(discountAmount),
           total: Value(finalTotal),
-          tax: Value(ref.read(cartTaxAmountProvider)),
+          tax: Value(effectiveTax),
           customerId: Value(selectedCustomer?.id),
           employeeId: Value(currentEmployee.id),
           customerName: _isDeliveryOrder && _customerNameController.text.trim().isNotEmpty
@@ -1052,9 +1066,11 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         final finalSaleId = widget.saleId ?? createdSale.id;
         await db.kitchenOrdersDao.serveOrdersBySaleId(finalSaleId);
         // Fix #3: SERVED 업데이트 후 명시적 invalidate → StreamProvider 즉시 갱신 보장
+        // Fix #Completed: kitchenPerformanceProvider도 invalidate → POS Completed 카운터 즉시 반영
         if (mounted) {
           ref.invalidate(todayServedCountProvider);
           ref.invalidate(activeOrdersStreamProvider);
+          ref.invalidate(kitchenPerformanceProvider);
         }
       } catch (e) {
         debugPrint('[Checkout] Failed to mark kitchen orders as served: $e');
@@ -1104,7 +1120,7 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
               items: savedItems,
               subtotal: subtotal,
               discount: discountAmount,
-              tax: ref.read(cartTaxAmountProvider),
+              tax: effectiveTax,
               total: finalTotal,
               paymentMethod: _selectedMethod.name.toUpperCase(),
               cashPaid: _selectedMethod == PaymentMethod.cash ? _cashInput : 0,
@@ -1116,8 +1132,12 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isProcessing = false);
         _showPaymentError(e.toString());
+      }
+    } finally {
+      // 어떤 경우에도 _isProcessing 리셋 보장 (성공·실패·예외 모두)
+      if (mounted) {
+        setState(() => _isProcessing = false);
       }
     }
   }

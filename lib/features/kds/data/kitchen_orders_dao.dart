@@ -381,11 +381,20 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// 완료된 주문 정리 (7일 이상 경과한 SERVED 주문)
-  Future<int> cleanupOldServedOrders({int daysOld = 7}) {
+  /// Web(sql.js) 호환: servedAt 비교를 Dart에서 처리.
+  Future<int> cleanupOldServedOrders({int daysOld = 7}) async {
     final cutoffDate = DateTime.now().subtract(Duration(days: daysOld));
+    final rows = await (select(kitchenOrders)
+          ..where((t) =>
+              t.status.equals('SERVED') & t.servedAt.isNotNull()))
+        .get();
+    final toDelete = rows
+        .where((r) => r.servedAt != null && r.servedAt!.isBefore(cutoffDate))
+        .map((r) => r.id)
+        .toList();
+    if (toDelete.isEmpty) return 0;
     return (delete(kitchenOrders)
-          ..where((t) => t.status.equals('SERVED'))
-          ..where((t) => t.servedAt.isSmallerThanValue(cutoffDate)))
+          ..where((t) => t.id.isIn(toDelete)))
         .go();
   }
 
@@ -393,68 +402,85 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
   // STATISTICS
   // ============================================================
 
-  /// 상태별 주문 개수 조회
-  Future<int> countOrdersByStatus(String status) {
+  /// 상태별 주문 개수 조회 (오늘 createdAt 기준)
+  /// Web(sql.js) 호환: Dart에서 날짜 필터링.
+  Future<int> countOrdersByStatus(String status) async {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    final query = selectOnly(kitchenOrders)
-      ..addColumns([kitchenOrders.id.count()])
-      ..where(kitchenOrders.status.equals(status))
-      ..where(kitchenOrders.createdAt.isBiggerOrEqualValue(startOfDay))
-      ..where(kitchenOrders.createdAt.isSmallerThanValue(endOfDay));
+    final rows = await (select(kitchenOrders)
+          ..where((t) => t.status.equals(status)))
+        .get();
 
-    return query
-        .map((row) => row.read(kitchenOrders.id.count()) ?? 0)
-        .getSingle();
+    return rows
+        .where((r) =>
+            !r.createdAt.isBefore(startOfDay) &&
+            r.createdAt.isBefore(endOfDay))
+        .length;
   }
 
   /// 오늘 처리된 주문 개수
+  /// Web(sql.js)에서 Drift DateTime은 ISO string으로 저장되어
+  /// isBiggerOrEqualValue 등 날짜 비교 연산자가 0을 반환하는 버그 수정.
+  /// 수정: status == 'SERVED' + servedAt IS NOT NULL 후 Dart에서 날짜 필터링.
   Future<int> countTodayServedOrders() async {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    final query = selectOnly(kitchenOrders)
-      ..addColumns([kitchenOrders.id.count()])
-      ..where(kitchenOrders.status.equals('SERVED'))
-      ..where(kitchenOrders.servedAt.isBiggerOrEqualValue(startOfDay))
-      ..where(kitchenOrders.servedAt.isSmallerThanValue(endOfDay));
+    final rows = await (select(kitchenOrders)
+          ..where((t) =>
+              t.status.equals('SERVED') & t.servedAt.isNotNull()))
+        .get();
 
-    return query
-        .map((row) => row.read(kitchenOrders.id.count()) ?? 0)
-        .getSingle();
+    return rows
+        .where((r) =>
+            r.servedAt != null &&
+            !r.servedAt!.isBefore(startOfDay) &&
+            r.servedAt!.isBefore(endOfDay))
+        .length;
   }
 
   /// Fix #3 (Stream): 오늘 완료(SERVED) 주문 개수 — 실시간 스트림
   /// selectOnly().watchSingle()은 집계쿼리라 변경감지 불안정 →
-  /// 전체 행 watch 후 dart에서 count (변경 감지 확실)
+  /// 전체 행 watch 후 Dart에서 날짜 필터링 (Web/Native 모두 안전).
+  ///
+  /// Web(sql.js) 버그 수정: isBiggerOrEqualValue 대신 status + isNotNull 필터 후
+  /// Dart DateTime 비교를 사용하여 플랫폼 무관하게 동작.
   Stream<int> watchTodayServedCount() {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     return (select(kitchenOrders)
-          ..where((t) => t.status.equals('SERVED'))
-          ..where((t) => t.servedAt.isBiggerOrEqualValue(startOfDay))
-          ..where((t) => t.servedAt.isSmallerThanValue(endOfDay)))
+          ..where((t) =>
+              t.status.equals('SERVED') & t.servedAt.isNotNull()))
         .watch()
-        .map((rows) => rows.length);
+        .map((rows) => rows
+            .where((r) =>
+                r.servedAt != null &&
+                !r.servedAt!.isBefore(startOfDay) &&
+                r.servedAt!.isBefore(endOfDay))
+            .length);
   }
 
   /// 평균 조리 시간 계산 (초 단위) - 오늘 주문만
   /// T-9: startedAt/readyAt 없으면 createdAt→servedAt fallback 사용
+  /// Web(sql.js) 호환: Dart에서 날짜 필터링.
   Future<double> calculateAveragePrepTime() async {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    final orders = await (select(kitchenOrders)
-          ..where((t) => t.status.equals('SERVED'))
-          ..where((t) => t.createdAt.isBiggerOrEqualValue(startOfDay))
-          ..where((t) => t.createdAt.isSmallerThanValue(endOfDay)))
+    final allOrders = await (select(kitchenOrders)
+          ..where((t) => t.status.equals('SERVED')))
         .get();
+    final orders = allOrders
+        .where((r) =>
+            !r.createdAt.isBefore(startOfDay) &&
+            r.createdAt.isBefore(endOfDay))
+        .toList();
 
     if (orders.isEmpty) return 0.0;
 

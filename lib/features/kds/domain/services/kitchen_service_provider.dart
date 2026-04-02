@@ -10,33 +10,41 @@ final kitchenServiceProvider = Provider<KitchenService>((ref) {
 });
 
 /// Kitchen Performance Provider (실시간 통계)
-/// Fix #3: watchAllOrders (SERVED 포함) 감시 → Completed 카운트 실시간 반영
+/// Fix race condition: async* { await for ... } 패턴에서 POS 백그라운드 시
+/// 스트림 이벤트 miss 문제 해결 → watchAllOrders().asyncMap 단일 스트림 패턴
 final kitchenPerformanceProvider =
-    StreamProvider<KitchenPerformance>((ref) async* {
+    StreamProvider<KitchenPerformance>((ref) {
   final dao = ref.watch(kitchenOrdersDaoProvider);
   final repository = ref.watch(kitchenOrdersRepositoryProvider);
 
-  // watchActiveOrders()는 SERVED로 바뀔 때 이벤트 발생하지만,
-  // POS 직접결제(kitchen order 없음)나 동일 세션 내 변화 미감지 케이스 보완을 위해
-  // watchTodayServedCount()도 함께 구독 → served 변화 시 즉시 반영
-  await for (final _ in dao.watchTodayServedCount()) {
-    final activeOrders = await repository.getActiveOrders();
-    final pendingCount =
-        activeOrders.where((KitchenOrder o) => o.status == 'PENDING').length;
-    final preparingCount =
-        activeOrders.where((KitchenOrder o) => o.status == 'PREPARING').length;
-    final readyCount =
-        activeOrders.where((KitchenOrder o) => o.status == 'READY').length;
+  return dao.watchAllOrders().asyncMap((allOrders) async {
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day);
 
-    final todayServed = await repository.getTodayServedCount();
+    // 오늘 SERVED된 주문 수 (Dart 레벨 날짜 필터링 — Web sql.js 호환)
+    final todayServed = allOrders
+        .where((KitchenOrder o) =>
+            o.status == 'SERVED' &&
+            o.servedAt != null &&
+            !o.servedAt!.isBefore(startOfDay))
+        .length;
+
+    // 기존 activeOrders, avgPrepTime 계산 로직 유지
+    final pendingCount =
+        allOrders.where((KitchenOrder o) => o.status == 'PENDING').length;
+    final preparingCount =
+        allOrders.where((KitchenOrder o) => o.status == 'PREPARING').length;
+    final readyCount =
+        allOrders.where((KitchenOrder o) => o.status == 'READY').length;
+
     final avgPrepTime = await repository.getAveragePrepTimeInMinutes();
 
-    yield KitchenPerformance(
+    return KitchenPerformance(
       todayServedCount: todayServed,
       averagePrepTimeMinutes: avgPrepTime,
       pendingCount: pendingCount,
       preparingCount: preparingCount,
       readyCount: readyCount,
     );
-  }
+  });
 });

@@ -1071,6 +1071,8 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
           ref.invalidate(todayServedCountProvider);
           ref.invalidate(activeOrdersStreamProvider);
           ref.invalidate(kitchenPerformanceProvider);
+          // Fix inventory: 결제 후 POS 재고 수량 즉시 갱신 (productChangeSignalProvider increment)
+          ref.read(productChangeSignalProvider.notifier).state++;
         }
       } catch (e) {
         debugPrint('[Checkout] Failed to mark kitchen orders as served: $e');

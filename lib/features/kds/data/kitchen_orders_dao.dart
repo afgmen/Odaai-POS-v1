@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import '../../../database/app_database.dart';
 import '../../../database/tables/kitchen_orders.dart';
 import '../../../database/tables/sales.dart';
@@ -288,8 +289,10 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
     final orders = await (select(kitchenOrders)
           ..where((t) => t.saleId.equals(saleId) & t.status.isNotIn(['CANCELLED', 'SERVED'])))
         .get();
+    debugPrint('[KDS] serveOrdersBySaleId(saleId=$saleId): found ${orders.length} orders to serve');
     final now = DateTime.now();
     for (final order in orders) {
+      debugPrint('[KDS] serving order id=${order.id} status=${order.status} → SERVED');
       await (update(kitchenOrders)..where((t) => t.id.equals(order.id))).write(
         KitchenOrdersCompanion(
           status: const Value('SERVED'),
@@ -298,6 +301,7 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
         ),
       );
     }
+    debugPrint('[KDS] serveOrdersBySaleId done. todayServedAt=$now');
   }
 
   /// B-UAT: saleId로 해당 sale의 모든 kitchen orders를 CANCELLED로 변경

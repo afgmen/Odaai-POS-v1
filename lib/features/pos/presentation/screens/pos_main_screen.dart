@@ -888,20 +888,23 @@ class _KdsStatsBadges extends ConsumerWidget {
     // (todayServedCountProvider 별도 스트림 대신 단일 소스로 통일)
     final performanceAsync = ref.watch(kitchenPerformanceProvider);
 
-    // 진단 로그: error 상태 시 실제 에러 출력
-    if (performanceAsync.hasError) {
-      debugPrint('[KDS Badge] ERROR state: ${performanceAsync.error}\n${performanceAsync.stackTrace}');
-    } else if (performanceAsync.isLoading) {
-      debugPrint('[KDS Badge] LOADING state');
+    // 진단: provider 상태를 배지 값에 직접 표시
+    final String completedLabel;
+    final Color completedColor;
+    if (performanceAsync.isLoading) {
+      completedLabel = '...';
+      completedColor = Colors.grey;
+    } else if (performanceAsync.hasError) {
+      completedLabel = 'ERR';
+      completedColor = Colors.red;
+      debugPrint('[KDS Badge] ERROR: ${performanceAsync.error}');
+    } else {
+      completedLabel = '${performanceAsync.value!.todayServedCount}';
+      completedColor = Colors.green;
     }
 
     final inProgressCount = performanceAsync.when(
       data: (p) => p.pendingCount + p.preparingCount,
-      loading: () => 0,
-      error: (_, __) => 0,
-    );
-    final completedCount = performanceAsync.when(
-      data: (p) => p.todayServedCount,
       loading: () => 0,
       error: (_, __) => 0,
     );
@@ -919,8 +922,8 @@ class _KdsStatsBadges extends ConsumerWidget {
         _buildStatBadge(
           icon: Icons.check_circle_outline,
           label: l10n.kdsCompleted,
-          value: '$completedCount',
-          color: Colors.green,
+          value: completedLabel,
+          color: completedColor,
         ),
         const SizedBox(width: 8),
         _buildStatBadge(

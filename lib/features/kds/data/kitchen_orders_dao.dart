@@ -32,6 +32,7 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
     String priority = 'NORMAL',
     String orderType = 'dineIn',
   }) async {
+    final now = DateTime.now();
     return await into(kitchenOrders).insert(
       KitchenOrdersCompanion.insert(
         saleId: saleId,
@@ -39,6 +40,8 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
         specialInstructions: Value(specialInstructions),
         priority: Value(priority),
         orderType: Value(orderType),
+        createdAt: Value(now),
+        updatedAt: Value(now),
       ),
     );
   }
@@ -455,16 +458,19 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
 
   /// 평균 조리 시간 계산 (초 단위) - 오늘 주문만
   /// T-9: startedAt/readyAt 없으면 createdAt→servedAt fallback 사용
+  /// Fix #3 v4: SQL datetime comparison unreliable on Drift Web (WasmDatabase)
+  /// → fetch all SERVED rows, filter today in Dart to avoid FormatException
   Future<double> calculateAveragePrepTime() async {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    final orders = await (select(kitchenOrders)
-          ..where((t) => t.status.equals('SERVED'))
-          ..where((t) => t.createdAt.isBiggerOrEqualValue(startOfDay))
-          ..where((t) => t.createdAt.isSmallerThanValue(endOfDay)))
+    final allServed = await (select(kitchenOrders)
+          ..where((t) => t.status.equals('SERVED')))
         .get();
+
+    final orders = allServed
+        .where((o) => !o.createdAt.isBefore(startOfDay))
+        .toList();
 
     if (orders.isEmpty) return 0.0;
 

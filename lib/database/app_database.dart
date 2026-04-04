@@ -154,7 +154,7 @@ class AppDatabase extends _$AppDatabase {
   late final dailyClosingDao = DailyClosingDao(this);
 
   @override
-  int get schemaVersion => 27;
+  int get schemaVersion => 28;
 
   @override
   MigrationStrategy get migration {
@@ -335,6 +335,13 @@ class AppDatabase extends _$AppDatabase {
           // v26 → v27: B-115 — StockMovements 공급업체 정보 컬럼 추가 (Oda 연동 대비)
           await _safeAddColumn('stock_movements', 'supplier_name', 'TEXT NULL');
           await _safeAddColumn('stock_movements', 'supplier_id', 'INTEGER NULL');
+        }
+        if (from < 28) {
+          // v27 → v28: Fix TEXT timestamps in kitchen_orders
+          // createOrderFromSale omits createdAt/updatedAt → SQLite DEFAULT CURRENT_TIMESTAMP
+          // stores TEXT "YYYY-MM-DD HH:MM:SS" → FormatException when Drift reads as integer.
+          // Same issue as v14→v15 fix for permissions/system_settings.
+          await _migrateFixKitchenOrdersTimestamps();
         }
       },
       beforeOpen: (details) async {
@@ -1267,6 +1274,31 @@ class AppDatabase extends _$AppDatabase {
       ''');
     } catch (e) {
       debugPrint('[Migration v15] Fix system_settings timestamps: $e');
+    }
+  }
+
+  /// v27 → v28: Fix TEXT timestamps in kitchen_orders
+  /// All datetime columns may contain "YYYY-MM-DD HH:MM:SS" text from
+  /// SQLite CURRENT_TIMESTAMP default → convert to integer epoch seconds.
+  Future<void> _migrateFixKitchenOrdersTimestamps() async {
+    const columns = [
+      'created_at',
+      'updated_at',
+      'started_at',
+      'ready_at',
+      'served_at',
+      'cancelled_at',
+    ];
+    for (final col in columns) {
+      try {
+        await customStatement('''
+          UPDATE kitchen_orders
+          SET $col = CAST(strftime('%s', $col) AS INTEGER)
+          WHERE typeof($col) = 'text'
+        ''');
+      } catch (e) {
+        debugPrint('[Migration v28] Fix kitchen_orders.$col: $e');
+      }
     }
   }
 

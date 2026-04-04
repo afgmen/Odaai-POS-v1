@@ -434,6 +434,23 @@ class KitchenOrdersDao extends DatabaseAccessor<AppDatabase>
         .getSingle();
   }
 
+  /// Fix #3 v5: 오늘 완료 주문 개수 — Future, Dart 레벨 날짜 필터
+  /// SERVED 행 전체 역직렬화 대신 servedAt 컬럼만 읽어 TEXT 타임스탬프 위험 최소화
+  /// (servedAt은 updateOrderStatus에서 항상 Value(now)로 명시 설정 → 항상 integer)
+  Future<int> countTodayServedSafe() async {
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day);
+
+    // SQL: status='SERVED' 필터만 적용, 날짜 필터는 Dart에서 처리
+    final rows = await (select(kitchenOrders)
+          ..where((t) => t.status.equals('SERVED')))
+        .get();
+
+    return rows
+        .where((o) => o.servedAt != null && !o.servedAt!.isBefore(startOfDay))
+        .length;
+  }
+
   /// Fix #3 (Stream): 오늘 완료(SERVED) 주문 개수 — 실시간 스트림
   /// SQLite datetime 비교(isBiggerOrEqualValue)는 Drift Web(WasmDatabase)에서
   /// 불안정할 수 있으므로, SQL은 status='SERVED' 만 필터하고

@@ -11,43 +11,58 @@ final kitchenServiceProvider = Provider<KitchenService>((ref) {
 });
 
 /// Kitchen Performance Provider (실시간 통계)
-/// Fix #3 v3: async* generator 대신 watchAllOrders().asyncMap() 직접 변환
-/// - async* + await for 패턴이 Riverpod StreamProvider에서 초기 emit 실패 가능
-/// - watchAllOrders() table-level watcher → 모든 상태 변경에 반응
-/// - Dart 레벨 필터링 → SQL datetime 비교 문제 회피
+/// Fix #3 v5: watchActiveOrders() 기반으로 전환 + todayServedCount는 watchTodayServedCount()
+/// - watchAllOrders()가 TEXT 타임스탬프를 가진 SERVED 행 역직렬화 시 stream-level 에러 발생
+/// - watchActiveOrders()는 PENDING/PREPARING/READY 행만 읽음 → TEXT 타임스탬프 위험 없음
+/// - todayServedCount는 DAO의 watchTodayServedCount()를 Future로 호출 (Dart 레벨 필터)
+/// - asyncMap 전체 try-catch로 에러 발생 시 안전 기본값 반환 (stream 죽지 않음)
 final kitchenPerformanceProvider =
     StreamProvider<KitchenPerformance>((ref) {
   final dao = ref.watch(kitchenOrdersDaoProvider);
   final repository = ref.watch(kitchenOrdersRepositoryProvider);
 
-  return dao.watchAllOrders().asyncMap((allOrders) async {
-    final today = DateTime.now();
-    final startOfDay = DateTime(today.year, today.month, today.day);
+  return dao.watchActiveOrders().asyncMap((activeOrders) async {
+    try {
+      final pendingCount =
+          activeOrders.where((KitchenOrder o) => o.status == 'PENDING').length;
+      final preparingCount =
+          activeOrders.where((KitchenOrder o) => o.status == 'PREPARING').length;
+      final readyCount =
+          activeOrders.where((KitchenOrder o) => o.status == 'READY').length;
 
-    final todayServedCount = allOrders
-        .where((KitchenOrder o) =>
-            o.status == 'SERVED' &&
-            o.servedAt != null &&
-            !o.servedAt!.isBefore(startOfDay))
-        .length;
+      // todayServedCount: SERVED 행 직접 역직렬화 피하기 위해 servedAt 기준으로 조회
+      int todayServedCount = 0;
+      try {
+        todayServedCount = await dao.countTodayServedSafe();
+      } catch (e) {
+        debugPrint('[KDS] countTodayServedSafe error: $e');
+      }
 
-    final pendingCount =
-        allOrders.where((KitchenOrder o) => o.status == 'PENDING').length;
-    final preparingCount =
-        allOrders.where((KitchenOrder o) => o.status == 'PREPARING').length;
-    final readyCount =
-        allOrders.where((KitchenOrder o) => o.status == 'READY').length;
+      double avgPrepTime = 0.0;
+      try {
+        avgPrepTime = await repository.getAveragePrepTimeInMinutes();
+      } catch (e) {
+        debugPrint('[KDS] getAveragePrepTimeInMinutes error: $e');
+      }
 
-    final avgPrepTime = await repository.getAveragePrepTimeInMinutes();
+      debugPrint('[KDS] performance updated: todayServed=$todayServedCount pending=$pendingCount preparing=$preparingCount ready=$readyCount');
 
-    debugPrint('[KDS] performance updated: todayServed=$todayServedCount pending=$pendingCount preparing=$preparingCount ready=$readyCount');
-
-    return KitchenPerformance(
-      todayServedCount: todayServedCount,
-      averagePrepTimeMinutes: avgPrepTime,
-      pendingCount: pendingCount,
-      preparingCount: preparingCount,
-      readyCount: readyCount,
-    );
+      return KitchenPerformance(
+        todayServedCount: todayServedCount,
+        averagePrepTimeMinutes: avgPrepTime,
+        pendingCount: pendingCount,
+        preparingCount: preparingCount,
+        readyCount: readyCount,
+      );
+    } catch (e, st) {
+      debugPrint('[KDS] performance asyncMap ERROR: $e\n$st');
+      return KitchenPerformance(
+        todayServedCount: 0,
+        averagePrepTimeMinutes: 0.0,
+        pendingCount: 0,
+        preparingCount: 0,
+        readyCount: 0,
+      );
+    }
   });
 });

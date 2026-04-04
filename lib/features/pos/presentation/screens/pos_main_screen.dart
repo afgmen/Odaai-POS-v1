@@ -888,6 +888,13 @@ class _KdsStatsBadges extends ConsumerWidget {
     // (todayServedCountProvider 별도 스트림 대신 단일 소스로 통일)
     final performanceAsync = ref.watch(kitchenPerformanceProvider);
 
+    // 진단 로그: error 상태 시 실제 에러 출력
+    if (performanceAsync.hasError) {
+      debugPrint('[KDS Badge] ERROR state: ${performanceAsync.error}\n${performanceAsync.stackTrace}');
+    } else if (performanceAsync.isLoading) {
+      debugPrint('[KDS Badge] LOADING state');
+    }
+
     final inProgressCount = performanceAsync.when(
       data: (p) => p.pendingCount + p.preparingCount,
       loading: () => 0,

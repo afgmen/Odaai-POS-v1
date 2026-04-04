@@ -351,6 +351,10 @@ class AppDatabase extends _$AppDatabase {
         }
         await customStatement('PRAGMA foreign_keys = ON');
 
+        // Fix #3 v5: kitchen_orders TEXT 타임스탬프 수정 — 매 앱 시작 시 실행
+        // v28 마이그레이션이 실패하거나 WasmDatabase에서 DB가 재생성되는 경우 대비
+        await _migrateFixKitchenOrdersTimestamps();
+
         // permissions / role_permissions / user_roles 시드 데이터는
         // INSERT OR IGNORE를 사용하므로 항상 안전하게 실행 가능
         // (이미 존재하는 행은 건너뜀, 빠진 행만 추가)

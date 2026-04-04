@@ -1054,17 +1054,12 @@ class _PaymentModalState extends ConsumerState<PaymentModal> {
         debugPrint('[Checkout] Calling serveOrdersBySaleId(saleId=$finalSaleId)');
         await db.kitchenOrdersDao.serveOrdersBySaleId(finalSaleId);
         debugPrint('[Checkout] serveOrdersBySaleId done');
-        // Fix #3: SERVED 업데이트 후 명시적 invalidate → StreamProvider 즉시 갱신 보장
-        if (mounted) {
-          ref.invalidate(todayServedCountProvider);
-          ref.invalidate(activeOrdersStreamProvider);
-        }
+        // Drift watchActiveOrders() 스트림이 DB 변경을 자동 감지하므로
+        // 수동 invalidate 불필요. StreamProvider를 invalidate하면 오히려
+        // loading 상태(0)로 리셋되어 배지가 0으로 고정되는 버그 발생.
       } catch (e) {
         debugPrint('[Checkout] Failed to mark kitchen orders as served: $e');
       }
-      // POS 오른쪽 상단 KDS 통계 배지 즉시 갱신 (completed count 0 고정 버그 방지)
-      debugPrint('[Checkout] Invalidating kitchenPerformanceProvider');
-      ref.invalidate(kitchenPerformanceProvider);
 
       if (mounted) {
         ref.read(cartProvider.notifier).clear();
